@@ -1,0 +1,43 @@
+{
+  "cli": {
+    "promptToConfigurePushNotifications": false,
+    "version": ">= 12.6.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "monorepo": {
+      "pnpm": "8.12.0",
+      "cache": {
+        "key": "turbo",
+        "paths": [
+          "../../node_modules/.cache/turbo"
+        ]
+      },
+      "env": {
+        "EXPO_USE_FAST_RESOLVER": "true"
+      }
+    },
+    "development": {
+      "extends": "monorepo",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "extends": "monorepo",
+      "distribution": "store",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "resourceClass": "m1-medium"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+    }
+  }
+}

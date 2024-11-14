@@ -1,0 +1,41 @@
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_USE_FAST_RESOLVER: true # Use the faster Metro resolver in SDK 51
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup repository
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+        with:
+          expo-token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 👷 Build packages
+        run: pnpm run -w build:mobile
+
+      # You can remove this step if you already configured this
+      # This project shouldn't be pre-configured with this ID, that's why its omitted
+      - name: 👷 Configure project
+        working-directory: apps/mobile
+        run: |
+          eas init --id d202a56f-0162-450d-af3b-a2d2e0678594 --force --non-interactive
+          echo $(jq '.expo.runtimeVersion.policy = "sdkVersion"' app.json) > app.json
+
+      - name: 🚀 Create preview
+        uses: expo/expo-github-action/preview@v8
+        with:
+          working-directory: apps/mobile
+          command: eas update --auto --branch=pr-${{ github.event.number }}
