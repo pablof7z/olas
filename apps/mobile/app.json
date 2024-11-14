@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Honeypot",
-    "slug": "honeypot",
+    "name": "Snapstr",
+    "slug": "snapstr",
     "version": "0.0.1",
-    "scheme": "honeypot",
+    "scheme": "snapstr",
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -53,8 +53,7 @@
       "bundleIdentifier": "com.pablof7z.honeypot",
       "config": {
         "usesNonExemptEncryption": false
-      },
-      "deploymentTarget": "16"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -67,11 +66,6 @@
         "android.permission.RECORD_AUDIO"
       ]
     },
-    "owner": "pablof7z",
-    "extra": {
-      "eas": {
-        "projectId": "8bf71b7d-92c9-4944-900a-700a642d1183"
-      }
-    }
+    "owner": "pablof7z"
   }
 }
