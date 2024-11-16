@@ -5,6 +5,11 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "monorepo": {
       "pnpm": "8.12.0",
       "cache": {
@@ -30,9 +35,6 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
-      },
-      "ios": {
-        "resourceClass": "m1-medium"
       }
     }
   },

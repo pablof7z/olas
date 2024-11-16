@@ -5,7 +5,6 @@ import { Stack, useRouter } from "expo-router";
 import { NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
 import { nip19 } from "nostr-tools";
 import { Text } from "@/components/nativewindui/Text";
-import { useNDKWallet } from "@/ndk-expo/providers/wallet";
 import { Button } from "@/components/nativewindui/Button";
 
 export default function LoginScreen() {
@@ -22,13 +21,11 @@ export default function LoginScreen() {
         }
     };
 
-    const { walletService } = useNDKWallet()
-
     useEffect(() => {
-        if (currentUser && walletService) {
+        if (currentUser) {
             router.replace("/");
         }
-    }, [ currentUser, walletService ])
+    }, [ currentUser ])
 
     const createAccount = async () => {
         const signer = NDKPrivateKeySigner.generate();

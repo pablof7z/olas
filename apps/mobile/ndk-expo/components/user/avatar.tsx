@@ -15,6 +15,7 @@ const UserAvatar: React.FC<AvatarProps> = ({ ...props }) => {
                 {userProfile?.image && (
                     <AvatarImage
                         source={{ uri: userProfile?.image }}
+                        {...props}
                     />
                 )}
                 <AvatarFallback>

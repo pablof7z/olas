@@ -5,7 +5,7 @@ import "react-native-get-random-values";
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, useNDK } from "@/ndk-expo";
-import { Link, router, Stack, useNavigation } from 'expo-router';
+import { Link, router, Stack, Tabs, useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';  
@@ -14,10 +14,8 @@ import { Platform, View, SafeAreaView, Pressable, TouchableOpacity } from 'react
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '~/ndk-expo';
-import { NDKWalletProvider } from '@/ndk-expo/providers/wallet';
 import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
-import { cn } from '@/lib/cn';
 import { NDKEvent, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
 
 export {
@@ -76,50 +74,47 @@ export default function RootLayout() {
             />
             <NDKProvider
                 explicitRelayUrls={relays}
-                cacheAdapter={new NDKCacheAdapterSqlite("nutsack")}
+                cacheAdapter={new NDKCacheAdapterSqlite("olas")}
                 netDebug={netDebug}
             >
-                <NDKWalletProvider>
                     <GestureHandlerRootView style={{ flex: 1 }}>
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                <Stack
-                                    screenOptions={{
-                                        animation: 'ios',
-                                        title: "Home",
-                                        headerShown: true,
-                                        headerTintColor: Platform.OS === 'ios' ? undefined : colors.foreground,
-                                    }}
-                                >
-                                    <Stack.Screen name="index" options={{
-                                        headerShown: true,
-                                        headerLeft: () => (
-                                            <UnpublishedEventIndicator />
-                                        ),
-                                        headerTitle: () => <Text>Wallets</Text>,
-                                        headerRight: () => (
-                                            <Link href="/(settings)">
-                                                <Icon name="cog-outline" size={24} color={colors.foreground} />
-                                            </Link>
-                                        )
-                                    }} />
-
-                                    <Stack.Screen name="/(publish)" options={{
-                                        presentation: 'modal',
-                                        title: 'Publish',
-                                    }} />
+                                <Stack>
+                                    <Stack.Screen
+                                        name="login"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
                                     
-                                    <Stack.Screen name="(settings)" options={SETTINGS_OPTIONS} />
-                                    <Stack.Screen name="login" options={LOGIN_OPTIONS} />
-                                    <Stack.Screen name="unpublished" options={{
-                                        presentation: 'modal',
-                                        title: 'Unpublished data',
-                                    }} />
+                                    <Stack.Screen
+                                        name="(tabs)"
+                                        options={{
+                                            headerShown: false
+                                        }}
+                                    />
+
+                                    <Stack.Screen
+                                        name="profile"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
+
+                                    <Stack.Screen
+                                        name="view"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
                                 </Stack>
                             </NavThemeProvider>
                         </KeyboardProvider>
                     </GestureHandlerRootView>
-                </NDKWalletProvider>
             </NDKProvider>
         </>
     );
@@ -136,18 +131,3 @@ const SETTINGS_OPTIONS = {
     headerShown: false,
     animation: 'fade_from_bottom', // for android
   } as const;
-
-function SettingsIcon() {
-    const { colors } = useColorScheme();
-    return (
-      <Link href="/(wallet)/(settings)" asChild>
-        <Pressable className="opacity-80 pr-2">
-          {({ pressed }) => (
-            <View className={cn(pressed ? 'opacity-50' : 'opacity-90')}>
-              <Icon name="cog-outline" size={32} color={colors.foreground} />
-            </View>
-          )}
-        </Pressable>
-      </Link>
-    );
-} 

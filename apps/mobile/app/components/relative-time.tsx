@@ -11,6 +11,7 @@ const RelativeTime: React.FC<RelativeTimeProps> = ({
     timestamp,
     dateThreshold = 24 * 60 * 60, // 24 hours in seconds
     timeThreshold = 2 * 60 * 60, // 2 hours in seconds
+    ...props
 }) => {
     const [relativeTime, setRelativeTime] = useState<string>('');
 
@@ -38,7 +39,7 @@ const RelativeTime: React.FC<RelativeTimeProps> = ({
         return () => clearInterval(intervalId);
     }, [timestamp, dateThreshold, timeThreshold]);
 
-    return <Text>{relativeTime}</Text>;
+    return <Text {...props}>{relativeTime}</Text>;
 };
 
 export default RelativeTime;

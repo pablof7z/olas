@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Snapstr",
+    "name": "Olas",
     "slug": "snapstr",
     "version": "0.0.1",
-    "scheme": "snapstr",
+    "scheme": "olas",
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -14,7 +14,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "cameraPermission": "The app accesses your camera to let you share photos with your friends."
         }
       ],
       [
@@ -30,8 +31,16 @@
         {
           "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
         }
+        
       ],
-      "expo-font"
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ],
+      "expo-font",
+      "expo-video",
     ],
     "experiments": {
       "typedRoutes": true,
@@ -50,7 +59,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pablof7z.honeypot",
+      "bundleIdentifier": "com.pablof7z.snapstr",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -60,12 +69,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.pablof7z.honeypot",
+      "package": "com.pablof7z.snapstr",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ]
     },
-    "owner": "pablof7z"
+    "owner": "pablof7z",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "03102736-9182-44f1-bfad-cf3b9a0b9f2f"
+      }
+    }
   }
 }

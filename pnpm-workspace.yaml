@@ -2,8 +2,3 @@ packages:
   - 'apps/*'
   - 'packages/eslint-config'
   - 'packages/feature-home'
-  - 'packages/ui'
-  - 'packages/ndk/ndk'
-  - 'packages/ndk/ndk-wallet'
-  - 'packages/ndk/packages/eslint-config-custom'
-  - 'packages/ndk/packages/tsconfig'

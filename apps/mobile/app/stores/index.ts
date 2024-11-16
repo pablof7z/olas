@@ -1,15 +1,15 @@
-import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
+import { NDKEvent } from "@nostr-dev-kit/ndk";
 import { create } from 'zustand';
 
-type WalletStoreState = {
-    activeWallet: NDKCashuWallet | null;
-    setActiveWallet: (wallet?: NDKCashuWallet) => void;
+type ActiveEventStoreState = {
+    activeEvent: NDKEvent | null;
+    setActiveEvent: (event?: NDKEvent) => void;
 }
 
 /** Store */
-export const walleteStore = create<WalletStoreState>((set) => ({
-    activeWallet: null,
-    setActiveWallet(wallet?: NDKCashuWallet): void {
-        set(() => ({ activeWallet: wallet }))
+export const activeEventStore = create<ActiveEventStoreState>((set) => ({
+    activeEvent: null,
+    setActiveEvent(event?: NDKEvent): void {
+        set(() => ({ activeEvent: event }))
     }
 }));
