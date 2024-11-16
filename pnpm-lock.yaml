@@ -20,12 +20,21 @@ importers:
       '@bacons/text-decoder':
         specifier: ^0.0.0
         version: 0.0.0(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))
+      '@bitpatty/imgproxy-url-builder':
+        specifier: 1.8.0-rc1
+        version: 1.8.0-rc1
       '@cashu/cashu-ts':
         specifier: ^1.2.1
         version: 1.2.1
       '@expo/vector-icons':
         specifier: ^14.0.4
         version: 14.0.4
+      '@imgproxy/imgproxy-js-core':
+        specifier: ^1.0.8
+        version: 1.0.8
+      '@misaon/imgproxy':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@nostr-dev-kit/ndk':
         specifier: ^2.10.5
         version: 2.10.5(typescript@5.3.3)
@@ -71,9 +80,6 @@ importers:
       '@shopify/flash-list':
         specifier: 1.6.4
         version: 1.6.4(@babel/runtime@7.26.0)(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0)
-      '@simform_solutions/react-native-audio-waveform':
-        specifier: ^2.1.1
-        version: 2.1.1(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0)
       '@uidotdev/usehooks':
         specifier: ^2.4.1
         version: 2.4.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -86,9 +92,6 @@ importers:
       expo:
         specifier: ~51.0.39
         version: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      expo-audio:
-        specifier: ^0.2.3
-        version: 0.2.3(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0)
       expo-av:
         specifier: ~14.0.7
         version: 14.0.7(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -155,9 +158,6 @@ importers:
       expo-system-ui:
         specifier: ~3.0.7
         version: 3.0.7(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))
-      expo-video:
-        specifier: ^2.0.0
-        version: 2.0.0(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0)
       expo-web-browser:
         specifier: ~13.0.3
         version: 13.0.3(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -1024,6 +1024,9 @@ packages:
     peerDependencies:
       react-native: '*'
 
+  '@bitpatty/imgproxy-url-builder@1.8.0-rc1':
+    resolution: {integrity: sha512-UXcPNbC4lRy39jX1kW6f/m7e0bfx6j6+5C9C6+hOW663EM5NlXEstq9ND7gTXsr7x/yui/OPdYf+kQoq/u4OwA==}
+
   '@cashu/cashu-ts@1.2.1':
     resolution: {integrity: sha512-B0+e02S8DQA8KBt2FgKHgGYvtHQokXJ3sZcTyAdHqvb0T0jfo1zF7nHn19eU9iYcfk8VSWf5xNBTocpTfj1aNg==}
 
@@ -1226,6 +1229,9 @@ packages:
   '@ide/backoff@1.0.0':
     resolution: {integrity: sha512-F0YfUDjvT+Mtt/R4xdl2X0EYCHMMiJqNLdxHD++jDT5ydEFIyqbCHh51Qx2E211dgZprPKhV7sHmnXKpLuvc5g==}
 
+  '@imgproxy/imgproxy-js-core@1.0.8':
+    resolution: {integrity: sha512-3oBneumj7b/YCeyLteKyKaidQSrDhEHnZMiVBHO0Hshju/YSplbzSeACZGwai7LyD3YMMpsK/kLIodXU6wbtMw==}
+
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
@@ -1285,6 +1291,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@misaon/imgproxy@1.0.1':
+    resolution: {integrity: sha512-9PxJuhoWPO7zO2fZ8wspNnL9jcF2h383yMx/H0d9qDw6jwonbidjYvNXz4quAEKQYy9AocKMONEpKx//B/oOFQ==}
 
   '@noble/ciphers@0.5.3':
     resolution: {integrity: sha512-B0+6IIHiqEs3BPMT0hcRmHvEj2QHOLu+uwt+tqDDeVd0oyVzh7BPrDcPjRnV1PV/5LaknXJJQvOuRGR0zQJz+w==}
@@ -2064,12 +2073,6 @@ packages:
 
   '@sideway/pinpoint@2.0.0':
     resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
-
-  '@simform_solutions/react-native-audio-waveform@2.1.1':
-    resolution: {integrity: sha512-bnfVgI0ksDoGEG5kt0DVQAJvhyzMMUQwfv2vN3NnBX6WRqWWkQkp4gSB3G3EngyxzyDpVWJ52ZkklnuCNWJlTg==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -2897,6 +2900,9 @@ packages:
   crypt@0.0.2:
     resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
 
+  crypto-es@1.2.7:
+    resolution: {integrity: sha512-UUqiVJ2gUuZFmbFsKmud3uuLcNP2+Opt+5ysmljycFCyhA0+T16XJmo1ev/t5kMChMqWh7IEvURNCqsg+SjZGQ==}
+
   crypto-random-string@1.0.0:
     resolution: {integrity: sha512-GsVpkFPlycH7/fRR7Dhcmnoii54gV1nz7y4CWyeFS14N+JVBBhY+r8amRHE4BwSYal7BPTDp8isvAlCxyFt3Hg==}
     engines: {node: '>=4'}
@@ -3412,13 +3418,6 @@ packages:
     peerDependencies:
       expo: '*'
 
-  expo-audio@0.2.3:
-    resolution: {integrity: sha512-ULsJv8QUboQefqbDflT/jeoA7Ftv2e/DFtPsjEOBZmJwGIGF7P9fge8tJzAHk+4n1TNzchVkSv4+gzlaRWzD6w==}
-    peerDependencies:
-      expo: '*'
-      react: '*'
-      react-native: '*'
-
   expo-av@14.0.7:
     resolution: {integrity: sha512-FvKZxyy+2/qcCmp+e1GTK3s4zH8ZO1RfjpqNxh7ARlS1oH8HPtk1AyZAMo52tHz3yQ3UIqxQ2YbI9CFb4065lA==}
     peerDependencies:
@@ -3589,13 +3588,6 @@ packages:
     resolution: {integrity: sha512-929XBU70q5ELxkKADj1xL0UIm3HvhYhNAOZv5DSk7rrKvLo7QDdPyl+JVnwZm9LrkNbH4wuE2rLoKu1KMgZ+9A==}
     peerDependencies:
       expo: '*'
-
-  expo-video@2.0.0:
-    resolution: {integrity: sha512-ntP6B2MGERk+wAaa9bQvgp+pcK9nivJXWxeuVXPifxL9kG02+jZSPE+X4sNH+tANr1inLui3B250GMBSD3MwoQ==}
-    peerDependencies:
-      expo: '*'
-      react: '*'
-      react-native: '*'
 
   expo-web-browser@13.0.3:
     resolution: {integrity: sha512-HXb7y82ApVJtqk8tManyudtTrCtx8xcUnVzmJECeHCB0SsWSQ+penVLZxJkcyATWoJOsFMnfVSVdrTcpKKGszQ==}
@@ -6255,6 +6247,9 @@ packages:
   uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
 
+  ufo@1.5.4:
+    resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
+
   unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
 
@@ -7564,6 +7559,8 @@ snapshots:
     dependencies:
       react-native: 0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10)
 
+  '@bitpatty/imgproxy-url-builder@1.8.0-rc1': {}
+
   '@cashu/cashu-ts@1.2.1':
     dependencies:
       '@cashu/crypto': 0.2.7
@@ -8011,6 +8008,8 @@ snapshots:
 
   '@ide/backoff@1.0.0': {}
 
+  '@imgproxy/imgproxy-js-core@1.0.8': {}
+
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
@@ -8096,6 +8095,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
     optional: true
+
+  '@misaon/imgproxy@1.0.1':
+    dependencies:
+      crypto-es: 1.2.7
+      ufo: 1.5.4
 
   '@noble/ciphers@0.5.3': {}
 
@@ -9089,12 +9093,6 @@ snapshots:
   '@sideway/formula@3.0.1': {}
 
   '@sideway/pinpoint@2.0.0': {}
-
-  '@simform_solutions/react-native-audio-waveform@2.1.1(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0)':
-    dependencies:
-      lodash: 4.17.21
-      react: 18.2.0
-      react-native: 0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10)
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -10149,6 +10147,8 @@ snapshots:
 
   crypt@0.0.2: {}
 
+  crypto-es@1.2.7: {}
+
   crypto-random-string@1.0.0: {}
 
   crypto-random-string@2.0.0: {}
@@ -10915,12 +10915,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-audio@0.2.3(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0):
-    dependencies:
-      expo: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      react: 18.2.0
-      react-native: 0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10)
-
   expo-av@14.0.7(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
       expo: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -11136,12 +11130,6 @@ snapshots:
   expo-updates-interface@0.16.2(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
       expo: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-
-  expo-video@2.0.0(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))(react@18.2.0):
-    dependencies:
-      expo: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      react: 18.2.0
-      react-native: 0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10)
 
   expo-web-browser@13.0.3(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
@@ -13960,6 +13948,8 @@ snapshots:
   ua-parser-js@1.0.39: {}
 
   uc.micro@1.0.6: {}
+
+  ufo@1.5.4: {}
 
   unbox-primitive@1.0.2:
     dependencies:

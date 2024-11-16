@@ -185,8 +185,6 @@ export class NDKCacheAdapterSqlite implements NDKCacheAdapter {
             `SELECT profile, catched_at FROM profiles WHERE pubkey = ?;`,
             [pubkey]
         ) as { profile: string; catched_at: number }[];
-
-        console.log("fetch profile result", Date.now() - start, "ms");
         
         if (result.length > 0) {
             try {

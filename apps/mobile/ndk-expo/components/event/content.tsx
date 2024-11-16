@@ -9,9 +9,13 @@ import { nip19 } from 'nostr-tools';
 interface EventContentProps {
     event: NDKEvent;
     content?: string;
+
+    onMentionPress?: (pubkey: string) => void;
 }
 
-const RenderPart: React.FC<{ part: string }> = ({ part }) => {
+const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
+    const { onMentionPress } = props as EventContentProps;
+    
     if (part.startsWith('https://')) {
         return (
             <Pressable>
@@ -25,14 +29,18 @@ const RenderPart: React.FC<{ part: string }> = ({ part }) => {
     
     const entity = part.match(/nostr:([a-zA-Z0-9]+)/)?.[1];
     if (!entity) {
-        return <Text>{part}</Text>
+        return <Text {...props}>{part}</Text>
     }
 
     // if the entity is a user, return the user's profile
     if (entity.startsWith('npub')) {
+        const pubkey = nip19.decode(entity).data as string;
+
         return (
             <User.Profile npub={entity}>
-                <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                <Pressable onPress={() => onMentionPress?.(pubkey)}>
+                    <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                </Pressable>
             </User.Profile>
         )
     } else if (entity.startsWith('nprofile')) {
@@ -42,17 +50,19 @@ const RenderPart: React.FC<{ part: string }> = ({ part }) => {
             pubkey = data.pubkey;
         } catch (e) {
             console.log({entity, e});
-            return <Text>{entity.substring(0, 6)}...</Text>
+            return <Text {...props}>{entity.substring(0, 6)}...</Text>
         }
         
         return (
             <User.Profile pubkey={pubkey}>
-                <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                <Pressable onPress={() => onMentionPress?.(pubkey)}>
+                    <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                </Pressable>
             </User.Profile>
         )
     }
 
-    return <Text>{entity.substring(0, 6)}...</Text>
+    return <Text {...props}>{entity.substring(0, 6)}...</Text>
 }
 
 const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
@@ -62,7 +72,7 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Vie
     return (
         <Text {...props}>
             {parts.map((part: string, index: number) => (
-                <RenderPart key={index} part={part} />
+                <RenderPart key={index} part={part} {...props} />
             ))}
         </Text>
     )

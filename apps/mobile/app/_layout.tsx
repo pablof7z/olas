@@ -16,7 +16,8 @@ import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '~/ndk-expo';
 import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
-import { NDKEvent, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDKSessionProvider from '@/ndk-expo/providers/session';
 
 export {
   ErrorBoundary,
@@ -75,14 +76,25 @@ export default function RootLayout() {
             <NDKProvider
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite("olas")}
-                netDebug={netDebug}
             >
+                <NDKSessionProvider
+                    follows={true}
+                    kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}
+                >
                     <GestureHandlerRootView style={{ flex: 1 }}>
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                 <Stack>
                                     <Stack.Screen
                                         name="login"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
+
+                                    <Stack.Screen
+                                        name="publish"
                                         options={{
                                             headerShown: false,
                                             presentation: 'modal',
@@ -103,6 +115,15 @@ export default function RootLayout() {
                                             presentation: 'modal',
                                         }}
                                     />
+                                    
+                                    <Stack.Screen
+                                        name="comment"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                            title: 'Comment',
+                                        }}
+                                    />
 
                                     <Stack.Screen
                                         name="view"
@@ -115,6 +136,7 @@ export default function RootLayout() {
                             </NavThemeProvider>
                         </KeyboardProvider>
                     </GestureHandlerRootView>
+                </NDKSessionProvider>
             </NDKProvider>
         </>
     );

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "scheme": "olas",
     "web": {
       "bundler": "metro",
@@ -39,8 +39,7 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ],
-      "expo-font",
-      "expo-video",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -51,7 +50,7 @@
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "contentFit": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [

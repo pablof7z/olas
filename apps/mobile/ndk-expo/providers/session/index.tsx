@@ -52,13 +52,10 @@ const NDKSessionProvider = ({ children, ...opts }: PropsWithChildren<NDKSessionP
 
                 events.set(kind, [...(events.get(kind) || []), event]);
                 setEvents(events);
-
-                console.log("added an event to the map", events);
         }
     };
 
     useEffect(() => {
-        console.log('events state updated:', events);
         if (!ndk || !currentUser) return;
         if (sub) {
             sub.stop();
@@ -80,6 +77,7 @@ const NDKSessionProvider = ({ children, ...opts }: PropsWithChildren<NDKSessionP
         <NDKSessionContext.Provider
             value={{
                 follows,
+                events,
             }}
         >
             {children}

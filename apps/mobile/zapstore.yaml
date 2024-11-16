@@ -1,0 +1,6 @@
+olas:
+  android:
+    name: Olas
+    description: Beauty is in the eye of the hodler
+    repository: https://github.com/pablof7z/snapstr
+    license: MIT
