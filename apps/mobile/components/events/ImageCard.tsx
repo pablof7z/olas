@@ -18,6 +18,7 @@ import { useMemo, memo } from 'react';
 import { useNDK, useSubscribe } from "@/ndk-expo";
 import { BookmarkIcon, Heart, MessageCircle } from "lucide-react-native";
 import { useNDKSession } from "@/ndk-expo/hooks/session";
+import { isVideo } from "@/utils/media";
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
@@ -52,8 +53,6 @@ const styles = StyleSheet.create({
         gap: 5
     }
 });
-
-const isVideo = (url: string) => /\.(mp4|webm|ogg|m4v|)$/i.test(url);
 
 export function VideoContainer({ url }: { url: string }) {
     return (
@@ -162,7 +161,7 @@ export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent })
             placeholder={{ blurhash: imeta?.blurhash }}
             allowDownscaling={true}
             contentPosition="center"
-            contentFit="fill"
+            contentFit="cover"
         />
     );
 });

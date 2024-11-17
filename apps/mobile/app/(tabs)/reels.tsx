@@ -18,6 +18,8 @@ const Reel = memo(({ event, isVisible }: { event: NDKEvent, isVisible: boolean }
     const thumb = event.tagValue('thumb');
     const videoRef = useRef<Video>(null);
 
+    console.log('reel url', event.tagValue('url'));
+
     return <View style={{ 
         flex: 1, width: '100%', height: Dimensions.get('window').height - safeAreaInsets.bottom,
         backgroundColor: 'black'
@@ -85,11 +87,21 @@ export default function ReelsScreen() {
             }
         }
     ).current;
+
+    const sortedEvents = useMemo(() => {
+        return events.sort((a, b) => {
+            return b.created_at! - a.created_at!;
+        })
+        // make sure no other events are from the same pubkey
+        .filter((event, index, self) => {
+            return self.findIndex(e => e.pubkey === event.pubkey) === index;
+        });
+    }, [events]);
     
     return (
         <View className="flex-1 bg-card">
             <FlashList
-                data={events}
+                data={sortedEvents}
                 keyExtractor={i => i.id}
                 renderItem={({item}) => (
                     <Reel 

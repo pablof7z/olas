@@ -14,9 +14,11 @@ import { Uploader } from '@/ndk-expo/utils/uploader'
 import { Image } from 'expo-image'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator'
-import { Mic } from 'lucide-react-native'
-import { Audio } from 'expo-av';
+import { ResizeMode } from 'expo-av';
 import { useNDKSession } from '@/ndk-expo/hooks/session'
+import { Video } from 'expo-av';
+import { manipulateAsync } from 'expo-image-manipulator'
+import * as VideoThumbnails from 'expo-video-thumbnails'
 
 async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: string): Promise<{url: string | null, mediaEvent: NDKEvent | null}> {
     return new Promise((resolve, reject) => {
@@ -58,12 +60,12 @@ export default function ImageUpload() {
     }, [blossomList]);
     const { ndk } = useNDK()
     const [uploading, setUploading] = useState(false);
-    const [audioUri, setAudioUri] = useState<string | null>(null);
     let imetaPromise: Promise<void> | null = null;
     let imetaTags: NDKTag[] = [];
-
+    const [selectionType, setSelectionType] = useState<"image" | "video" | null>(null);
+    const [thumbnail, setThumbnail] = useState<string | null>(null)
     async function handlePost() {
-        if (!selectedImage && !audioUri) {
+        if (!selectedImage) {
             console.error("No media to upload");
             return;
         }
@@ -72,14 +74,20 @@ export default function ImageUpload() {
         let contentType: string;
         let eventKind: number;
 
-        if (selectedImage) {
-            fileContent = await FileSystem.readAsStringAsync(selectedImage, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
-            contentType = 'image/jpeg';
-            eventKind = 20;
-        }
+        fileContent = await FileSystem.readAsStringAsync(selectedImage, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
 
+        console.log('selectedImage', selectedImage);
+
+        if (selectionType === 'video') {
+            eventKind = NDKKind.VerticalVideo;
+            contentType = 'video/mp4';
+        } else {
+            eventKind = 20;
+            contentType = 'image/jpeg';
+        }
+        
         const blob = await fetch(`data:${contentType};base64,${fileContent}`).then((res) =>
             res.blob()
         );
@@ -89,8 +97,20 @@ export default function ImageUpload() {
         event.content = description;
         event.tags = [];
 
-        const uploadPromise = new Promise<void>((resolve, reject) => {
+        const uploadPromise = new Promise<void>(async (resolve, reject) => {
             setUploading(true);
+            console.log('uploading thumbnail?', thumbnail);
+            // if we have a thumbnail, upload it
+            if (thumbnail) {
+                const thumbnailBlob = await fetch(thumbnail).then((res) =>
+                    res.blob()
+                );
+                console.log('uploading thumbnail', thumbnailBlob.size);
+                const { url } = await upload(ndk, thumbnailBlob, description, defaultBlossomServer);
+                event.tags = [...event.tags, ['thumb', url]];
+                console.log('thumbnail uploaded', url);
+            }
+            
             upload(ndk, blob, description, defaultBlossomServer).then((ret) => {
                 setUploading(false);
                 event.tags = [...event.tags, ...(ret.mediaEvent?.tags??[])];
@@ -103,9 +123,9 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
+            console.log('event', event.rawEvent());
             await event.publish();
             setUploading(false);
-            setAudioUri(null);
         } catch (error) {
             console.error("Error uploading media:", error);
         }
@@ -113,7 +133,7 @@ export default function ImageUpload() {
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -121,21 +141,44 @@ export default function ImageUpload() {
 
         if (!result.canceled) {
             setSelectedImage(result.assets[0].uri)
+            setSelectionType(result.assets[0].type)
+
+            console.log('selectedImage type', result.assets[0].type);
 
             const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
 
-            imetaPromise = new Promise<void>((resolve, reject) => {
-                imetaFromImage(fileContent).then((tags: NDKTag[]) => {
-                    imetaTags = tags;
-                    console.log('imetaTags', imetaTags);
+            if (result.assets[0].type === 'video') {
+                imetaPromise = new Promise<void>((resolve, reject) => {
+                    try {
+                        VideoThumbnails.getThumbnailAsync(
+                            result.assets[0].uri,
+                            {
+                                time: 0,
+                                quality: 0.7,
+                            }
+                        ).then(({uri}) => {
+                            console.log('thumbnail', uri);
+                            setThumbnail(uri)
+                        })
+                    } catch (e) {
+                        console.warn('Error generating thumbnail:', e)
+                    }
                     resolve();
-                }).catch((error) => {
-                    console.error('imetaFromImage error', error);
-                    reject(error);
                 });
-            });
+            } else {
+                imetaPromise = new Promise<void>((resolve, reject) => {
+                    imetaFromImage(fileContent).then((tags: NDKTag[]) => {
+                        imetaTags = tags;
+                        console.log('imetaTags', imetaTags);
+                        resolve();
+                    }).catch((error) => {
+                        console.error('imetaFromImage error', error);
+                        reject(error);
+                    });
+                });
+            }
         }
     }
 
@@ -159,26 +202,31 @@ export default function ImageUpload() {
     }
 
     return (
-        <View style={styles.container}>
-            {selectedImage || audioUri ? (
+        <View style={styles.container} className="flex-1 bg-card">
+            {selectedImage ? (
                 <KeyboardAwareScrollView>
-                    <View className="flex-row w-full h-[30px]">
-                        <View className="flex-1"></View>
-
-                        <TouchableOpacity className="h-[26px] w-fit shrink" onPress={handlePost} disabled={uploading}>
-                            {uploading ? <ActivityIndicator /> : <Text className="text-primary font-bold">Publish</Text>}
-                        </TouchableOpacity>
-                    </View>
-                    
-                    <View className="flex-1 grow">
+                    <View className="flex-1 grow mb-4">
                         {selectedImage && (
                             <View style={styles.imageContainer}>
-                                <Image
-                                    source={{ uri: selectedImage }}
-                                    style={styles.image}
-                                    contentFit="cover"
-                                    contentPosition="center"
-                                />
+                                {selectionType === 'video' ? (
+                                    <View style={styles.imageContainer}>
+                                        <Video
+                                            source={{ uri: selectedImage }}
+                                            style={styles.image}
+                                            useNativeControls
+                                            resizeMode={ResizeMode.CONTAIN}
+                                            posterSource={{ uri: thumbnail }}
+                                            usePoster
+                                        />
+                                    </View>
+                                ) : (
+                                    <Image
+                                        source={{ uri: selectedImage }}
+                                        style={styles.image}
+                                        contentFit="cover"
+                                        contentPosition="center"
+                                    />
+                                )}
                                 <TouchableOpacity
                                     style={styles.removeButton}
                                     onPress={() => {
@@ -193,12 +241,24 @@ export default function ImageUpload() {
                         
                         <TextInput
                             style={styles.textInput}
-                            placeholder={selectedImage ? "Write something about your image..." : "Add a description for your audio..."}
+                            placeholder="Write a caption or comment..."
                             value={description}
                             onChangeText={setDescription}
                             multiline
                         />
+
+                        {/* <List
+                            data={[
+                                { title: 'Image', leftView: <Ionicons name="images" size={24} color="#666" /> },
+                                { title: 'Audio', leftView: <Ionicons name="mic" size={24} color="#666" /> },
+                            ]}
+                            renderItem={({item}) => <Text>{item.title}</Text>}
+                        /> */}
                     </View>
+
+                    <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading}>
+                        {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
+                    </Button>
                 </KeyboardAwareScrollView>
             ) : (
                 <View style={styles.uploadContainer}>
@@ -230,12 +290,15 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         position: 'relative',
+        maxHeight: 240,
         aspectRatio: 1,
-        width: '100%',
+        width: '100%'
     },
     image: {
         flex: 1,
         borderRadius: 12,
+        width: '100%',
+        height: '100%',
     },
     removeButton: {
         position: 'absolute',

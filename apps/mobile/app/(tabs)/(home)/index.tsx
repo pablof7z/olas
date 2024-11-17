@@ -16,7 +16,7 @@ export default function HomeScreen() {
         const filters: NDKFilter[] = [
             { kinds: [20] },
         ];
-        if (follows) filters.push({ kinds: [1], authors: follows });
+        if (follows) filters.push({ kinds: [1], authors: follows, limit: 50 });
         else filters.push({ kinds: [1], authors: myFollows, limit: 50 });
         
         return filters;
