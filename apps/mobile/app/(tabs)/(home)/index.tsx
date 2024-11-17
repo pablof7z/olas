@@ -1,7 +1,6 @@
 import { useNDK, useSubscribe } from "@/ndk-expo";
 import { NDKEvent, NDKFilter, NDKKind, NDKSubscriptionCacheUsage } from "@nostr-dev-kit/ndk";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
 import { Dimensions, StyleSheet, View } from "react-native";
 import WelcomeConsentScreen from "../../welcome";
 import { FlashList } from "@shopify/flash-list";
@@ -16,10 +15,9 @@ export default function HomeScreen() {
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
             { kinds: [20] },
-            {kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo], limit: 50},
         ];
-        // if (follows) filters.push({ kinds: [1], authors: follows });
-        filters.push({ kinds: [1], authors: myFollows, limit: 50 });
+        if (follows) filters.push({ kinds: [1], authors: follows });
+        else filters.push({ kinds: [1], authors: myFollows, limit: 50 });
         
         return filters;
     }, [follows]);

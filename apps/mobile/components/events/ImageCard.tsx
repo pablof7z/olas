@@ -52,7 +52,7 @@ export function Reactions({ event }: { event: NDKEvent }) {
 
     const comment = () => {
         setActiveEvent(event);
-        router.push(`/comment`);
+        router.push(`/comments`);
     }
 
     const bookmark = async () => {
@@ -74,7 +74,7 @@ export function Reactions({ event }: { event: NDKEvent }) {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }} onPress={comment}>
-                        <MessageCircle size={24} color={!commentedByUser ? colors.primary : 'blue'} />
+                        <MessageCircle size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 

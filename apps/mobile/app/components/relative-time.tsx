@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text } from 'react-native';
+import { Text, TextProps } from 'react-native';
 
 interface RelativeTimeProps {
     timestamp: number; // Timestamp in seconds
@@ -7,7 +7,7 @@ interface RelativeTimeProps {
     timeThreshold?: number; // Defaults to 2 hours
 }
 
-const RelativeTime: React.FC<RelativeTimeProps> = ({
+const RelativeTime: React.FC<RelativeTimeProps & TextProps> = ({
     timestamp,
     dateThreshold = 24 * 60 * 60, // 24 hours in seconds
     timeThreshold = 2 * 60 * 60, // 2 hours in seconds

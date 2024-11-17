@@ -1,10 +1,12 @@
 import { Link, router, Tabs } from 'expo-router'
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Icon } from '@roninoss/icons';
-import { Home, Mic, PlusSquare, Search, Speaker, SpeakerIcon, SquarePlay, UserCircle, UserCircle2, Video } from "lucide-react-native";
+import { BoltIcon, Home, Mic, PlaySquare, PlusSquare, Search, Speaker, SpeakerIcon, SquarePlay, UserCircle2, Wallet, Wallet2 } from "lucide-react-native";
+import * as User from '@/ndk-expo/components/user';
 import { View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useNDK } from '@/ndk-expo';
+import { Text } from '@/components/nativewindui/Text';
 
 export default function HomeLayout() {
     const { currentUser } = useNDK();
@@ -18,19 +20,11 @@ export default function HomeLayout() {
                 tabBarActiveTintColor: '#000',
                 tabBarInactiveTintColor: '#000',
                 tabBarStyle: {
-                    backgroundColor: 'transparent',
                     position: 'absolute',
                     bottom: 0,
                     left: 0,
                     right: 0,
                 },
-                tabBarBackground: () => (
-                    <BlurView 
-                        intensity={50} 
-                        tint="light" 
-                        style={{ flex: 1 }}
-                    />
-                ),
             }}>
             <Tabs.Screen
                 name="(home)"
@@ -61,6 +55,17 @@ export default function HomeLayout() {
             />
 
             <Tabs.Screen
+                name="reels"
+                options={{
+                    title: 'Reels',
+                    headerShown: false,
+                    tabBarIcon: ({ color, focused }) => (
+                        <PlaySquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                    )
+                }}
+            />
+
+            <Tabs.Screen
                 name="(settings)"
                 listeners={{
                     tabPress: (e) => {  
@@ -74,7 +79,12 @@ export default function HomeLayout() {
                     title: 'Settings',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <UserCircle size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                        currentUser ?
+                            <User.Profile pubkey={currentUser.pubkey}>
+                                <User.Avatar alt="Profile image" className="w-6 h-6" />
+                            </User.Profile>
+                        :
+                            <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
                     )
                 }}
             />

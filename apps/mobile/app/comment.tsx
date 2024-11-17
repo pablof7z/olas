@@ -1,9 +1,9 @@
 import { TextInput } from "react-native-gesture-handler";
 import { KeyboardAvoidingView, KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router, Stack } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
-import { useNDK } from "@/ndk-expo";
+import { useNDK, useSubscribe } from "@/ndk-expo";
 import * as User from '@/ndk-expo/components/user';
 import { Text } from "@/components/nativewindui/Text";
 import { Button } from "@/components/nativewindui/Button";
@@ -25,7 +25,7 @@ export default function CommentScreen() {
 
         await event.sign();
         event.publish();
-        
+
         // close modal
         router.back();
     }
@@ -50,7 +50,6 @@ export default function CommentScreen() {
                     </View>
                     
                     <View className="grow">
-                        <Text>{comment}</Text>
                         <TextInput
                             placeholder="Add a comment..."
                             multiline
