@@ -63,7 +63,7 @@ export default function HomeScreen() {
         <View className="flex-1 bg-card gap-2">
             <FlashList
                 data={debouncedEvents}
-                estimatedItemSize={240}
+                estimatedItemSize={340}
                 keyExtractor={(item) => item.id}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={loadUserData} />

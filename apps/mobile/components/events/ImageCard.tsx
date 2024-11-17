@@ -7,21 +7,53 @@ import EventContent from "@/ndk-expo/components/event/content";
 import RelativeTime from "@/app/components/relative-time";
 import {ResizeMode, Video} from "expo-av";
 import { Button } from "../nativewindui/Button";
-import { getImageUrl } from '@misaon/imgproxy'
+import { getProxiedImageUrl } from '@/utils/imgproxy'
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { router } from "expo-router";
 import { useStore } from "zustand";
 import { activeEventStore } from "@/app/stores";
 import { imetaFromEvent } from "@/ndk-expo/utils/imeta";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { useMemo } from "react";
+import { useMemo, memo } from 'react';
 import { useNDK, useSubscribe } from "@/ndk-expo";
 import { BookmarkIcon, Heart, MessageCircle } from "lucide-react-native";
 import { useNDKSession } from "@/ndk-expo/hooks/session";
 
-const isVideo = (url: string) => {
-    return url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg');
-}
+const WINDOW_WIDTH = Dimensions.get('window').width;
+const WINDOW_HEIGHT = Dimensions.get('window').height;
+
+const styles = StyleSheet.create({
+    image: {
+        width: WINDOW_WIDTH,
+        flex: 1,
+        aspectRatio: 1,
+    },
+    video: {
+        width: WINDOW_WIDTH,
+        aspectRatio: 1.5,
+        minHeight: 240,
+        maxHeight: WINDOW_HEIGHT - 100,
+    },
+    container: {
+        flex: 1, 
+        flexDirection: 'column', 
+        flexGrow: 1, 
+        minHeight: 240
+    },
+    profileContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: 2
+    },
+    reactionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5
+    }
+});
+
+const isVideo = (url: string) => /\.(mp4|webm|ogg|m4v|)$/i.test(url);
 
 export function VideoContainer({ url }: { url: string }) {
     return (
@@ -69,16 +101,16 @@ export function Reactions({ event }: { event: NDKEvent }) {
         <View className="flex-1 flex-col gap-1 p-2">
             <View className="flex-1 flex-row gap-4 w-full justify-between">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }} onPress={react}>
+                    <TouchableOpacity style={styles.reactionButton} onPress={react}>
                         <Heart size={24} color={!reactedByUser ? colors.primary : 'red'} />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }} onPress={comment}>
+                    <TouchableOpacity style={styles.reactionButton} onPress={comment}>
                         <MessageCircle size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }} onPress={bookmark}>
+                <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
                     <BookmarkIcon size={24} color={colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -89,66 +121,51 @@ export function Reactions({ event }: { event: NDKEvent }) {
     );
 }
 
-function Kind1Media({ event }: { event: NDKEvent }) {
-    // find the urls that are images in the content
+const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
     const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
 
-    if (urls.length === 0) return null;
+    if (!urls?.length) return null;
 
-    if (urls.length === 1 || urls.length > 0) {
-        const imageUrl = getImageUrl(urls[0], {
-            baseURL: 'https://imgproxy.f7z.io', // optional
-            secret: '',
-            salt: '',
-            modifiers: {
-                width: Dimensions.get('window').width.toString(),
-            }
-        })
+    const imageUrl = getProxiedImageUrl(urls[0]);
 
-        return (
-            <Image
-                source={{ uri: imageUrl }}
-                style={styles.image}
-                contentFit="cover"
-            />
-        );
-    }
-}
+    return (
+        <Image
+            source={{ uri: imageUrl }}
+            style={styles.image}
+            placeholder={{ blurhash: 'U1LQF[-;~qs,}' }}
+            contentFit="fill"
+        />
+    );
+});
 
-export function CardMedia({ event }: { event: NDKEvent }) {
+export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {
     const url = event.tagValue('url');
 
-    if (url && isVideo(url)) return <VideoContainer url={url} />
+    if (url && isVideo(url)) return <VideoContainer url={url} />;
+    if (event.kind === NDKKind.Text) return <Kind1Media event={event} />;
+    if (!url) return null;
 
-    if (event.kind === NDKKind.Text) {
-        return <Kind1Media event={event} />
-    }
+    const imeta = useMemo(() => 
+        imetaFromEvent(event),
+        [event]
+    );
 
-    if (url) {
-        const imeta = imetaFromEvent(event);
-        const blurhash = imeta?.blurhash;
+    const imageUrl = useMemo(() => 
+        getProxiedImageUrl(url),
+        [url]
+    );
 
-        const imageUrl = getImageUrl(url, {
-            baseURL: 'https://imgproxy.snort.social', // optional
-            secret: 'a82fcf26aa0ccb55dfc6b4bd6a1c90744d3be0f38429f21a8828b43449ce7cebe6bdc2b09a827311bef37b18ce35cb1e6b1c60387a254541afa9e5b4264ae942',
-            salt: 'a897770d9abf163de055e9617891214e75a9016d748f8ef865e6ffbcb9ed932295659549773a22a019a5f06d0b440c320be411e3fddfe784e199e4f03d74bd9b',
-            modifiers: {
-                width: Dimensions.get('window').width.toString(),
-            }
-        })
-
-        return (
-            <Image
-                source={{ uri: imageUrl }}
-                style={styles.image}
-                placeholder={{blurhash}}
-                allowDownscaling={true}
-                contentPosition="center"
-                contentFit="fill"
-            />
-        );
-    }
-}
+    return (
+        <Image
+            source={{ uri: imageUrl }}
+            style={styles.image}
+            placeholder={{ blurhash: imeta?.blurhash }}
+            allowDownscaling={true}
+            contentPosition="center"
+            contentFit="fill"
+        />
+    );
+});
 
 export default function ImageCard({ event }: { event: NDKEvent }) {
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
@@ -157,8 +174,7 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
     const { follows } = useNDKSession();
 
     const follow = async () => {
-        const f = await currentUser?.follow(event.author);
-        console.log('follow', f);
+        await currentUser?.follow(event.author);
     }
 
     let content = event.content.trim();
@@ -169,11 +185,9 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
     }
 
     return (
-        <View
-            className="bg-card overflow-hidden py-2 border-b border-gray-200"
-        >
+        <View className="bg-card overflow-hidden py-2 border-b border-gray-200">
             <View className="flex-row justify-between items-center gap-2 p-2 w-full">
-                <View className="flex-row items-center gap-2 p-2">
+                <View style={styles.profileContainer}>
                     <User.Profile pubkey={event.pubkey}>
                         <TouchableOpacity onPress={() => {
                             router.push(`/profile?pubkey=${event.pubkey}`);
@@ -186,7 +200,6 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
                             <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                         </View>
                     </User.Profile>
-
                 </View>
 
                 {!follows?.includes(event.pubkey) && event.pubkey !== currentUser?.pubkey && (
@@ -199,7 +212,7 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
             <Pressable onPress={() => {
                 setActiveEvent(event);
                 router.push('/view');
-            }} style={{ flex: 1, flexDirection: 'column', flexGrow: 1, minHeight: 240 }}>
+            }} style={styles.container}>
                 <CardMedia event={event} />
             </Pressable>
 
@@ -220,17 +233,3 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    image: {
-        width: Dimensions.get('window').width,
-        flex: 1,
-        aspectRatio: 1,
-    },
-    video: {
-        width: Dimensions.get('window').width,
-        aspectRatio: 1.5,
-        minHeight: 240,
-        maxHeight: Dimensions.get('window').height - 100,
-    }
-})
