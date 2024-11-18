@@ -1,5 +1,5 @@
-import { NDKEvent, NDKTag } from "@nostr-dev-kit/ndk";
-import { Image } from "expo-image";
+import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk';
+import { Image } from 'expo-image';
 import * as Crypto from 'expo-crypto';
 
 interface ImetaData {
@@ -24,7 +24,7 @@ export function imetaFromEvent(event: NDKEvent): ImetaData {
     for (const pair of pairs) {
         const [key, ...valueParts] = pair.split(' ');
         const value = valueParts.join(' ');
-        
+
         if (key === 'fallback') {
             fallbacks.push(value);
         } else {
@@ -39,16 +39,13 @@ export function imetaFromEvent(event: NDKEvent): ImetaData {
     return data;
 }
 
-export async function imetaFromImage(
-    fileContent: string,
-    url?: string,
-): Promise<NDKTag[]> {
+export async function imetaFromImage(fileContent: string, url?: string): Promise<NDKTag[]> {
     console.log('imetaFromImage', fileContent.length, url);
     const tags: NDKTag[] = [];
     const imeta: ImetaData = {};
-    
+
     const base64Url = `data:image/jpeg;base64,${fileContent}`;
-    
+
     try {
         console.log('generating blurhash');
         const blurhash = await Image.generateBlurhashAsync(base64Url, [4, 3]);
@@ -64,12 +61,12 @@ export async function imetaFromImage(
     const mime = response.headers.get('content-type');
     if (mime) {
         imeta.m = mime;
-        tags.push(["m", mime]);
+        tags.push(['m', mime]);
     }
 
     if (url) {
         imeta.url = url;
-        tags.push(["url", url]);
+        tags.push(['url', url]);
     }
 
     // const buffer = await response.arrayBuffer();
@@ -91,7 +88,7 @@ export async function imetaFromImage(
             .flat()
             .join(' ');
         console.log('imeta value', val);
-        tags.push(["imeta", val]);
+        tags.push(['imeta', val]);
     }
 
     return tags;

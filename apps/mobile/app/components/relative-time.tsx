@@ -43,4 +43,3 @@ const RelativeTime: React.FC<RelativeTimeProps & TextProps> = ({
 };
 
 export default RelativeTime;
-

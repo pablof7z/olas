@@ -1,5 +1,5 @@
-import { Hexpubkey, NDKEvent, NDKKind } from "@nostr-dev-kit/ndk";
-import { createContext } from "react";
+import { Hexpubkey, NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
+import { createContext } from 'react';
 
 interface NDKSessionContext {
     follows?: Array<Hexpubkey>;
@@ -8,7 +8,7 @@ interface NDKSessionContext {
 
 const NDKSessionContext = createContext<NDKSessionContext>({
     follows: [],
-    events: new Map()
+    events: new Map(),
 });
 
 export default NDKSessionContext;

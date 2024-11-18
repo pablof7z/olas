@@ -17,11 +17,7 @@ const Field: React.FC<FieldProps> = ({ label, fallback, ...props }) => {
         return null;
     }
 
-    return (
-        <Text {...props}>
-            {userProfile?.[label] || fallback}
-        </Text>
-    );
+    return <Text {...props}>{userProfile?.[label] || fallback}</Text>;
 };
 
 export default Field;

@@ -37,58 +37,45 @@ export default function WelcomeConsentScreen() {
         <SafeAreaView style={ROOT_STYLE}>
             <View className="mx-auto max-w-sm flex-1 justify-between gap-4 px-8 py-4 ">
                 <View className="ios:pt-8 pt-12">
-                    <Text
-                        variant="largeTitle"
-                        className="ios:text-left ios:font-black text-primary text-center font-bold text-6xl">
+                    <Text variant="largeTitle" className="ios:text-left ios:font-black text-center text-6xl font-bold text-primary">
                         Snapstr
                     </Text>
 
-                    <Text variant="subhead" className="text-lg font-bold mb-6">
-                      Beauty is everywhere.
-                      Specially in nostr.
+                    <Text variant="subhead" className="mb-6 text-lg font-bold">
+                        Beauty is everywhere. Specially in nostr.
                     </Text>
                 </View>
-                
+
                 <View className="gap-8">
-                {FEATURES.map((feature) => (
-                    <View key={feature.title} className="flex-row gap-4">
-                    <View className="pt-px">
-                        <Icon
-                        name={feature.icon}
-                        size={38}
-                        color={colors.primary}
-                        ios={{ renderingMode: 'hierarchical' }}
-                        />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="font-bold">{feature.title}</Text>
-                        <Text variant="footnote">{feature.description}</Text>
-                    </View>
-                    </View>
-                ))}
+                    {FEATURES.map((feature) => (
+                        <View key={feature.title} className="flex-row gap-4">
+                            <View className="pt-px">
+                                <Icon name={feature.icon} size={38} color={colors.primary} ios={{ renderingMode: 'hierarchical' }} />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="font-bold">{feature.title}</Text>
+                                <Text variant="footnote">{feature.description}</Text>
+                            </View>
+                        </View>
+                    ))}
                 </View>
                 <View className="gap-4">
-                <View className="items-center">
-                    <Icon
-                    name="account-multiple"
-                    size={24}
-                    color={colors.primary}
-                    ios={{ renderingMode: 'hierarchical' }}
-                    />
-                    <Text variant="caption2" className="pt-1 text-center">
-                    By pressing continue, you agree to the universe's{' '}
-                    <Link href="/">
-                        <Text variant="caption2" className="text-primary">
-                        Terms of Service
+                    <View className="items-center">
+                        <Icon name="account-multiple" size={24} color={colors.primary} ios={{ renderingMode: 'hierarchical' }} />
+                        <Text variant="caption2" className="pt-1 text-center">
+                            By pressing continue, you agree to the universe's{' '}
+                            <Link href="/">
+                                <Text variant="caption2" className="text-primary">
+                                    Terms of Service
+                                </Text>
+                            </Link>{' '}
                         </Text>
-                    </Link>{' '}
-                    </Text>
-                </View>
-                <Link href="/login" replace asChild>
-                    <Button size={Platform.select({ ios: 'lg', default: 'md' })}>
-                    <Text>Continue</Text>
-                    </Button>
-                </Link>
+                    </View>
+                    <Link href="/login" replace asChild>
+                        <Button size={Platform.select({ ios: 'lg', default: 'md' })}>
+                            <Text>Continue</Text>
+                        </Button>
+                    </Link>
                 </View>
             </View>
         </SafeAreaView>
@@ -96,14 +83,14 @@ export default function WelcomeConsentScreen() {
 }
 
 const FEATURES = [
-  {
-    title: '#reckless',
-    description: 'This is very experimental. Expect bugs, annoyances aaaaand money gone.',
-    icon: 'brain'
-  },
-  {
-    title: 'Powered by Cashu',
-    description: 'Interact with your NIP-60 cashu tokens',
-    icon: 'message-processing',
-  },
+    {
+        title: '#reckless',
+        description: 'This is very experimental. Expect bugs, annoyances aaaaand money gone.',
+        icon: 'brain',
+    },
+    {
+        title: 'Powered by Cashu',
+        description: 'Interact with your NIP-60 cashu tokens',
+        icon: 'message-processing',
+    },
 ] as const;

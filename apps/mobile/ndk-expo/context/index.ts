@@ -1,1 +1,1 @@
-export * from "./ndk";
+export * from './ndk';

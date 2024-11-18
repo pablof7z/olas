@@ -1,5 +1,5 @@
-import "@bacons/text-decoder/install";
-import "react-native-get-random-values";
+import '@bacons/text-decoder/install';
+import 'react-native-get-random-values';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import NDKWalletService, { NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useNDK } from '@/ndk-expo';
@@ -28,18 +28,18 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (ndk && currentUser) {
             const initWalletService = async () => {
                 try {
-                    console.log("starting ndk wallet service", ndk.signer, currentUser.npub)
+                    console.log('starting ndk wallet service', ndk.signer, currentUser.npub);
                     const service = new NDKWalletService(ndk);
                     setWalletService(service);
 
-                    service.on("ready", () => {
-                        console.log("wallet service ready", service.wallets.length)
-                        setWallets(service.wallets)
-                    })
+                    service.on('ready', () => {
+                        console.log('wallet service ready', service.wallets.length);
+                        setWallets(service.wallets);
+                    });
 
                     service.on('wallet', (wallet: NDKWallet) => {
                         console.log('wallet', wallet);
-                        setWallets(prevWallets => [...prevWallets, wallet]);
+                        setWallets((prevWallets) => [...prevWallets, wallet]);
                     });
 
                     service.on('wallet:default', (wallet: NDKWallet) => {
@@ -67,9 +67,5 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
     }, [ndk, currentUser]);
 
-    return (
-        <NDKWalletContext.Provider value={{ walletService, wallets, defaultWallet }}>
-            {children}
-        </NDKWalletContext.Provider>
-    );
+    return <NDKWalletContext.Provider value={{ walletService, wallets, defaultWallet }}>{children}</NDKWalletContext.Provider>;
 };

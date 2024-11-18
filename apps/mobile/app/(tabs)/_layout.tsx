@@ -1,7 +1,7 @@
-import { Link, router, Tabs } from 'expo-router'
+import { Link, router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Icon } from '@roninoss/icons';
-import { BoltIcon, Home, Mic, PlaySquare, PlusSquare, Search, Speaker, SpeakerIcon, SquarePlay, UserCircle2, Wallet, Wallet2 } from "lucide-react-native";
+import { BoltIcon, Home, Mic, PlaySquare, PlusSquare, Search, Speaker, SpeakerIcon, SquarePlay, UserCircle2, Wallet, Wallet2 } from 'lucide-react-native';
 import * as User from '@/ndk-expo/components/user';
 import { View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -32,9 +32,7 @@ export default function HomeLayout() {
                     headerTintColor: colors.foreground,
                     headerTransparent: false,
                     title: 'Home',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
-                    )
+                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
                 }}
             />
 
@@ -44,13 +42,11 @@ export default function HomeLayout() {
                     tabPress: (e) => {
                         e.preventDefault();
                         router.push('/publish');
-                    }
+                    },
                 }}
                 options={{
                     title: 'Publish',
-                    tabBarIcon: ({ color, focused }) => (
-                        <PlusSquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
-                    )
+                    tabBarIcon: ({ color, focused }) => <PlusSquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
                 }}
             />
 
@@ -59,35 +55,33 @@ export default function HomeLayout() {
                 options={{
                     title: 'Reels',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        <PlaySquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
-                    )
+                    tabBarIcon: ({ color, focused }) => <PlaySquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
                 }}
             />
 
             <Tabs.Screen
                 name="(settings)"
                 listeners={{
-                    tabPress: (e) => {  
+                    tabPress: (e) => {
                         if (!currentUser) {
                             e.preventDefault();
                             router.push('/login');
                         }
-                    }
+                    },
                 }}
                 options={{
                     title: 'Settings',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        currentUser ?
+                    tabBarIcon: ({ color, focused }) =>
+                        currentUser ? (
                             <User.Profile pubkey={currentUser.pubkey}>
-                                <User.Avatar alt="Profile image" className="w-6 h-6" />
+                                <User.Avatar alt="Profile image" className="h-6 w-6" />
                             </User.Profile>
-                        :
+                        ) : (
                             <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
-                    )
+                        ),
                 }}
             />
         </Tabs>
-    )
+    );
 }

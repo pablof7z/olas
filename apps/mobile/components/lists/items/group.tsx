@@ -26,7 +26,7 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
     const { colors } = useColorScheme();
 
     const groupId = groupMetadata.dTag;
-    const filters = useMemo(() => [{ kinds: [30023], "#h": [groupId!] }], []);
+    const filters = useMemo(() => [{ kinds: [30023], '#h': [groupId!] }], []);
     const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }), []);
     const { events: groupEvents } = useSubscribe({ filters, opts });
 
@@ -35,13 +35,16 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
     const imageUrl = groupMetadata.picture;
     const name = groupMetadata.name ?? groupId;
 
-    const item = useMemo(() => ({
-        item: groupMetadata,
-        index,
-        target,
-        title: name,
-        subTitle: groupMetadata.dTag,
-    }), [groupMetadata, index, target, name, mostRecentEvent?.content]);
+    const item = useMemo(
+        () => ({
+            item: groupMetadata,
+            index,
+            target,
+            title: name,
+            subTitle: groupMetadata.dTag,
+        }),
+        [groupMetadata, index, target, name, mostRecentEvent?.content]
+    );
 
     const messageCount = useMemo(() => groupEvents.length, [groupEvents]);
 
@@ -53,16 +56,13 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn(
-                    'h-[88px]',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
                 leftView={
-                    <View className="flex-1 flex-row items-center px-3 py-3 pl-2 h-12 ios:border-b border-border dark:border-border/80">
+                    <View className="ios:border-b dark:border-border/80 h-12 flex-1 flex-row items-center border-border px-3 py-3 pl-2">
                         {imageUrl ? (
-                            <Avatar className="rounded-lg w-12 h-12">
+                            <Avatar className="h-12 w-12 rounded-lg">
                                 <AvatarImage
                                     source={{
                                         uri: imageUrl,
@@ -70,7 +70,7 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
                                 />
                             </Avatar>
                         ) : (
-                            <View className="w-12 h-12 bg-gray-200 rounded-lg items-center justify-center">
+                            <View className="h-12 w-12 items-center justify-center rounded-lg bg-gray-200">
                                 <Icon name="plus" size={14} color={colors.grey} />
                             </View>
                         )}
@@ -79,17 +79,13 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
                 rightView={
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
                         <View className="flex-row items-center">
-                            <Text className="text-muted-foreground text-sm">
-                                {messageCount > 0 ? messageCount : ''}
-                            </Text>
+                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />
                         </View>
                     </View>
-                }
-            >
-            </ListItem>
+                }></ListItem>
         </Swipeable>
     );
 }

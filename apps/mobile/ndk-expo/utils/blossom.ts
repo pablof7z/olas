@@ -1,7 +1,7 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
-import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from "@nostr-dev-kit/ndk";
-import { BlobDescriptor, EventTemplate } from "./blossom-client";
+import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk';
+import { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;
 
@@ -19,10 +19,10 @@ export function generateMediaEventFromBlobDescriptor(ndk: NDK, blob: BlobDescrip
     const mediaEvent = new NDKEvent(ndk);
     mediaEvent.kind = NDKKind.Media;
     console.log('blob', JSON.stringify(blob, null, 4));
-    if (blob.type) mediaEvent.tags.push(["m", blob.type]);
-    if (blob.sha256) mediaEvent.tags.push(["x", blob.sha256]);
-    if (blob.url) mediaEvent.tags.push(["url", blob.url]);
-    if (blob.size) mediaEvent.tags.push(["size", blob.size.toString()]);
+    if (blob.type) mediaEvent.tags.push(['m', blob.type]);
+    if (blob.sha256) mediaEvent.tags.push(['x', blob.sha256]);
+    if (blob.url) mediaEvent.tags.push(['url', blob.url]);
+    if (blob.size) mediaEvent.tags.push(['size', blob.size.toString()]);
 
     return mediaEvent;
 }
@@ -39,27 +39,23 @@ function fileHashFromUrl(url: string) {
 
 async function getBlossomListFor(ndk: NDK, user: NDKUser) {
     const event = await ndk.fetchEvent({
-        kinds: [NDKKind.BlossomList], authors: [user.pubkey]
-    })
+        kinds: [NDKKind.BlossomList],
+        authors: [user.pubkey],
+    });
     if (!event) {
         return null;
     }
     return NDKList.from(event);
 }
 
-function nextBlossomServerToTry(
-    user: NDKUser,
-    blossomList: NDKList,
-    hash: string,
-    attemptedServers: string[] = []
-): string | null {
-    const servers = blossomList.getMatchingTags("server").map(tag => tag[1]);
-    const server = servers.find(server => !attemptedServers.includes(server));
+function nextBlossomServerToTry(user: NDKUser, blossomList: NDKList, hash: string, attemptedServers: string[] = []): string | null {
+    const servers = blossomList.getMatchingTags('server').map((tag) => tag[1]);
+    const server = servers.find((server) => !attemptedServers.includes(server));
     return server ?? null;
 }
 
-export function createBlossom(ndk: NDK, {user}: { user: NDKUser }) {
-    return function(node: HTMLImageElement) {
+export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
+    return function (node: HTMLImageElement) {
         let originalUrl = node.src;
         let url;
         try {
@@ -70,7 +66,7 @@ export function createBlossom(ndk: NDK, {user}: { user: NDKUser }) {
         let originalServer = normalize([url.origin])[0];
         let blossomList: NDKList | undefined | null;
         let hash: string | undefined;
-        let attemptedServers: string[] = [ originalServer ];
+        let attemptedServers: string[] = [originalServer];
 
         const status = document.createElement('span');
         let inserted = false;
@@ -106,7 +102,7 @@ export function createBlossom(ndk: NDK, {user}: { user: NDKUser }) {
                 finalStatus(`Media restored from different Blossom server ${newUrl.hostname}`);
             }
         }
-        
+
         async function handleError(event: Event) {
             if (!hash) return;
 
@@ -140,7 +136,7 @@ export function createBlossom(ndk: NDK, {user}: { user: NDKUser }) {
         return {
             destroy() {
                 node.removeEventListener('error', handleError);
-            }
-        }
-    }
+            },
+        };
+    };
 }

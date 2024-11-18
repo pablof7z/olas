@@ -1,10 +1,10 @@
-import "react-native-get-random-values";
-import "@bacons/text-decoder/install";
-import { PropsWithChildren, useEffect, useMemo, useRef, useState } from "react";
-import NDK, { NDKConstructorParams, NDKEvent, NDKSigner, NDKUser } from "@nostr-dev-kit/ndk";
-import NDKContext from "@/ndk-expo/context/ndk";
+import 'react-native-get-random-values';
+import '@bacons/text-decoder/install';
+import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
+import NDK, { NDKConstructorParams, NDKEvent, NDKSigner, NDKUser } from '@nostr-dev-kit/ndk';
+import NDKContext from '@/ndk-expo/context/ndk';
 import * as SecureStore from 'expo-secure-store';
-import { withPayload } from "./signers";
+import { withPayload } from './signers';
 
 export interface UnpublishedEventEntry {
     event: NDKEvent;
@@ -21,52 +21,54 @@ const NDKProvider = ({
         connect?: boolean;
     }
 >) => {
-    const ndk = useRef(new NDK({
-        ...opts
-    }));
+    const ndk = useRef(
+        new NDK({
+            ...opts,
+        })
+    );
     const [currentUser, setCurrentUser] = useState<NDKUser | null>(null);
     const [unpublishedEvents, setUnpublishedEvents] = useState<Map<string, UnpublishedEventEntry>>(new Map());
-        
+
     useEffect(() => {
-        ndk.current.cacheAdapter?.getUnpublishedEvents?.().then(entries => {
+        ndk.current.cacheAdapter?.getUnpublishedEvents?.().then((entries) => {
             const e = new Map<string, UnpublishedEventEntry>();
             entries.forEach((entry) => {
                 e.set(entry.event.id, entry);
             });
             setUnpublishedEvents(e);
-        })
-    }, [])
+        });
+    }, []);
 
     if (connect) {
         ndk.current.connect();
     }
 
-    ndk.current.on("event:publish-failed", (event: NDKEvent) => {
+    ndk.current.on('event:publish-failed', (event: NDKEvent) => {
         if (unpublishedEvents.has(event.id)) return;
-        unpublishedEvents.set(event.id, { event })
-        setUnpublishedEvents(unpublishedEvents)
-        event.once("published", () => {
-            unpublishedEvents.delete(event.id)
-            setUnpublishedEvents(unpublishedEvents)
+        unpublishedEvents.set(event.id, { event });
+        setUnpublishedEvents(unpublishedEvents);
+        event.once('published', () => {
+            unpublishedEvents.delete(event.id);
+            setUnpublishedEvents(unpublishedEvents);
         });
-    })
+    });
 
     useEffect(() => {
-        const storePayload = SecureStore.getItem("key");
-        console.log("loading key", {storePayload})
-        
-        if (storePayload) {
-            loginWithPayload(storePayload, { save: false })
-        }
-    }, [])
+        const storePayload = SecureStore.getItem('key');
+        console.log('loading key', { storePayload });
 
-    async function loginWithPayload(payload: string, opts?: { save?: boolean } ) {
+        if (storePayload) {
+            loginWithPayload(storePayload, { save: false });
+        }
+    }, []);
+
+    async function loginWithPayload(payload: string, opts?: { save?: boolean }) {
         const signer = withPayload(ndk.current, payload);
         await login(signer);
         if (!ndk.current.signer) return;
 
         if (opts?.save) {
-            SecureStore.setItemAsync("key", payload);
+            SecureStore.setItemAsync('key', payload);
         }
     }
 
@@ -76,13 +78,13 @@ const NDKProvider = ({
                 ndk.current.signer = signer ?? undefined;
 
                 if (signer) {
-                    signer.user().then(setCurrentUser)
+                    signer.user().then(setCurrentUser);
                 } else {
                     setCurrentUser(null);
                 }
             })
             .catch((e) => {
-                console.log("error in login, removing signer", ndk.current.signer, e);
+                console.log('error in login, removing signer', ndk.current.signer, e);
                 ndk.current.signer = undefined;
             });
     }
@@ -92,7 +94,7 @@ const NDKProvider = ({
 
         setCurrentUser(null);
 
-        SecureStore.deleteItemAsync("key");
+        SecureStore.deleteItemAsync('key');
     }
 
     return (
@@ -103,13 +105,11 @@ const NDKProvider = ({
                 loginWithPayload,
                 logout,
                 currentUser,
-                unpublishedEvents
-            }}
-        >
+                unpublishedEvents,
+            }}>
             {children}
         </NDKContext.Provider>
     );
 };
 
 export { NDKProvider };
-    

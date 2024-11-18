@@ -42,15 +42,15 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
     const [item, setItem] = useState<ListRenderItemInfo<Thread>>({ item: thread, index, target });
     const rootEventId = useMemo(() => thread.rootEventId, [thread]);
     const events = useMemo(() => thread.events, [thread]);
-    const rootEvent = useMemo(() => rootEventId ? events.find((e) => e.id === rootEventId) : undefined, [events, rootEventId]);
+    const rootEvent = useMemo(() => (rootEventId ? events.find((e) => e.id === rootEventId) : undefined), [events, rootEventId]);
 
     useEffect(() => {
         if (!ndk || !rootEvent) return;
         const fetchedUser = ndk.getUser({ pubkey: rootEvent.pubkey });
         fetchedUser.fetchProfile().then(setUserProfile);
     }, [ndk, rootEvent?.pubkey]);
-    
-    const mostRecentEvent = useMemo(() => events ? events.sort((a, b) => a.created_at! - b.created_at!).pop() : undefined, [events]);
+
+    const mostRecentEvent = useMemo(() => (events ? events.sort((a, b) => a.created_at! - b.created_at!).pop() : undefined), [events]);
 
     const messageCount = useDebounce(events?.length, 1000);
 
@@ -85,10 +85,7 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn(
-                    'h-[94px]',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('h-[94px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-base"
                 subTitleClassName="pt-0.5"
@@ -96,10 +93,10 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
                     <View className="flex-1 flex-row items-center px-3 py-3 pl-2">
                         {rootEvent ? (
                             <User.Profile pubkey={rootEvent?.pubkey}>
-                                <User.Avatar className="w-12 h-12" alt="" />
+                                <User.Avatar className="h-12 w-12" alt="" />
                             </User.Profile>
                         ) : (
-                            <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center">
+                            <View className="h-12 w-12 items-center justify-center rounded-full bg-gray-200">
                                 <Icon name="plus" size={14} color={colors.grey} />
                             </View>
                         )}
@@ -108,17 +105,14 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
                 rightView={
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
                         <View className="flex-row items-center">
-                            <Text className="text-muted-foreground text-sm">
-                                {messageCount > 0 ? messageCount : ''}
-                            </Text>
+                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />
                         </View>
                     </View>
-                }
-            >
-                <View className="flex-1 flex-row items-center pt-2 h-6">
+                }>
+                <View className="h-6 flex-1 flex-row items-center pt-2">
                     <AvatarGroup events={events} avatarSize={6} threshold={5} />
                 </View>
             </ListItem>

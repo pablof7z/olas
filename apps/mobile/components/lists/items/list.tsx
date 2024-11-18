@@ -25,33 +25,32 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
     const { colors } = useColorScheme();
 
     const listId = list.id;
-    const pTags = useMemo(() => list.items
-        .filter((item) => item[0] === 'p')
-        .map((item) => item[1]), [list.items]);
-    const tTags = useMemo(() => list.items
-        .filter((item) => item[0] === 't')
-        .map((item) => item[1]), [list.items]);
+    const pTags = useMemo(() => list.items.filter((item) => item[0] === 'p').map((item) => item[1]), [list.items]);
+    const tTags = useMemo(() => list.items.filter((item) => item[0] === 't').map((item) => item[1]), [list.items]);
     const filters = useMemo(() => {
         const f: NDKFilter[] = [];
-        if (pTags.length > 0) f.push({ kinds: [1], "authors": pTags, limit: 1 });
-        if (tTags.length > 0) f.push({ kinds: [1], "#t": tTags, limit: 1 });
+        if (pTags.length > 0) f.push({ kinds: [1], authors: pTags, limit: 1 });
+        if (tTags.length > 0) f.push({ kinds: [1], '#t': tTags, limit: 1 });
         return f;
-    }, [ pTags, tTags ]);
+    }, [pTags, tTags]);
 
-    const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, }), []);
+    const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }), []);
     const { events: listEvents } = useSubscribe({ filters, opts });
 
     const mostRecentEvent = useMemo(() => listEvents.sort((a, b) => a.created_at! - b.created_at!).pop(), [listEvents]);
 
     const name = list.title ?? list.dTag;
 
-    const item = useMemo(() => ({
-        item: list,
-        index,
-        target,
-        title: name,
-        subTitle: mostRecentEvent?.content,
-    }), [list, index, target, name, mostRecentEvent?.content]);
+    const item = useMemo(
+        () => ({
+            item: list,
+            index,
+            target,
+            title: name,
+            subTitle: mostRecentEvent?.content,
+        }),
+        [list, index, target, name, mostRecentEvent?.content]
+    );
 
     const messageCount = useMemo(() => listEvents.length, [listEvents]);
 
@@ -63,15 +62,12 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn(
-                    'h-[88px]',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
                 leftView={
-                    <View className="flex-1 flex-row items-center px-3 py-3 pl-2 h-12 ios:border-b border-border dark:border-border/80">
-                        <View className="w-12 h-12 bg-gray-200 rounded-lg items-center justify-center">
+                    <View className="ios:border-b dark:border-border/80 h-12 flex-1 flex-row items-center border-border px-3 py-3 pl-2">
+                        <View className="h-12 w-12 items-center justify-center rounded-lg bg-gray-200">
                             <Icon name="plus" size={14} color={colors.grey} />
                         </View>
                     </View>
@@ -79,17 +75,13 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                 rightView={
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
                         <View className="flex-row items-center">
-                            <Text className="text-muted-foreground text-sm">
-                                {messageCount > 0 ? messageCount : ''}
-                            </Text>
+                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />
                         </View>
                     </View>
-                }
-            >
-            </ListItem>
+                }></ListItem>
         </Swipeable>
     );
 }

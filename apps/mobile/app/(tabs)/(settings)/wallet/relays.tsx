@@ -5,18 +5,21 @@ import { View } from 'react-native';
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import {
-  ESTIMATED_ITEM_HEIGHT,
-  List,
-  ListDataItem,
-  ListItem,
-  ListRenderItemInfo,
-  ListSectionHeader,
-} from '~/components/nativewindui/List';
+import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NDKRelayStatus, NDKSubscriptionCacheUsage, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, {
+    NDKEvent,
+    NDKKind,
+    NDKPrivateKeySigner,
+    NDKRelay,
+    NDKRelaySet,
+    NDKRelayStatus,
+    NDKSubscriptionCacheUsage,
+    NDKUser,
+    NostrEvent,
+} from '@nostr-dev-kit/ndk';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
@@ -35,47 +38,44 @@ const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
 } as const;
 
 function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
-    const color = CONNECTIVITY_STATUS_COLORS[relay.status]
-    
-    return (
-        <View style={{ borderRadius: 10, width: 8, height: 8, backgroundColor: color }}></View>
-    )
+    const color = CONNECTIVITY_STATUS_COLORS[relay.status];
+
+    return <View style={{ borderRadius: 10, width: 8, height: 8, backgroundColor: color }}></View>;
 }
 
 export default function RelaysScreen() {
     const { ndk } = useNDK();
-    const { activeWallet } = useStore(walleteStore)
-    const [ searchText, setSearchText ] = useState<string | null>(null);
-    const [url, setUrl] = useState<string>("wss://relay.damus.io");
-    const [relays, setRelays] = useState<string[]>(activeWallet?.relays??[]);
+    const { activeWallet } = useStore(walleteStore);
+    const [searchText, setSearchText] = useState<string | null>(null);
+    const [url, setUrl] = useState<string>('wss://relay.damus.io');
+    const [relays, setRelays] = useState<string[]>(activeWallet?.relays ?? []);
 
     const data = useMemo(() => {
-        if (!ndk || !activeWallet) return []
+        if (!ndk || !activeWallet) return [];
 
-        return relays.map(relay => ({
-            id: relay,
-            title: relay,
-            validateFn: () => {
-                validateRelay(ndk, relay)
-            },
-            rightView: <View className="flex-1 items-center px-4 py-2">
-                {/* <RelayConnectivityIndicator relay={ndk.pool.getRelay(relay)} /> */}
-            </View>
-        }))
-        .filter(item => (searchText??'').trim().length === 0 || item.title.match(searchText!))
-  }, [ndk?.pool.relays, relays, searchText]);
+        return relays
+            .map((relay) => ({
+                id: relay,
+                title: relay,
+                validateFn: () => {
+                    validateRelay(ndk, relay);
+                },
+                rightView: <View className="flex-1 items-center px-4 py-2">{/* <RelayConnectivityIndicator relay={ndk.pool.getRelay(relay)} /> */}</View>,
+            }))
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+    }, [ndk?.pool.relays, relays, searchText]);
 
     const addFn = () => {
         try {
-            const uri = new URL(url)
+            const uri = new URL(url);
             if (!['wss:', 'ws:'].includes(uri.protocol)) {
-                alert("Invalid protocol")
+                alert('Invalid protocol');
                 return;
             }
-            setRelays([...relays, url])
-            setUrl("");
+            setRelays([...relays, url]);
+            setUrl('');
         } catch (e) {
-            alert("Invalid URL")
+            alert('Invalid URL');
         }
     };
 
@@ -84,32 +84,35 @@ export default function RelaysScreen() {
 
         activeWallet.relays = relays;
         activeWallet.publish().then(() => {
-            router.back()
-        })
-    }
-  
+            router.back();
+        });
+    };
+
     return (
         <>
             <LargeTitleHeader
-            title="Relays"
-            searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
-            rightView={() => (
-                <View className="flex-row gap-4">
-                    <TouchableOpacity onPress={save}>
-                        <Text className="text-primary">Save</Text>
-                    </TouchableOpacity>
+                title="Relays"
+                searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
+                rightView={() => (
+                    <View className="flex-row gap-4">
+                        <TouchableOpacity onPress={save}>
+                            <Text className="text-primary">Save</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => {if (ndk) validateRelays(ndk)}}>
-                        <Text className="text-primary">Validate</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (ndk) validateRelays(ndk);
+                            }}>
+                            <Text className="text-primary">Validate</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             />
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={[...data, {id: 'add', fn: addFn, set: setUrl}]}
+                data={[...data, { id: 'add', fn: addFn, set: setUrl }]}
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
@@ -120,44 +123,30 @@ export default function RelaysScreen() {
 }
 
 function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
-  if (info.item.id === 'add') {
+    if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
-                rightView={(
+                rightView={
                     <TouchableOpacity onPress={info.item.fn}>
-                        <Text className="text-primary pr-4 mt-2">Add</Text>
+                        <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
-                )}
-                {...info}
-            >
-            <TextInput
-                className="flex-1 text-lg"
-                placeholder="Add relay"
-                onChangeText={info.item.set}
-                autoCapitalize="none"
-                autoCorrect={false}
-            />
+                }
+                {...info}>
+                <TextInput className="flex-1 text-lg" placeholder="Add relay" onChangeText={info.item.set} autoCapitalize="none" autoCorrect={false} />
             </ListItem>
-        )
-  }
-    else if (typeof info.item === 'string') {
+        );
+    } else if (typeof info.item === 'string') {
         return <ListSectionHeader {...info} />;
     }
     return (
         <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleClassName="text-lg"
             leftView={info.item.leftView}
-            rightView={(
+            rightView={
                 <View className="flex-row gap-4">
                     {/* <TouchableOpacity onPress={}>
                         <Text className="text-neutral pr-4 mt-2">
@@ -166,25 +155,23 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                     </TouchableOpacity> */}
 
                     <TouchableOpacity onPress={info.item.fn}>
-                        <Text className="text-neutral pr-4 mt-2">
+                        <Text className="text-neutral mt-2 pr-4">
                             <Icon name="trash-can-outline" size={20} />
                         </Text>
                     </TouchableOpacity>
                 </View>
-            )}
+            }
             {...info}
             onPress={() => info.item.validateFn()}
         />
-  );
+    );
 }
 
 function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
-  return typeof item === 'string' ? item : item.id;
+    return typeof item === 'string' ? item : item.id;
 }
 
-async function validateRelays(ndk: NDK) {
-    
-}
+async function validateRelays(ndk: NDK) {}
 
 async function validateRelay(ndk: NDK, relay: string) {
     const pk = NDKPrivateKeySigner.generate();
@@ -192,21 +179,18 @@ async function validateRelay(ndk: NDK, relay: string) {
 
     const testToken = new NDKEvent(ndk, {
         kind: NDKKind.CashuToken,
-    } as NostrEvent)
+    } as NostrEvent);
     await testToken.sign(pk);
     const pub = await testToken.publish(relaySet);
 
     if (pub.size !== 1) {
-        alert("Looks like we weren't able to publish to "+relay);
+        alert("Looks like we weren't able to publish to " + relay);
     }
 
     // validate it was published
-    const req = await ndk.fetchEvents(
-        { kinds: [NDKKind.CashuToken], authors: [testToken.pubkey]},
-        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
-    )
+    const req = await ndk.fetchEvents({ kinds: [NDKKind.CashuToken], authors: [testToken.pubkey] }, { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY });
     if (req.size !== 1) {
-        alert("Relay "+ relay +" returned the wrong number of tokens:" + req.size)
+        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
         return false;
     }
 
@@ -216,14 +200,11 @@ async function validateRelay(ndk: NDK, relay: string) {
     await deleteEvent.publish(relaySet);
 
     // validate it was deleted
-    const req2 = await ndk.fetchEvents(
-        { kinds: [NDKKind.CashuToken], authors: [testToken.pubkey]},
-        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
-    )
+    const req2 = await ndk.fetchEvents({ kinds: [NDKKind.CashuToken], authors: [testToken.pubkey] }, { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY });
     if (req2.size !== 0) {
-        alert("Relay "+ relay +" returned the wrong number of tokens:" + req.size)
+        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
         return false;
     }
-    
+
     return true;
 }

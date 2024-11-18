@@ -13,10 +13,13 @@ export const useThreads = () => {
     const { ndk } = useNDK();
     const [threads, setThreads] = useState<Thread[]>([]);
 
-    const filter = useMemo(() => ([{ kinds: [1], "#p": ["fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52"], limit: 50 }]), []);
-    const opts = useMemo(() => ({
-        cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-    }), []);
+    const filter = useMemo(() => [{ kinds: [1], '#p': ['fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52'], limit: 50 }], []);
+    const opts = useMemo(
+        () => ({
+            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+        }),
+        []
+    );
     const { events } = useSubscribe({ filters: filter, opts });
 
     const rootEventIdOrEventId = (event: NDKEvent) => getRootEventId(event) ?? event.id;
@@ -31,9 +34,13 @@ export const useThreads = () => {
 
             processedRootEventIds.current.add(rootEventId);
             const sub = ndk.subscribe(
-                [{ kinds: [1], ids: [rootEventId] }, { kinds: [1], "#e": [rootEventId] }],
+                [
+                    { kinds: [1], ids: [rootEventId] },
+                    { kinds: [1], '#e': [rootEventId] },
+                ],
                 { closeOnEose: false },
-                undefined, false
+                undefined,
+                false
             );
             sub.on('event', handleEvent(rootEventId));
             sub.on('eose', () => {
@@ -57,4 +64,3 @@ export const useThreads = () => {
 
     return threads;
 };
-

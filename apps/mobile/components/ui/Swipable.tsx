@@ -49,15 +49,20 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
         left: interpolate(-translateX.value, [0, dimensions.width], [dimensions.width, 0]),
         flex: 1,
         height: '100%',
-        width: previousTranslateX.value > translateX.value
-            ? interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width], [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0])
-            : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [0, BUTTON_WIDTH, 0]),
+        width:
+            previousTranslateX.value > translateX.value
+                ? interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width], [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0])
+                : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [0, BUTTON_WIDTH, 0]),
     }));
 
     const statusIconStyle = useAnimatedStyle(() => ({
         overflow: 'hidden',
         position: 'absolute',
-        left: interpolate(translateX.value, [0, BUTTON_WIDTH, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width], [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH * 2, dimensions.width - BUTTON_WIDTH]),
+        left: interpolate(
+            translateX.value,
+            [0, BUTTON_WIDTH, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width],
+            [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH * 2, dimensions.width - BUTTON_WIDTH]
+        ),
         flex: 1,
         height: '100%',
         width: BUTTON_WIDTH,
@@ -66,9 +71,14 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
     const trashIconStyle = useAnimatedStyle(() => ({
         overflow: 'hidden',
         position: 'absolute',
-        right: previousTranslateX.value > translateX.value
-            ? interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, BUTTON_WIDTH * 3 + 40, dimensions.width], [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH + 40, dimensions.width - BUTTON_WIDTH])
-            : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [-BUTTON_WIDTH, 0, dimensions.width - BUTTON_WIDTH]),
+        right:
+            previousTranslateX.value > translateX.value
+                ? interpolate(
+                      -translateX.value,
+                      [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, BUTTON_WIDTH * 3 + 40, dimensions.width],
+                      [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH + 40, dimensions.width - BUTTON_WIDTH]
+                  )
+                : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [-BUTTON_WIDTH, 0, dimensions.width - BUTTON_WIDTH]),
         flex: 1,
         height: '100%',
         width: BUTTON_WIDTH,

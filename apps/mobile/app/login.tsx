@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, View } from "react-native";
-import { useNDK } from "@/ndk-expo";
-import { Stack, useRouter } from "expo-router";
-import { NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
-import { nip19 } from "nostr-tools";
-import { Text } from "@/components/nativewindui/Text";
-import { Button } from "@/components/nativewindui/Button";
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { useNDK } from '@/ndk-expo';
+import { Stack, useRouter } from 'expo-router';
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
+import { nip19 } from 'nostr-tools';
+import { Text } from '@/components/nativewindui/Text';
+import { Button } from '@/components/nativewindui/Button';
 
 export default function LoginScreen() {
     const [payload, setPayload] = useState<string | undefined>(undefined);
@@ -17,37 +17,36 @@ export default function LoginScreen() {
         try {
             await loginWithPayload(payload, { save: true });
         } catch (error) {
-            Alert.alert("Error", error.message || "An error occurred during login");
+            Alert.alert('Error', error.message || 'An error occurred during login');
         }
     };
 
     useEffect(() => {
         if (currentUser) {
-            router.replace("/");
+            router.replace('/');
         }
-    }, [ currentUser ])
+    }, [currentUser]);
 
     const createAccount = async () => {
         const signer = NDKPrivateKeySigner.generate();
-        const nsec = nip19.nsecEncode(signer._privateKey!)
+        const nsec = nip19.nsecEncode(signer._privateKey!);
         await loginWithPayload(nsec, { save: true });
 
-        router.replace("/")
-    }
+        router.replace('/');
+    };
 
     return (
-        <View className="flex-1 justify-center items-center bg-card w-full px-8 py-4">
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
+        <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                 <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
-                    <Text variant="heading" className="text-2xl font-bold">Login</Text>
-                    
+                    <Text variant="heading" className="text-2xl font-bold">
+                        Login
+                    </Text>
+
                     <TextInput
                         style={styles.input}
                         multiline
-                        autoCapitalize='none'
+                        autoCapitalize="none"
                         autoComplete={undefined}
                         placeholder="Enter your nsec or bunker:// connection"
                         autoCorrect={false}
@@ -71,17 +70,17 @@ const styles = StyleSheet.create({
     container: {
         padding: 20,
         flex: 1,
-        width: '100%'
+        width: '100%',
     },
     title: {
         fontSize: 24,
-        fontWeight: "bold",
+        fontWeight: 'bold',
         marginBottom: 20,
     },
     input: {
-        width: "100%",
+        width: '100%',
         height: 100,
-        borderColor: "gray",
+        borderColor: 'gray',
         fontFamily: 'monospace',
         borderWidth: 1,
         borderRadius: 5,
@@ -89,17 +88,17 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     button: {
-        backgroundColor: "#007AFF",
-        textAlign: "center",
+        backgroundColor: '#007AFF',
+        textAlign: 'center',
         padding: 20,
         borderRadius: 99,
         marginBottom: 10,
-        width: '100%'
+        width: '100%',
     },
     buttonText: {
-        color: "white",
+        color: 'white',
         fontSize: 20,
-        fontWeight: "bold",
-        textAlign: "center",
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });

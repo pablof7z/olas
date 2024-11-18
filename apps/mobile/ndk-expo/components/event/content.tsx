@@ -15,21 +15,18 @@ interface EventContentProps {
 
 const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
     const { onMentionPress } = props as EventContentProps;
-    
+
     if (part.startsWith('https://')) {
         return (
             <Pressable>
-                <Image
-                    source={{ uri: part }}
-                    style={{ width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 }}
-                />
+                <Image source={{ uri: part }} style={{ width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 }} />
             </Pressable>
-        )
+        );
     }
-    
+
     const entity = part.match(/nostr:([a-zA-Z0-9]+)/)?.[1];
     if (!entity) {
-        return <Text {...props}>{part}</Text>
+        return <Text {...props}>{part}</Text>;
     }
 
     // if the entity is a user, return the user's profile
@@ -39,31 +36,35 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
         return (
             <User.Profile npub={entity}>
                 <Pressable onPress={() => onMentionPress?.(pubkey)}>
-                    <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                    <Text style={style.mention}>
+                        @<User.Name style={style.mention} />
+                    </Text>
                 </Pressable>
             </User.Profile>
-        )
+        );
     } else if (entity.startsWith('nprofile')) {
         let pubkey: string | undefined;
         try {
-            const {data} = nip19.decode(entity) as { data: { pubkey: string } };
+            const { data } = nip19.decode(entity) as { data: { pubkey: string } };
             pubkey = data.pubkey;
         } catch (e) {
-            console.log({entity, e});
-            return <Text {...props}>{entity.substring(0, 6)}...</Text>
+            console.log({ entity, e });
+            return <Text {...props}>{entity.substring(0, 6)}...</Text>;
         }
-        
+
         return (
             <User.Profile pubkey={pubkey}>
                 <Pressable onPress={() => onMentionPress?.(pubkey)}>
-                    <Text style={ style.mention }>@<User.Name style={ style.mention } /></Text>
+                    <Text style={style.mention}>
+                        @<User.Name style={style.mention} />
+                    </Text>
                 </Pressable>
             </User.Profile>
-        )
+        );
     }
 
-    return <Text {...props}>{entity.substring(0, 6)}...</Text>
-}
+    return <Text {...props}>{entity.substring(0, 6)}...</Text>;
+};
 
 const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
     content ??= event.content;
@@ -75,7 +76,7 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Vie
                 <RenderPart key={index} part={part} {...props} />
             ))}
         </Text>
-    )
+    );
 };
 
 export default EventContent;

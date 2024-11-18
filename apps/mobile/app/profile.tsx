@@ -1,5 +1,5 @@
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as User from '@/ndk-expo/components/user';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
@@ -14,15 +14,21 @@ import { activeEventStore } from './stores';
 export default function Profile() {
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const scrollY = useRef(new Animated.Value(0)).current;
-    const filters = useMemo(() => [
-        {kinds: [1063], "#m": ["image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4"], authors: [pubkey!]},
-        {kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!]},
-        {kinds: [1], authors: [pubkey!], limit: 50},
-    ], []);
-    const opts = useMemo(() => ({
-        groupable: false,
-        cacheUsage: NDKSubscriptionCacheUsage.PARALLEL
-    }), []);
+    const filters = useMemo(
+        () => [
+            { kinds: [1063], '#m': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'], authors: [pubkey!] },
+            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
+            { kinds: [1], authors: [pubkey!], limit: 50 },
+        ],
+        []
+    );
+    const opts = useMemo(
+        () => ({
+            groupable: false,
+            cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+        }),
+        []
+    );
     const { events } = useSubscribe({ filters, opts });
 
     if (!pubkey) {
@@ -34,44 +40,42 @@ export default function Profile() {
             <TouchableOpacity style={styles.editButton}>
                 <Text style={styles.editButtonText}>Follow</Text>
             </TouchableOpacity>
-        )
-    }
+        );
+    };
 
     const headerTranslateY = scrollY.interpolate({
         inputRange: [0, 100],
         outputRange: [0, -120], // adjust based on difference between header heights
-        extrapolate: 'clamp'
+        extrapolate: 'clamp',
     });
 
     const headerOpacity = scrollY.interpolate({
         inputRange: [0, 100],
         outputRange: [1, 0],
-        extrapolate: 'clamp'
+        extrapolate: 'clamp',
     });
 
     const compactHeaderOpacity = scrollY.interpolate({
         inputRange: [0, 100],
         outputRange: [0, 1],
-        extrapolate: 'clamp'
+        extrapolate: 'clamp',
     });
-    
+
     return (
         <User.Profile pubkey={pubkey}>
             <View style={styles.container}>
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.header,
-                        { 
+                        {
                             opacity: headerOpacity,
-                            transform: [{ translateY: headerTranslateY }]
-                        }
+                            transform: [{ translateY: headerTranslateY }],
+                        },
                     ]}>
                     <User.Avatar style={styles.profileImage} alt="Profile image" />
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>
-                                {events.length}
-                            </Text>
+                            <Text style={styles.statNumber}>{events.length}</Text>
                             <Text style={styles.statLabel}>Posts</Text>
                         </View>
                         <View style={styles.statItem}>
@@ -83,21 +87,18 @@ export default function Profile() {
                             <Text style={styles.statLabel}>Following</Text>
                         </View>
                     </View>
-            </Animated.View>
+                </Animated.View>
 
                 <Animated.View className="flex-col items-center justify-between" style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
                     <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
-                    <Text style={styles.username} className="text-lg font-bold grow">
+                    <Text style={styles.username} className="grow text-lg font-bold">
                         <User.Name />
                     </Text>
                     <FollowButton />
                 </Animated.View>
 
                 <Animated.ScrollView
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: true }
-                    )}
+                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
                         <Text style={styles.username}>
@@ -107,7 +108,7 @@ export default function Profile() {
                             <User.Field label="about" />
                         </Text>
                     </View>
-                    
+
                     <FollowButton />
 
                     <MasonryFlashList
@@ -115,18 +116,16 @@ export default function Profile() {
                         numColumns={3}
                         estimatedItemSize={100}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <ImageGridItem event={item} />
-                        )}
+                        renderItem={({ item }) => <ImageGridItem event={item} />}
                     />
                 </Animated.ScrollView>
             </View>
         </User.Profile>
-    )
+    );
 }
 
 function ImageGridItem({ event }: { event: NDKEvent }) {
-    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue("u");
+    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
     const { setActiveEvent } = useStore(activeEventStore);
 
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
@@ -137,19 +136,21 @@ function ImageGridItem({ event }: { event: NDKEvent }) {
             url = urlMatch[0];
         }
     }
-    
+
     if (!url) {
         return null;
     }
 
     return (
-        <TouchableOpacity onPress={() => {
-            setActiveEvent(event);
-            router.push('/view');
-        }} style={styles.gridItem}>
+        <TouchableOpacity
+            onPress={() => {
+                setActiveEvent(event);
+                router.push('/view');
+            }}
+            style={styles.gridItem}>
             <Image source={{ uri: url }} style={styles.gridImage} />
         </TouchableOpacity>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
         borderRadius: 40,
     },
     statsContainer: {
-        flex:1,
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-around',
     },
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
         height: Dimensions.get('window').width / 3,
         backgroundColor: '#eee',
-        margin: 1
+        margin: 1,
     },
     gridImage: {
         width: '100%',
@@ -231,4 +232,4 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginRight: 12,
     },
-})
+});

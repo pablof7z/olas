@@ -8,11 +8,7 @@ import { useUserProfile } from './profile';
 const Name: React.FC<Text['props']> = (props) => {
     const { userProfile, user } = useUserProfile();
 
-    return (
-        <Text {...props}>
-            {userProfile?.displayName || userProfile?.name || user?.npub.substring(0, 6)}
-        </Text>
-    );
+    return <Text {...props}>{userProfile?.displayName || userProfile?.name || user?.npub.substring(0, 6)}</Text>;
 };
 
 export default Name;

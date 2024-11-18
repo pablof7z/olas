@@ -1,16 +1,16 @@
-import { useStore } from "zustand";
-import { activeEventStore } from "./stores";
-import { Text } from "@/components/nativewindui/Text";
-import { NDKKind } from "@nostr-dev-kit/ndk";
-import { NDKEvent } from "@nostr-dev-kit/ndk";
+import { useStore } from 'zustand';
+import { activeEventStore } from './stores';
+import { Text } from '@/components/nativewindui/Text';
+import { NDKKind } from '@nostr-dev-kit/ndk';
+import { NDKEvent } from '@nostr-dev-kit/ndk';
 import * as User from '@/ndk-expo/components/user';
-import { Dimensions, View, ScrollView } from "react-native";
+import { Dimensions, View, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
-import RelativeTime from "./components/relative-time";
-import EventContent from "@/ndk-expo/components/event/content";
+import RelativeTime from './components/relative-time';
+import EventContent from '@/ndk-expo/components/event/content';
 
 function getUrlFromEvent(event: NDKEvent) {
-    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue("u");
+    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
 
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
     if (!url && event.kind === NDKKind.Text) {
@@ -20,7 +20,7 @@ function getUrlFromEvent(event: NDKEvent) {
             url = urlMatch[0];
         }
     }
-    
+
     return url;
 }
 
@@ -28,7 +28,7 @@ export default function ViewScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     if (!activeEvent) {
-        return <Text>No active event</Text>
+        return <Text>No active event</Text>;
     }
 
     const url = getUrlFromEvent(activeEvent);
@@ -43,12 +43,12 @@ export default function ViewScreen() {
         <ScrollView className="flex-1 bg-black">
             <View className="flex-1">
                 {/* Header with user info */}
-                <View className="p-4 flex-row items-center border-b border-gray-800">
+                <View className="flex-row items-center border-b border-gray-800 p-4">
                     <User.Profile pubkey={activeEvent.pubkey}>
-                        <User.Avatar className="w-8 h-8 rounded-full" alt={activeEvent.pubkey} />
+                        <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} />
                         <View className="ml-3">
                             <User.Name className="font-bold text-white" />
-                            <Text className="text-gray-400 text-sm">
+                            <Text className="text-sm text-gray-400">
                                 <RelativeTime timestamp={activeEvent.created_at} />
                             </Text>
                         </View>
@@ -57,7 +57,7 @@ export default function ViewScreen() {
 
                 {/* Image */}
                 {url && (
-                    <ScrollView minimumZoomScale={1} maximumZoomScale={5} >
+                    <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
                         <Image
                             source={{ uri: url }}
                             style={{
@@ -73,9 +73,9 @@ export default function ViewScreen() {
 
                 {/* Content */}
                 <View className="p-4">
-                    <EventContent event={activeEvent} content={content} className="text-white text-sm" />
+                    <EventContent event={activeEvent} content={content} className="text-sm text-white" />
                 </View>
             </View>
         </ScrollView>
-    )
+    );
 }

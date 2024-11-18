@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: ImgProxyConfig = {
     salt: '',
     modifiers: {
         width: WINDOW_WIDTH.toString(),
-    }
+    },
 };
 
 export function getProxiedImageUrl(url: string, config: Partial<ImgProxyConfig> = {}) {

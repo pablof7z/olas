@@ -1,26 +1,26 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
-import { Text } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import * as ImagePicker from 'expo-image-picker'
-import { imetaFromImage } from '@/ndk-expo/utils/imeta'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { TextInput } from 'react-native'
-import { Button } from '@/components/nativewindui/Button'
-import { Icon } from '@roninoss/icons'
-import { useNDK } from '@/ndk-expo'
-import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk'
-import * as FileSystem from "expo-file-system";
-import { Uploader } from '@/ndk-expo/utils/uploader'
-import { Image } from 'expo-image'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
-import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator'
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { imetaFromImage } from '@/ndk-expo/utils/imeta';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { TextInput } from 'react-native';
+import { Button } from '@/components/nativewindui/Button';
+import { Icon } from '@roninoss/icons';
+import { useNDK } from '@/ndk-expo';
+import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import * as FileSystem from 'expo-file-system';
+import { Uploader } from '@/ndk-expo/utils/uploader';
+import { Image } from 'expo-image';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ResizeMode } from 'expo-av';
-import { useNDKSession } from '@/ndk-expo/hooks/session'
+import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { Video } from 'expo-av';
-import { manipulateAsync } from 'expo-image-manipulator'
-import * as VideoThumbnails from 'expo-video-thumbnails'
+import { manipulateAsync } from 'expo-image-manipulator';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 
-async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: string): Promise<{url: string | null, mediaEvent: NDKEvent | null}> {
+async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
         // Create an Uploader instance with the blob
         const uploader = new Uploader(ndk, blob, blossomServer);
@@ -33,13 +33,13 @@ async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: 
         };
 
         uploader.onError = (error) => {
-            console.error("Upload error:", error);
+            console.error('Upload error:', error);
             reject(error);
         };
 
         uploader.onUploaded = async (url) => {
             const mediaEvent = await uploader.mediaEvent();
-            resolve({url, mediaEvent});
+            resolve({ url, mediaEvent });
         };
 
         // Start the upload
@@ -48,25 +48,25 @@ async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: 
 }
 
 export default function ImageUpload() {
-    const [selectedImage, setSelectedImage] = useState<string | null>(null)
-    const [description, setDescription] = useState('')
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [description, setDescription] = useState('');
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
         console.log('event kinds', events.keys(), follows.length);
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
     }, [events, follows]);
     const defaultBlossomServer = useMemo(() => {
-        return blossomList?.items.find(item => item[0] === 'server')?.[1] ?? 'https://blossom.primal.net'
+        return blossomList?.items.find((item) => item[0] === 'server')?.[1] ?? 'https://blossom.primal.net';
     }, [blossomList]);
-    const { ndk } = useNDK()
+    const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
     let imetaPromise: Promise<void> | null = null;
     let imetaTags: NDKTag[] = [];
-    const [selectionType, setSelectionType] = useState<"image" | "video" | null>(null);
-    const [thumbnail, setThumbnail] = useState<string | null>(null)
+    const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
+    const [thumbnail, setThumbnail] = useState<string | null>(null);
     async function handlePost() {
         if (!selectedImage) {
-            console.error("No media to upload");
+            console.error('No media to upload');
             return;
         }
 
@@ -87,10 +87,8 @@ export default function ImageUpload() {
             eventKind = 20;
             contentType = 'image/jpeg';
         }
-        
-        const blob = await fetch(`data:${contentType};base64,${fileContent}`).then((res) =>
-            res.blob()
-        );
+
+        const blob = await fetch(`data:${contentType};base64,${fileContent}`).then((res) => res.blob());
 
         const event = new NDKEvent(ndk);
         event.kind = eventKind;
@@ -102,20 +100,18 @@ export default function ImageUpload() {
             console.log('uploading thumbnail?', thumbnail);
             // if we have a thumbnail, upload it
             if (thumbnail) {
-                const thumbnailBlob = await fetch(thumbnail).then((res) =>
-                    res.blob()
-                );
+                const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
                 console.log('uploading thumbnail', thumbnailBlob.size);
                 const { url } = await upload(ndk, thumbnailBlob, description, defaultBlossomServer);
                 event.tags = [...event.tags, ['thumb', url]];
                 console.log('thumbnail uploaded', url);
             }
-            
+
             upload(ndk, blob, description, defaultBlossomServer).then((ret) => {
                 setUploading(false);
-                event.tags = [...event.tags, ...(ret.mediaEvent?.tags??[])];
+                event.tags = [...event.tags, ...(ret.mediaEvent?.tags ?? [])];
                 resolve();
-            })
+            });
         });
 
         // Only do imeta for images
@@ -127,7 +123,7 @@ export default function ImageUpload() {
             await event.publish();
             setUploading(false);
         } catch (error) {
-            console.error("Error uploading media:", error);
+            console.error('Error uploading media:', error);
         }
     }
 
@@ -137,11 +133,11 @@ export default function ImageUpload() {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
-        })
+        });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri)
-            setSelectionType(result.assets[0].type)
+            setSelectedImage(result.assets[0].uri);
+            setSelectionType(result.assets[0].type);
 
             console.log('selectedImage type', result.assets[0].type);
 
@@ -152,41 +148,40 @@ export default function ImageUpload() {
             if (result.assets[0].type === 'video') {
                 imetaPromise = new Promise<void>((resolve, reject) => {
                     try {
-                        VideoThumbnails.getThumbnailAsync(
-                            result.assets[0].uri,
-                            {
-                                time: 0,
-                                quality: 0.7,
-                            }
-                        ).then(({uri}) => {
+                        VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
+                            time: 0,
+                            quality: 0.7,
+                        }).then(({ uri }) => {
                             console.log('thumbnail', uri);
-                            setThumbnail(uri)
-                        })
+                            setThumbnail(uri);
+                        });
                     } catch (e) {
-                        console.warn('Error generating thumbnail:', e)
+                        console.warn('Error generating thumbnail:', e);
                     }
                     resolve();
                 });
             } else {
                 imetaPromise = new Promise<void>((resolve, reject) => {
-                    imetaFromImage(fileContent).then((tags: NDKTag[]) => {
-                        imetaTags = tags;
-                        console.log('imetaTags', imetaTags);
-                        resolve();
-                    }).catch((error) => {
-                        console.error('imetaFromImage error', error);
-                        reject(error);
-                    });
+                    imetaFromImage(fileContent)
+                        .then((tags: NDKTag[]) => {
+                            imetaTags = tags;
+                            console.log('imetaTags', imetaTags);
+                            resolve();
+                        })
+                        .catch((error) => {
+                            console.error('imetaFromImage error', error);
+                            reject(error);
+                        });
                 });
             }
         }
-    }
+    };
 
     const takePhoto = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync()
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            alert('Sorry, we need camera permissions to make this work!')
-            return
+            alert('Sorry, we need camera permissions to make this work!');
+            return;
         }
 
         const result = await ImagePicker.launchCameraAsync({
@@ -194,18 +189,18 @@ export default function ImageUpload() {
             aspect: [1, 1],
             quality: 1,
             mediaTypes: ImagePicker.MediaTypeOptions.All,
-        })
+        });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri)
+            setSelectedImage(result.assets[0].uri);
         }
-    }
+    };
 
     return (
         <View style={styles.container} className="flex-1 bg-card">
             {selectedImage ? (
                 <KeyboardAwareScrollView>
-                    <View className="flex-1 grow mb-4">
+                    <View className="mb-4 flex-1 grow">
                         {selectedImage && (
                             <View style={styles.imageContainer}>
                                 {selectionType === 'video' ? (
@@ -220,25 +215,19 @@ export default function ImageUpload() {
                                         />
                                     </View>
                                 ) : (
-                                    <Image
-                                        source={{ uri: selectedImage }}
-                                        style={styles.image}
-                                        contentFit="cover"
-                                        contentPosition="center"
-                                    />
+                                    <Image source={{ uri: selectedImage }} style={styles.image} contentFit="cover" contentPosition="center" />
                                 )}
                                 <TouchableOpacity
                                     style={styles.removeButton}
                                     onPress={() => {
-                                        setSelectedImage(null)
-                                        setDescription('')
-                                    }}
-                                >
+                                        setSelectedImage(null);
+                                        setDescription('');
+                                    }}>
                                     <Ionicons name="close" size={24} color="white" />
                                 </TouchableOpacity>
                             </View>
                         )}
-                        
+
                         <TextInput
                             style={styles.textInput}
                             placeholder="Write a caption or comment..."
@@ -274,14 +263,11 @@ export default function ImageUpload() {
                         </TouchableOpacity>
                     </View>
 
-                    
-                    <Text style={styles.helperText}>
-                        Upload a photo or take a new one
-                    </Text>
+                    <Text style={styles.helperText}>Upload a photo or take a new one</Text>
                 </View>
             )}
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -292,7 +278,7 @@ const styles = StyleSheet.create({
         position: 'relative',
         maxHeight: 240,
         aspectRatio: 1,
-        width: '100%'
+        width: '100%',
     },
     image: {
         flex: 1,
@@ -369,4 +355,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#666',
     },
-}) 
+});
