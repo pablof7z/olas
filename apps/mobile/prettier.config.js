@@ -1,5 +1,5 @@
 module.exports = {
-    printWidth: 120, // Allow longer lines before wrapping
+    printWidth: 80, // Allow longer lines before wrapping
     tabWidth: 4,
     singleQuote: true,
     bracketSameLine: true,

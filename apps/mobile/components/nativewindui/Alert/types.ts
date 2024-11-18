@@ -5,7 +5,9 @@ type AlertInputValue = { login: string; password: string } | string;
 
 type AlertProps = {
     title: string;
-    buttons: (Omit<AlertButton, 'onPress'> & { onPress?: (text: AlertInputValue) => void })[];
+    buttons: (Omit<AlertButton, 'onPress'> & {
+        onPress?: (text: AlertInputValue) => void;
+    })[];
     message?: string | undefined;
     prompt?: {
         type?: Exclude<AlertType, 'default'> | undefined;
@@ -13,7 +15,9 @@ type AlertProps = {
         keyboardType?: KeyboardType | undefined;
     };
     materialPortalHost?: string;
-    materialIcon?: Pick<IconProps<'material'>, 'color' | 'size'> & { name: MaterialIconName };
+    materialIcon?: Pick<IconProps<'material'>, 'color' | 'size'> & {
+        name: MaterialIconName;
+    };
     materialWidth?: number;
     children?: React.ReactNode;
 };

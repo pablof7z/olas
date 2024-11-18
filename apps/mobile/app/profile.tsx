@@ -1,4 +1,13 @@
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    Dimensions,
+    Animated,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as User from '@/ndk-expo/components/user';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,10 +26,19 @@ export default function Profile() {
         () => [
             {
                 kinds: [1063],
-                '#m': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'],
+                '#m': [
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/webp',
+                    'video/mp4',
+                ],
                 authors: [pubkey!],
             },
-            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
+            {
+                kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20],
+                authors: [pubkey!],
+            },
             { kinds: [1], authors: [pubkey!], limit: 50 },
         ],
         []
@@ -75,10 +93,15 @@ export default function Profile() {
                             transform: [{ translateY: headerTranslateY }],
                         },
                     ]}>
-                    <User.Avatar style={styles.profileImage} alt="Profile image" />
+                    <User.Avatar
+                        style={styles.profileImage}
+                        alt="Profile image"
+                    />
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{events.length}</Text>
+                            <Text style={styles.statNumber}>
+                                {events.length}
+                            </Text>
                             <Text style={styles.statLabel}>Posts</Text>
                         </View>
                         <View style={styles.statItem}>
@@ -94,18 +117,29 @@ export default function Profile() {
 
                 <Animated.View
                     className="flex-col items-center justify-between"
-                    style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
-                    <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
-                    <Text style={styles.username} className="grow text-lg font-bold">
+                    style={[
+                        styles.compactHeader,
+                        { opacity: compactHeaderOpacity },
+                    ]}>
+                    <User.Avatar
+                        style={styles.smallProfileImage}
+                        alt="Profile image"
+                    />
+                    <Text
+                        style={styles.username}
+                        className="grow text-lg font-bold">
                         <User.Name />
                     </Text>
                     <FollowButton />
                 </Animated.View>
 
                 <Animated.ScrollView
-                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                        useNativeDriver: true,
-                    })}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        {
+                            useNativeDriver: true,
+                        }
+                    )}
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
                         <Text style={styles.username}>
@@ -123,7 +157,9 @@ export default function Profile() {
                         numColumns={3}
                         estimatedItemSize={100}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => <ImageGridItem event={item} />}
+                        renderItem={({ item }) => (
+                            <ImageGridItem event={item} />
+                        )}
                     />
                 </Animated.ScrollView>
             </View>
@@ -132,13 +168,16 @@ export default function Profile() {
 }
 
 function ImageGridItem({ event }: { event: NDKEvent }) {
-    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
+    let url =
+        event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
     const { setActiveEvent } = useStore(activeEventStore);
 
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
     if (!url && event.kind === NDKKind.Text) {
         const content = event.content;
-        const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
+        const urlMatch = content.match(
+            /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
+        );
         if (urlMatch) {
             url = urlMatch[0];
         }

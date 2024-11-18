@@ -19,7 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function CommentScreen() {
     const { ndk, currentUser } = useNDK();
     const [comment, setComment] = useState('');
-    const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
+    const activeEvent = useStore(
+        activeEventStore,
+        (state) => state.activeEvent
+    );
 
     const filters = useMemo(
         () => [
@@ -40,7 +43,10 @@ export default function CommentScreen() {
                 renderItem={({ item }) => (
                     <View className="w-full flex-1 flex-row gap-2 p-4">
                         <User.Profile pubkey={item.pubkey}>
-                            <User.Avatar alt="Profile image" className="h-8 w-8" />
+                            <User.Avatar
+                                alt="Profile image"
+                                className="h-8 w-8"
+                            />
 
                             <View className="flex-col">
                                 <View className="flex-row items-center gap-1">
@@ -51,7 +57,10 @@ export default function CommentScreen() {
                                     />
                                 </View>
 
-                                <EventContent event={item} className="text-sm" />
+                                <EventContent
+                                    event={item}
+                                    className="text-sm"
+                                />
                             </View>
                         </User.Profile>
                     </View>

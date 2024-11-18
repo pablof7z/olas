@@ -4,7 +4,12 @@ import { ListItem, ListRenderItemInfo } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useSubscribe } from '@/ndk-expo';
-import { NDKFilter, NDKList, NDKSimpleGroupMetadata, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
+import {
+    NDKFilter,
+    NDKList,
+    NDKSimpleGroupMetadata,
+    NDKSubscriptionCacheUsage,
+} from '@nostr-dev-kit/ndk';
 import { Icon } from '@roninoss/icons';
 import Swipeable from '@/components/ui/Swipable';
 import { cn } from '~/lib/cn';
@@ -25,8 +30,16 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
     const { colors } = useColorScheme();
 
     const listId = list.id;
-    const pTags = useMemo(() => list.items.filter((item) => item[0] === 'p').map((item) => item[1]), [list.items]);
-    const tTags = useMemo(() => list.items.filter((item) => item[0] === 't').map((item) => item[1]), [list.items]);
+    const pTags = useMemo(
+        () =>
+            list.items.filter((item) => item[0] === 'p').map((item) => item[1]),
+        [list.items]
+    );
+    const tTags = useMemo(
+        () =>
+            list.items.filter((item) => item[0] === 't').map((item) => item[1]),
+        [list.items]
+    );
     const filters = useMemo(() => {
         const f: NDKFilter[] = [];
         if (pTags.length > 0) f.push({ kinds: [1], authors: pTags, limit: 1 });
@@ -34,10 +47,16 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
         return f;
     }, [pTags, tTags]);
 
-    const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }), []);
+    const opts = useMemo(
+        () => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }),
+        []
+    );
     const { events: listEvents } = useSubscribe({ filters, opts });
 
-    const mostRecentEvent = useMemo(() => listEvents.sort((a, b) => a.created_at! - b.created_at!).pop(), [listEvents]);
+    const mostRecentEvent = useMemo(
+        () => listEvents.sort((a, b) => a.created_at! - b.created_at!).pop(),
+        [listEvents]
+    );
 
     const name = list.title ?? list.dTag;
 
@@ -64,7 +83,8 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                 onPress={onPress}
                 className={cn(
                     'h-[88px]',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
                 )}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
@@ -89,7 +109,11 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                             </Text>
                         </View>
                         <View className="pr-3">
-                            <Icon name="chevron-right" size={14} color={colors.grey} />
+                            <Icon
+                                name="chevron-right"
+                                size={14}
+                                color={colors.grey}
+                            />
                         </View>
                     </View>
                 }></ListItem>

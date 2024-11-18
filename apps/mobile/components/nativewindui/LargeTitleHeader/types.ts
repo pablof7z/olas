@@ -1,8 +1,13 @@
 import type { Stack } from 'expo-router';
-import type { NativeSyntheticEvent, TextInputSubmitEditingEventData } from 'react-native';
+import type {
+    NativeSyntheticEvent,
+    TextInputSubmitEditingEventData,
+} from 'react-native';
 import type { SearchBarCommands } from 'react-native-screens';
 
-type NativeStackNavigationOptions = NonNullable<React.ComponentPropsWithoutRef<typeof Stack.Screen>['options']>;
+type NativeStackNavigationOptions = NonNullable<
+    React.ComponentPropsWithoutRef<typeof Stack.Screen>['options']
+>;
 
 type ScreenOptions = Pick<
     NativeStackNavigationOptions,
@@ -30,9 +35,14 @@ type ScreenOptions = Pick<
 
 type HeaderOptions = Omit<NativeStackNavigationOptions, keyof ScreenOptions>;
 
-type NativeStackNavigationSearchBarOptions = NonNullable<HeaderOptions['headerSearchBarOptions']>;
+type NativeStackNavigationSearchBarOptions = NonNullable<
+    HeaderOptions['headerSearchBarOptions']
+>;
 
-type LargeTitleSearchBarRef = Omit<SearchBarCommands, 'blur' | 'toggleCancelButton'>;
+type LargeTitleSearchBarRef = Omit<
+    SearchBarCommands,
+    'blur' | 'toggleCancelButton'
+>;
 
 type LargeTitleHeaderProps = {
     iosBackButtonMenuEnabled?: boolean;
@@ -62,7 +72,11 @@ type LargeTitleHeaderProps = {
         iosTintColor?: string;
         materialRightView?: HeaderOptions['headerRight'];
         materialBlurOnSubmit?: boolean;
-        materialOnSubmitEditing?: ((e: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => void) | undefined;
+        materialOnSubmitEditing?:
+            | ((
+                  e: NativeSyntheticEvent<TextInputSubmitEditingEventData>
+              ) => void)
+            | undefined;
         autoCapitalize?: NativeStackNavigationSearchBarOptions['autoCapitalize'];
         inputType?: NativeStackNavigationSearchBarOptions['inputType'];
         onBlur?: () => void;

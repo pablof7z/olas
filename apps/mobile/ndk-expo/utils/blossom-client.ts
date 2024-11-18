@@ -83,9 +83,15 @@ export class BlossomClient {
 
         // Convert ArrayBuffer to string
         const uint8Array = new Uint8Array(buffer);
-        const stringData = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '');
+        const stringData = uint8Array.reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ''
+        );
 
-        const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, stringData);
+        const hash = await Crypto.digestStringAsync(
+            Crypto.CryptoDigestAlgorithm.SHA256,
+            stringData
+        );
 
         return hash;
     }
@@ -102,7 +108,12 @@ export class BlossomClient {
      * @param expiration The expiration time in seconds
      * @returns {Promise<SignedEvent>}
      */
-    static async getGetAuth(signer: Signer, message: string, serverOrHash: string | string[], expiration = oneHour()) {
+    static async getGetAuth(
+        signer: Signer,
+        message: string,
+        serverOrHash: string | string[],
+        expiration = oneHour()
+    ) {
         const draft: EventTemplate = {
             created_at: now(),
             kind: AUTH_EVENT_KIND,
@@ -125,7 +136,12 @@ export class BlossomClient {
     }
     static async getBlob(server: ServerType, hash: string, auth?: SignedEvent) {
         const res = await fetch(new URL(hash, server), {
-            headers: auth ? { authorization: BlossomClient.encodeAuthorizationHeader(auth) } : {},
+            headers: auth
+                ? {
+                      authorization:
+                          BlossomClient.encodeAuthorizationHeader(auth),
+                  }
+                : {},
         });
         await HTTPError.handleErrorResponse(res);
         return await res.blob();
@@ -165,15 +181,34 @@ export class BlossomClient {
     }
 
     /** Creates a one-off upload auth event for a file */
-    static async getUploadAuth(file: UploadType, signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
+    static async getUploadAuth(
+        file: UploadType,
+        signer: Signer,
+        message = 'Upload Blob',
+        expiration = oneHour()
+    ) {
         const sha256 = await BlossomClient.getFileSha256(file);
-        return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
+        return await BlossomClient.createUploadAuth(
+            sha256,
+            signer,
+            message,
+            expiration
+        );
     }
-    static async uploadBlob(server: ServerType, file: UploadType, auth?: SignedEvent) {
+    static async uploadBlob(
+        server: ServerType,
+        file: UploadType,
+        auth?: SignedEvent
+    ) {
         const res = await fetch(new URL('/upload', server), {
             method: 'PUT',
             body: file,
-            headers: auth ? { authorization: BlossomClient.encodeAuthorizationHeader(auth) } : {},
+            headers: auth
+                ? {
+                      authorization:
+                          BlossomClient.encodeAuthorizationHeader(auth),
+                  }
+                : {},
         });
 
         await HTTPError.handleErrorResponse(res);
@@ -181,11 +216,20 @@ export class BlossomClient {
     }
 
     // static mirror blob
-    static async mirrorBlob(server: ServerType, url: string | URL, auth?: SignedEvent) {
+    static async mirrorBlob(
+        server: ServerType,
+        url: string | URL,
+        auth?: SignedEvent
+    ) {
         const res = await fetch(new URL('/mirror', server), {
             method: 'PUT',
             body: JSON.stringify({ url: url.toString() }),
-            headers: auth ? { authorization: BlossomClient.encodeAuthorizationHeader(auth) } : {},
+            headers: auth
+                ? {
+                      authorization:
+                          BlossomClient.encodeAuthorizationHeader(auth),
+                  }
+                : {},
         });
 
         await HTTPError.handleErrorResponse(res);
@@ -193,7 +237,11 @@ export class BlossomClient {
     }
 
     // static list blobs
-    static async getListAuth(signer: Signer, message = 'List Blobs', expiration = oneHour()) {
+    static async getListAuth(
+        signer: Signer,
+        message = 'List Blobs',
+        expiration = oneHour()
+    ) {
         return await signer({
             created_at: now(),
             kind: AUTH_EVENT_KIND,
@@ -214,7 +262,12 @@ export class BlossomClient {
         if (opts?.since) url.searchParams.append('since', String(opts.since));
         if (opts?.until) url.searchParams.append('until', String(opts.until));
         const res = await fetch(url, {
-            headers: auth ? { authorization: BlossomClient.encodeAuthorizationHeader(auth) } : {},
+            headers: auth
+                ? {
+                      authorization:
+                          BlossomClient.encodeAuthorizationHeader(auth),
+                  }
+                : {},
         });
         await HTTPError.handleErrorResponse(res);
         return (await res.json()) as Promise<BlobDescriptor[]>;
@@ -243,48 +296,101 @@ export class BlossomClient {
 
         return await signer(draft);
     }
-    static async deleteBlob(server: ServerType, hash: string, auth?: SignedEvent) {
+    static async deleteBlob(
+        server: ServerType,
+        hash: string,
+        auth?: SignedEvent
+    ) {
         const res = await fetch(new URL('/' + hash, server), {
             method: 'DELETE',
-            headers: auth ? { authorization: BlossomClient.encodeAuthorizationHeader(auth) } : {},
+            headers: auth
+                ? {
+                      authorization:
+                          BlossomClient.encodeAuthorizationHeader(auth),
+                  }
+                : {},
         });
         await HTTPError.handleErrorResponse(res);
         return await res.text();
     }
 
     // get blob
-    async getGetAuth(message: string, serverOrHash: string, expiration?: number) {
+    async getGetAuth(
+        message: string,
+        serverOrHash: string,
+        expiration?: number
+    ) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getGetAuth(this.signer, message, serverOrHash, expiration);
+        return await BlossomClient.getGetAuth(
+            this.signer,
+            message,
+            serverOrHash,
+            expiration
+        );
     }
     async getBlob(hash: string, auth: SignedEvent | boolean = false) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getGetAuth('Get Blob', hash);
-        return BlossomClient.getBlob(this.server, hash, auth ? auth : undefined);
+        if (typeof auth === 'boolean' && auth)
+            auth = await this.getGetAuth('Get Blob', hash);
+        return BlossomClient.getBlob(
+            this.server,
+            hash,
+            auth ? auth : undefined
+        );
     }
 
     // upload blob
-    async getUploadAuth(file: UploadType, message?: string, expiration?: number) {
+    async getUploadAuth(
+        file: UploadType,
+        message?: string,
+        expiration?: number
+    ) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getUploadAuth(file, this.signer, message, expiration);
+        return await BlossomClient.getUploadAuth(
+            file,
+            this.signer,
+            message,
+            expiration
+        );
     }
     async uploadBlob(file: UploadType, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getUploadAuth(file);
-        return BlossomClient.uploadBlob(this.server, file, auth ? auth : undefined);
+        if (typeof auth === 'boolean' && auth)
+            auth = await this.getUploadAuth(file);
+        return BlossomClient.uploadBlob(
+            this.server,
+            file,
+            auth ? auth : undefined
+        );
     }
 
     // mirror blob
     async getMirrorAuth(sha256: string, message?: string, expiration?: number) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.createUploadAuth(sha256, this.signer, message, expiration);
+        return await BlossomClient.createUploadAuth(
+            sha256,
+            this.signer,
+            message,
+            expiration
+        );
     }
-    async mirrorBlob(sha256: string, url: string | URL, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getMirrorAuth(sha256);
-        return BlossomClient.mirrorBlob(this.server, url, auth ? auth : undefined);
+    async mirrorBlob(
+        sha256: string,
+        url: string | URL,
+        auth: SignedEvent | boolean = true
+    ) {
+        if (typeof auth === 'boolean' && auth)
+            auth = await this.getMirrorAuth(sha256);
+        return BlossomClient.mirrorBlob(
+            this.server,
+            url,
+            auth ? auth : undefined
+        );
     }
 
     // has blob
     static async hasBlob(server: ServerType, hash: string) {
-        const res = await fetch(new URL(`/` + hash, server), { method: 'HEAD' });
+        const res = await fetch(new URL(`/` + hash, server), {
+            method: 'HEAD',
+        });
         await HTTPError.handleErrorResponse(res);
         return res.ok;
     }
@@ -295,20 +401,43 @@ export class BlossomClient {
     // list blobs
     async getListAuth(message?: string, expiration?: number) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getListAuth(this.signer, message, expiration);
+        return await BlossomClient.getListAuth(
+            this.signer,
+            message,
+            expiration
+        );
     }
-    async listBlobs(pubkey: string, opts?: { since?: number; until?: number }, auth: SignedEvent | boolean = false) {
+    async listBlobs(
+        pubkey: string,
+        opts?: { since?: number; until?: number },
+        auth: SignedEvent | boolean = false
+    ) {
         if (typeof auth === 'boolean' && auth) auth = await this.getListAuth();
-        return BlossomClient.listBlobs(this.server, pubkey, opts, auth ? auth : undefined);
+        return BlossomClient.listBlobs(
+            this.server,
+            pubkey,
+            opts,
+            auth ? auth : undefined
+        );
     }
 
     // delete blob
     async getDeleteAuth(hash: string, message?: string, expiration?: number) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getDeleteAuth(hash, this.signer, message, expiration);
+        return await BlossomClient.getDeleteAuth(
+            hash,
+            this.signer,
+            message,
+            expiration
+        );
     }
     async deleteBlob(hash: string, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getDeleteAuth(hash);
-        return BlossomClient.deleteBlob(this.server, hash, auth ? auth : undefined);
+        if (typeof auth === 'boolean' && auth)
+            auth = await this.getDeleteAuth(hash);
+        return BlossomClient.deleteBlob(
+            this.server,
+            hash,
+            auth ? auth : undefined
+        );
     }
 }

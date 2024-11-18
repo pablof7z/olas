@@ -47,7 +47,11 @@ export default function HomeLayout() {
                     title: 'Home',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                        <Home
+                            size={24}
+                            color={color}
+                            strokeWidth={focused ? 2.5 : 1.5}
+                        />
                     ),
                 }}
             />
@@ -63,7 +67,11 @@ export default function HomeLayout() {
                 options={{
                     title: 'Publish',
                     tabBarIcon: ({ color, focused }) => (
-                        <PlusSquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                        <PlusSquare
+                            size={24}
+                            color={color}
+                            strokeWidth={focused ? 2.5 : 1.5}
+                        />
                     ),
                 }}
             />
@@ -74,7 +82,11 @@ export default function HomeLayout() {
                     title: 'Reels',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <PlaySquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                        <PlaySquare
+                            size={24}
+                            color={color}
+                            strokeWidth={focused ? 2.5 : 1.5}
+                        />
                     ),
                 }}
             />
@@ -95,10 +107,17 @@ export default function HomeLayout() {
                     tabBarIcon: ({ color, focused }) =>
                         currentUser ? (
                             <User.Profile pubkey={currentUser.pubkey}>
-                                <User.Avatar alt="Profile image" className="h-6 w-6" />
+                                <User.Avatar
+                                    alt="Profile image"
+                                    className="h-6 w-6"
+                                />
                             </User.Profile>
                         ) : (
-                            <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+                            <UserCircle2
+                                size={24}
+                                color={color}
+                                strokeWidth={focused ? 2.5 : 1.5}
+                            />
                         ),
                 }}
             />

@@ -13,7 +13,9 @@ interface EventContentProps {
     onMentionPress?: (pubkey: string) => void;
 }
 
-const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
+const RenderPart: React.FC<
+    { part: string } & React.ComponentProps<typeof Text>
+> = ({ part, ...props }) => {
     const { onMentionPress } = props as EventContentProps;
 
     if (part.startsWith('https://')) {
@@ -21,7 +23,12 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
             <Pressable>
                 <Image
                     source={{ uri: part }}
-                    style={{ width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 }}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        resizeMode: 'cover',
+                        borderRadius: 12,
+                    }}
                 />
             </Pressable>
         );
@@ -48,7 +55,9 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
     } else if (entity.startsWith('nprofile')) {
         let pubkey: string | undefined;
         try {
-            const { data } = nip19.decode(entity) as { data: { pubkey: string } };
+            const { data } = nip19.decode(entity) as {
+                data: { pubkey: string };
+            };
             pubkey = data.pubkey;
         } catch (e) {
             console.log({ entity, e });
@@ -69,13 +78,13 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
     return <Text {...props}>{entity.substring(0, 6)}...</Text>;
 };
 
-const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({
-    event,
-    content,
-    ...props
-}) => {
+const EventContent: React.FC<
+    EventContentProps & React.ComponentProps<typeof View>
+> = ({ event, content, ...props }) => {
     content ??= event.content;
-    const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/);
+    const parts = content.split(
+        /(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/
+    );
 
     return (
         <Text {...props}>

@@ -26,10 +26,19 @@ const ACTION_BUTTON_STYLE = {
     width: BUTTON_WIDTH,
 };
 
-function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread: boolean }) {
+function Swipeable({
+    children,
+    isUnread,
+}: {
+    children: React.ReactNode;
+    isUnread: boolean;
+}) {
     const translateX = useSharedValue(0);
     const previousTranslateX = useSharedValue(0);
-    const initialTouchLocation = useSharedValue<{ x: number; y: number } | null>(null);
+    const initialTouchLocation = useSharedValue<{
+        x: number;
+        y: number;
+    } | null>(null);
 
     const rootStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: translateX.value }],
@@ -39,7 +48,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
         position: 'absolute',
         flex: 1,
         height: '100%',
-        width: interpolate(translateX.value, [0, dimensions.width], [0, dimensions.width]),
+        width: interpolate(
+            translateX.value,
+            [0, dimensions.width],
+            [0, dimensions.width]
+        ),
     }));
 
     const trashActionStyle = useAnimatedStyle(() => ({
@@ -47,13 +60,21 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
         right: 0,
         flex: 1,
         height: '100%',
-        width: interpolate(-translateX.value, [0, dimensions.width], [0, dimensions.width]),
+        width: interpolate(
+            -translateX.value,
+            [0, dimensions.width],
+            [0, dimensions.width]
+        ),
     }));
 
     const notificationActionStyle = useAnimatedStyle(() => ({
         overflow: 'hidden',
         position: 'absolute',
-        left: interpolate(-translateX.value, [0, dimensions.width], [dimensions.width, 0]),
+        left: interpolate(
+            -translateX.value,
+            [0, dimensions.width],
+            [dimensions.width, 0]
+        ),
         flex: 1,
         height: '100%',
         width:
@@ -63,7 +84,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                       [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width],
                       [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0]
                   )
-                : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [0, BUTTON_WIDTH, 0]),
+                : interpolate(
+                      -translateX.value,
+                      [0, BUTTON_WIDTH * 2, dimensions.width],
+                      [0, BUTTON_WIDTH, 0]
+                  ),
     }));
 
     const statusIconStyle = useAnimatedStyle(() => ({
@@ -71,8 +96,20 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
         position: 'absolute',
         left: interpolate(
             translateX.value,
-            [0, BUTTON_WIDTH, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width],
-            [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH * 2, dimensions.width - BUTTON_WIDTH]
+            [
+                0,
+                BUTTON_WIDTH,
+                BUTTON_WIDTH * 2,
+                BUTTON_WIDTH * 3,
+                dimensions.width,
+            ],
+            [
+                -BUTTON_WIDTH,
+                0,
+                0,
+                BUTTON_WIDTH * 2,
+                dimensions.width - BUTTON_WIDTH,
+            ]
         ),
         flex: 1,
         height: '100%',
@@ -86,8 +123,20 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
             previousTranslateX.value > translateX.value
                 ? interpolate(
                       -translateX.value,
-                      [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, BUTTON_WIDTH * 3 + 40, dimensions.width],
-                      [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH + 40, dimensions.width - BUTTON_WIDTH]
+                      [
+                          0,
+                          BUTTON_WIDTH * 2,
+                          BUTTON_WIDTH * 3,
+                          BUTTON_WIDTH * 3 + 40,
+                          dimensions.width,
+                      ],
+                      [
+                          -BUTTON_WIDTH,
+                          0,
+                          0,
+                          BUTTON_WIDTH + 40,
+                          dimensions.width - BUTTON_WIDTH,
+                      ]
                   )
                 : interpolate(
                       -translateX.value,
@@ -127,8 +176,12 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                 return;
             }
 
-            const xDiff = Math.abs(evt.changedTouches[0].x - initialTouchLocation.value.x);
-            const yDiff = Math.abs(evt.changedTouches[0].y - initialTouchLocation.value.y);
+            const xDiff = Math.abs(
+                evt.changedTouches[0].x - initialTouchLocation.value.x
+            );
+            const yDiff = Math.abs(
+                evt.changedTouches[0].y - initialTouchLocation.value.y
+            );
             const isHorizontalPanning = xDiff > yDiff;
 
             if (isHorizontalPanning && xDiff > 0.5) {
@@ -154,18 +207,26 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                     runOnJS(onToggleMarkAsRead)();
                     return;
                 }
-                translateX.value = withSpring(event.translationX > 0 ? BUTTON_WIDTH : -BUTTON_WIDTH, SPRING_CONFIG);
+                translateX.value = withSpring(
+                    event.translationX > 0 ? BUTTON_WIDTH : -BUTTON_WIDTH,
+                    SPRING_CONFIG
+                );
                 return;
             }
 
             if (left) {
                 if (translateX.value < -BUTTON_WIDTH * 3) {
-                    translateX.value = withSpring(-dimensions.width, SPRING_CONFIG);
+                    translateX.value = withSpring(
+                        -dimensions.width,
+                        SPRING_CONFIG
+                    );
                     runOnJS(onDelete)();
                     return;
                 }
                 translateX.value = withSpring(
-                    event.translationX > 0 ? BUTTON_WIDTH * 2 : -BUTTON_WIDTH * 2,
+                    event.translationX > 0
+                        ? BUTTON_WIDTH * 2
+                        : -BUTTON_WIDTH * 2,
                     SPRING_CONFIG
                 );
                 return;
@@ -199,10 +260,16 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                             onPress={onStatusActionPress}
                             className="absolute bottom-0 right-0 top-0 items-center justify-center">
                             <Icon
-                                ios={{ name: isUnread ? 'checkmark.message.fill' : 'message.badge.fill' }}
+                                ios={{
+                                    name: isUnread
+                                        ? 'checkmark.message.fill'
+                                        : 'message.badge.fill',
+                                }}
                                 materialIcon={{
                                     type: 'MaterialCommunityIcons',
-                                    name: isUnread ? 'read' : 'email-mark-as-unread',
+                                    name: isUnread
+                                        ? 'read'
+                                        : 'email-mark-as-unread',
                                 }}
                                 size={24}
                                 color="white"
@@ -210,7 +277,9 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                         </Pressable>
                     </Animated.View>
                 </Animated.View>
-                <Animated.View style={trashActionStyle} className="bg-destructive">
+                <Animated.View
+                    style={trashActionStyle}
+                    className="bg-destructive">
                     <Animated.View style={trashIconStyle}>
                         <Pressable
                             style={ACTION_BUTTON_STYLE}
@@ -220,14 +289,19 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                         </Pressable>
                     </Animated.View>
                 </Animated.View>
-                <Animated.View style={notificationActionStyle} className="bg-violet-600">
+                <Animated.View
+                    style={notificationActionStyle}
+                    className="bg-violet-600">
                     <Pressable
                         style={ACTION_BUTTON_STYLE}
                         onPress={onNotificationActionPress}
                         className="absolute bottom-0 left-0 top-0 items-center justify-center">
                         <Icon
                             ios={{ name: 'bell.slash.fill' }}
-                            materialIcon={{ type: 'MaterialCommunityIcons', name: 'bell-cancel' }}
+                            materialIcon={{
+                                type: 'MaterialCommunityIcons',
+                                name: 'bell-cancel',
+                            }}
                             size={24}
                             color="white"
                         />

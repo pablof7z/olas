@@ -22,7 +22,15 @@ type ToolbarProps = Omit<ViewProps, 'children' | 'style'> & {
     iosBlurIntensity?: number;
 };
 
-function Toolbar({ leftView, rightView, iosHint, children, className, iosBlurIntensity = 60, ...props }: ToolbarProps) {
+function Toolbar({
+    leftView,
+    rightView,
+    iosHint,
+    children,
+    className,
+    iosBlurIntensity = 60,
+    ...props
+}: ToolbarProps) {
     const insets = useSafeAreaInsets();
 
     return (
@@ -50,7 +58,9 @@ function Toolbar({ leftView, rightView, iosHint, children, className, iosBlurInt
                             {iosHint}
                         </Text>
                     )}
-                    <View className="flex-1 flex-row justify-end">{rightView}</View>
+                    <View className="flex-1 flex-row justify-end">
+                        {rightView}
+                    </View>
                 </>
             )}
         </BlurView>
@@ -58,7 +68,10 @@ function Toolbar({ leftView, rightView, iosHint, children, className, iosBlurInt
 }
 
 type IconProps = ROIconProps<'material'>;
-type MaterialSchemeOnlyIconProps = Omit<ROIconProps<'material'>, 'namingScheme'>;
+type MaterialSchemeOnlyIconProps = Omit<
+    ROIconProps<'material'>,
+    'namingScheme'
+>;
 
 const ToolbarIcon = React.forwardRef<
     React.ElementRef<typeof Button>,

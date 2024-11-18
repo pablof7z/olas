@@ -11,7 +11,13 @@ import {
     type NativeSyntheticEvent,
     type TextInputFocusEventData,
 } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeOut,
+    useAnimatedStyle,
+    useDerivedValue,
+    withTiming,
+} from 'react-native-reanimated';
 
 import type { TextFieldProps, TextFieldRef } from './types';
 
@@ -44,7 +50,10 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
         },
         ref
     ) => {
-        const inputRef = useAugmentedRef({ ref, methods: { focus, blur, clear } });
+        const inputRef = useAugmentedRef({
+            ref,
+            methods: { focus, blur, clear },
+        });
         const [isFocused, setIsFocused] = React.useState(false);
 
         const [value = '', onChangeText] = useControllableState({
@@ -75,7 +84,8 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
             onBlurProp?.(e);
         }
 
-        const InputWrapper = materialVariant === 'filled' ? FilledWrapper : FilledWrapper;
+        const InputWrapper =
+            materialVariant === 'filled' ? FilledWrapper : FilledWrapper;
 
         return (
             <Pressable
@@ -88,7 +98,11 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                     }),
                     className: containerClassName,
                 })}
-                style={materialRingColor ? { borderColor: materialRingColor } : undefined}
+                style={
+                    materialRingColor
+                        ? { borderColor: materialRingColor }
+                        : undefined
+                }
                 disabled={editable === false}
                 onPress={focus}>
                 <View
@@ -100,7 +114,11 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             editable,
                         }),
                     })}
-                    style={materialRingColor && isFocused ? { borderColor: materialRingColor } : undefined}>
+                    style={
+                        materialRingColor && isFocused
+                            ? { borderColor: materialRingColor }
+                            : undefined
+                    }>
                     {leftView}
                     <InputWrapper>
                         {!!label && (
@@ -119,7 +137,9 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             editable={editable}
                             className={cn(
                                 'flex-1 rounded py-3 pl-2.5 text-[17px] text-foreground dark:placeholder:text-white/30',
-                                materialVariant === 'filled' && !!label && 'pb-2 pt-5',
+                                materialVariant === 'filled' &&
+                                    !!label &&
+                                    'pb-2 pt-5',
                                 className
                             )}
                             placeholder={isFocused || !label ? placeholder : ''}
@@ -127,7 +147,9 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             onBlur={onBlur}
                             onChangeText={onChangeText}
                             value={value}
-                            accessibilityHint={accessibilityHint ?? errorMessage}
+                            accessibilityHint={
+                                accessibilityHint ?? errorMessage
+                            }
                             {...props}
                         />
                     </InputWrapper>
@@ -136,7 +158,13 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             {!!errorMessage ? (
                                 <MaterialErrorIcon />
                             ) : (
-                                !!value && isFocused && <MaterialClearIcon clearText={clear} editable={editable} />
+                                !!value &&
+                                isFocused && (
+                                    <MaterialClearIcon
+                                        clearText={clear}
+                                        editable={editable}
+                                    />
+                                )
                             )}
                         </>
                     )}
@@ -233,19 +261,32 @@ function MaterialLabel(props: MaterialLabelProps) {
             alignSelf: 'center',
         };
         if (variantDerived.value === 'outlined') {
-            style.paddingLeft = withTiming(hasLeftViewDerived.value && isLiftedDerived.value ? 0 : 12, {
-                duration: 200,
-            });
+            style.paddingLeft = withTiming(
+                hasLeftViewDerived.value && isLiftedDerived.value ? 0 : 12,
+                {
+                    duration: 200,
+                }
+            );
             style.transform = [
                 {
-                    translateY: withTiming(isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 2 : 0, {
-                        duration: 200,
-                    }),
+                    translateY: withTiming(
+                        isLiftedDerived.value
+                            ? -DEFAULT_TEXT_FIELD_HEIGHT / 2
+                            : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
                 {
-                    translateX: withTiming(hasLeftViewDerived.value && isLiftedDerived.value ? -12 : 0, {
-                        duration: 200,
-                    }),
+                    translateX: withTiming(
+                        hasLeftViewDerived.value && isLiftedDerived.value
+                            ? -12
+                            : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
             ];
         }
@@ -253,9 +294,14 @@ function MaterialLabel(props: MaterialLabelProps) {
             style.paddingLeft = 8;
             style.transform = [
                 {
-                    translateY: withTiming(isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 4 : 0, {
-                        duration: 200,
-                    }),
+                    translateY: withTiming(
+                        isLiftedDerived.value
+                            ? -DEFAULT_TEXT_FIELD_HEIGHT / 4
+                            : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
                 {
                     translateX: 0,
@@ -266,7 +312,9 @@ function MaterialLabel(props: MaterialLabelProps) {
     });
     const animatedTextStyle = useAnimatedStyle(() => {
         return {
-            fontSize: withTiming(isLiftedDerived.value ? 10 : 17, { duration: 200 }),
+            fontSize: withTiming(isLiftedDerived.value ? 10 : 17, {
+                duration: 200,
+            }),
         };
     });
     return (
@@ -275,7 +323,9 @@ function MaterialLabel(props: MaterialLabelProps) {
                 className={cn(
                     'bg-card/0 text-foreground/70 rounded',
                     isLifted && 'px-0.5',
-                    isLifted && props.materialVariant === 'outlined' && 'bg-background',
+                    isLifted &&
+                        props.materialVariant === 'outlined' &&
+                        'bg-background',
                     props.isFocused && 'text-primary/60 dark:text-primary',
                     props.hasError && 'text-destructive dark:text-destructive',
                     props.className
@@ -295,12 +345,18 @@ type MaterialClearIconProps = {
 function MaterialClearIcon(props: MaterialClearIconProps) {
     const { colors } = useColorScheme();
     return (
-        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+        <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}>
             <Pressable
                 disabled={props.editable === false}
                 className="flex-1 justify-center px-2 active:opacity-65"
                 onPress={props.clearText}>
-                <Icon color={colors.grey2} name="close-circle-outline" size={24} />
+                <Icon
+                    color={colors.grey2}
+                    name="close-circle-outline"
+                    size={24}
+                />
             </Pressable>
         </Animated.View>
     );

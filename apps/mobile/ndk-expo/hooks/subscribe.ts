@@ -51,7 +51,8 @@ const createSubscribeStore = <T extends NDKEvent>() =>
             }),
         setEose: () => set({ eose: true }),
         clearEvents: () => set({ eventMap: new Map(), eose: false }),
-        setSubscription: (sub) => set({ subscriptionRef: sub, isSubscribed: !!sub }),
+        setSubscription: (sub) =>
+            set({ subscriptionRef: sub, isSubscribed: !!sub }),
     }));
 
 export const useSubscribe = <T extends NDKEvent>({
@@ -99,7 +100,11 @@ export const useSubscribe = <T extends NDKEvent>({
 
             if (!shouldAcceptEvent(event)) return;
 
-            if (opts?.includeDeleted !== true && event.isParamReplaceable() && event.hasTag('deleted')) {
+            if (
+                opts?.includeDeleted !== true &&
+                event.isParamReplaceable() &&
+                event.hasTag('deleted')
+            ) {
                 // We mark the event but we don't add the actual event, since
                 // it has been deleted
                 eventIds.current.set(id, event.created_at!);
@@ -153,5 +158,9 @@ export const useSubscribe = <T extends NDKEvent>({
         };
     }, [filters, opts, relaySet, ndk]);
 
-    return { events: storeInstance.events, eose: storeInstance.eose, isSubscribed: storeInstance.isSubscribed };
+    return {
+        events: storeInstance.events,
+        eose: storeInstance.eose,
+        isSubscribed: storeInstance.isSubscribed,
+    };
 };

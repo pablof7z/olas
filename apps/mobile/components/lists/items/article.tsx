@@ -15,7 +15,9 @@ type ArticleItemProps = {
 
 export function FeaturedArticle({ article }: ArticleItemProps) {
     return (
-        <View className="relative" style={{ height: Dimensions.get('window').height * 0.5 }}>
+        <View
+            className="relative"
+            style={{ height: Dimensions.get('window').height * 0.5 }}>
             <Image
                 source={article.image}
                 className="h-full w-full flex-1"
@@ -24,11 +26,26 @@ export function FeaturedArticle({ article }: ArticleItemProps) {
 
             <LinearGradient
                 colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,1)']}
-                style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '100%' }}
+                style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '100%',
+                }}
             />
 
-            <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10 }}>
-                <Text numberOfLines={2} variant="heading" className="font-serif text-3xl font-bold text-white">
+            <View
+                style={{
+                    position: 'absolute',
+                    bottom: 10,
+                    left: 10,
+                    right: 10,
+                }}>
+                <Text
+                    numberOfLines={2}
+                    variant="heading"
+                    className="font-serif text-3xl font-bold text-white">
                     {article.title}
                 </Text>
 
@@ -74,7 +91,10 @@ export function Article({ article, onPress, index }: ArticleItemProps) {
             onPress={onPress}
             skipTitle={true}
             style={{ height: size }}
-            className={cn(index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}>
+            className={cn(
+                index === 0 &&
+                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}>
             <View style={styles.container}>
                 <View style={styles.content}>
                     <Text style={styles.title} numberOfLines={titleLines}>
@@ -103,12 +123,21 @@ export function Article({ article, onPress, index }: ArticleItemProps) {
             subTitleNumberOfLines={1}
             onLongPress={noop}
             onPress={onPress}
-            className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'h-[88px]',
+                index === 0 &&
+                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleStyle={TEXT_STYLE}
             titleClassName="font-medium text-lg"
             rightView={
                 <View
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        height: '100%',
+                    }}>
                     <Image source={article.image} style={styles.image} />
                 </View>
             }></ListItem>

@@ -29,7 +29,10 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
         },
         ref
     ) => {
-        const inputRef = useAugmentedRef({ ref, methods: { focus, blur, clear } });
+        const inputRef = useAugmentedRef({
+            ref,
+            methods: { focus, blur, clear },
+        });
 
         const [value = '', onChangeText] = useControllableState({
             prop: valueProp,
@@ -51,13 +54,25 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
 
         return (
             <Pressable
-                className={cn(editable === false && 'opacity-50', containerClassName)}
+                className={cn(
+                    editable === false && 'opacity-50',
+                    containerClassName
+                )}
                 disabled={editable === false}
                 onPress={focus}>
                 {!!label && (
-                    <View className={cn('flex-row pt-2', !leftView ? 'pl-1.5' : 'pl-2')}>
+                    <View
+                        className={cn(
+                            'flex-row pt-2',
+                            !leftView ? 'pl-1.5' : 'pl-2'
+                        )}>
                         {leftView}
-                        <Text className={cn('text-muted-foreground', !leftView ? 'pl-1' : 'pl-2', labelClassName)}>
+                        <Text
+                            className={cn(
+                                'text-muted-foreground',
+                                !leftView ? 'pl-1' : 'pl-2',
+                                labelClassName
+                            )}>
                             {label}
                         </Text>
                     </View>
@@ -67,7 +82,10 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                     <TextInput
                         ref={inputRef}
                         editable={editable}
-                        className={cn('flex-1 px-2.5 py-3 text-[17px] text-foreground', className)}
+                        className={cn(
+                            'flex-1 px-2.5 py-3 text-[17px] text-foreground',
+                            className
+                        )}
                         onChangeText={onChangeText}
                         value={value}
                         clearButtonMode="while-editing"

@@ -4,7 +4,13 @@ import { Icon } from '@roninoss/icons';
 import * as React from 'react';
 import { View } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeInDown,
+    FadeOut,
+    FadeOutDown,
+    useAnimatedStyle,
+} from 'react-native-reanimated';
 
 import { AlertProps, AlertRef } from './types';
 
@@ -31,16 +37,17 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
     ) => {
         const { height } = useReanimatedKeyboardAnimation();
         const [open, setOpen] = React.useState(false);
-        const [{ title, message, buttons, prompt, materialIcon, materialWidth }, setProps] = React.useState<AlertProps>(
-            {
-                title: titleProp,
-                message: messageProp,
-                buttons: buttonsProp,
-                prompt: promptProp,
-                materialIcon: materialIconProp,
-                materialWidth: materialWidthProp,
-            }
-        );
+        const [
+            { title, message, buttons, prompt, materialIcon, materialWidth },
+            setProps,
+        ] = React.useState<AlertProps>({
+            title: titleProp,
+            message: messageProp,
+            buttons: buttonsProp,
+            prompt: promptProp,
+            materialIcon: materialIconProp,
+            materialWidth: materialWidthProp,
+        });
         const [text, setText] = React.useState(promptProp?.defaultValue ?? '');
         const [password, setPassword] = React.useState('');
         const { colors } = useColorScheme();
@@ -62,7 +69,9 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
             };
         });
 
-        function promptAlert(args: AlertProps & { prompt: Required<AlertProps['prompt']> }) {
+        function promptAlert(
+            args: AlertProps & { prompt: Required<AlertProps['prompt']> }
+        ) {
             setText(args.prompt?.defaultValue ?? '');
             setPassword('');
             setProps(args);
@@ -85,8 +94,13 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
         }
 
         return (
-            <AlertDialogPrimitive.Root ref={augmentedRef} open={open} onOpenChange={onOpenChange}>
-                <AlertDialogPrimitive.Trigger asChild={!!children}>{children}</AlertDialogPrimitive.Trigger>
+            <AlertDialogPrimitive.Root
+                ref={augmentedRef}
+                open={open}
+                onOpenChange={onOpenChange}>
+                <AlertDialogPrimitive.Trigger asChild={!!children}>
+                    {children}
+                </AlertDialogPrimitive.Trigger>
                 <AlertDialogPrimitive.Portal hostName={materialPortalHost}>
                     <AlertDialogPrimitive.Overlay asChild>
                         <Animated.View
@@ -98,13 +112,21 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                             )}>
                             <AlertDialogPrimitive.Content>
                                 <Animated.View
-                                    style={typeof materialWidth === 'number' ? { width: materialWidth } : undefined}
+                                    style={
+                                        typeof materialWidth === 'number'
+                                            ? { width: materialWidth }
+                                            : undefined
+                                    }
                                     entering={FadeInDown}
                                     exiting={FadeOutDown}
                                     className="min-w-72 max-w-xl rounded-3xl bg-card p-6 pt-7 shadow-xl">
                                     {!!materialIcon && (
                                         <View className="items-center pb-4">
-                                            <Icon color={colors.foreground} size={27} {...materialIcon} />
+                                            <Icon
+                                                color={colors.foreground}
+                                                size={27}
+                                                {...materialIcon}
+                                            />
                                         </View>
                                     )}
                                     {!!message ? (
@@ -112,12 +134,19 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                             <AlertDialogPrimitive.Title asChild>
                                                 <Text
                                                     variant="title2"
-                                                    className={cn(!!materialIcon && 'text-center', 'pb-4')}>
+                                                    className={cn(
+                                                        !!materialIcon &&
+                                                            'text-center',
+                                                        'pb-4'
+                                                    )}>
                                                     {title}
                                                 </Text>
                                             </AlertDialogPrimitive.Title>
-                                            <AlertDialogPrimitive.Description asChild>
-                                                <Text variant="subhead" className="pb-4 opacity-90">
+                                            <AlertDialogPrimitive.Description
+                                                asChild>
+                                                <Text
+                                                    variant="subhead"
+                                                    className="pb-4 opacity-90">
                                                     {message}
                                                 </Text>
                                             </AlertDialogPrimitive.Description>
@@ -126,13 +155,19 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                         <AlertDialogPrimitive.Title asChild>
                                             <Text
                                                 variant="title2"
-                                                className={cn(!!materialIcon && 'text-center', 'pb-4')}>
+                                                className={cn(
+                                                    !!materialIcon &&
+                                                        'text-center',
+                                                    'pb-4'
+                                                )}>
                                                 {title}
                                             </Text>
                                         </AlertDialogPrimitive.Title>
                                     ) : (
                                         <AlertDialogPrimitive.Title asChild>
-                                            <Text variant="subhead" className="pb-4 opacity-90">
+                                            <Text
+                                                variant="subhead"
+                                                className="pb-4 opacity-90">
                                                 {title}
                                             </Text>
                                         </AlertDialogPrimitive.Title>
@@ -143,40 +178,78 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                                 autoFocus
                                                 labelClassName="bg-card"
                                                 keyboardType={
-                                                    prompt.type === 'secure-text' ? 'default' : prompt.keyboardType
+                                                    prompt.type ===
+                                                    'secure-text'
+                                                        ? 'default'
+                                                        : prompt.keyboardType
                                                 }
-                                                label={prompt.type === 'login-password' ? 'Email' : ''}
-                                                secureTextEntry={prompt.type === 'secure-text'}
+                                                label={
+                                                    prompt.type ===
+                                                    'login-password'
+                                                        ? 'Email'
+                                                        : ''
+                                                }
+                                                secureTextEntry={
+                                                    prompt.type ===
+                                                    'secure-text'
+                                                }
                                                 value={text}
                                                 onChangeText={setText}
                                                 onSubmitEditing={() => {
-                                                    if (prompt.type === 'login-password' && passwordRef.current) {
+                                                    if (
+                                                        prompt.type ===
+                                                            'login-password' &&
+                                                        passwordRef.current
+                                                    ) {
                                                         passwordRef.current.focus();
                                                         return;
                                                     }
                                                     for (const button of buttons) {
-                                                        if (!button.style || button.style === 'default') {
-                                                            button.onPress?.(text);
+                                                        if (
+                                                            !button.style ||
+                                                            button.style ===
+                                                                'default'
+                                                        ) {
+                                                            button.onPress?.(
+                                                                text
+                                                            );
                                                         }
                                                     }
                                                     onOpenChange(false);
                                                 }}
-                                                blurOnSubmit={prompt.type !== 'login-password'}
+                                                blurOnSubmit={
+                                                    prompt.type !==
+                                                    'login-password'
+                                                }
                                             />
-                                            {prompt.type === 'login-password' && (
+                                            {prompt.type ===
+                                                'login-password' && (
                                                 <TextField
                                                     ref={passwordRef}
                                                     labelClassName="bg-card"
-                                                    keyboardType={prompt.keyboardType}
-                                                    defaultValue={prompt.defaultValue}
+                                                    keyboardType={
+                                                        prompt.keyboardType
+                                                    }
+                                                    defaultValue={
+                                                        prompt.defaultValue
+                                                    }
                                                     label="Password"
-                                                    secureTextEntry={prompt.type === 'login-password'}
+                                                    secureTextEntry={
+                                                        prompt.type ===
+                                                        'login-password'
+                                                    }
                                                     value={password}
                                                     onChangeText={setPassword}
                                                     onSubmitEditing={() => {
                                                         for (const button of buttons) {
-                                                            if (!button.style || button.style === 'default') {
-                                                                button.onPress?.(text);
+                                                            if (
+                                                                !button.style ||
+                                                                button.style ===
+                                                                    'default'
+                                                            ) {
+                                                                button.onPress?.(
+                                                                    text
+                                                                );
                                                             }
                                                         }
                                                         onOpenChange(false);
@@ -190,7 +263,8 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                     <View
                                         className={cn(
                                             'flex-row items-center justify-end gap-0.5',
-                                            buttons.length > 2 && 'justify-between'
+                                            buttons.length > 2 &&
+                                                'justify-between'
                                         )}>
                                         {buttons.map((button, index) => {
                                             if (button.style === 'cancel') {
@@ -198,46 +272,68 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                                     <View
                                                         key={`${button.text}-${index}`}
                                                         className={cn(
-                                                            buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                            buttons.length >
+                                                                2 &&
+                                                                index === 0 &&
+                                                                'flex-1 items-start'
                                                         )}>
-                                                        <AlertDialogPrimitive.Cancel asChild>
+                                                        <AlertDialogPrimitive.Cancel
+                                                            asChild>
                                                             <Button
                                                                 variant="plain"
                                                                 onPress={() => {
                                                                     button.onPress?.(
-                                                                        prompt?.type === 'login-password'
-                                                                            ? { login: text, password }
+                                                                        prompt?.type ===
+                                                                            'login-password'
+                                                                            ? {
+                                                                                  login: text,
+                                                                                  password,
+                                                                              }
                                                                             : text
                                                                     );
                                                                 }}>
                                                                 <Text className="text-[14px] font-medium  text-primary">
-                                                                    {button.text}
+                                                                    {
+                                                                        button.text
+                                                                    }
                                                                 </Text>
                                                             </Button>
                                                         </AlertDialogPrimitive.Cancel>
                                                     </View>
                                                 );
                                             }
-                                            if (button.style === 'destructive') {
+                                            if (
+                                                button.style === 'destructive'
+                                            ) {
                                                 return (
                                                     <View
                                                         key={`${button.text}-${index}`}
                                                         className={cn(
-                                                            buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                            buttons.length >
+                                                                2 &&
+                                                                index === 0 &&
+                                                                'flex-1 items-start'
                                                         )}>
-                                                        <AlertDialogPrimitive.Action asChild>
+                                                        <AlertDialogPrimitive.Action
+                                                            asChild>
                                                             <Button
                                                                 variant="tonal"
                                                                 className="bg-destructive/10 dark:bg-destructive/25"
                                                                 onPress={() => {
                                                                     button.onPress?.(
-                                                                        prompt?.type === 'login-password'
-                                                                            ? { login: text, password }
+                                                                        prompt?.type ===
+                                                                            'login-password'
+                                                                            ? {
+                                                                                  login: text,
+                                                                                  password,
+                                                                              }
                                                                             : text
                                                                     );
                                                                 }}>
                                                                 <Text className="text-[14px] font-medium  text-foreground">
-                                                                    {button.text}
+                                                                    {
+                                                                        button.text
+                                                                    }
                                                                 </Text>
                                                             </Button>
                                                         </AlertDialogPrimitive.Action>
@@ -248,15 +344,22 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                                 <View
                                                     key={`${button.text}-${index}`}
                                                     className={cn(
-                                                        buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                        buttons.length > 2 &&
+                                                            index === 0 &&
+                                                            'flex-1 items-start'
                                                     )}>
-                                                    <AlertDialogPrimitive.Action asChild>
+                                                    <AlertDialogPrimitive.Action
+                                                        asChild>
                                                         <Button
                                                             variant="plain"
                                                             onPress={() => {
                                                                 button.onPress?.(
-                                                                    prompt?.type === 'login-password'
-                                                                        ? { login: text, password }
+                                                                    prompt?.type ===
+                                                                        'login-password'
+                                                                        ? {
+                                                                              login: text,
+                                                                              password,
+                                                                          }
                                                                         : text
                                                                 );
                                                             }}>

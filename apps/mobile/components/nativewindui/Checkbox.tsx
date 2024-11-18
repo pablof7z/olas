@@ -16,9 +16,18 @@ type CheckboxProps = Omit<
     onCheckedChange?: (checked: boolean) => void;
 };
 
-const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
+const Checkbox = React.forwardRef<
+    React.ElementRef<typeof CheckboxPrimitive.Root>,
+    CheckboxProps
+>(
     (
-        { className, checked: checkedProps, onCheckedChange: onCheckedChangeProps, defaultChecked = false, ...props },
+        {
+            className,
+            checked: checkedProps,
+            onCheckedChange: onCheckedChangeProps,
+            defaultChecked = false,
+            ...props
+        },
         ref
     ) => {
         const [checked = false, onCheckedChange] = useControllableState({
@@ -38,7 +47,8 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
                 checked={checked}
                 onCheckedChange={onCheckedChange}
                 {...props}>
-                <CheckboxPrimitive.Indicator className={cn('h-full w-full items-center justify-center')}>
+                <CheckboxPrimitive.Indicator
+                    className={cn('h-full w-full items-center justify-center')}>
                     <Icon
                         name="check"
                         ios={{ weight: 'medium' }}

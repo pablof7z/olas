@@ -19,7 +19,15 @@ import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '~/ndk-expo';
 import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
-import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
+import {
+    NDKEvent,
+    NDKKind,
+    NDKList,
+    NDKPrivateKeySigner,
+    NDKRelay,
+    NDKRelaySet,
+    NostrEvent,
+} from '@nostr-dev-kit/ndk';
 import NDKSessionProvider from '@/ndk-expo/providers/session';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { BlurView } from 'expo-blur';
@@ -36,7 +44,9 @@ function UnpublishedEventIndicator() {
             <View className="flex-row items-center">
                 <Icon name="archive-outline" />
                 <View className="flex-row items-center gap-2 rounded-md bg-red-500 px-2 py-0.5">
-                    <Text className="text-xs text-white">{unpublishedEvents.size}</Text>
+                    <Text className="text-xs text-white">
+                        {unpublishedEvents.size}
+                    </Text>
                 </View>
             </View>
         </Link>
@@ -67,7 +77,11 @@ export default function RootLayout() {
     const { colors } = useColorScheme();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
 
-    const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+    const netDebug = (
+        msg: string,
+        relay: NDKRelay,
+        direction?: 'send' | 'recv'
+    ) => {
         const url = new URL(relay.url);
         if (direction === 'send') console.log('👉', url.hostname, msg);
     };
@@ -102,10 +116,17 @@ export default function RootLayout() {
                     <NDKWalletProvider>
                         <NDKSessionProvider
                             follows={true}
-                            kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
+                            kinds={
+                                new Map([
+                                    [NDKKind.BlossomList, { wrapper: NDKList }],
+                                ])
+                            }>
                             <GestureHandlerRootView style={{ flex: 1 }}>
-                                <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                    <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                <KeyboardProvider
+                                    statusBarTranslucent
+                                    navigationBarTranslucent>
+                                    <NavThemeProvider
+                                        value={NAV_THEME[colorScheme]}>
                                         <Stack>
                                             <Stack.Screen
                                                 name="login"
@@ -115,9 +136,27 @@ export default function RootLayout() {
                                                 }}
                                             />
 
-                                            <Stack.Screen name="publish/index" options={{ headerShown: true, presentation: 'modal' }} />
-                                            <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
-                                            <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen
+                                                name="publish/index"
+                                                options={{
+                                                    headerShown: true,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
+                                            <Stack.Screen
+                                                name="publish/caption"
+                                                options={{
+                                                    headerShown: true,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
+                                            <Stack.Screen
+                                                name="publish/expiration"
+                                                options={{
+                                                    headerShown: true,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
 
                                             <Stack.Screen
                                                 name="(tabs)"
@@ -152,9 +191,18 @@ export default function RootLayout() {
                                                     headerRight: () => (
                                                         <View className="flex-row items-center gap-2">
                                                             <Button
-                                                                style={{ backgroundColor: colors.grey5 }}
-                                                                onPress={() => router.push('/comment')}>
-                                                                <Text className="text-primary-secondary">Comment</Text>
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        colors.grey5,
+                                                                }}
+                                                                onPress={() =>
+                                                                    router.push(
+                                                                        '/comment'
+                                                                    )
+                                                                }>
+                                                                <Text className="text-primary-secondary">
+                                                                    Comment
+                                                                </Text>
                                                             </Button>
                                                         </View>
                                                     ),

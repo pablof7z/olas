@@ -1,11 +1,16 @@
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
-import { ActivityIndicator, Dimensions, Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
+import {
+    Dimensions,
+    Pressable,
+    StyleSheet,
+    TouchableNativeFeedback,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { View, Text } from 'react-native';
 import * as User from '@/ndk-expo/components/user';
 import EventContent from '@/ndk-expo/components/event/content';
 import RelativeTime from '@/app/components/relative-time';
-import { ResizeMode, Video } from 'expo-av';
+import { Video } from 'expo-av';
 import { Button } from '../nativewindui/Button';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { TouchableOpacity } from 'react-native-gesture-handler';
@@ -61,7 +66,17 @@ export function VideoContainer({ url }: { url: string }) {
 export function Reactions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
     const filters = useMemo(
-        () => [{ kinds: [NDKKind.Text, 22, NDKKind.Reaction, NDKKind.BookmarkList], ...event.filter() }],
+        () => [
+            {
+                kinds: [
+                    NDKKind.Text,
+                    22,
+                    NDKKind.Reaction,
+                    NDKKind.BookmarkList,
+                ],
+                ...event.filter(),
+            },
+        ],
         [event.id]
     );
     const opts = useMemo(() => ({ groupable: true }), []);
@@ -86,13 +101,19 @@ export function Reactions({ event }: { event: NDKEvent }) {
         alert('Not implemented yet');
     };
 
-    const reactions = useMemo(() => relatedEvents.filter((r) => r.kind === NDKKind.Reaction), [relatedEvents]);
+    const reactions = useMemo(
+        () => relatedEvents.filter((r) => r.kind === NDKKind.Reaction),
+        [relatedEvents]
+    );
     const reactedByUser = useMemo(
         () => reactions.find((r) => r.pubkey === currentUser?.pubkey),
         [reactions, currentUser?.pubkey]
     );
 
-    const comments = useMemo(() => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)), [relatedEvents]);
+    const comments = useMemo(
+        () => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)),
+        [relatedEvents]
+    );
     const commentedByUser = useMemo(
         () => comments.find((c) => c.pubkey === currentUser?.pubkey),
         [comments, currentUser?.pubkey]
@@ -102,21 +123,32 @@ export function Reactions({ event }: { event: NDKEvent }) {
         <View className="flex-1 flex-col gap-1 p-2">
             <View className="w-full flex-1 flex-row justify-between gap-4">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <TouchableOpacity style={styles.reactionButton} onPress={react}>
-                        <Heart size={24} color={!reactedByUser ? colors.primary : 'red'} />
+                    <TouchableOpacity
+                        style={styles.reactionButton}
+                        onPress={react}>
+                        <Heart
+                            size={24}
+                            color={!reactedByUser ? colors.primary : 'red'}
+                        />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.reactionButton} onPress={comment}>
+                    <TouchableOpacity
+                        style={styles.reactionButton}
+                        onPress={comment}>
                         <MessageCircle size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
+                <TouchableOpacity
+                    style={styles.reactionButton}
+                    onPress={bookmark}>
                     <BookmarkIcon size={24} color={colors.primary} />
                 </TouchableOpacity>
             </View>
             {reactions.length > 0 && (
-                <Text className="text-sm font-semibold" style={{ color: colors.primary }}>
+                <Text
+                    className="text-sm font-semibold"
+                    style={{ color: colors.primary }}>
                     {reactions.length} reactions
                 </Text>
             )}
@@ -125,7 +157,9 @@ export function Reactions({ event }: { event: NDKEvent }) {
 }
 
 const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
-    const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
+    const urls = event.content.match(
+        /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
+    );
 
     if (!urls?.length) return null;
 
@@ -141,7 +175,11 @@ const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
     );
 });
 
-export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {
+export const CardMedia = memo(function CardMedia({
+    event,
+}: {
+    event: NDKEvent;
+}) {
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
@@ -179,7 +217,10 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
 
     if (event.kind === NDKKind.Text) {
         // remove the urls from the content
-        content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/g, '');
+        content = content.replace(
+            /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/g,
+            ''
+        );
     }
 
     return (
@@ -188,11 +229,24 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
                 <View style={styles.profileContainer}>
                     {loading ? (
                         <SkeletonPlaceholder borderRadius={4}>
-                            <SkeletonPlaceholder.Item flexDirection="row" alignItems="center">
-                                <SkeletonPlaceholder.Item width={60} height={60} borderRadius={50} />
+                            <SkeletonPlaceholder.Item
+                                flexDirection="row"
+                                alignItems="center">
+                                <SkeletonPlaceholder.Item
+                                    width={60}
+                                    height={60}
+                                    borderRadius={50}
+                                />
                                 <SkeletonPlaceholder.Item marginLeft={20}>
-                                    <SkeletonPlaceholder.Item width={120} height={20} />
-                                    <SkeletonPlaceholder.Item marginTop={6} width={80} height={20} />
+                                    <SkeletonPlaceholder.Item
+                                        width={120}
+                                        height={20}
+                                    />
+                                    <SkeletonPlaceholder.Item
+                                        marginTop={6}
+                                        width={80}
+                                        height={20}
+                                    />
                                 </SkeletonPlaceholder.Item>
                             </SkeletonPlaceholder.Item>
                         </SkeletonPlaceholder>
@@ -200,24 +254,34 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
                         <User.Profile pubkey={event.pubkey}>
                             <TouchableOpacity
                                 onPress={() => {
-                                    router.push(`/profile?pubkey=${event.pubkey}`);
+                                    router.push(
+                                        `/profile?pubkey=${event.pubkey}`
+                                    );
                                 }}>
                                 <User.Avatar alt={event.pubkey} />
                             </TouchableOpacity>
 
                             <View className="flex-col">
                                 <User.Name />
-                                <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                                <RelativeTime
+                                    timestamp={event.created_at}
+                                    className="text-xs text-muted-foreground"
+                                />
                             </View>
                         </User.Profile>
                     )}
                 </View>
 
-                {!follows?.includes(event.pubkey) && event.pubkey !== currentUser?.pubkey && (
-                    <Button style={{ backgroundColor: colors.grey5 }} onPress={follow}>
-                        <Text className="text-primary-secondary">Follow</Text>
-                    </Button>
-                )}
+                {!follows?.includes(event.pubkey) &&
+                    event.pubkey !== currentUser?.pubkey && (
+                        <Button
+                            style={{ backgroundColor: colors.grey5 }}
+                            onPress={follow}>
+                            <Text className="text-primary-secondary">
+                                Follow
+                            </Text>
+                        </Button>
+                    )}
             </View>
 
             <Pressable

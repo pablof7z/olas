@@ -15,7 +15,10 @@ interface NDKContext {
     ndk: NDK | undefined;
 
     login: (promise: Promise<NDKSigner | null>) => Promise<void>;
-    loginWithPayload: (payload: string, { save }: { save?: boolean }) => Promise<void>;
+    loginWithPayload: (
+        payload: string,
+        { save }: { save?: boolean }
+    ) => Promise<void>;
     logout: () => Promise<void>;
     unpublishedEvents: Map<string, UnpublishedEventEntry>;
 

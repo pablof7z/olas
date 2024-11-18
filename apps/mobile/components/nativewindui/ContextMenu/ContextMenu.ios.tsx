@@ -10,7 +10,13 @@ import {
     OnPressMenuItemEvent,
 } from 'react-native-ios-context-menu';
 
-import type { ContextItem, ContextMenuConfig, ContextMenuProps, ContextMenuRef, ContextSubMenu } from './types';
+import type {
+    ContextItem,
+    ContextMenuConfig,
+    ContextMenuProps,
+    ContextMenuRef,
+    ContextSubMenu,
+} from './types';
 
 cssInterop(ContextMenuView, {
     className: 'style',
@@ -82,12 +88,18 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
                     onPressMenuItem={toOnPressMenuItem(onItemPress)}
                     onPressMenuPreview={iosOnPressMenuPreview}
                     shouldCleanupOnComponentWillUnmountForAuxPreview
-                    previewConfig={!iosRenderPreview ? undefined : PREVIEW_CONFIG}
+                    previewConfig={
+                        !iosRenderPreview ? undefined : PREVIEW_CONFIG
+                    }
                     renderPreview={iosRenderPreview}
                     shouldPreventLongPressGestureFromPropagating
                     lazyPreview={!!iosRenderPreview}
                     auxiliaryPreviewConfig={
-                        !renderAuxiliaryPreview ? undefined : getAuxiliaryPreviewConfig(auxiliaryPreviewPosition)
+                        !renderAuxiliaryPreview
+                            ? undefined
+                            : getAuxiliaryPreviewConfig(
+                                  auxiliaryPreviewPosition
+                              )
                     }
                     isAuxiliaryPreviewEnabled={!!renderAuxiliaryPreview}
                     renderAuxiliaryPreview={renderAuxiliaryPreview}
@@ -102,18 +114,24 @@ ContextMenu.displayName = 'ContextMenu';
 
 export { ContextMenu };
 
-function toOnPressMenuItem(onItemPress: ContextMenuProps['onItemPress']): OnPressMenuItemEvent {
+function toOnPressMenuItem(
+    onItemPress: ContextMenuProps['onItemPress']
+): OnPressMenuItemEvent {
     return ({ nativeEvent, isUsingActionSheetFallback }) => {
         onItemPress?.(
             {
                 actionKey: nativeEvent.actionKey,
                 title: nativeEvent.actionTitle,
                 subTitle: nativeEvent.actionSubtitle,
-                state: nativeEvent.menuState ? { checked: nativeEvent.menuState === 'on' } : undefined,
-                destructive: nativeEvent.menuAttributes?.includes('destructive'),
+                state: nativeEvent.menuState
+                    ? { checked: nativeEvent.menuState === 'on' }
+                    : undefined,
+                destructive:
+                    nativeEvent.menuAttributes?.includes('destructive'),
                 disabled: nativeEvent.menuAttributes?.includes('disabled'),
                 hidden: nativeEvent.menuAttributes?.includes('hidden'),
-                keepOpenOnPress: nativeEvent.menuAttributes?.includes('keepsMenuPresented'),
+                keepOpenOnPress:
+                    nativeEvent.menuAttributes?.includes('keepsMenuPresented'),
                 loading: false,
             },
             isUsingActionSheetFallback
@@ -146,7 +164,8 @@ function toConfigSubMenu(subMenu: ContextSubMenu): MenuElementConfig {
         };
     }
     return {
-        menuOptions: subMenu.iOSType === 'inline' ? ['displayInline'] : undefined,
+        menuOptions:
+            subMenu.iOSType === 'inline' ? ['displayInline'] : undefined,
         menuTitle: subMenu.title ?? '',
         menuSubtitle: subMenu.subTitle,
         menuPreferredElementSize: subMenu.iOSItemSize,
@@ -204,7 +223,8 @@ function toConfigItem(item: ContextItem): MenuElementConfig {
                         item.icon?.namingScheme === 'sfSymbol'
                             ? (item.icon.name ?? 'questionmark')
                             : item.icon.name && item.icon.name in ICON_MAPPING
-                              ? ICON_MAPPING[item.icon.name as MaterialIconName].sfSymbol
+                              ? ICON_MAPPING[item.icon.name as MaterialIconName]
+                                    .sfSymbol
                               : 'questionmark',
                     iconTint: item.icon?.color,
                 }

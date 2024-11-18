@@ -65,7 +65,10 @@ type DropdownMenuConfig = {
 type DropdownMenuProps = DropdownMenuConfig &
     ViewProps & {
         children: React.ReactNode;
-        onItemPress?: (item: Omit<DropdownItem, 'icon'>, isUsingActionSheetFallback?: boolean) => void;
+        onItemPress?: (
+            item: Omit<DropdownItem, 'icon'>,
+            isUsingActionSheetFallback?: boolean
+        ) => void;
         enabled?: boolean;
         materialPortalHost?: string;
         // defaults to 2
@@ -84,4 +87,10 @@ type DropdownMenuRef = React.ElementRef<typeof View> & {
     dismissMenu?: () => void;
 };
 
-export type { DropdownMenuProps, DropdownMenuConfig, DropdownSubMenu, DropdownItem, DropdownMenuRef };
+export type {
+    DropdownMenuProps,
+    DropdownMenuConfig,
+    DropdownSubMenu,
+    DropdownItem,
+    DropdownMenuRef,
+};

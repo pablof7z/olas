@@ -3,7 +3,11 @@ import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import {
     ESTIMATED_ITEM_HEIGHT,
@@ -47,7 +51,15 @@ const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
 function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
     const color = CONNECTIVITY_STATUS_COLORS[relay.status];
 
-    return <View style={{ borderRadius: 10, width: 8, height: 8, backgroundColor: color }}></View>;
+    return (
+        <View
+            style={{
+                borderRadius: 10,
+                width: 8,
+                height: 8,
+                backgroundColor: color,
+            }}></View>
+    );
 }
 
 export default function RelaysScreen() {
@@ -73,7 +85,11 @@ export default function RelaysScreen() {
                     </View>
                 ),
             }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+            .filter(
+                (item) =>
+                    (searchText ?? '').trim().length === 0 ||
+                    item.title.match(searchText!)
+            );
     }, [ndk?.pool.relays, relays, searchText]);
 
     const addFn = () => {
@@ -103,7 +119,10 @@ export default function RelaysScreen() {
         <>
             <LargeTitleHeader
                 title="Relays"
-                searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
+                searchBar={{
+                    iosHideWhenScrolling: true,
+                    onChangeText: setSearchText,
+                }}
                 rightView={() => (
                     <View className="flex-row gap-4">
                         <TouchableOpacity onPress={save}>
@@ -133,13 +152,16 @@ export default function RelaysScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
+function renderItem<T extends (typeof data)[number]>(
+    info: ListRenderItemInfo<T>
+) {
     if (info.item.id === 'add') {
         return (
             <ListItem
                 className={cn(
                     'ios:pl-0 pl-2',
-                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
                 )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
@@ -165,7 +187,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
         <ListItem
             className={cn(
                 'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                info.index === 0 &&
+                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
             )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
@@ -190,7 +213,9 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     );
 }
 
-function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
+function keyExtractor(
+    item: (Omit<ListDataItem, string> & { id: string }) | string
+) {
     return typeof item === 'string' ? item : item.id;
 }
 
@@ -216,7 +241,12 @@ async function validateRelay(ndk: NDK, relay: string) {
         { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
     );
     if (req.size !== 1) {
-        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
+        alert(
+            'Relay ' +
+                relay +
+                ' returned the wrong number of tokens:' +
+                req.size
+        );
         return false;
     }
 
@@ -231,7 +261,12 @@ async function validateRelay(ndk: NDK, relay: string) {
         { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
     );
     if (req2.size !== 0) {
-        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
+        alert(
+            'Relay ' +
+                relay +
+                ' returned the wrong number of tokens:' +
+                req.size
+        );
         return false;
     }
 

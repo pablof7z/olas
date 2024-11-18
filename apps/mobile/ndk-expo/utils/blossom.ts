@@ -1,6 +1,13 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
-import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk';
+import NDK, {
+    NDKEvent,
+    NDKKind,
+    NDKList,
+    NDKSigner,
+    NDKUser,
+    normalize,
+} from '@nostr-dev-kit/ndk';
 import { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;
@@ -15,7 +22,10 @@ export async function sign(draft: EventTemplate, signer?: NDKSigner) {
     return e.toNostrEvent();
 }
 
-export function generateMediaEventFromBlobDescriptor(ndk: NDK, blob: BlobDescriptor) {
+export function generateMediaEventFromBlobDescriptor(
+    ndk: NDK,
+    blob: BlobDescriptor
+) {
     const mediaEvent = new NDKEvent(ndk);
     mediaEvent.kind = NDKKind.Media;
     console.log('blob', JSON.stringify(blob, null, 4));
@@ -104,7 +114,9 @@ export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
             // add an emoji right below the image saying that it was loaded from a different server
             if (attemptedServers.length > 1) {
                 const newUrl = new URL(node.src);
-                finalStatus(`Media restored from different Blossom server ${newUrl.hostname}`);
+                finalStatus(
+                    `Media restored from different Blossom server ${newUrl.hostname}`
+                );
             }
         }
 
@@ -113,8 +125,11 @@ export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
 
             // make sure we have the blossom list
             if (blossomList === undefined) {
-                updateStatus(`Using blossom to replace missing media from ${originalServer}`);
-                if (!inserted) node.insertAdjacentElement('beforebegin', status);
+                updateStatus(
+                    `Using blossom to replace missing media from ${originalServer}`
+                );
+                if (!inserted)
+                    node.insertAdjacentElement('beforebegin', status);
                 blossomList = await getBlossomListFor(ndk, user);
             }
 
@@ -123,7 +138,12 @@ export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
                 return;
             }
 
-            const newServer = nextBlossomServerToTry(user, blossomList!, hash!, attemptedServers);
+            const newServer = nextBlossomServerToTry(
+                user,
+                blossomList!,
+                hash!,
+                attemptedServers
+            );
             if (!newServer) {
                 finalStatus('No more servers to try');
                 return;

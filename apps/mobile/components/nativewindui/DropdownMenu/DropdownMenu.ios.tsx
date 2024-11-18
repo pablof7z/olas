@@ -9,7 +9,13 @@ import {
     OnPressMenuItemEvent,
 } from 'react-native-ios-context-menu';
 
-import type { DropdownItem, DropdownMenuConfig, DropdownMenuProps, DropdownMenuRef, DropdownSubMenu } from './types';
+import type {
+    DropdownItem,
+    DropdownMenuConfig,
+    DropdownMenuProps,
+    DropdownMenuRef,
+    DropdownSubMenu,
+} from './types';
 
 const DropdownMenu = React.forwardRef<DropdownMenuRef, DropdownMenuProps>(
     (
@@ -51,18 +57,24 @@ DropdownMenu.displayName = 'DropdownMenu';
 
 export { DropdownMenu };
 
-function toOnPressMenuItem(onItemPress: DropdownMenuProps['onItemPress']): OnPressMenuItemEvent {
+function toOnPressMenuItem(
+    onItemPress: DropdownMenuProps['onItemPress']
+): OnPressMenuItemEvent {
     return ({ nativeEvent, isUsingActionSheetFallback }) => {
         onItemPress?.(
             {
                 actionKey: nativeEvent.actionKey,
                 title: nativeEvent.actionTitle,
                 subTitle: nativeEvent.actionSubtitle,
-                state: nativeEvent.menuState ? { checked: nativeEvent.menuState === 'on' } : undefined,
-                destructive: nativeEvent.menuAttributes?.includes('destructive'),
+                state: nativeEvent.menuState
+                    ? { checked: nativeEvent.menuState === 'on' }
+                    : undefined,
+                destructive:
+                    nativeEvent.menuAttributes?.includes('destructive'),
                 disabled: nativeEvent.menuAttributes?.includes('disabled'),
                 hidden: nativeEvent.menuAttributes?.includes('hidden'),
-                keepOpenOnPress: nativeEvent.menuAttributes?.includes('keepsMenuPresented'),
+                keepOpenOnPress:
+                    nativeEvent.menuAttributes?.includes('keepsMenuPresented'),
                 loading: false,
             },
             isUsingActionSheetFallback
@@ -95,7 +107,8 @@ function toConfigSubMenu(subMenu: DropdownSubMenu): MenuElementConfig {
         };
     }
     return {
-        menuOptions: subMenu.iOSType === 'inline' ? ['displayInline'] : undefined,
+        menuOptions:
+            subMenu.iOSType === 'inline' ? ['displayInline'] : undefined,
         menuTitle: subMenu.title ?? '',
         menuSubtitle: subMenu.subTitle,
         menuPreferredElementSize: subMenu.iOSItemSize,
@@ -153,7 +166,8 @@ function toConfigItem(item: DropdownItem): MenuElementConfig {
                         item.icon?.namingScheme === 'sfSymbol'
                             ? (item.icon.name ?? 'questionmark')
                             : item.icon.name && item.icon.name in ICON_MAPPING
-                              ? ICON_MAPPING[item.icon.name as MaterialIconName].sfSymbol
+                              ? ICON_MAPPING[item.icon.name as MaterialIconName]
+                                    .sfSymbol
                               : 'questionmark',
                     iconTint: item.icon?.color,
                 }

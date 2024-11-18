@@ -1,7 +1,13 @@
 import * as Slot from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { Platform, Pressable, PressableProps, View, ViewStyle } from 'react-native';
+import {
+    Platform,
+    Pressable,
+    PressableProps,
+    View,
+    ViewStyle,
+} from 'react-native';
 
 import { TextClassContext } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
@@ -12,7 +18,8 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2', {
     variants: {
         variant: {
             primary: 'ios:active:opacity-80 bg-primary',
-            secondary: 'ios:border-primary ios:active:bg-primary/5 border border-foreground/40',
+            secondary:
+                'ios:border-primary ios:active:bg-primary/5 border border-foreground/40',
             tonal: 'ios:bg-primary/10 dark:ios:bg-primary/10 ios:active:bg-primary/15 bg-primary/15 dark:bg-primary/30',
             plain: 'ios:active:opacity-70',
             accent: 'ios:bg-accent ios:active:bg-accent/80 bg-accent',
@@ -85,16 +92,40 @@ function convertToRGBA(rgb: string, opacity: number): string {
 
 const ANDROID_RIPPLE = {
     dark: {
-        primary: { color: convertToRGBA(COLORS.dark.grey3, 0.4), borderless: false },
-        secondary: { color: convertToRGBA(COLORS.dark.grey5, 0.8), borderless: false },
-        plain: { color: convertToRGBA(COLORS.dark.grey5, 0.8), borderless: false },
-        tonal: { color: convertToRGBA(COLORS.dark.grey5, 0.8), borderless: false },
+        primary: {
+            color: convertToRGBA(COLORS.dark.grey3, 0.4),
+            borderless: false,
+        },
+        secondary: {
+            color: convertToRGBA(COLORS.dark.grey5, 0.8),
+            borderless: false,
+        },
+        plain: {
+            color: convertToRGBA(COLORS.dark.grey5, 0.8),
+            borderless: false,
+        },
+        tonal: {
+            color: convertToRGBA(COLORS.dark.grey5, 0.8),
+            borderless: false,
+        },
     },
     light: {
-        primary: { color: convertToRGBA(COLORS.light.grey4, 0.4), borderless: false },
-        secondary: { color: convertToRGBA(COLORS.light.grey5, 0.4), borderless: false },
-        plain: { color: convertToRGBA(COLORS.light.grey5, 0.4), borderless: false },
-        tonal: { color: convertToRGBA(COLORS.light.grey6, 0.4), borderless: false },
+        primary: {
+            color: convertToRGBA(COLORS.light.grey4, 0.4),
+            borderless: false,
+        },
+        secondary: {
+            color: convertToRGBA(COLORS.light.grey5, 0.4),
+            borderless: false,
+        },
+        plain: {
+            color: convertToRGBA(COLORS.light.grey5, 0.4),
+            borderless: false,
+        },
+        tonal: {
+            color: convertToRGBA(COLORS.light.grey6, 0.4),
+            borderless: false,
+        },
     },
 };
 
@@ -103,7 +134,10 @@ const BORDER_CURVE: ViewStyle = {
     borderCurve: 'continuous',
 };
 
-type ButtonVariantProps = Omit<VariantProps<typeof buttonVariants>, 'variant'> & {
+type ButtonVariantProps = Omit<
+    VariantProps<typeof buttonVariants>,
+    'variant'
+> & {
     variant?: Exclude<VariantProps<typeof buttonVariants>['variant'], null>;
 };
 
@@ -118,12 +152,26 @@ type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps;
 
 const Root = Platform.OS === 'android' ? View : Slot.Pressable;
 
-const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-    ({ className, variant = 'primary', size, style = BORDER_CURVE, androidRootClassName, ...props }, ref) => {
+const Button = React.forwardRef<
+    React.ElementRef<typeof Pressable>,
+    ButtonProps
+>(
+    (
+        {
+            className,
+            variant = 'primary',
+            size,
+            style = BORDER_CURVE,
+            androidRootClassName,
+            ...props
+        },
+        ref
+    ) => {
         const { colorScheme } = useColorScheme();
 
         return (
-            <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
+            <TextClassContext.Provider
+                value={buttonTextVariants({ variant, size })}>
                 <Root
                     className={Platform.select({
                         ios: undefined,
@@ -133,7 +181,10 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
                         }),
                     })}>
                     <Pressable
-                        className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size, className }))}
+                        className={cn(
+                            props.disabled && 'opacity-50',
+                            buttonVariants({ variant, size, className })
+                        )}
                         ref={ref}
                         style={style}
                         android_ripple={ANDROID_RIPPLE[colorScheme][variant]}

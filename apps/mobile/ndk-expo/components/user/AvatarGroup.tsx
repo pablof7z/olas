@@ -15,7 +15,12 @@ interface AvatarGroupProps {
  * This component renders a list of avatars that slightly overlap. Useful to show
  * multiple people that have participated in certain event
  */
-const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, threshold = 3 }) => {
+const AvatarGroup: React.FC<AvatarGroupProps> = ({
+    events,
+    pubkeys,
+    avatarSize,
+    threshold = 3,
+}) => {
     const pubkeyCounts = useMemo(() => {
         if (!events) return {};
 
@@ -41,7 +46,9 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
                     <User.Avatar
                         alt={pubkey}
                         className={`h-${avatarSize} w-${avatarSize}`}
-                        style={{ marginLeft: index > 0 ? -(avatarSize * 1.5) : 0 }}
+                        style={{
+                            marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
+                        }}
                     />
                 </User.Profile>
             ))}
@@ -50,7 +57,9 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
                 <View
                     className={`h-${avatarSize} w-${avatarSize} items-center justify-center rounded-full bg-gray-200`}
                     style={{ marginLeft: -10 }}>
-                    <Text className="text-sm text-gray-700">+{sortedPubkeys.length - threshold}</Text>
+                    <Text className="text-sm text-gray-700">
+                        +{sortedPubkeys.length - threshold}
+                    </Text>
                 </View>
             )}
         </View>

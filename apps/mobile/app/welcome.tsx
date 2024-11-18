@@ -60,8 +60,12 @@ export default function WelcomeConsentScreen() {
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="font-bold">{feature.title}</Text>
-                                <Text variant="footnote">{feature.description}</Text>
+                                <Text className="font-bold">
+                                    {feature.title}
+                                </Text>
+                                <Text variant="footnote">
+                                    {feature.description}
+                                </Text>
                             </View>
                         </View>
                     ))}
@@ -77,14 +81,20 @@ export default function WelcomeConsentScreen() {
                         <Text variant="caption2" className="pt-1 text-center">
                             By pressing continue, you agree to the universe's{' '}
                             <Link href="/">
-                                <Text variant="caption2" className="text-primary">
+                                <Text
+                                    variant="caption2"
+                                    className="text-primary">
                                     Terms of Service
                                 </Text>
                             </Link>{' '}
                         </Text>
                     </View>
                     <Link href="/login" replace asChild>
-                        <Button size={Platform.select({ ios: 'lg', default: 'md' })}>
+                        <Button
+                            size={Platform.select({
+                                ios: 'lg',
+                                default: 'md',
+                            })}>
                             <Text>Continue</Text>
                         </Button>
                     </Link>
@@ -97,7 +107,8 @@ export default function WelcomeConsentScreen() {
 const FEATURES = [
     {
         title: '#reckless',
-        description: 'This is very experimental. Expect bugs, annoyances aaaaand money gone.',
+        description:
+            'This is very experimental. Expect bugs, annoyances aaaaand money gone.',
         icon: 'brain',
     },
     {

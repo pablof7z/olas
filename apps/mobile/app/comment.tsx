@@ -1,5 +1,8 @@
 import { TextInput } from 'react-native-gesture-handler';
-import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import {
+    KeyboardAvoidingView,
+    KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import { router, Stack } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -14,7 +17,10 @@ import { useStore } from 'zustand';
 export default function CommentScreen() {
     const { ndk, currentUser } = useNDK();
     const [comment, setComment] = useState('');
-    const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
+    const activeEvent = useStore(
+        activeEventStore,
+        (state) => state.activeEvent
+    );
 
     const postComment = async () => {
         const event = new NDKEvent(ndk, {

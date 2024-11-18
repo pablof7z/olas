@@ -31,12 +31,30 @@ export default function Article({ article }: ArticleProps) {
                 />
 
                 <LinearGradient
-                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,1)']}
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '100%' }}
+                    colors={[
+                        'rgba(0,0,0,0)',
+                        'rgba(0,0,0,0.2)',
+                        'rgba(0,0,0,1)',
+                    ]}
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '100%',
+                    }}
                 />
 
-                <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10 }}>
-                    <Text variant="heading" className="text-3xl font-bold text-white">
+                <View
+                    style={{
+                        position: 'absolute',
+                        bottom: 10,
+                        left: 10,
+                        right: 10,
+                    }}>
+                    <Text
+                        variant="heading"
+                        className="text-3xl font-bold text-white">
                         {article.title}
                     </Text>
                 </View>

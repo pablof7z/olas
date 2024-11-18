@@ -1,4 +1,8 @@
-import { NDKArticle, NDKList, NDKSimpleGroupMetadata } from '@nostr-dev-kit/ndk';
+import {
+    NDKArticle,
+    NDKList,
+    NDKSimpleGroupMetadata,
+} from '@nostr-dev-kit/ndk';
 import ThreadItem, { type Thread } from './thread';
 import GroupItem from './group';
 import ListItem from './list';
@@ -16,23 +20,52 @@ interface RenderItemProps {
     onListPress?: (list: NDKList) => void;
 }
 
-export function renderItem({ onThreadPress, onArticlePress, onGroupPress, onListPress }: RenderItemProps) {
+export function renderItem({
+    onThreadPress,
+    onArticlePress,
+    onGroupPress,
+    onListPress,
+}: RenderItemProps) {
     return (info: ListRenderItemInfo<ListItem>) => {
         const { item } = info;
 
         if (item instanceof NDKSimpleGroupMetadata) {
-            return <GroupItem {...info} groupMetadata={item} onPress={() => onGroupPress?.(item)} />;
+            return (
+                <GroupItem
+                    {...info}
+                    groupMetadata={item}
+                    onPress={() => onGroupPress?.(item)}
+                />
+            );
         }
 
         if (item instanceof NDKList) {
-            return <ListItem {...info} list={item} onPress={() => onListPress?.(item)} />;
+            return (
+                <ListItem
+                    {...info}
+                    list={item}
+                    onPress={() => onListPress?.(item)}
+                />
+            );
         }
 
         if (item instanceof NDKArticle) {
-            return <Article {...info} article={item} onPress={() => onArticlePress?.(item)} />;
+            return (
+                <Article
+                    {...info}
+                    article={item}
+                    onPress={() => onArticlePress?.(item)}
+                />
+            );
         }
 
-        return <ThreadItem {...info} thread={item} onPress={() => onThreadPress?.(item)} />;
+        return (
+            <ThreadItem
+                {...info}
+                thread={item}
+                onPress={() => onThreadPress?.(item)}
+            />
+        );
     };
 
     //     return useCallback((info: ListRenderItemInfo<ListItem>) => {

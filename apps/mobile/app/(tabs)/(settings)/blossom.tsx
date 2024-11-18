@@ -12,11 +12,7 @@ import {
 } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
-import {
-    NDKKind,
-    NDKList,
-    NostrEvent,
-} from '@nostr-dev-kit/ndk';
+import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useNDKSession } from '@/ndk-expo/hooks/session';
@@ -27,13 +23,17 @@ export default function BlossomScreen() {
     const blossomList = useMemo(() => {
         let list = events?.get(NDKKind.BlossomList)?.[0] as NDKList;
         if (!list) {
-            list = new NDKList(ndk, { kind: NDKKind.BlossomList } as NostrEvent);
+            list = new NDKList(ndk, {
+                kind: NDKKind.BlossomList,
+            } as NostrEvent);
         }
         return list;
     }, [events]);
     const [searchText, setSearchText] = useState<string | null>(null);
     const [blossoms, setBlossoms] = useState<string[]>(
-        blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1])
+        blossomList?.items
+            .filter((item) => item[0] === 'server')
+            .map((item) => item[1])
     );
     const [url, setUrl] = useState('');
 
@@ -68,11 +68,17 @@ export default function BlossomScreen() {
                     setBlossoms([url, ...blossoms.filter((u) => u !== url)]);
                 },
             }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+            .filter(
+                (item) =>
+                    (searchText ?? '').trim().length === 0 ||
+                    item.title.match(searchText!)
+            );
     }, [ndk?.pool.relays, searchText, blossoms]);
 
     function save() {
-        blossomList.tags = blossomList.tags.filter((tag) => tag[0] !== 'server');
+        blossomList.tags = blossomList.tags.filter(
+            (tag) => tag[0] !== 'server'
+        );
 
         for (const url of blossoms) {
             blossomList.addItem(['server', url]);
@@ -86,7 +92,10 @@ export default function BlossomScreen() {
         <>
             <LargeTitleHeader
                 title="🌸 Blossom Servers"
-                searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
+                searchBar={{
+                    iosHideWhenScrolling: true,
+                    onChangeText: setSearchText,
+                }}
                 rightView={() => (
                     <TouchableOpacity onPress={save}>
                         <Text className="text-primary">Save</Text>
@@ -107,13 +116,16 @@ export default function BlossomScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
+function renderItem<T extends (typeof data)[number]>(
+    info: ListRenderItemInfo<T>
+) {
     if (info.item.id === 'add') {
         return (
             <ListItem
                 className={cn(
                     'ios:pl-0 pl-2',
-                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
                 )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
@@ -139,14 +151,17 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
         <ListItem
             className={cn(
                 'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                info.index === 0 &&
+                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
             )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
                 info.index > 0 && (
                     <TouchableOpacity onPress={info.item.makeDefault}>
-                        <Text className="mt-2 pr-4 text-xs text-primary">Make default</Text>
+                        <Text className="mt-2 pr-4 text-xs text-primary">
+                            Make default
+                        </Text>
                     </TouchableOpacity>
                 )
             }
@@ -156,6 +171,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     );
 }
 
-function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
+function keyExtractor(
+    item: (Omit<ListDataItem, string> & { id: string }) | string
+) {
     return typeof item === 'string' ? item : item.id;
 }

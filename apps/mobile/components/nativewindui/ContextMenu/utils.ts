@@ -1,6 +1,9 @@
 import { ContextItem, ContextSubMenu } from './types';
 
-function createContextSubMenu(subMenu: Omit<ContextSubMenu, 'items'>, items: ContextSubMenu['items']) {
+function createContextSubMenu(
+    subMenu: Omit<ContextSubMenu, 'items'>,
+    items: ContextSubMenu['items']
+) {
     return Object.assign(subMenu, { items }) as ContextSubMenu;
 }
 

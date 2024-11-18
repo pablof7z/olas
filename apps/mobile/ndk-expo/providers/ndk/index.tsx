@@ -1,7 +1,12 @@
 import 'react-native-get-random-values';
 import '@bacons/text-decoder/install';
 import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
-import NDK, { NDKConstructorParams, NDKEvent, NDKSigner, NDKUser } from '@nostr-dev-kit/ndk';
+import NDK, {
+    NDKConstructorParams,
+    NDKEvent,
+    NDKSigner,
+    NDKUser,
+} from '@nostr-dev-kit/ndk';
 import NDKContext from '@/ndk-expo/context/ndk';
 import * as SecureStore from 'expo-secure-store';
 import { withPayload } from './signers';
@@ -27,8 +32,12 @@ const NDKProvider = ({
         })
     );
     const [currentUser, setCurrentUser] = useState<NDKUser | null>(null);
-    const [unpublishedEvents, setUnpublishedEvents] = useState<Map<string, UnpublishedEventEntry>>(new Map());
-    const [cacheInitialized, setCacheInitialized] = useState<boolean | null>(opts?.cacheAdapter ? false : null);
+    const [unpublishedEvents, setUnpublishedEvents] = useState<
+        Map<string, UnpublishedEventEntry>
+    >(new Map());
+    const [cacheInitialized, setCacheInitialized] = useState<boolean | null>(
+        opts?.cacheAdapter ? false : null
+    );
 
     if (!ndk.current.cacheAdapter?.ready) {
         ndk.current.cacheAdapter?.onReady(() => {
@@ -71,7 +80,10 @@ const NDKProvider = ({
         }
     }, []);
 
-    async function loginWithPayload(payload: string, opts?: { save?: boolean }) {
+    async function loginWithPayload(
+        payload: string,
+        opts?: { save?: boolean }
+    ) {
         const signer = withPayload(ndk.current, payload);
         await login(signer);
         if (!ndk.current.signer) return;
@@ -93,7 +105,11 @@ const NDKProvider = ({
                 }
             })
             .catch((e) => {
-                console.log('error in login, removing signer', ndk.current.signer, e);
+                console.log(
+                    'error in login, removing signer',
+                    ndk.current.signer,
+                    e
+                );
                 ndk.current.signer = undefined;
             });
     }

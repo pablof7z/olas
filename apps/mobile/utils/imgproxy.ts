@@ -23,7 +23,10 @@ const DEFAULT_CONFIG: ImgProxyConfig = {
     },
 };
 
-export function getProxiedImageUrl(url: string, config: Partial<ImgProxyConfig> = {}) {
+export function getProxiedImageUrl(
+    url: string,
+    config: Partial<ImgProxyConfig> = {}
+) {
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
     return getImageUrl(url, finalConfig);
 }
