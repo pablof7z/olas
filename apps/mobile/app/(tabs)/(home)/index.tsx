@@ -88,7 +88,6 @@ import { memo } from 'react';
 const randomPhotoTags = ['photo', 'photography', 'artstr'];
 
 export default function HomeScreen() {
-    const { ndk, currentUser } = useNDK();
     const { follows } = useNDKSession();
     const [tagFilter, setTagFilter] = useState<string | null>(null);
     const [includeTweets, setIncludeTweets] = useState(false);
@@ -103,7 +102,7 @@ export default function HomeScreen() {
         if (tagFilter) filters.push({ kinds: [1], '#t': [tagFilter] });
 
         return filters;
-    }, [follows]);
+    }, [follows, includeTweets, tagFilter]);
     const opts = useMemo(() => ({}), []);
     const { events } = useSubscribe({ filters, opts });
 
@@ -134,10 +133,9 @@ export default function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
 
     const loadUserData = () => {
-        setRefreshing(true);
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 1000);
+        // Pick a random tag when refreshing
+        const randomTag = randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
+        setTagFilter(randomTag);
     };
 
     return (

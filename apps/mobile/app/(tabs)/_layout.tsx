@@ -45,6 +45,7 @@ export default function HomeLayout() {
                     headerTintColor: colors.foreground,
                     headerTransparent: false,
                     title: 'Home',
+                    headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
                         <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
                     ),

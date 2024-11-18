@@ -4,9 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { imetaFromImage } from '@/ndk-expo/utils/imeta';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { TextInput } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { Icon } from '@roninoss/icons';
 import { useNDK } from '@/ndk-expo';
 import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import * as FileSystem from 'expo-file-system';
@@ -17,8 +15,14 @@ import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ResizeMode } from 'expo-av';
 import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { Video } from 'expo-av';
-import { manipulateAsync } from 'expo-image-manipulator';
 import * as VideoThumbnails from 'expo-video-thumbnails';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { router, Stack } from 'expo-router';
+import { publishStore } from '../stores/publish';
+import { useStore } from 'zustand';
+import { IconView } from '../(tabs)/(settings)';
+import { List, ListItem } from '@/components/nativewindui/List';
+import { cn } from '@/lib/cn';
 
 async function upload(
     ndk: NDK,
@@ -50,6 +54,77 @@ async function upload(
         // Start the upload
         uploader.start();
     });
+}
+
+function PostOptions() {
+    const { caption, expiration } = useStore(publishStore);
+    const { colors } = useColorScheme();
+
+    const openCaption = () => {
+        router.push('/publish/caption');
+    };
+
+    const openExpiration = () => {
+        router.push('/publish/expiration');
+    };
+
+    const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
+        const now = new Date().getTime() - 600 * 1000;
+        const diff = expiration - now;
+        if (diff >= 1000 * 60 * 60 * 24) {
+            return `${Math.round(diff / (1000 * 60 * 60 * 24))} days`;
+        }
+        return `${Math.round(diff / (1000 * 60 * 60))} hours`;
+    };
+
+    const data = useMemo(() => {
+        const expirationText = expiration ? new Date(expiration).toLocaleString() : 'None';
+
+        return [
+            {
+                id: 'expiration',
+                title: 'Expiration',
+                subTitle: 'Delete post after some time',
+                onPress: openExpiration,
+                leftView: <IconView className="bg-blue-500" name="timer-outline"></IconView>,
+                rightView: (
+                    <Text className="text-sm text-muted-foreground">
+                        {expiration ? `${calculateRelativeExpirationTimeInDaysOrHours(expiration)}` : 'None'}
+                    </Text>
+                ),
+            },
+        ];
+    }, [expiration]);
+
+    return (
+        <>
+            <TouchableOpacity
+                onPress={openCaption}
+                className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
+                <Text className="text-sm text-muted-foreground">
+                    {caption.trim().length > 0 ? caption : 'Add a caption'}
+                </Text>
+            </TouchableOpacity>
+            <List
+                data={data}
+                contentContainerClassName="pt-4"
+                contentInsetAdjustmentBehavior="automatic"
+                renderItem={({ item, index, target }) => (
+                    <ListItem
+                        className={cn(
+                            'ios:pl-0 pl-2',
+                            index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                        )}
+                        item={item}
+                        leftView={item.leftView}
+                        rightView={item.rightView}
+                        onPress={item.onPress}
+                        index={index}
+                        target={target}></ListItem>
+                )}
+            />
+        </>
+    );
 }
 
 export default function ImageUpload() {
@@ -127,6 +202,7 @@ export default function ImageUpload() {
             console.log('event', event.rawEvent());
             await event.publish();
             setUploading(false);
+            router.back();
         } catch (error) {
             console.error('Error uploading media:', error);
         }
@@ -143,8 +219,6 @@ export default function ImageUpload() {
         if (!result.canceled) {
             setSelectedImage(result.assets[0].uri);
             setSelectionType(result.assets[0].type);
-
-            console.log('selectedImage type', result.assets[0].type);
 
             const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri, {
                 encoding: FileSystem.EncodingType.Base64,
@@ -202,81 +276,80 @@ export default function ImageUpload() {
     };
 
     return (
-        <View style={styles.container} className="flex-1 bg-card">
-            {selectedImage ? (
-                <KeyboardAwareScrollView>
-                    <View className="mb-4 flex-1 grow">
-                        {selectedImage && (
-                            <View style={styles.imageContainer}>
-                                {selectionType === 'video' ? (
+        <>
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    title: 'Publish',
+                    headerRight: () => <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading}>
+                        <Text className="text-white">Publish</Text>
+                    </Button>,
+                }}
+            />
+            <View style={styles.container} className="flex-1 bg-card">
+                {selectedImage ? (
+                    <KeyboardAwareScrollView>
+                        <View className="mb-4 flex-1 grow">
+                            <View className="flex-1 flex-row items-center">
+                                {selectedImage && (
                                     <View style={styles.imageContainer}>
-                                        <Video
-                                            source={{ uri: selectedImage }}
-                                            style={styles.image}
-                                            useNativeControls
-                                            resizeMode={ResizeMode.CONTAIN}
-                                            posterSource={{ uri: thumbnail }}
-                                            usePoster
-                                        />
+                                        {selectionType === 'video' ? (
+                                        <View style={styles.imageContainer}>
+                                            <Video
+                                                source={{ uri: selectedImage }}
+                                                style={styles.image}
+                                                useNativeControls
+                                                resizeMode={ResizeMode.CONTAIN}
+                                                posterSource={{ uri: thumbnail }}
+                                                usePoster
+                                            />
+                                        </View>
+                                        ) : (
+                                            <Image
+                                                source={{ uri: selectedImage }}
+                                                style={styles.image}
+                                                contentFit="cover"
+                                                contentPosition="center"
+                                            />
+                                        )}
+                                        <TouchableOpacity
+                                            style={styles.removeButton}
+                                            onPress={() => {
+                                                setSelectedImage(null);
+                                                setDescription('');
+                                            }}>
+                                            <Ionicons name="close" size={24} color="white" />
+                                        </TouchableOpacity>
                                     </View>
-                                ) : (
-                                    <Image
-                                        source={{ uri: selectedImage }}
-                                        style={styles.image}
-                                        contentFit="cover"
-                                        contentPosition="center"
-                                    />
                                 )}
-                                <TouchableOpacity
-                                    style={styles.removeButton}
-                                    onPress={() => {
-                                        setSelectedImage(null);
-                                        setDescription('');
-                                    }}>
-                                    <Ionicons name="close" size={24} color="white" />
-                                </TouchableOpacity>
                             </View>
-                        )}
 
-                        <TextInput
-                            style={styles.textInput}
-                            placeholder="Write a caption or comment..."
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                        />
+                            <PostOptions />
+                        </View>
 
-                        {/* <List
-                            data={[
-                                { title: 'Image', leftView: <Ionicons name="images" size={24} color="#666" /> },
-                                { title: 'Audio', leftView: <Ionicons name="mic" size={24} color="#666" /> },
-                            ]}
-                            renderItem={({item}) => <Text>{item.title}</Text>}
-                        /> */}
+                        <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading}>
+                            {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
+                        </Button>
+                    </KeyboardAwareScrollView>
+                ) : (
+                    <View style={styles.uploadContainer}>
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity style={styles.button} onPress={pickImage}>
+                                <Ionicons name="images" size={40} color="#666" />
+                                <Text style={styles.buttonText}>Gallery</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.button} onPress={takePhoto}>
+                                <Ionicons name="camera" size={40} color="#666" />
+                                <Text style={styles.buttonText}>Camera</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.helperText}>Upload a photo or take a new one</Text>
                     </View>
-
-                    <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading}>
-                        {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
-                    </Button>
-                </KeyboardAwareScrollView>
-            ) : (
-                <View style={styles.uploadContainer}>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.button} onPress={pickImage}>
-                            <Ionicons name="images" size={40} color="#666" />
-                            <Text style={styles.buttonText}>Gallery</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.button} onPress={takePhoto}>
-                            <Ionicons name="camera" size={40} color="#666" />
-                            <Text style={styles.buttonText}>Camera</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <Text style={styles.helperText}>Upload a photo or take a new one</Text>
-                </View>
-            )}
-        </View>
+                )}
+            </View>
+        </>
     );
 }
 

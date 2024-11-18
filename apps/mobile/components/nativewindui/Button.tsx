@@ -15,6 +15,7 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2', {
             secondary: 'ios:border-primary ios:active:bg-primary/5 border border-foreground/40',
             tonal: 'ios:bg-primary/10 dark:ios:bg-primary/10 ios:active:bg-primary/15 bg-primary/15 dark:bg-primary/30',
             plain: 'ios:active:opacity-70',
+            accent: 'ios:bg-accent ios:active:bg-accent/80 bg-accent',
         },
         size: {
             none: '',
@@ -22,6 +23,7 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2', {
             md: 'ios:rounded-lg py-2 ios:py-1.5 ios:px-3.5 px-5 rounded-full',
             lg: 'py-2.5 px-5 ios:py-2 rounded-xl gap-2',
             icon: 'ios:rounded-lg h-10 w-10 rounded-full',
+            accent: 'ios:rounded-lg h-10 w-10 rounded-full',
         },
     },
     defaultVariants: {

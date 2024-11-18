@@ -171,7 +171,7 @@ function ChevronRight() {
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
 }
 
-function IconView({
+export function IconView({
     className,
     name,
     children,

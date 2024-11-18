@@ -7,8 +7,7 @@ import { useStore } from 'zustand';
 import { NDKEvent, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { NDKKind } from '@nostr-dev-kit/ndk';
 import { useSubscribe } from '@/ndk-expo';
-import ImageCard from '@/components/events/ImageCard';
-import { FlashList, MasonryFlashList } from '@shopify/flash-list';
+import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
 
 export default function Profile() {

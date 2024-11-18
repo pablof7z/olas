@@ -1,10 +1,6 @@
 import { useNDK } from '@/ndk-expo';
-import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
-import * as User from '@/ndk-expo/components/user';
 
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import {
     ESTIMATED_ITEM_HEIGHT,
@@ -16,14 +12,9 @@ import {
 } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
-import { useColorScheme } from '~/lib/useColorScheme';
 import {
     NDKKind,
     NDKList,
-    NDKPrivateKeySigner,
-    NDKRelay,
-    NDKRelayStatus,
-    NDKUser,
     NostrEvent,
 } from '@nostr-dev-kit/ndk';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';

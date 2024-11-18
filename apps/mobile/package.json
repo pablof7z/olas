@@ -22,6 +22,7 @@
     "@misaon/imgproxy": "^1.0.1",
     "@nostr-dev-kit/ndk": "^2.10.6",
     "@nostr-dev-kit/ndk-wallet": "^0.3.14",
+    "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-native-picker/picker": "2.7.5",
     "@react-native-segmented-control/segmented-control": "2.5.2",

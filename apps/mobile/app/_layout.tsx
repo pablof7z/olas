@@ -115,13 +115,9 @@ export default function RootLayout() {
                                                 }}
                                             />
 
-                                            <Stack.Screen
-                                                name="publish"
-                                                options={{
-                                                    headerShown: false,
-                                                    presentation: 'modal',
-                                                }}
-                                            />
+                                            <Stack.Screen name="publish/index" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
 
                                             <Stack.Screen
                                                 name="(tabs)"

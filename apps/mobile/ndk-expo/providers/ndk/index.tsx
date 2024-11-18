@@ -65,7 +65,6 @@ const NDKProvider = ({
 
     useEffect(() => {
         const storePayload = SecureStore.getItem('key');
-        console.log('loading key', { storePayload });
 
         if (storePayload) {
             loginWithPayload(storePayload, { save: false });
