@@ -48,7 +48,12 @@ async function getBlossomListFor(ndk: NDK, user: NDKUser) {
     return NDKList.from(event);
 }
 
-function nextBlossomServerToTry(user: NDKUser, blossomList: NDKList, hash: string, attemptedServers: string[] = []): string | null {
+function nextBlossomServerToTry(
+    user: NDKUser,
+    blossomList: NDKList,
+    hash: string,
+    attemptedServers: string[] = []
+): string | null {
     const servers = blossomList.getMatchingTags('server').map((tag) => tag[1]);
     const server = servers.find((server) => !attemptedServers.includes(server));
     return server ?? null;

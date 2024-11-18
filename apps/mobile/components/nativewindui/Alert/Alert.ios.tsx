@@ -19,7 +19,14 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(({ children, title, buttons
     });
 
     function promptAlert(args: AlertProps & { prompt: Required<AlertProps['prompt']> }) {
-        RNAlert.prompt(args.title, args.message, args.buttons as AlertButton[], args.prompt?.type, args.prompt?.defaultValue, args.prompt?.keyboardType);
+        RNAlert.prompt(
+            args.title,
+            args.message,
+            args.buttons as AlertButton[],
+            args.prompt?.type,
+            args.prompt?.defaultValue,
+            args.prompt?.keyboardType
+        );
     }
 
     function alert(args: AlertProps) {

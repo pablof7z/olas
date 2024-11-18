@@ -6,10 +6,11 @@ import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, useNDK } from '@/ndk-expo';
 import { Link, router, Stack, Tabs, useNavigation } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { Platform, View, SafeAreaView, Pressable, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 import { NDKWalletProvider } from '@/ndk-expo/providers/wallet';
 
@@ -20,6 +21,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
 import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
 import NDKSessionProvider from '@/ndk-expo/providers/session';
+import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { BlurView } from 'expo-blur';
 
 export { ErrorBoundary } from 'expo-router';
@@ -39,6 +41,25 @@ function UnpublishedEventIndicator() {
             </View>
         </Link>
     );
+}
+
+function NDKCacheCheck({ children }: { children: React.ReactNode }) {
+    const { ndk, cacheInitialized } = useNDK();
+
+    console.log('cacheInitialized', { cacheInitialized });
+
+    if (cacheInitialized === false) {
+        return (
+            <View className="flex-1 flex-col items-center justify-center gap-4">
+                <Text>Initializing cache...</Text>
+
+                <ActivityIndicator />
+            </View>
+        );
+    } else if (cacheInitialized === true) {
+        SplashScreen.hideAsync();
+        return <>{children}</>;
+    }
 }
 
 export default function RootLayout() {
@@ -68,87 +89,96 @@ export default function RootLayout() {
 
     return (
         <>
-            <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
+            <StatusBar
+                key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
+                style={isDarkColorScheme ? 'light' : 'dark'}
+            />
             <NDKProvider
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505">
-                <NDKWalletProvider>
-                    <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
-                        <GestureHandlerRootView style={{ flex: 1 }}>
-                            <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                    <Stack>
-                                        <Stack.Screen
-                                            name="login"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        />
+                <NDKCacheCheck>
+                    <NDKWalletProvider>
+                        <NDKSessionProvider
+                            follows={true}
+                            kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
+                            <GestureHandlerRootView style={{ flex: 1 }}>
+                                <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+                                    <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                        <Stack>
+                                            <Stack.Screen
+                                                name="login"
+                                                options={{
+                                                    headerShown: false,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="publish"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        />
+                                            <Stack.Screen
+                                                name="publish"
+                                                options={{
+                                                    headerShown: false,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="(tabs)"
-                                            options={{
-                                                headerShown: false,
-                                            }}
-                                        />
+                                            <Stack.Screen
+                                                name="(tabs)"
+                                                options={{
+                                                    headerShown: false,
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="profile"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        />
+                                            <Stack.Screen
+                                                name="profile"
+                                                options={{
+                                                    headerShown: false,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="comment"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                                title: 'Comment',
-                                            }}
-                                        />
+                                            <Stack.Screen
+                                                name="comment"
+                                                options={{
+                                                    headerShown: false,
+                                                    presentation: 'modal',
+                                                    title: 'Comment',
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="comments"
-                                            options={{
-                                                headerShown: true,
-                                                presentation: 'modal',
-                                                title: '',
-                                                headerRight: () => (
-                                                    <View className="flex-row items-center gap-2">
-                                                        <Button style={{ backgroundColor: colors.grey5 }} onPress={() => router.push('/comment')}>
-                                                            <Text className="text-primary-secondary">Comment</Text>
-                                                        </Button>
-                                                    </View>
-                                                ),
-                                            }}
-                                        />
+                                            <Stack.Screen
+                                                name="comments"
+                                                options={{
+                                                    headerShown: true,
+                                                    presentation: 'modal',
+                                                    title: '',
+                                                    headerRight: () => (
+                                                        <View className="flex-row items-center gap-2">
+                                                            <Button
+                                                                style={{ backgroundColor: colors.grey5 }}
+                                                                onPress={() => router.push('/comment')}>
+                                                                <Text className="text-primary-secondary">Comment</Text>
+                                                            </Button>
+                                                        </View>
+                                                    ),
+                                                }}
+                                            />
 
-                                        <Stack.Screen
-                                            name="view"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        />
-                                    </Stack>
-                                </NavThemeProvider>
-                            </KeyboardProvider>
-                        </GestureHandlerRootView>
-                    </NDKSessionProvider>
-                </NDKWalletProvider>
+                                            <Stack.Screen
+                                                name="view"
+                                                options={{
+                                                    headerShown: false,
+                                                    presentation: 'modal',
+                                                }}
+                                            />
+                                        </Stack>
+                                    </NavThemeProvider>
+                                </KeyboardProvider>
+                            </GestureHandlerRootView>
+                        </NDKSessionProvider>
+                    </NDKWalletProvider>
+                </NDKCacheCheck>
             </NDKProvider>
         </>
     );

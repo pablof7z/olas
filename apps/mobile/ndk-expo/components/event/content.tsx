@@ -19,7 +19,10 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
     if (part.startsWith('https://')) {
         return (
             <Pressable>
-                <Image source={{ uri: part }} style={{ width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 }} />
+                <Image
+                    source={{ uri: part }}
+                    style={{ width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 }}
+                />
             </Pressable>
         );
     }
@@ -66,7 +69,11 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
     return <Text {...props}>{entity.substring(0, 6)}...</Text>;
 };
 
-const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
+const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({
+    event,
+    content,
+    ...props
+}) => {
     content ??= event.content;
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/);
 

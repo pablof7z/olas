@@ -20,7 +20,12 @@ import { Video } from 'expo-av';
 import { manipulateAsync } from 'expo-image-manipulator';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 
-async function upload(ndk: NDK, blob: Blob, description: string, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
+async function upload(
+    ndk: NDK,
+    blob: Blob,
+    description: string,
+    blossomServer: string
+): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
         // Create an Uploader instance with the blob
         const uploader = new Uploader(ndk, blob, blossomServer);
@@ -215,7 +220,12 @@ export default function ImageUpload() {
                                         />
                                     </View>
                                 ) : (
-                                    <Image source={{ uri: selectedImage }} style={styles.image} contentFit="cover" contentPosition="center" />
+                                    <Image
+                                        source={{ uri: selectedImage }}
+                                        style={styles.image}
+                                        contentFit="cover"
+                                        contentPosition="center"
+                                    />
                                 )}
                                 <TouchableOpacity
                                     style={styles.removeButton}

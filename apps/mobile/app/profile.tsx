@@ -16,7 +16,11 @@ export default function Profile() {
     const scrollY = useRef(new Animated.Value(0)).current;
     const filters = useMemo(
         () => [
-            { kinds: [1063], '#m': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'], authors: [pubkey!] },
+            {
+                kinds: [1063],
+                '#m': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'],
+                authors: [pubkey!],
+            },
             { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
             { kinds: [1], authors: [pubkey!], limit: 50 },
         ],
@@ -89,7 +93,9 @@ export default function Profile() {
                     </View>
                 </Animated.View>
 
-                <Animated.View className="flex-col items-center justify-between" style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+                <Animated.View
+                    className="flex-col items-center justify-between"
+                    style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
                     <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
                     <Text style={styles.username} className="grow text-lg font-bold">
                         <User.Name />
@@ -98,7 +104,9 @@ export default function Profile() {
                 </Animated.View>
 
                 <Animated.ScrollView
-                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                        useNativeDriver: true,
+                    })}
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
                         <Text style={styles.username}>

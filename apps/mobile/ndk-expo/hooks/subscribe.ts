@@ -1,5 +1,12 @@
 import { createStore } from 'zustand/vanilla';
-import { NDKEvent, NDKEventId, NDKFilter, NDKRelaySet, NDKSubscription, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk';
+import {
+    NDKEvent,
+    NDKEventId,
+    NDKFilter,
+    NDKRelaySet,
+    NDKSubscription,
+    NDKSubscriptionOptions,
+} from '@nostr-dev-kit/ndk';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNDK } from './ndk';
 import { useStore } from 'zustand';
@@ -47,7 +54,11 @@ const createSubscribeStore = <T extends NDKEvent>() =>
         setSubscription: (sub) => set({ subscriptionRef: sub, isSubscribed: !!sub }),
     }));
 
-export const useSubscribe = <T extends NDKEvent>({ filters, opts = undefined, relays = undefined }: UseSubscribeParams) => {
+export const useSubscribe = <T extends NDKEvent>({
+    filters,
+    opts = undefined,
+    relays = undefined,
+}: UseSubscribeParams) => {
     const { ndk } = useNDK();
     const store = useMemo(() => createSubscribeStore<T>(), []);
     const storeInstance = useStore(store);

@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Pressable, Platform, Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, interpolate, withSpring, runOnJS, clamp } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    interpolate,
+    withSpring,
+    runOnJS,
+    clamp,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Icon } from '@roninoss/icons';
 
@@ -51,7 +58,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
         height: '100%',
         width:
             previousTranslateX.value > translateX.value
-                ? interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width], [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0])
+                ? interpolate(
+                      -translateX.value,
+                      [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width],
+                      [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0]
+                  )
                 : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [0, BUTTON_WIDTH, 0]),
     }));
 
@@ -78,7 +89,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                       [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, BUTTON_WIDTH * 3 + 40, dimensions.width],
                       [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH + 40, dimensions.width - BUTTON_WIDTH]
                   )
-                : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [-BUTTON_WIDTH, 0, dimensions.width - BUTTON_WIDTH]),
+                : interpolate(
+                      -translateX.value,
+                      [0, BUTTON_WIDTH * 2, dimensions.width],
+                      [-BUTTON_WIDTH, 0, dimensions.width - BUTTON_WIDTH]
+                  ),
         flex: 1,
         height: '100%',
         width: BUTTON_WIDTH,
@@ -123,7 +138,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
             }
         })
         .onUpdate((event) => {
-            translateX.value = clamp(event.translationX + previousTranslateX.value, -dimensions.width, dimensions.width);
+            translateX.value = clamp(
+                event.translationX + previousTranslateX.value,
+                -dimensions.width,
+                dimensions.width
+            );
         })
         .onEnd((event) => {
             const right = event.translationX > 0 && translateX.value > 0;
@@ -145,7 +164,10 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                     runOnJS(onDelete)();
                     return;
                 }
-                translateX.value = withSpring(event.translationX > 0 ? BUTTON_WIDTH * 2 : -BUTTON_WIDTH * 2, SPRING_CONFIG);
+                translateX.value = withSpring(
+                    event.translationX > 0 ? BUTTON_WIDTH * 2 : -BUTTON_WIDTH * 2,
+                    SPRING_CONFIG
+                );
                 return;
             }
 

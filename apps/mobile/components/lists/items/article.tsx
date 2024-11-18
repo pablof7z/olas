@@ -16,7 +16,11 @@ type ArticleItemProps = {
 export function FeaturedArticle({ article }: ArticleItemProps) {
     return (
         <View className="relative" style={{ height: Dimensions.get('window').height * 0.5 }}>
-            <Image source={article.image} className="h-full w-full flex-1" style={{ objectFit: 'cover', height: '100%', maxWidth: '100%' }} />
+            <Image
+                source={article.image}
+                className="h-full w-full flex-1"
+                style={{ objectFit: 'cover', height: '100%', maxWidth: '100%' }}
+            />
 
             <LinearGradient
                 colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,1)']}
@@ -103,7 +107,8 @@ export function Article({ article, onPress, index }: ArticleItemProps) {
             titleStyle={TEXT_STYLE}
             titleClassName="font-medium text-lg"
             rightView={
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                <View
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
                     <Image source={article.image} style={styles.image} />
                 </View>
             }></ListItem>

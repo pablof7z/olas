@@ -39,6 +39,18 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#232323",
+          "image": "./assets/splash.png",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 200
+        }
+      ],
       "expo-font"
     ],
     "experiments": {
@@ -74,7 +86,7 @@
         "android.permission.RECORD_AUDIO"
       ]
     },
-    "owner": "pablof7z",
+    "owner": "sanityisland",
     "extra": {
       "router": {
         "origin": false

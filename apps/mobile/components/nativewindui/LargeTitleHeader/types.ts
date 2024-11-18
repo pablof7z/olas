@@ -77,4 +77,9 @@ type LargeTitleHeaderProps = {
     };
 };
 
-export type { NativeStackNavigationOptions, LargeTitleSearchBarRef, LargeTitleHeaderProps, NativeStackNavigationSearchBarOptions };
+export type {
+    NativeStackNavigationOptions,
+    LargeTitleSearchBarRef,
+    LargeTitleHeaderProps,
+    NativeStackNavigationSearchBarOptions,
+};

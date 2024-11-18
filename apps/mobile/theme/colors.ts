@@ -16,6 +16,7 @@ const IOS_SYSTEM_COLORS = {
         card: 'rgb(255, 255, 255)',
         destructive: 'rgb(255, 56, 43)',
         primary: 'rgb(0, 0, 0)',
+        accent: 'rgb(225, 48, 108)',
     },
     dark: {
         grey6: 'rgb(21, 21, 24)',
@@ -30,6 +31,7 @@ const IOS_SYSTEM_COLORS = {
         card: 'rgb(28, 28, 30)',
         destructive: 'rgb(254, 67, 54)',
         primary: 'rgb(225, 48, 108)',
+        accent: 'rgb(225, 48, 108)',
     },
 } as const;
 

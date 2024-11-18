@@ -3,7 +3,14 @@ import { useAugmentedRef } from '@rn-primitives/hooks';
 import { Icon } from '@roninoss/icons';
 import * as React from 'react';
 import { Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInLeft, FadeOut, FadeOutLeft, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeInLeft,
+    FadeOut,
+    FadeOutLeft,
+    LayoutAnimationConfig,
+    LinearTransition,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DropdownItem, DropdownMenuProps, DropdownMenuRef, DropdownSubMenu } from './types';
@@ -90,13 +97,18 @@ const DropdownMenu = React.forwardRef<DropdownMenuRef, DropdownMenuProps>(
                             subMenuRefs,
                             closeSubMenus,
                         }}>
-                        <DropdownMenuPrimitive.Overlay style={StyleSheet.absoluteFill} pointerEvents={materialIsSubMenu ? 'box-none' : undefined}>
+                        <DropdownMenuPrimitive.Overlay
+                            style={StyleSheet.absoluteFill}
+                            pointerEvents={materialIsSubMenu ? 'box-none' : undefined}>
                             <Animated.View
                                 style={StyleSheet.absoluteFill}
                                 entering={FadeIn}
                                 exiting={FadeOut}
                                 pointerEvents={materialIsSubMenu ? 'box-none' : undefined}
-                                className={cn(!materialIsSubMenu && 'bg-black/20', !materialIsSubMenu && materialOverlayClassName)}>
+                                className={cn(
+                                    !materialIsSubMenu && 'bg-black/20',
+                                    !materialIsSubMenu && materialOverlayClassName
+                                )}>
                                 <DropdownMenuPrimitive.Content
                                     insets={{
                                         top: insets.top,
@@ -147,7 +159,11 @@ function DropdownMenuInnerContent({ items }: { items: (DropdownItem | DropdownSu
                 if (item.loading) {
                     return (
                         <DropdownMenuPrimitive.Item key={`loading:${id}-${item.title}-${index}`} asChild>
-                            <Button disabled variant="plain" className="h-12 justify-between gap-10 rounded-none px-3" androidRootClassName="rounded-none ">
+                            <Button
+                                disabled
+                                variant="plain"
+                                className="h-12 justify-between gap-10 rounded-none px-3"
+                                androidRootClassName="rounded-none ">
                                 <Text className="font-normal opacity-60">{materialLoadingText}</Text>
                                 <ActivityIndicator />
                             </Button>
@@ -158,7 +174,12 @@ function DropdownMenuInnerContent({ items }: { items: (DropdownItem | DropdownSu
                     const subMenu = item as DropdownSubMenu;
                     if (subMenu.items.length === 0) return null;
                     return (
-                        <DropdownMenuSubMenu title={subMenu.title} subTitle={subMenu.subTitle} items={subMenu.items} key={`${id}-${subMenu.title}-${index}`} />
+                        <DropdownMenuSubMenu
+                            title={subMenu.title}
+                            subTitle={subMenu.subTitle}
+                            items={subMenu.items}
+                            key={`${id}-${subMenu.title}-${index}`}
+                        />
                     );
                 }
                 const dropdownItem = item as DropdownItem;
@@ -198,7 +219,10 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                 }}>
                 <Button
                     variant={props.state?.checked ? 'tonal' : 'plain'}
-                    className={cn('h-12 justify-between gap-10 rounded-none px-3', !props.state && !props.title && 'justify-center px-4')}
+                    className={cn(
+                        'h-12 justify-between gap-10 rounded-none px-3',
+                        !props.state && !props.title && 'justify-center px-4'
+                    )}
                     androidRootClassName="rounded-none"
                     accessibilityHint={props.subTitle}
                     onPress={onPress}>
@@ -212,7 +236,11 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                             <Animated.View layout={LinearTransition}>
                                 <Text
                                     numberOfLines={1}
-                                    className={cn('font-normal', props.destructive && 'font-medium text-destructive', props.disabled && 'opacity-60')}>
+                                    className={cn(
+                                        'font-normal',
+                                        props.destructive && 'font-medium text-destructive',
+                                        props.disabled && 'opacity-60'
+                                    )}>
                                     {props.title}
                                 </Text>
                             </Animated.View>
@@ -225,7 +253,10 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                             style={{
                                 width: 22,
                                 height: 22,
-                                borderRadius: typeof props.image.cornerRadius === 'number' && props.image.cornerRadius > 0 ? props.image.cornerRadius / 4 : 0,
+                                borderRadius:
+                                    typeof props.image.cornerRadius === 'number' && props.image.cornerRadius > 0
+                                        ? props.image.cornerRadius / 4
+                                        : 0,
                             }}
                         />
                     ) : props.icon ? (
@@ -244,7 +275,13 @@ const DEFAULT_LAYOUT = {
 
 function DropdownMenuSubMenu({ title, subTitle, items }: Omit<DropdownSubMenu, 'loading'>) {
     const { colors } = useColorScheme();
-    const { onItemPress: onDropdownItemPress, dismissMenu, materialSubMenuTitlePlaceholder, subMenuRefs, closeSubMenus } = useDropdownContext();
+    const {
+        onItemPress: onDropdownItemPress,
+        dismissMenu,
+        materialSubMenuTitlePlaceholder,
+        subMenuRefs,
+        closeSubMenus,
+    } = useDropdownContext();
     const [triggerLayout, setTriggerLayout] = React.useState<typeof DEFAULT_LAYOUT>(DEFAULT_LAYOUT);
 
     function onItemPress(item: Omit<DropdownItem, 'icon'>) {

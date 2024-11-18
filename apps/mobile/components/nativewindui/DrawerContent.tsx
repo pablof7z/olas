@@ -97,7 +97,13 @@ function DrawerContentSectionItem<T extends 'sfSymbol' | 'material'>({
                 {...icon}
             />
             <View className="flex-1">
-                <Text className={cn(isActive ? 'ios:text-white dark:text-white' : 'text-card-foreground', 'android:text-[14px] font-normal')}>{label}</Text>
+                <Text
+                    className={cn(
+                        isActive ? 'ios:text-white dark:text-white' : 'text-card-foreground',
+                        'android:text-[14px] font-normal'
+                    )}>
+                    {label}
+                </Text>
             </View>
             {rightView}
         </Button>
@@ -116,4 +122,11 @@ function getActiveDrawerContentScreen(props: DrawerContentComponentProps) {
     return props.state.routes[props.state.index].name;
 }
 
-export { DrawerContentRoot, DrawerContentSection, DrawerContentSectionItem, DrawerContentSectionTitle, useToggleDrawer, getActiveDrawerContentScreen };
+export {
+    DrawerContentRoot,
+    DrawerContentSection,
+    DrawerContentSectionItem,
+    DrawerContentSectionTitle,
+    useToggleDrawer,
+    getActiveDrawerContentScreen,
+};

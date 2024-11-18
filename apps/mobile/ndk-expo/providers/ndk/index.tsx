@@ -28,6 +28,16 @@ const NDKProvider = ({
     );
     const [currentUser, setCurrentUser] = useState<NDKUser | null>(null);
     const [unpublishedEvents, setUnpublishedEvents] = useState<Map<string, UnpublishedEventEntry>>(new Map());
+    const [cacheInitialized, setCacheInitialized] = useState<boolean | null>(opts?.cacheAdapter ? false : null);
+
+    if (!ndk.current.cacheAdapter?.ready) {
+        ndk.current.cacheAdapter?.onReady(() => {
+            console.log('cache initialized!');
+            setCacheInitialized(true);
+        });
+    }
+
+    console.log('cache initialized', { cacheInitialized });
 
     useEffect(() => {
         ndk.current.cacheAdapter?.getUnpublishedEvents?.().then((entries) => {
@@ -106,6 +116,7 @@ const NDKProvider = ({
                 logout,
                 currentUser,
                 unpublishedEvents,
+                cacheInitialized,
             }}>
             {children}
         </NDKContext.Provider>

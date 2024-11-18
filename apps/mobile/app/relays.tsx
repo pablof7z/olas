@@ -26,7 +26,10 @@ const RelayListItem: React.FC<
     const relays = useMemo(() => [item.title], [item.title]);
     const { events: groupEvents } = useSubscribe({ filters: groupFilters, opts, relays });
 
-    const adminPubkeys = useMemo(() => groupEvents.map((event) => event.getMatchingTags('p').map((tag) => tag[1])).flat(), [groupEvents]);
+    const adminPubkeys = useMemo(
+        () => groupEvents.map((event) => event.getMatchingTags('p').map((tag) => tag[1])).flat(),
+        [groupEvents]
+    );
 
     return (
         <ListItem item={item} index={index} target={target}>

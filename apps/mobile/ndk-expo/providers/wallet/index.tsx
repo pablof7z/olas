@@ -67,5 +67,9 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
     }, [ndk, currentUser]);
 
-    return <NDKWalletContext.Provider value={{ walletService, wallets, defaultWallet }}>{children}</NDKWalletContext.Provider>;
+    return (
+        <NDKWalletContext.Provider value={{ walletService, wallets, defaultWallet }}>
+            {children}
+        </NDKWalletContext.Provider>
+    );
 };

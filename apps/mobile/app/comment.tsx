@@ -50,7 +50,13 @@ export default function CommentScreen() {
                     </View>
 
                     <View className="grow">
-                        <TextInput placeholder="Add a comment..." multiline autoFocus value={comment} onChangeText={setComment} />
+                        <TextInput
+                            placeholder="Add a comment..."
+                            multiline
+                            autoFocus
+                            value={comment}
+                            onChangeText={setComment}
+                        />
                     </View>
                 </KeyboardAwareScrollView>
             </View>

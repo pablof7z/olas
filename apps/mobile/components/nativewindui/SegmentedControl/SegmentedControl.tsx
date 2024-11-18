@@ -33,7 +33,11 @@ function SegmentedControl({
                             disabled={!enabled}
                             size="sm"
                             variant={selectedIndex === index ? 'tonal' : 'plain'}
-                            androidRootClassName={cn('rounded-none', index === 0 && 'rounded-l-full', index === values?.length - 1 && 'rounded-r-full')}
+                            androidRootClassName={cn(
+                                'rounded-none',
+                                index === 0 && 'rounded-l-full',
+                                index === values?.length - 1 && 'rounded-r-full'
+                            )}
                             className={cn(
                                 'rounded-none py-2.5',
                                 index === 0 && 'rounded-l-full',

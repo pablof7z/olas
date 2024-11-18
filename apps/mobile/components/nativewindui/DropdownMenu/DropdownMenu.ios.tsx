@@ -1,7 +1,13 @@
 import { ICON_MAPPING, type MaterialIconName } from '@roninoss/icons';
 import * as React from 'react';
 import { View } from 'react-native';
-import { ContextMenuButton, MenuAttributes, MenuConfig, MenuElementConfig, OnPressMenuItemEvent } from 'react-native-ios-context-menu';
+import {
+    ContextMenuButton,
+    MenuAttributes,
+    MenuConfig,
+    MenuElementConfig,
+    OnPressMenuItemEvent,
+} from 'react-native-ios-context-menu';
 
 import type { DropdownItem, DropdownMenuConfig, DropdownMenuProps, DropdownMenuRef, DropdownSubMenu } from './types';
 
@@ -64,7 +70,11 @@ function toOnPressMenuItem(onItemPress: DropdownMenuProps['onItemPress']): OnPre
     };
 }
 
-function toConfigMenu(items: DropdownMenuConfig['items'], iOSItemSize: DropdownMenuConfig['iOSItemSize'], title: DropdownMenuConfig['title']): MenuConfig {
+function toConfigMenu(
+    items: DropdownMenuConfig['items'],
+    iOSItemSize: DropdownMenuConfig['iOSItemSize'],
+    title: DropdownMenuConfig['title']
+): MenuConfig {
     return {
         menuTitle: title ?? '',
         menuPreferredElementSize: iOSItemSize,

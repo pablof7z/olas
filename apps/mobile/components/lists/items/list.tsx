@@ -62,7 +62,10 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'h-[88px]',
+                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
                 leftView={
@@ -73,9 +76,17 @@ export default function List({ list, onPress, index, target }: ListItemProps) {
                     </View>
                 }
                 rightView={
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            height: '100%',
+                        }}>
                         <View className="flex-row items-center">
-                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
+                            <Text className="text-sm text-muted-foreground">
+                                {messageCount > 0 ? messageCount : ''}
+                            </Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />

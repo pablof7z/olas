@@ -60,55 +60,57 @@ function Toolbar({ leftView, rightView, iosHint, children, className, iosBlurInt
 type IconProps = ROIconProps<'material'>;
 type MaterialSchemeOnlyIconProps = Omit<ROIconProps<'material'>, 'namingScheme'>;
 
-const ToolbarIcon = React.forwardRef<React.ElementRef<typeof Button>, ButtonProps & { icon: MaterialSchemeOnlyIconProps }>(
-    ({ icon, className, androidRootClassName, ...props }, ref) => {
-        const { colors } = useColorScheme();
-        return (
-            <Button
-                ref={ref}
-                size="icon"
-                variant="plain"
-                className={cn('h-11 w-11 rounded-lg', className)}
-                androidRootClassName={cn('rounded-lg', androidRootClassName)}
-                {...props}>
-                <Icon
-                    color={Platform.select({
-                        ios: colors.primary,
-                        default: colors.foreground,
-                    })}
-                    size={Platform.select({ ios: 27, default: 24 })}
-                    {...(icon as IconProps)}
-                />
-            </Button>
-        );
-    }
-);
+const ToolbarIcon = React.forwardRef<
+    React.ElementRef<typeof Button>,
+    ButtonProps & { icon: MaterialSchemeOnlyIconProps }
+>(({ icon, className, androidRootClassName, ...props }, ref) => {
+    const { colors } = useColorScheme();
+    return (
+        <Button
+            ref={ref}
+            size="icon"
+            variant="plain"
+            className={cn('h-11 w-11 rounded-lg', className)}
+            androidRootClassName={cn('rounded-lg', androidRootClassName)}
+            {...props}>
+            <Icon
+                color={Platform.select({
+                    ios: colors.primary,
+                    default: colors.foreground,
+                })}
+                size={Platform.select({ ios: 27, default: 24 })}
+                {...(icon as IconProps)}
+            />
+        </Button>
+    );
+});
 
 ToolbarIcon.displayName = 'ToolbarIcon';
 
-const ToolbarCTA = React.forwardRef<React.ElementRef<typeof Button>, ButtonProps & { icon: MaterialSchemeOnlyIconProps }>(
-    ({ icon, className, androidRootClassName, ...props }, ref) => {
-        const { colors } = useColorScheme();
-        return (
-            <Button
-                ref={ref}
-                size="icon"
-                variant={Platform.select({ ios: 'plain', default: 'tonal' })}
-                className={cn('h-11 w-11 rounded-lg', className)}
-                androidRootClassName={cn('rounded-lg', androidRootClassName)}
-                {...props}>
-                <Icon
-                    size={Platform.select({ ios: 27, default: 24 })}
-                    color={Platform.select({
-                        ios: colors.primary,
-                        default: colors.foreground,
-                    })}
-                    {...(icon as IconProps)}
-                />
-            </Button>
-        );
-    }
-);
+const ToolbarCTA = React.forwardRef<
+    React.ElementRef<typeof Button>,
+    ButtonProps & { icon: MaterialSchemeOnlyIconProps }
+>(({ icon, className, androidRootClassName, ...props }, ref) => {
+    const { colors } = useColorScheme();
+    return (
+        <Button
+            ref={ref}
+            size="icon"
+            variant={Platform.select({ ios: 'plain', default: 'tonal' })}
+            className={cn('h-11 w-11 rounded-lg', className)}
+            androidRootClassName={cn('rounded-lg', androidRootClassName)}
+            {...props}>
+            <Icon
+                size={Platform.select({ ios: 27, default: 24 })}
+                color={Platform.select({
+                    ios: colors.primary,
+                    default: colors.foreground,
+                })}
+                {...(icon as IconProps)}
+            />
+        </Button>
+    );
+});
 
 ToolbarCTA.displayName = 'ToolbarCTA';
 

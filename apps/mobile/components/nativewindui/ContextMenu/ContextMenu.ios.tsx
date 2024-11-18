@@ -2,7 +2,13 @@ import { ICON_MAPPING, type MaterialIconName } from '@roninoss/icons';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
 import { View } from 'react-native';
-import { ContextMenuView, MenuAttributes, MenuConfig, MenuElementConfig, OnPressMenuItemEvent } from 'react-native-ios-context-menu';
+import {
+    ContextMenuView,
+    MenuAttributes,
+    MenuConfig,
+    MenuElementConfig,
+    OnPressMenuItemEvent,
+} from 'react-native-ios-context-menu';
 
 import type { ContextItem, ContextMenuConfig, ContextMenuProps, ContextMenuRef, ContextSubMenu } from './types';
 
@@ -80,7 +86,9 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
                     renderPreview={iosRenderPreview}
                     shouldPreventLongPressGestureFromPropagating
                     lazyPreview={!!iosRenderPreview}
-                    auxiliaryPreviewConfig={!renderAuxiliaryPreview ? undefined : getAuxiliaryPreviewConfig(auxiliaryPreviewPosition)}
+                    auxiliaryPreviewConfig={
+                        !renderAuxiliaryPreview ? undefined : getAuxiliaryPreviewConfig(auxiliaryPreviewPosition)
+                    }
                     isAuxiliaryPreviewEnabled={!!renderAuxiliaryPreview}
                     renderAuxiliaryPreview={renderAuxiliaryPreview}
                     {...props}
@@ -113,7 +121,11 @@ function toOnPressMenuItem(onItemPress: ContextMenuProps['onItemPress']): OnPres
     };
 }
 
-function toConfigMenu(items: ContextMenuConfig['items'], iOSItemSize: ContextMenuConfig['iOSItemSize'], title: ContextMenuConfig['title']): MenuConfig {
+function toConfigMenu(
+    items: ContextMenuConfig['items'],
+    iOSItemSize: ContextMenuConfig['iOSItemSize'],
+    title: ContextMenuConfig['title']
+): MenuConfig {
     return {
         menuTitle: title ?? '',
         menuPreferredElementSize: iOSItemSize,

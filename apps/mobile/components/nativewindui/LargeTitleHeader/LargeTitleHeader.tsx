@@ -5,7 +5,15 @@ import { Icon } from '@roninoss/icons';
 import { Stack, useNavigation } from 'expo-router';
 import * as React from 'react';
 import { BackHandler, TextInput, View } from 'react-native';
-import Animated, { FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, ZoomIn, withTiming } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeInRight,
+    FadeInUp,
+    FadeOut,
+    FadeOutRight,
+    ZoomIn,
+    withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { LargeTitleHeaderProps, LargeTitleSearchBarRef, NativeStackNavigationSearchBarOptions } from './types';
@@ -107,7 +115,9 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                 <View className="flex-row justify-between px-0.5">
                     <View className="flex-1 flex-row items-center">
                         {!!props.leftView ? (
-                            <View className="flex-row justify-center gap-4 pl-0.5">{props.leftView({ canGoBack, tintColor: colors.foreground })}</View>
+                            <View className="flex-row justify-center gap-4 pl-0.5">
+                                {props.leftView({ canGoBack, tintColor: colors.foreground })}
+                            </View>
                         ) : (
                             props.backVisible !== false &&
                             canGoBack && (
@@ -155,14 +165,19 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
             {!!props.searchBar && showSearchBar && (
                 <Portal name={`large-title:${id}`}>
                     <Animated.View exiting={FadeOut} className="absolute bottom-0 left-0 right-0 top-0">
-                        <View style={{ paddingTop: insets.top + 6 }} className="relative z-50 overflow-hidden bg-background">
+                        <View
+                            style={{ paddingTop: insets.top + 6 }}
+                            className="relative z-50 overflow-hidden bg-background">
                             <Animated.View
                                 entering={customEntering}
                                 exiting={customExiting}
                                 className="bg-muted/25 absolute bottom-2.5 left-4 right-4 h-14 rounded-full dark:bg-card"
                             />
                             <View className="pb-2.5">
-                                <Animated.View entering={FadeIn} exiting={FadeOut} className="h-14 flex-row items-center pl-3.5 pr-5">
+                                <Animated.View
+                                    entering={FadeIn}
+                                    exiting={FadeOut}
+                                    className="h-14 flex-row items-center pl-3.5 pr-5">
                                     <Animated.View entering={FadeIn} exiting={FadeOut}>
                                         <Button variant="plain" size="icon" onPress={onSearchBackPress}>
                                             <Icon color={colors.grey} name={'arrow-left'} size={24} />

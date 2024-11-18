@@ -31,14 +31,16 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
     ) => {
         const { height } = useReanimatedKeyboardAnimation();
         const [open, setOpen] = React.useState(false);
-        const [{ title, message, buttons, prompt, materialIcon, materialWidth }, setProps] = React.useState<AlertProps>({
-            title: titleProp,
-            message: messageProp,
-            buttons: buttonsProp,
-            prompt: promptProp,
-            materialIcon: materialIconProp,
-            materialWidth: materialWidthProp,
-        });
+        const [{ title, message, buttons, prompt, materialIcon, materialWidth }, setProps] = React.useState<AlertProps>(
+            {
+                title: titleProp,
+                message: messageProp,
+                buttons: buttonsProp,
+                prompt: promptProp,
+                materialIcon: materialIconProp,
+                materialWidth: materialWidthProp,
+            }
+        );
         const [text, setText] = React.useState(promptProp?.defaultValue ?? '');
         const [password, setPassword] = React.useState('');
         const { colors } = useColorScheme();
@@ -91,7 +93,9 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                             entering={FadeIn}
                             exiting={FadeOut}
                             style={bottomPaddingStyle}
-                            className={cn('bg-popover/80 absolute bottom-0 left-0 right-0 top-0 items-center justify-center px-3')}>
+                            className={cn(
+                                'bg-popover/80 absolute bottom-0 left-0 right-0 top-0 items-center justify-center px-3'
+                            )}>
                             <AlertDialogPrimitive.Content>
                                 <Animated.View
                                     style={typeof materialWidth === 'number' ? { width: materialWidth } : undefined}
@@ -106,7 +110,9 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                     {!!message ? (
                                         <>
                                             <AlertDialogPrimitive.Title asChild>
-                                                <Text variant="title2" className={cn(!!materialIcon && 'text-center', 'pb-4')}>
+                                                <Text
+                                                    variant="title2"
+                                                    className={cn(!!materialIcon && 'text-center', 'pb-4')}>
                                                     {title}
                                                 </Text>
                                             </AlertDialogPrimitive.Title>
@@ -118,7 +124,9 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                         </>
                                     ) : !!materialIcon ? (
                                         <AlertDialogPrimitive.Title asChild>
-                                            <Text variant="title2" className={cn(!!materialIcon && 'text-center', 'pb-4')}>
+                                            <Text
+                                                variant="title2"
+                                                className={cn(!!materialIcon && 'text-center', 'pb-4')}>
                                                 {title}
                                             </Text>
                                         </AlertDialogPrimitive.Title>
@@ -134,7 +142,9 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                             <TextField
                                                 autoFocus
                                                 labelClassName="bg-card"
-                                                keyboardType={prompt.type === 'secure-text' ? 'default' : prompt.keyboardType}
+                                                keyboardType={
+                                                    prompt.type === 'secure-text' ? 'default' : prompt.keyboardType
+                                                }
                                                 label={prompt.type === 'login-password' ? 'Email' : ''}
                                                 secureTextEntry={prompt.type === 'secure-text'}
                                                 value={text}
@@ -177,20 +187,32 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                     ) : (
                                         <View className="h-0.5" />
                                     )}
-                                    <View className={cn('flex-row items-center justify-end gap-0.5', buttons.length > 2 && 'justify-between')}>
+                                    <View
+                                        className={cn(
+                                            'flex-row items-center justify-end gap-0.5',
+                                            buttons.length > 2 && 'justify-between'
+                                        )}>
                                         {buttons.map((button, index) => {
                                             if (button.style === 'cancel') {
                                                 return (
                                                     <View
                                                         key={`${button.text}-${index}`}
-                                                        className={cn(buttons.length > 2 && index === 0 && 'flex-1 items-start')}>
+                                                        className={cn(
+                                                            buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                        )}>
                                                         <AlertDialogPrimitive.Cancel asChild>
                                                             <Button
                                                                 variant="plain"
                                                                 onPress={() => {
-                                                                    button.onPress?.(prompt?.type === 'login-password' ? { login: text, password } : text);
+                                                                    button.onPress?.(
+                                                                        prompt?.type === 'login-password'
+                                                                            ? { login: text, password }
+                                                                            : text
+                                                                    );
                                                                 }}>
-                                                                <Text className="text-[14px] font-medium  text-primary">{button.text}</Text>
+                                                                <Text className="text-[14px] font-medium  text-primary">
+                                                                    {button.text}
+                                                                </Text>
                                                             </Button>
                                                         </AlertDialogPrimitive.Cancel>
                                                     </View>
@@ -200,29 +222,47 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                                 return (
                                                     <View
                                                         key={`${button.text}-${index}`}
-                                                        className={cn(buttons.length > 2 && index === 0 && 'flex-1 items-start')}>
+                                                        className={cn(
+                                                            buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                        )}>
                                                         <AlertDialogPrimitive.Action asChild>
                                                             <Button
                                                                 variant="tonal"
                                                                 className="bg-destructive/10 dark:bg-destructive/25"
                                                                 onPress={() => {
-                                                                    button.onPress?.(prompt?.type === 'login-password' ? { login: text, password } : text);
+                                                                    button.onPress?.(
+                                                                        prompt?.type === 'login-password'
+                                                                            ? { login: text, password }
+                                                                            : text
+                                                                    );
                                                                 }}>
-                                                                <Text className="text-[14px] font-medium  text-foreground">{button.text}</Text>
+                                                                <Text className="text-[14px] font-medium  text-foreground">
+                                                                    {button.text}
+                                                                </Text>
                                                             </Button>
                                                         </AlertDialogPrimitive.Action>
                                                     </View>
                                                 );
                                             }
                                             return (
-                                                <View key={`${button.text}-${index}`} className={cn(buttons.length > 2 && index === 0 && 'flex-1 items-start')}>
+                                                <View
+                                                    key={`${button.text}-${index}`}
+                                                    className={cn(
+                                                        buttons.length > 2 && index === 0 && 'flex-1 items-start'
+                                                    )}>
                                                     <AlertDialogPrimitive.Action asChild>
                                                         <Button
                                                             variant="plain"
                                                             onPress={() => {
-                                                                button.onPress?.(prompt?.type === 'login-password' ? { login: text, password } : text);
+                                                                button.onPress?.(
+                                                                    prompt?.type === 'login-password'
+                                                                        ? { login: text, password }
+                                                                        : text
+                                                                );
                                                             }}>
-                                                            <Text className="text-[14px] font-medium  text-primary">{button.text}</Text>
+                                                            <Text className="text-[14px] font-medium  text-primary">
+                                                                {button.text}
+                                                            </Text>
                                                         </Button>
                                                     </AlertDialogPrimitive.Action>
                                                 </View>

@@ -42,7 +42,10 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
     const [item, setItem] = useState<ListRenderItemInfo<Thread>>({ item: thread, index, target });
     const rootEventId = useMemo(() => thread.rootEventId, [thread]);
     const events = useMemo(() => thread.events, [thread]);
-    const rootEvent = useMemo(() => (rootEventId ? events.find((e) => e.id === rootEventId) : undefined), [events, rootEventId]);
+    const rootEvent = useMemo(
+        () => (rootEventId ? events.find((e) => e.id === rootEventId) : undefined),
+        [events, rootEventId]
+    );
 
     useEffect(() => {
         if (!ndk || !rootEvent) return;
@@ -50,7 +53,10 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
         fetchedUser.fetchProfile().then(setUserProfile);
     }, [ndk, rootEvent?.pubkey]);
 
-    const mostRecentEvent = useMemo(() => (events ? events.sort((a, b) => a.created_at! - b.created_at!).pop() : undefined), [events]);
+    const mostRecentEvent = useMemo(
+        () => (events ? events.sort((a, b) => a.created_at! - b.created_at!).pop() : undefined),
+        [events]
+    );
 
     const messageCount = useDebounce(events?.length, 1000);
 
@@ -85,7 +91,10 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn('h-[94px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'h-[94px]',
+                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-base"
                 subTitleClassName="pt-0.5"
@@ -103,9 +112,17 @@ export default function ThreadItem({ thread, onPress, index, target }: ThreadIte
                     </View>
                 }
                 rightView={
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            height: '100%',
+                        }}>
                         <View className="flex-row items-center">
-                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
+                            <Text className="text-sm text-muted-foreground">
+                                {messageCount > 0 ? messageCount : ''}
+                            </Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />

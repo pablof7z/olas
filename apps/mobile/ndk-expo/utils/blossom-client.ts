@@ -139,7 +139,12 @@ export class BlossomClient {
      * @param expiration The expiration time in seconds
      * @returns {Promise<SignedEvent>}
      */
-    static async createUploadAuth(sha256: string | string[], signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
+    static async createUploadAuth(
+        sha256: string | string[],
+        signer: Signer,
+        message = 'Upload Blob',
+        expiration = oneHour()
+    ) {
         const draft: EventTemplate = {
             kind: AUTH_EVENT_KIND,
             content: message,
@@ -199,7 +204,12 @@ export class BlossomClient {
             ],
         });
     }
-    static async listBlobs(server: ServerType, pubkey: string, opts?: { since?: number; until?: number }, auth?: SignedEvent) {
+    static async listBlobs(
+        server: ServerType,
+        pubkey: string,
+        opts?: { since?: number; until?: number },
+        auth?: SignedEvent
+    ) {
         const url = new URL(`/list/` + pubkey, server);
         if (opts?.since) url.searchParams.append('since', String(opts.since));
         if (opts?.until) url.searchParams.append('until', String(opts.until));
@@ -211,7 +221,12 @@ export class BlossomClient {
     }
 
     // static delete blob
-    static async getDeleteAuth(hash: string | string[], signer: Signer, message = 'Delete Blob', expiration = oneHour()) {
+    static async getDeleteAuth(
+        hash: string | string[],
+        signer: Signer,
+        message = 'Delete Blob',
+        expiration = oneHour()
+    ) {
         const draft: EventTemplate = {
             created_at: now(),
             kind: AUTH_EVENT_KIND,

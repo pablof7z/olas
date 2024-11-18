@@ -22,7 +22,12 @@ export default function Article({ article }: ArticleProps) {
                 <Image
                     source={article.image}
                     className="h-full w-full flex-1"
-                    style={{ contentFit: 'cover', aspectRatio: 16 / 9, maxHeight: Dimensions.get('window').height / 2, width: '100%' }}
+                    style={{
+                        contentFit: 'cover',
+                        aspectRatio: 16 / 9,
+                        maxHeight: Dimensions.get('window').height / 2,
+                        width: '100%',
+                    }}
                 />
 
                 <LinearGradient

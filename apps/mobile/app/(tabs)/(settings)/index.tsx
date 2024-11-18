@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    ListDataItem,
+    ListItem,
+    ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -105,7 +112,11 @@ export default function SettingsIosStyleScreen() {
 
     return (
         <>
-            <LargeTitleHeader title="Settings" searchBar={{ iosHideWhenScrolling: true }} rightView={() => <ThemeToggle />} />
+            <LargeTitleHeader
+                title="Settings"
+                searchBar={{ iosHideWhenScrolling: true }}
+                rightView={() => <ThemeToggle />}
+            />
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
@@ -126,7 +137,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -157,7 +171,15 @@ function ChevronRight() {
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
 }
 
-function IconView({ className, name, children }: { className?: string; name?: MaterialIconName; children?: React.ReactNode }) {
+function IconView({
+    className,
+    name,
+    children,
+}: {
+    className?: string;
+    name?: MaterialIconName;
+    children?: React.ReactNode;
+}) {
     return (
         <View className="px-3">
             <View className={cn('h-6 w-6 items-center justify-center rounded-md', className)}>

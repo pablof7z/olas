@@ -27,7 +27,20 @@ type FormSectionProps = ViewProps & {
 };
 
 const FormSection = React.forwardRef<React.ElementRef<typeof View>, FormSectionProps>(
-    ({ rootClassName, className, footnote, footnoteClassName, ios, materialIconProps, style = BORDER_CURVE, children: childrenProps, ...props }, ref) => {
+    (
+        {
+            rootClassName,
+            className,
+            footnote,
+            footnoteClassName,
+            ios,
+            materialIconProps,
+            style = BORDER_CURVE,
+            children: childrenProps,
+            ...props
+        },
+        ref
+    ) => {
         const { colors } = useColorScheme();
         const children = React.useMemo(() => {
             if (Platform.OS !== 'ios') return childrenProps;
@@ -39,14 +52,24 @@ const FormSection = React.forwardRef<React.ElementRef<typeof View>, FormSectionP
                 if (typeof child === 'string') {
                     console.log('FormSection - Invalid asChild element', child);
                 }
-                return React.cloneElement<ViewProps & { isLast?: boolean }, View>(typeof child === 'string' ? <></> : child, { isLast });
+                return React.cloneElement<ViewProps & { isLast?: boolean }, View>(
+                    typeof child === 'string' ? <></> : child,
+                    { isLast }
+                );
             });
         }, [childrenProps]);
 
         return (
-            <View className={cn('relative', Platform.OS !== 'ios' && !!materialIconProps && 'flex-row gap-4', rootClassName)}>
+            <View
+                className={cn(
+                    'relative',
+                    Platform.OS !== 'ios' && !!materialIconProps && 'flex-row gap-4',
+                    rootClassName
+                )}>
                 {Platform.OS === 'ios' && !!ios?.title && (
-                    <Text variant="footnote" className={cn('pb-1 pl-3 uppercase text-muted-foreground', ios?.titleClassName)}>
+                    <Text
+                        variant="footnote"
+                        className={cn('pb-1 pl-3 uppercase text-muted-foreground', ios?.titleClassName)}>
                         {ios.title}
                     </Text>
                 )}
@@ -58,13 +81,18 @@ const FormSection = React.forwardRef<React.ElementRef<typeof View>, FormSectionP
                 <View className="flex-1">
                     <View
                         ref={ref}
-                        className={cn('ios:overflow-hidden ios:rounded-lg ios:bg-card ios:gap-0 ios:pl-1 gap-4', className)}
+                        className={cn(
+                            'ios:overflow-hidden ios:rounded-lg ios:bg-card ios:gap-0 ios:pl-1 gap-4',
+                            className
+                        )}
                         style={style}
                         children={children}
                         {...props}
                     />
                     {!!footnote && (
-                        <Text className={cn('ios:pl-3 ios:pt-1 pl-3 pt-0.5 text-muted-foreground', footnoteClassName)} variant="footnote">
+                        <Text
+                            className={cn('ios:pl-3 ios:pt-1 pl-3 pt-0.5 text-muted-foreground', footnoteClassName)}
+                            variant="footnote">
                             {footnote}
                         </Text>
                     )}
@@ -84,7 +112,9 @@ const FormItem = React.forwardRef<
     return (
         <>
             <View ref={ref} className={cn('ios:pr-1', className)} {...props} />
-            {Platform.OS === 'ios' && !isLast && <View className={cn('ml-2 h-px flex-1 bg-border', iosSeparatorClassName)} />}
+            {Platform.OS === 'ios' && !isLast && (
+                <View className={cn('ml-2 h-px flex-1 bg-border', iosSeparatorClassName)} />
+            )}
         </>
     );
 });

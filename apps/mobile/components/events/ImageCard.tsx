@@ -60,7 +60,10 @@ export function VideoContainer({ url }: { url: string }) {
 
 export function Reactions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
-    const filters = useMemo(() => [{ kinds: [NDKKind.Text, 22, NDKKind.Reaction, NDKKind.BookmarkList], ...event.filter() }], [event.id]);
+    const filters = useMemo(
+        () => [{ kinds: [NDKKind.Text, 22, NDKKind.Reaction, NDKKind.BookmarkList], ...event.filter() }],
+        [event.id]
+    );
     const opts = useMemo(() => ({ groupable: true }), []);
     const { events: relatedEvents } = useSubscribe({ filters, opts });
     const { colors } = useColorScheme();
@@ -84,10 +87,16 @@ export function Reactions({ event }: { event: NDKEvent }) {
     };
 
     const reactions = useMemo(() => relatedEvents.filter((r) => r.kind === NDKKind.Reaction), [relatedEvents]);
-    const reactedByUser = useMemo(() => reactions.find((r) => r.pubkey === currentUser?.pubkey), [reactions, currentUser?.pubkey]);
+    const reactedByUser = useMemo(
+        () => reactions.find((r) => r.pubkey === currentUser?.pubkey),
+        [reactions, currentUser?.pubkey]
+    );
 
     const comments = useMemo(() => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)), [relatedEvents]);
-    const commentedByUser = useMemo(() => comments.find((c) => c.pubkey === currentUser?.pubkey), [comments, currentUser?.pubkey]);
+    const commentedByUser = useMemo(
+        () => comments.find((c) => c.pubkey === currentUser?.pubkey),
+        [comments, currentUser?.pubkey]
+    );
 
     return (
         <View className="flex-1 flex-col gap-1 p-2">
@@ -122,7 +131,14 @@ const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
 
     const imageUrl = getProxiedImageUrl(urls[0]);
 
-    return <Image source={{ uri: imageUrl }} style={styles.image} placeholder={{ blurhash: 'U1LQF[-;~qs,}' }} contentFit="fill" />;
+    return (
+        <Image
+            source={{ uri: imageUrl }}
+            style={styles.image}
+            placeholder={{ blurhash: 'U1LQF[-;~qs,}' }}
+            contentFit="fill"
+        />
+    );
 });
 
 export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {

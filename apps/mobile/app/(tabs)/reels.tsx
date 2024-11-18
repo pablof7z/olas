@@ -30,9 +30,18 @@ const Reel = memo(
                     backgroundColor: 'black',
                 }}>
                 {isLoading && (
-                    <View style={{ flex: 1, width: '100%', height: Dimensions.get('window').height - safeAreaInsets.bottom }}>
+                    <View
+                        style={{
+                            flex: 1,
+                            width: '100%',
+                            height: Dimensions.get('window').height - safeAreaInsets.bottom,
+                        }}>
                         <Image source={{ uri: thumb }} style={{ flex: 1, width: '100%', height: '100%' }} />
-                        <ActivityIndicator size="large" color="#000" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+                        <ActivityIndicator
+                            size="large"
+                            color="#000"
+                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                        />
                     </View>
                 )}
                 <Video
@@ -50,7 +59,9 @@ const Reel = memo(
                 />
                 <SafeAreaView className="absolute bottom-4 left-4 flex-col items-start gap-2">
                     <User.Profile pubkey={event.pubkey}>
-                        <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
+                        <Pressable
+                            className="flex-row items-center gap-2"
+                            onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
                             <User.Avatar alt="Profile image" className="h-8 w-8" />
                             <Text className="text-base font-semibold text-white">
                                 <User.Name />

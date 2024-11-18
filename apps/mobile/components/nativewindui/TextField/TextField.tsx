@@ -2,7 +2,15 @@ import { useAugmentedRef, useControllableState } from '@rn-primitives/hooks';
 import { Icon } from '@roninoss/icons';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
-import { Pressable, TextInput, View, ViewProps, ViewStyle, type NativeSyntheticEvent, type TextInputFocusEventData } from 'react-native';
+import {
+    Pressable,
+    TextInput,
+    View,
+    ViewProps,
+    ViewStyle,
+    type NativeSyntheticEvent,
+    type TextInputFocusEventData,
+} from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
 
 import type { TextFieldProps, TextFieldRef } from './types';
@@ -124,7 +132,13 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                         />
                     </InputWrapper>
                     {!materialHideActionIcons && (
-                        <>{!!errorMessage ? <MaterialErrorIcon /> : !!value && isFocused && <MaterialClearIcon clearText={clear} editable={editable} />}</>
+                        <>
+                            {!!errorMessage ? (
+                                <MaterialErrorIcon />
+                            ) : (
+                                !!value && isFocused && <MaterialClearIcon clearText={clear} editable={editable} />
+                            )}
+                        </>
                     )}
                     {rightView}
                 </View>
@@ -282,7 +296,10 @@ function MaterialClearIcon(props: MaterialClearIconProps) {
     const { colors } = useColorScheme();
     return (
         <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
-            <Pressable disabled={props.editable === false} className="flex-1 justify-center px-2 active:opacity-65" onPress={props.clearText}>
+            <Pressable
+                disabled={props.editable === false}
+                className="flex-1 justify-center px-2 active:opacity-65"
+                onPress={props.clearText}>
                 <Icon color={colors.grey2} name="close-circle-outline" size={24} />
             </Pressable>
         </Animated.View>
@@ -292,7 +309,11 @@ function MaterialClearIcon(props: MaterialClearIconProps) {
 function MaterialErrorIcon() {
     const { colors } = useColorScheme();
     return (
-        <Animated.View pointerEvents="none" entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} className="justify-center pr-2">
+        <Animated.View
+            pointerEvents="none"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="justify-center pr-2">
             <Icon
                 color={colors.destructive}
                 name="close-circle-outline"

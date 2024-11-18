@@ -45,7 +45,10 @@ export default function CommentScreen() {
                             <View className="flex-col">
                                 <View className="flex-row items-center gap-1">
                                     <User.Name className="font-bold" />
-                                    <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
+                                    <RelativeTime
+                                        timestamp={item.created_at}
+                                        className="text-xs text-muted-foreground"
+                                    />
                                 </View>
 
                                 <EventContent event={item} className="text-sm" />
@@ -55,9 +58,17 @@ export default function CommentScreen() {
                 )}
             />
 
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="border-t border-border p-4">
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                className="border-t border-border p-4">
                 <View className="flex-row items-center gap-2">
-                    <TextInput placeholder="Add a comment..." value={comment} onChangeText={setComment} multiline className="flex-1 rounded-full" />
+                    <TextInput
+                        placeholder="Add a comment..."
+                        value={comment}
+                        onChangeText={setComment}
+                        multiline
+                        className="flex-1 rounded-full"
+                    />
                     <Button disabled={!comment.trim()}>
                         <Text className="font-semibold">Post</Text>
                     </Button>

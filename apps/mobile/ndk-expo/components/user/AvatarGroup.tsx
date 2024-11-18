@@ -38,12 +38,18 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
         <View className="flex flex-row">
             {sortedPubkeys.slice(0, threshold).map((pubkey, index) => (
                 <User.Profile key={pubkey} pubkey={pubkey}>
-                    <User.Avatar alt={pubkey} className={`h-${avatarSize} w-${avatarSize}`} style={{ marginLeft: index > 0 ? -(avatarSize * 1.5) : 0 }} />
+                    <User.Avatar
+                        alt={pubkey}
+                        className={`h-${avatarSize} w-${avatarSize}`}
+                        style={{ marginLeft: index > 0 ? -(avatarSize * 1.5) : 0 }}
+                    />
                 </User.Profile>
             ))}
 
             {sortedPubkeys.length > threshold && (
-                <View className={`h-${avatarSize} w-${avatarSize} items-center justify-center rounded-full bg-gray-200`} style={{ marginLeft: -10 }}>
+                <View
+                    className={`h-${avatarSize} w-${avatarSize} items-center justify-center rounded-full bg-gray-200`}
+                    style={{ marginLeft: -10 }}>
                     <Text className="text-sm text-gray-700">+{sortedPubkeys.length - threshold}</Text>
                 </View>
             )}

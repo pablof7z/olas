@@ -5,7 +5,11 @@ import * as React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import type { LargeTitleHeaderProps, NativeStackNavigationOptions, NativeStackNavigationSearchBarOptions } from './types';
+import type {
+    LargeTitleHeaderProps,
+    NativeStackNavigationOptions,
+    NativeStackNavigationSearchBarOptions,
+} from './types';
 
 import { useColorScheme } from '~/lib/useColorScheme';
 
@@ -20,7 +24,10 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
             <Stack.Screen options={propsToScreenOptions(props, colors.background, setIsFocused)} />
             {props.searchBar?.content && isFocused && (
                 <Portal name={`large-title:${id}`}>
-                    <Animated.View entering={FadeIn.delay(100)} style={{ top: headerHeight + 6 }} className="absolute bottom-0 left-0 right-0">
+                    <Animated.View
+                        entering={FadeIn.delay(100)}
+                        style={{ top: headerHeight + 6 }}
+                        className="absolute bottom-0 left-0 right-0">
                         {props.searchBar?.content}
                     </Animated.View>
                 </Portal>
@@ -43,13 +50,18 @@ function propsToScreenOptions(
         headerLargeTitleShadowVisible: props.shadowVisible,
         headerBlurEffect: props.iosBlurEffect === 'none' ? undefined : (props.iosBlurEffect ?? 'systemMaterial'),
         headerShadowVisible: props.shadowVisible,
-        headerLeft: props.leftView ? (headerProps) => <View className="flex-row justify-center gap-4">{props.leftView!(headerProps)}</View> : undefined,
-        headerRight: props.rightView ? (headerProps) => <View className="flex-row justify-center gap-4">{props.rightView!(headerProps)}</View> : undefined,
+        headerLeft: props.leftView
+            ? (headerProps) => <View className="flex-row justify-center gap-4">{props.leftView!(headerProps)}</View>
+            : undefined,
+        headerRight: props.rightView
+            ? (headerProps) => <View className="flex-row justify-center gap-4">{props.rightView!(headerProps)}</View>
+            : undefined,
         headerShown: props.shown,
         headerTitle: props.title,
         headerTransparent: props.iosBlurEffect !== 'none',
         headerLargeStyle: { backgroundColor: props.backgroundColor ?? backgroundColor },
-        headerStyle: props.iosBlurEffect === 'none' ? { backgroundColor: props.backgroundColor ?? backgroundColor } : undefined,
+        headerStyle:
+            props.iosBlurEffect === 'none' ? { backgroundColor: props.backgroundColor ?? backgroundColor } : undefined,
         headerSearchBarOptions: props.searchBar
             ? {
                   autoCapitalize: props.searchBar?.autoCapitalize,
@@ -62,7 +74,9 @@ function propsToScreenOptions(
                       props.searchBar?.onBlur?.();
                   },
                   onCancelButtonPress: props.searchBar?.onCancelButtonPress,
-                  onChangeText: props.searchBar?.onChangeText ? (event) => props.searchBar?.onChangeText!(event.nativeEvent.text) : undefined,
+                  onChangeText: props.searchBar?.onChangeText
+                      ? (event) => props.searchBar?.onChangeText!(event.nativeEvent.text)
+                      : undefined,
                   onFocus: () => {
                       setIsFocused(true);
                       props.searchBar?.onFocus?.();

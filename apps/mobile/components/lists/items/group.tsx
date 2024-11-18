@@ -30,7 +30,10 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
     const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }), []);
     const { events: groupEvents } = useSubscribe({ filters, opts });
 
-    const mostRecentEvent = useMemo(() => groupEvents.sort((a, b) => a.created_at! - b.created_at!).pop(), [groupEvents]);
+    const mostRecentEvent = useMemo(
+        () => groupEvents.sort((a, b) => a.created_at! - b.created_at!).pop(),
+        [groupEvents]
+    );
 
     const imageUrl = groupMetadata.picture;
     const name = groupMetadata.name ?? groupId;
@@ -56,7 +59,10 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'h-[88px]',
+                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
                 leftView={
@@ -77,9 +83,17 @@ export default function GroupRow({ groupMetadata, onPress, index, target }: Grou
                     </View>
                 }
                 rightView={
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            height: '100%',
+                        }}>
                         <View className="flex-row items-center">
-                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
+                            <Text className="text-sm text-muted-foreground">
+                                {messageCount > 0 ? messageCount : ''}
+                            </Text>
                         </View>
                         <View className="pr-3">
                             <Icon name="chevron-right" size={14} color={colors.grey} />
