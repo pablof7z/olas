@@ -27,7 +27,7 @@ export default function BlossomScreen() {
     const [url, setUrl] = useState('');
 
     if (blossoms.length === 0) {
-        setBlossoms(['https://blossom.primal.net']);
+        setBlossoms(['https://nostr.download']);
     }
 
     const addFn = () => {
@@ -113,7 +113,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 }
                 {...info}>
                 <TextInput
-                    className="flex-1 text-lg"
+                    className="flex-1 text-lg text-foreground"
                     placeholder="Add blossom server"
                     onChangeText={info.item.set}
                     autoCapitalize="none"

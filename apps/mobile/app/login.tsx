@@ -45,6 +45,7 @@ export default function LoginScreen() {
 
                     <TextInput
                         style={styles.input}
+                        className="text-foreground"
                         multiline
                         autoCapitalize="none"
                         autoComplete={undefined}

@@ -1,6 +1,8 @@
 import '@bacons/text-decoder/install';
 import { create } from 'zustand';
 
+export type PostType = 'generic' | 'high-quality';
+
 type PublishStoreState = {
     caption: string;
     setCaption: (caption: string) => void;
@@ -10,6 +12,9 @@ type PublishStoreState = {
 
     tags: string[];
     setTags: (tags: string[]) => void;
+
+    type: PostType;
+    setType: (type: PostType) => void;
 
     reset: () => void;
 };
@@ -31,6 +36,16 @@ export const publishStore = create<PublishStoreState>((set) => ({
     },
 
     reset(): void {
-        set(() => ({ caption: '', tags: [], expiration: null }));
+        set(() => ({
+            caption: '',
+            tags: [],
+            expiration: null,
+            type: 'high-quality',
+        }));
+    },
+
+    type: 'high-quality',
+    setType(type: PostType): void {
+        set(() => ({ type }));
     },
 }));

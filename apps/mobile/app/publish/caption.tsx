@@ -27,7 +27,7 @@ export default function Caption() {
                 }}
             />
             <TextInput
-                className="p-4"
+                className="p-4 text-foreground text-lg"
                 placeholder="Write a caption or comment..."
                 autoFocus
                 value={description}

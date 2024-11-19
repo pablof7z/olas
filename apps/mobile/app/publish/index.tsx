@@ -23,6 +23,7 @@ import { useStore } from 'zustand';
 import { IconView } from '../(tabs)/(settings)';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
+import { Timer, Type } from 'lucide-react-native';
 
 async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
@@ -52,16 +53,12 @@ async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ ur
 }
 
 function PostOptions() {
-    const { caption, expiration } = useStore(publishStore);
+    const { caption, expiration, type } = useStore(publishStore);
     const { colors } = useColorScheme();
 
-    const openCaption = () => {
-        router.push('/publish/caption');
-    };
-
-    const openExpiration = () => {
-        router.push('/publish/expiration');
-    };
+    const openCaption = () => router.push('/publish/caption');
+    const openExpiration = () => router.push('/publish/expiration');
+    const openType = () => router.push('/publish/type');
 
     const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
         const now = new Date().getTime() - 600 * 1000;
@@ -73,23 +70,38 @@ function PostOptions() {
     };
 
     const data = useMemo(() => {
-        const expirationText = expiration ? new Date(expiration).toLocaleString() : 'None';
-
         return [
             {
                 id: 'expiration',
                 title: 'Expiration',
                 subTitle: 'Delete post after some time',
                 onPress: openExpiration,
-                leftView: <IconView className="bg-blue-500" name="timer-outline"></IconView>,
+                leftView: <View style={{ paddingHorizontal: 10}}><Timer size={24} color={colors.muted} /></View>,
                 rightView: (
-                    <Text className="text-sm text-muted-foreground">
-                        {expiration ? `${calculateRelativeExpirationTimeInDaysOrHours(expiration)}` : 'None'}
-                    </Text>
+                    <View className="flex-1 justify-center">
+                        <Text className="text-sm text-muted-foreground">
+                            {expiration ? `${calculateRelativeExpirationTimeInDaysOrHours(expiration)}` : 'None'}
+                        </Text>
+                    </View>
                 ),
             },
+            {
+                id: 'type',
+                title: 'Post type',
+                subTitle: 'Choose the type of post',
+                onPress: openType,
+                leftView: <View style={{ paddingHorizontal: 10}}><Type size={24} color={colors.muted} /></View>,
+                rightView: (
+                    <View className="flex-1 justify-center">
+                        <Text className="text-sm text-muted-foreground">
+                            { type === 'generic' && 'Generic' }
+                            { type === 'high-quality' && 'High-quality' }
+                        </Text>
+                    </View>
+                ),
+            }
         ];
-    }, [expiration]);
+    }, [expiration, type]);
 
     return (
         <>
@@ -116,7 +128,7 @@ function PostOptions() {
 }
 
 export default function ImageUpload() {
-    const resetStore = useStore(publishStore).reset;
+    const { type, reset: resetStore } = useStore(publishStore);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
@@ -124,7 +136,7 @@ export default function ImageUpload() {
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
     }, [events, follows]);
     const defaultBlossomServer = useMemo(() => {
-        return blossomList?.items.find((item) => item[0] === 'server')?.[1] ?? 'https://blossom.primal.net';
+        return blossomList?.items.find((item) => item[0] === 'server')?.[1] ?? 'https://nostr.download';
     }, [blossomList]);
     const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
@@ -133,6 +145,7 @@ export default function ImageUpload() {
     const { expiration, caption } = useStore(publishStore);
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
+
     async function handlePost() {
         if (!selectedImage) {
             console.error('No media to upload');
@@ -149,7 +162,9 @@ export default function ImageUpload() {
 
         console.log('selectedImage', selectedImage);
 
-        if (selectionType === 'video') {
+        if (type === 'generic') {
+            eventKind = NDKKind.Text;
+        } else if (selectionType === 'video') {
             eventKind = NDKKind.VerticalVideo;
             contentType = 'video/mp4';
         } else {
@@ -163,6 +178,8 @@ export default function ImageUpload() {
         event.kind = eventKind;
         event.content = caption;
         event.tags = [];
+
+        let mediaUrls: string[] = [];
 
         const uploadPromise = new Promise<void>(async (resolve, reject) => {
             setUploading(true);
@@ -178,14 +195,12 @@ export default function ImageUpload() {
 
             upload(ndk, blob, defaultBlossomServer).then((ret) => {
                 event.tags = [...event.tags, ...(ret.mediaEvent?.tags ?? [])];
+                mediaUrls.push(ret.url);
                 resolve();
             });
         });
 
-        // Only do imeta for images
         await Promise.all([uploadPromise, imetaPromise]);
-
-        console.log('about to sign, imetatag is', imetaData.current);
 
         if (selectionType === 'image') {
             for (const tag of event.tags) {
@@ -198,6 +213,11 @@ export default function ImageUpload() {
         // if we have an expiration, set the tag
         if (expiration) {
             event.tags = [...event.tags, ['expiration', Math.floor(expiration / 1000).toString()]];
+        }
+
+        // if this is a generic post, add the URL to the content's end
+        if (type === 'generic') {
+            event.content = [ event.content, ...mediaUrls ].filter(text => text?.trim().length > 0).join('\n');
         }
 
         try {
@@ -349,12 +369,12 @@ export default function ImageUpload() {
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity style={styles.button} onPress={pickImage}>
                                 <Ionicons name="images" size={40} color="#666" />
-                                <Text style={styles.buttonText}>Gallery</Text>
+                                <Text className="text-foreground text-lg px-4">Gallery</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.button} onPress={takePhoto}>
                                 <Ionicons name="camera" size={40} color="#666" />
-                                <Text style={styles.buttonText}>Camera</Text>
+                                <Text className="text-foreground text-lg px-4">Camera</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -391,10 +411,6 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     uploadContainer: {
-        borderWidth: 2,
-        borderStyle: 'dashed',
-        borderColor: '#ccc',
-        borderRadius: 12,
         padding: 32,
     },
     buttonContainer: {
