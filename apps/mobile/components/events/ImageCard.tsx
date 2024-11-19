@@ -5,7 +5,6 @@ import {
     StyleSheet,
     TouchableNativeFeedback,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { View, Text } from 'react-native';
 import * as User from '@/ndk-expo/components/user';
 import EventContent from '@/ndk-expo/components/event/content';
@@ -24,6 +23,7 @@ import { useNDK, useSubscribe } from '@/ndk-expo';
 import { BookmarkIcon, Heart, MessageCircle } from 'lucide-react-native';
 import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { isVideo } from '@/utils/media';
+import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
@@ -163,14 +163,10 @@ const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
 
     if (!urls?.length) return null;
 
-    const imageUrl = getProxiedImageUrl(urls[0]);
-
     return (
         <Image
-            source={{ uri: imageUrl }}
+            event={event}
             style={styles.image}
-            placeholder={{ blurhash: 'U1LQF[-;~qs,}' }}
-            contentFit="fill"
         />
     );
 });
@@ -183,22 +179,9 @@ export const CardMedia = memo(function CardMedia({
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
-    if (event.kind === NDKKind.Text) return <Kind1Media event={event} />;
-    if (!url) return null;
-
-    const imeta = useMemo(() => imetaFromEvent(event), [event]);
-
-    const imageUrl = useMemo(() => getProxiedImageUrl(url), [url]);
 
     return (
-        <Image
-            source={{ uri: imageUrl }}
-            style={styles.image}
-            placeholder={{ blurhash: imeta?.blurhash }}
-            allowDownscaling={true}
-            contentPosition="center"
-            contentFit="cover"
-        />
+        <Image event={event} style={styles.image} />
     );
 });
 

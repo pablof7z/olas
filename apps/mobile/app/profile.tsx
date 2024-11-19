@@ -2,18 +2,16 @@ import {
     View,
     Text,
     Image,
-    ScrollView,
     StyleSheet,
     TouchableOpacity,
     Dimensions,
     Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import * as User from '@/ndk-expo/components/user';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
-import { NDKEvent, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { NDKKind } from '@nostr-dev-kit/ndk';
 import { useSubscribe } from '@/ndk-expo';
 import { MasonryFlashList } from '@shopify/flash-list';
@@ -22,34 +20,19 @@ import { activeEventStore } from './stores';
 export default function Profile() {
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const scrollY = useRef(new Animated.Value(0)).current;
-    const filters = useMemo(
-        () => [
-            {
-                kinds: [1063],
-                '#m': [
-                    'image/jpeg',
-                    'image/png',
-                    'image/gif',
-                    'image/webp',
-                    'video/mp4',
-                ],
-                authors: [pubkey!],
-            },
-            {
-                kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20],
-                authors: [pubkey!],
-            },
-            { kinds: [1], authors: [pubkey!], limit: 50 },
-        ],
-        []
-    );
-    const opts = useMemo(
-        () => ({
-            groupable: false,
-            cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
-        }),
-        []
-    );
+    const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const filters = useMemo(() => {
+        const filters: NDKFilter[] = [
+            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!], },
+        ];
+
+        if (filtersExpanded) {
+            filters.push({ kinds: [1], authors: [pubkey!], limit: 50 });
+        }
+
+        return filters;
+    }, [filtersExpanded]);
+    const opts = useMemo( () => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
     if (!pubkey) {
@@ -81,6 +64,10 @@ export default function Profile() {
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });
+
+    function expandFilters() {
+        setFiltersExpanded(true);
+    }
 
     return (
         <User.Profile pubkey={pubkey}>
@@ -152,15 +139,33 @@ export default function Profile() {
 
                     <FollowButton />
 
-                    <MasonryFlashList
-                        data={events}
-                        numColumns={3}
-                        estimatedItemSize={100}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <ImageGridItem event={item} />
-                        )}
-                    />
+                    {events.length === 0 ? (
+                        <View style={styles.noEventsContainer}>
+                            <Text style={styles.noEventsText}>
+                                No posts yet
+                            </Text>
+
+                            {!filtersExpanded && (
+                                <TouchableOpacity
+                                    style={styles.browseButton}
+                                    onPress={expandFilters}>
+                                    <Text style={styles.browseButtonText}>
+                                        Browse tweet images
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    ) : (
+                        <MasonryFlashList
+                            data={events}
+                            numColumns={3}
+                            estimatedItemSize={100}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <ImageGridItem event={item} />
+                            )}
+                        />
+                    )}
                 </Animated.ScrollView>
             </View>
         </User.Profile>
@@ -277,5 +282,25 @@ const styles = StyleSheet.create({
         height: 40,
         borderRadius: 20,
         marginRight: 12,
+    },
+    noEventsText: {
+        textAlign: 'center',
+        color: '#666',
+        padding: 20,
+        fontSize: 16,
+    },
+    noEventsContainer: {
+        alignItems: 'center',
+        padding: 20,
+    },
+    browseButton: {
+        marginTop: 12,
+        padding: 10,
+        backgroundColor: '#007AFF',
+        borderRadius: 8,
+    },
+    browseButtonText: {
+        color: '#fff',
+        fontWeight: '600',
     },
 });

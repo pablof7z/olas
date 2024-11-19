@@ -1,12 +1,12 @@
 import { useNDK, useSubscribe } from '@/ndk-expo';
 import {
-    NDKEvent,
+    NDKEvent,useRef, 
     NDKFilter,
     NDKKind,
     NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk';
-import { useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Button, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import WelcomeConsentScreen from '../../welcome';
 import { FlashList } from '@shopify/flash-list';
 import ImageCard from '@/components/events/ImageCard';
@@ -17,78 +17,39 @@ import { UserProfileProvider } from '@/ndk-expo/components/user/profile';
 import { myFollows } from '@/utils/myfollows';
 import { Stack } from 'expo-router';
 import { Filter } from 'lucide-react-native';
-import { List, ListItem } from '@/components/nativewindui/List';
 import { memo } from 'react';
+import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
+import {
+  createDropdownItem,
+} from '~/components/nativewindui/DropdownMenu/utils';
 
-// const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
-//     // ref
-//     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-//     // memoize data
-//     const data = useMemo(
-//         () => [
-//             {
-//                 id: 1,
-//                 title: 'Photos & videos',
-//                 subTitle: 'Include only content that has been posted as a photo or video',
-//                 selected: !includeTweets,
-//                 onPress: () => {
-//                     setIncludeTweets(false);
-//                     bottomSheetModalRef.current?.dismiss();
-//                 },
-//             },
-//             {
-//                 id: 2,
-//                 title: 'Include notes',
-//                 subTitle: 'Include generic short notes, higher velocity, lower quality',
-//                 selected: includeTweets,
-//                 onPress: () => {
-//                     setIncludeTweets(true);
-//                     bottomSheetModalRef.current?.dismiss();
-//                 },
-//             },
-//         ],
-//         [includeTweets]
-//     );
-
-//     // memoize render item callback
-//     const renderItem = useCallback(({ item, index, target }) => {
-//         return <ListItem item={item} index={index} target={target} onPress={item.onPress} />;
-//     }, []);
-
-//     // memoize key extractor
-//     const keyExtractor = (item) => item.id.toString();
-
-//     // callbacks
-//     const handlePresentModalPress = useCallback(() => {
-//         bottomSheetModalRef.current?.snapToPosition(100);
-//         bottomSheetModalRef.current?.present();
-//     }, []);
-
-//     return (
-//         <>
-//             <Pressable onPress={handlePresentModalPress}>
-//                 <Filter size={24} />
-//             </Pressable>
-
-//             <BottomSheetModal ref={bottomSheetModalRef}>
-//                 <BottomSheetView style={styles.contentContainer}>
-//                     <View className="h-full w-full">
-//                         <List
-//                             variant="insets"
-//                             keyExtractor={keyExtractor}
-//                             estimatedItemSize={50}
-//                             data={data}
-//                             contentContainerClassName="pt-4"
-//                             contentInsetAdjustmentBehavior="automatic"
-//                             renderItem={renderItem}
-//                         />
-//                     </View>
-//                 </BottomSheetView>
-//             </BottomSheetModal>
-//         </>
-//     );
-// });
+const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
+    return (
+        <DropdownMenu
+            items={[
+                createDropdownItem({
+                    actionKey: 'photos-videos',
+                    title: 'Photos & videos',
+                    subTitle: 'Lower velocity, higher quality',
+                    state: { checked: !includeTweets },
+                }),
+                createDropdownItem({
+                    actionKey: 'include-tweets',
+                    title: 'Include tweets',
+                    subTitle: 'Higher velocity, lower quality',
+                    state: { checked: includeTweets },
+                }),
+            ]}
+            onItemPress={(item) => {
+                if (item.actionKey === 'photos-videos') setIncludeTweets(false);
+                if (item.actionKey === 'include-tweets') setIncludeTweets(true);
+            }}>
+            <Pressable>
+                <Filter size={24} />
+            </Pressable>
+        </DropdownMenu>
+    )
+});
 
 const randomPhotoTags = ['photo', 'photography', 'artstr'];
 
@@ -157,7 +118,7 @@ export default function HomeScreen() {
                 options={{
                     headerShown: true,
                     title: 'Home',
-                    // headerRight: () => <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />,
+                    headerRight: () => <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />,
                 }}
             />
             <View className="flex-1 gap-2 bg-card">

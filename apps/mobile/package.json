@@ -77,7 +77,7 @@
     "react-native-gesture-handler": "~2.16.2",
     "react-native-get-random-values": "~1.11.0",
     "react-native-gifted-charts": "^1.4.47",
-    "react-native-ios-context-menu": "^2.5.1",
+    "react-native-ios-context-menu": "^2.5.2",
     "react-native-ios-utilities": "^4.5.1",
     "react-native-keyboard-controller": "^1.14.3",
     "react-native-linear-gradient": "^2.8.3",

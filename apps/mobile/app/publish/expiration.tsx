@@ -47,7 +47,7 @@ export default function Caption() {
                 <DateTimePicker
                     testID="dateTimePicker"
                     value={date}
-                    mode={'datetime'}
+                    mode={'date'}
                     onChange={onChange}
                 />
 

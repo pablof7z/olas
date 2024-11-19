@@ -149,7 +149,7 @@ export default function ImageUpload() {
     const [description, setDescription] = useState('');
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
-        console.log('event kinds', events.keys(), follows.length);
+        console.log('event kinds', events.keys(), follows?.length);
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
     }, [events, follows]);
     const defaultBlossomServer = useMemo(() => {
@@ -162,9 +162,8 @@ export default function ImageUpload() {
     const [uploading, setUploading] = useState(false);
     let imetaPromise: Promise<void> | null = null;
     let imetaTags: NDKTag[] = [];
-    const [selectionType, setSelectionType] = useState<
-        'image' | 'video' | null
-    >(null);
+    const { expiration } = useStore(publishStore);
+    const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     async function handlePost() {
         if (!selectedImage) {
@@ -227,6 +226,14 @@ export default function ImageUpload() {
 
         // Only do imeta for images
         await Promise.all([uploadPromise, imetaPromise]);
+
+        // if we have an expiration, set the tag
+        if (expiration) {
+            event.tags = [
+                ...event.tags,
+                ['expiration', Math.floor(expiration / 1000).toString()],
+            ];
+        }
 
         try {
             await event.sign();
@@ -432,7 +439,7 @@ export default function ImageUpload() {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 16,
+        padding: 10,
     },
     imageContainer: {
         position: 'relative',

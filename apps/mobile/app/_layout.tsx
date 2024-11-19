@@ -2,6 +2,7 @@ import '../global.css';
 import 'expo-dev-client';
 import '@bacons/text-decoder/install';
 import 'react-native-get-random-values';
+import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, useNDK } from '@/ndk-expo';
@@ -32,7 +33,7 @@ import NDKSessionProvider from '@/ndk-expo/providers/session';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { BlurView } from 'expo-blur';
 
-export { ErrorBoundary } from 'expo-router';
+SplashScreen.preventAutoHideAsync();
 
 function UnpublishedEventIndicator() {
     const { ndk, unpublishedEvents } = useNDK();
@@ -126,7 +127,9 @@ export default function RootLayout() {
                                     statusBarTranslucent
                                     navigationBarTranslucent>
                                     <NavThemeProvider
-                                        value={NAV_THEME[colorScheme]}>
+                                        value={NAV_THEME[colorScheme]}
+                                    >
+                                        <PortalHost />
                                         <Stack>
                                             <Stack.Screen
                                                 name="login"
