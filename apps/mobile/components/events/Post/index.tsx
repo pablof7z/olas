@@ -5,7 +5,7 @@ import * as User from '@/ndk-expo/components/user';
 import EventContent from '@/ndk-expo/components/event/content';
 import RelativeTime from '@/app/components/relative-time';
 import { Video } from 'expo-av';
-import { Button } from '../nativewindui/Button';
+import { Button } from '../../nativewindui/Button';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
@@ -20,6 +20,7 @@ import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import { Reactions } from './Reactions';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -38,6 +39,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'column',
+        backgroundColor: 'red',
         flexGrow: 1,
         minHeight: 240,
     },
@@ -47,89 +49,12 @@ const styles = StyleSheet.create({
         gap: 10,
         padding: 2,
     },
-    reactionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-    },
+    
 });
 
 export function VideoContainer({ url }: { url: string }) {
     return <Video style={styles.video} source={{ uri: url }} />;
 }
-
-export function Reactions({ event }: { event: NDKEvent }) {
-    const { currentUser } = useNDK();
-    const filters = useMemo(
-        () => [
-            {
-                kinds: [NDKKind.Text, 22, NDKKind.Reaction, NDKKind.BookmarkList],
-                ...event.filter(),
-            },
-        ],
-        [event.id]
-    );
-    const opts = useMemo(() => ({ groupable: true }), []);
-    const { events: relatedEvents } = useSubscribe({ filters, opts });
-    const { colors } = useColorScheme();
-    const { setActiveEvent } = useStore(activeEventStore, (state) => state);
-
-    const react = async () => {
-        const r = await event.react('+1', false);
-        r.tags.push(['k', event.kind.toString()]);
-        await r.sign();
-        console.log('reaction', JSON.stringify(r, null, 2));
-        await r.publish();
-    };
-
-    const comment = () => {
-        setActiveEvent(event);
-        router.push(`/comments`);
-    };
-
-    const bookmark = async () => {
-        alert('Not implemented yet');
-    };
-
-    const reactions = useMemo(() => relatedEvents.filter((r) => r.kind === NDKKind.Reaction), [relatedEvents]);
-    const reactedByUser = useMemo(() => reactions.find((r) => r.pubkey === currentUser?.pubkey), [reactions, currentUser?.pubkey]);
-
-    const comments = useMemo(() => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)), [relatedEvents]);
-    const commentedByUser = useMemo(() => comments.find((c) => c.pubkey === currentUser?.pubkey), [comments, currentUser?.pubkey]);
-
-    return (
-        <View className="flex-1 flex-col gap-1 p-2">
-            <View className="w-full flex-1 flex-row justify-between gap-4">
-                <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <TouchableOpacity style={styles.reactionButton} onPress={react}>
-                        <Heart size={24} color={!reactedByUser ? colors.primary : 'red'} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.reactionButton} onPress={comment}>
-                        <MessageCircle size={24} color={colors.primary} />
-                    </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
-                    <BookmarkIcon size={24} color={colors.primary} />
-                </TouchableOpacity>
-            </View>
-            {reactions.length > 0 && (
-                <Text className="text-sm font-semibold" style={{ color: colors.primary }}>
-                    {reactions.length} reactions
-                </Text>
-            )}
-        </View>
-    );
-}
-
-const Kind1Media = memo(function Kind1Media({ event }: { event: NDKEvent }) {
-    const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
-
-    if (!urls?.length) return null;
-
-    return <Image event={event} style={styles.image} />;
-});
 
 export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {
     const url = event.tagValue('url');
@@ -139,7 +64,7 @@ export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent })
     return <Image event={event} style={styles.image} />;
 });
 
-export default function ImageCard({ event }: { event: NDKEvent }) {
+export default function Post({ event }: { event: NDKEvent }) {
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();
     const { currentUser } = useNDK();
@@ -181,7 +106,7 @@ export default function ImageCard({ event }: { event: NDKEvent }) {
                             </TouchableOpacity>
 
                             <View className="flex-col">
-                                <User.Name />
+                                <User.Name className="text-foreground font-bold" />
                                 <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             </View>
                         </User.Profile>

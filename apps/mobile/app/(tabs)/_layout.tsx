@@ -30,8 +30,7 @@ export default function HomeLayout() {
             screenOptions={{
                 headerShown: true,
                 tabBarShowLabel: false,
-                tabBarActiveTintColor: '#000',
-                tabBarInactiveTintColor: '#000',
+                tabBarActiveTintColor: colors.foreground,
                 tabBarStyle: {
                     position: 'absolute',
                     bottom: 0,

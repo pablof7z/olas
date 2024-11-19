@@ -1,12 +1,11 @@
-import { useNDK, useSubscribe } from '@/ndk-expo';
-import { NDKEvent, useRef, NDKFilter, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
-import { useCallback, useMemo, useState } from 'react';
-import { Button, Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import WelcomeConsentScreen from '../../welcome';
+import { useSubscribe } from '@/ndk-expo';
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk';
+import { useMemo, useState } from 'react';
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import ImageCard from '@/components/events/ImageCard';
+import Post from '@/components/events/Post';
 import { useNDKSession } from '@/ndk-expo/hooks/session';
-import { useDebounce, useThrottle } from '@uidotdev/usehooks';
+import { useThrottle } from '@uidotdev/usehooks';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { UserProfileProvider } from '@/ndk-expo/components/user/profile';
 import { myFollows } from '@/utils/myfollows';
@@ -114,7 +113,7 @@ export default function HomeScreen() {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
                     renderItem={({ item }) => (
                         <UserProfileProvider pubkey={item.pubkey}>
-                            <ImageCard event={item} />
+                            <Post event={item} />
                         </UserProfileProvider>
                     )}
                     contentContainerStyle={styles.listContainer}
