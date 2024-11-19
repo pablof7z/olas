@@ -55,7 +55,7 @@ export default function CommentScreen() {
                 )}
             />
 
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="border-t border-border p-4">
+            {/* <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="border-t border-border p-4">
                 <View className="flex-row items-center gap-2">
                     <TextInput
                         placeholder="Add a comment..."
@@ -68,7 +68,7 @@ export default function CommentScreen() {
                         <Text className="font-semibold">Post</Text>
                     </Button>
                 </View>
-            </KeyboardAvoidingView>
+            </KeyboardAvoidingView> */}
         </SafeAreaView>
     );
 }

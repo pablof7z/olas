@@ -10,6 +10,8 @@ type PublishStoreState = {
 
     tags: string[];
     setTags: (tags: string[]) => void;
+
+    reset: () => void;
 };
 
 export const publishStore = create<PublishStoreState>((set) => ({
@@ -26,5 +28,9 @@ export const publishStore = create<PublishStoreState>((set) => ({
     expiration: null,
     setExpiration(expiration: number | null): void {
         set(() => ({ expiration }));
+    },
+
+    reset(): void {
+        set(() => ({ caption: '', tags: [], expiration: null }));
     },
 }));

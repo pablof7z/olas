@@ -2,7 +2,7 @@ import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk';
 import { Image } from 'expo-image';
 import * as Crypto from 'expo-crypto';
 
-interface ImetaData {
+export interface ImetaData {
     url?: string;
     blurhash?: string;
     dim?: string;
@@ -39,9 +39,8 @@ export function imetaFromEvent(event: NDKEvent): ImetaData {
     return data;
 }
 
-export async function imetaFromImage(fileContent: string, url?: string): Promise<NDKTag[]> {
+export async function imetaFromImage(fileContent: string, url?: string): Promise<ImetaData> {
     console.log('imetaFromImage', fileContent.length, url);
-    const tags: NDKTag[] = [];
     const imeta: ImetaData = {};
 
     const base64Url = `data:image/jpeg;base64,${fileContent}`;
@@ -59,15 +58,8 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
 
     const response = await fetch(base64Url);
     const mime = response.headers.get('content-type');
-    if (mime) {
-        imeta.m = mime;
-        tags.push(['m', mime]);
-    }
-
-    if (url) {
-        imeta.url = url;
-        tags.push(['url', url]);
-    }
+    if (mime) { imeta.m = mime; }
+    if (url) { imeta.url = url; }
 
     // const buffer = await response.arrayBuffer();
     // const hashBuffer = await Crypto.digest(
@@ -83,13 +75,16 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
     console.log('imeta', JSON.stringify(imeta, null, 2));
 
     if (Object.keys(imeta).length > 0) {
-        const val = Object.entries(imeta)
-            .map(([key, value]) => `${key} ${value}`)
-            .flat()
-            .join(' ');
-        console.log('imeta value', val);
-        tags.push(['imeta', val]);
+        return imeta;
     }
 
-    return tags;
+    return null;
+}
+
+export function imetaToTag(imeta: ImetaData): NDKTag {
+    const val = Object.entries(imeta)
+        .map(([key, value]) => `${key} ${value}`)
+        .flat()
+        .join(' ');
+    return ['imeta', val];
 }

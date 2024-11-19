@@ -2,8 +2,8 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { imetaFromImage } from '@/ndk-expo/utils/imeta';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ImetaData, imetaFromImage, imetaToTag } from '@/ndk-expo/utils/imeta';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@/ndk-expo';
 import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
@@ -27,7 +27,6 @@ import { cn } from '@/lib/cn';
 async function upload(
     ndk: NDK,
     blob: Blob,
-    description: string,
     blossomServer: string
 ): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
@@ -121,8 +120,8 @@ function PostOptions() {
 }
 
 export default function ImageUpload() {
+    const resetStore = useStore(publishStore).reset;
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [description, setDescription] = useState('');
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
         console.log('event kinds', events.keys(), follows?.length);
@@ -133,9 +132,9 @@ export default function ImageUpload() {
     }, [blossomList]);
     const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
-    let imetaPromise: Promise<void> | null = null;
-    let imetaTags: NDKTag[] = [];
-    const { expiration } = useStore(publishStore);
+    const [imetaPromise, setImetaPromise] = useState<Promise<void> | null>(null);
+    const imetaData = useRef<ImetaData | null>(null);
+    const { expiration, caption } = useStore(publishStore);
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     async function handlePost() {
@@ -166,7 +165,7 @@ export default function ImageUpload() {
 
         const event = new NDKEvent(ndk);
         event.kind = eventKind;
-        event.content = description;
+        event.content = caption;
         event.tags = [];
 
         const uploadPromise = new Promise<void>(async (resolve, reject) => {
@@ -176,13 +175,12 @@ export default function ImageUpload() {
             if (thumbnail) {
                 const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
                 console.log('uploading thumbnail', thumbnailBlob.size);
-                const { url } = await upload(ndk, thumbnailBlob, description, defaultBlossomServer);
+                const { url } = await upload(ndk, thumbnailBlob, defaultBlossomServer);
                 event.tags = [...event.tags, ['thumb', url]];
                 console.log('thumbnail uploaded', url);
             }
 
-            upload(ndk, blob, description, defaultBlossomServer).then((ret) => {
-                setUploading(false);
+            upload(ndk, blob, defaultBlossomServer).then((ret) => {
                 event.tags = [...event.tags, ...(ret.mediaEvent?.tags ?? [])];
                 resolve();
             });
@@ -191,6 +189,16 @@ export default function ImageUpload() {
         // Only do imeta for images
         await Promise.all([uploadPromise, imetaPromise]);
 
+        console.log('about to sign, imetatag is', imetaData.current);
+
+        if (selectionType === 'image') {
+            for (const tag of event.tags) {
+                imetaData.current[tag[0]] = tag[1];
+            }
+
+            event.tags = [ imetaToTag(imetaData.current) ];
+        }
+
         // if we have an expiration, set the tag
         if (expiration) {
             event.tags = [...event.tags, ['expiration', Math.floor(expiration / 1000).toString()]];
@@ -198,7 +206,6 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
-            console.log('event', event.rawEvent());
             await event.publish();
             setUploading(false);
             router.back();
@@ -224,33 +231,35 @@ export default function ImageUpload() {
             });
 
             if (result.assets[0].type === 'video') {
-                imetaPromise = new Promise<void>((resolve, reject) => {
-                    try {
-                        VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
-                            time: 0,
-                            quality: 0.7,
-                        }).then(({ uri }) => {
-                            console.log('thumbnail', uri);
-                            setThumbnail(uri);
-                        });
-                    } catch (e) {
-                        console.warn('Error generating thumbnail:', e);
-                    }
-                    resolve();
-                });
+                setImetaPromise(
+                    new Promise<void>((resolve, reject) => {
+                        try {
+                            VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
+                                time: 0,
+                                quality: 0.7,
+                            }).then(({ uri }) => {
+                                console.log('thumbnail', uri);
+                                setThumbnail(uri);
+                            });
+                        } catch (e) {
+                            console.warn('Error generating thumbnail:', e);
+                        }
+                        resolve();
+                    }));
             } else {
-                imetaPromise = new Promise<void>((resolve, reject) => {
+                console.log('generating imeta');
+                setImetaPromise(new Promise<void>((resolve, reject) => {
                     imetaFromImage(fileContent)
-                        .then((tags: NDKTag[]) => {
-                            imetaTags = tags;
-                            console.log('imetaTags', imetaTags);
+                        .then((imeta) => {
+                            imetaData.current = imeta;
+                            console.log('resolving imetaData', imetaData.current);
                             resolve();
                         })
                         .catch((error) => {
                             console.error('imetaFromImage error', error);
                             reject(error);
                         });
-                });
+                }));
             }
         }
     };
@@ -321,7 +330,7 @@ export default function ImageUpload() {
                                             style={styles.removeButton}
                                             onPress={() => {
                                                 setSelectedImage(null);
-                                                setDescription('');
+                                                resetStore();
                                             }}>
                                             <Ionicons name="close" size={24} color="white" />
                                         </TouchableOpacity>

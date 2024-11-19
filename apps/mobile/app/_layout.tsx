@@ -167,11 +167,9 @@ export default function RootLayout() {
                                                     headerRight: () => (
                                                         <View className="flex-row items-center gap-2">
                                                             <Button
-                                                                style={{
-                                                                    backgroundColor: colors.grey5,
-                                                                }}
+                                                                variant="plain"
                                                                 onPress={() => router.push('/comment')}>
-                                                                <Text className="text-primary-secondary">Comment</Text>
+                                                                <Text className="text-primary">New Comment</Text>
                                                             </Button>
                                                         </View>
                                                     ),

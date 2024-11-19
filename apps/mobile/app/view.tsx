@@ -5,7 +5,7 @@ import { NDKKind } from '@nostr-dev-kit/ndk';
 import { NDKEvent } from '@nostr-dev-kit/ndk';
 import * as User from '@/ndk-expo/components/user';
 import { Dimensions, View, ScrollView } from 'react-native';
-import { Image } from 'expo-image';
+import Image from '@/components/media/image';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/ndk-expo/components/event/content';
 
@@ -56,20 +56,17 @@ export default function ViewScreen() {
                 </View>
 
                 {/* Image */}
-                {url && (
-                    <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
-                        <Image
-                            source={{ uri: url }}
-                            style={{
-                                width: Dimensions.get('window').width,
-                                minHeight: Dimensions.get('window').height * 0.6,
-                                flex: 1,
-                            }}
-                            contentFit="contain"
-                            transition={200}
-                        />
-                    </ScrollView>
-                )}
+                <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
+                    <Image
+                        event={activeEvent}
+                        style={{
+                            width: Dimensions.get('window').width,
+                            minHeight: Dimensions.get('window').height * 0.6,
+                            flex: 1,
+                        }}
+                        transition={200}
+                    />
+                </ScrollView>
 
                 {/* Content */}
                 <View className="p-4">
