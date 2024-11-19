@@ -24,11 +24,7 @@ import { IconView } from '../(tabs)/(settings)';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 
-async function upload(
-    ndk: NDK,
-    blob: Blob,
-    blossomServer: string
-): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
+async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
         // Create an Uploader instance with the blob
         const uploader = new Uploader(ndk, blob, blossomServer);
@@ -196,7 +192,7 @@ export default function ImageUpload() {
                 imetaData.current[tag[0]] = tag[1];
             }
 
-            event.tags = [ imetaToTag(imetaData.current) ];
+            event.tags = [imetaToTag(imetaData.current)];
         }
 
         // if we have an expiration, set the tag
@@ -245,21 +241,24 @@ export default function ImageUpload() {
                             console.warn('Error generating thumbnail:', e);
                         }
                         resolve();
-                    }));
+                    })
+                );
             } else {
                 console.log('generating imeta');
-                setImetaPromise(new Promise<void>((resolve, reject) => {
-                    imetaFromImage(fileContent)
-                        .then((imeta) => {
-                            imetaData.current = imeta;
-                            console.log('resolving imetaData', imetaData.current);
-                            resolve();
-                        })
-                        .catch((error) => {
-                            console.error('imetaFromImage error', error);
-                            reject(error);
-                        });
-                }));
+                setImetaPromise(
+                    new Promise<void>((resolve, reject) => {
+                        imetaFromImage(fileContent)
+                            .then((imeta) => {
+                                imetaData.current = imeta;
+                                console.log('resolving imetaData', imetaData.current);
+                                resolve();
+                            })
+                            .catch((error) => {
+                                console.error('imetaFromImage error', error);
+                                reject(error);
+                            });
+                    })
+                );
             }
         }
     };

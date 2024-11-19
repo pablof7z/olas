@@ -58,8 +58,12 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
 
     const response = await fetch(base64Url);
     const mime = response.headers.get('content-type');
-    if (mime) { imeta.m = mime; }
-    if (url) { imeta.url = url; }
+    if (mime) {
+        imeta.m = mime;
+    }
+    if (url) {
+        imeta.url = url;
+    }
 
     // const buffer = await response.arrayBuffer();
     // const hashBuffer = await Crypto.digest(

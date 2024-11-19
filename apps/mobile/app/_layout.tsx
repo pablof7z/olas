@@ -166,9 +166,7 @@ export default function RootLayout() {
                                                     title: '',
                                                     headerRight: () => (
                                                         <View className="flex-row items-center gap-2">
-                                                            <Button
-                                                                variant="plain"
-                                                                onPress={() => router.push('/comment')}>
+                                                            <Button variant="plain" onPress={() => router.push('/comment')}>
                                                                 <Text className="text-primary">New Comment</Text>
                                                             </Button>
                                                         </View>
