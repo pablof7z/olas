@@ -1,6 +1,5 @@
 import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk';
 import { Image } from 'expo-image';
-import * as Crypto from 'expo-crypto';
 
 export interface ImetaData {
     url?: string;
@@ -12,18 +11,39 @@ export interface ImetaData {
     fallback?: string[];
 }
 
-export function imetaFromEvent(event: NDKEvent): ImetaData {
-    const imetaTag = event.tagValue('imeta');
-    if (!imetaTag) return {};
+export function imetasFromEvent(event: NDKEvent): ImetaData[] {
+    const imetaData: ImetaData[] = [];
 
+    for (const tag of event.getMatchingTags('imeta')) {
+        const data = imetaFromTag(tag);
+        if (data) {
+            imetaData.push(data);
+        }
+    }
+
+    return imetaData;
+}
+
+export function imetaFromTag(tag: NDKTag): ImetaData {
     const data: ImetaData = {};
     const fallbacks: string[] = [];
 
+    // if we have a single value, split the string into key/value pairs
+    if (tag.length === 2) {
+        const parts = tag[1].split(' ');
+
+        for (let i = 0; i < parts.length; i += 2) {
+            const key = parts[i];
+            const value = parts[i + 1];
+            data[key] = value;
+        }
+    }
+
     // Split the string into pairs and process each pair
-    const pairs = imetaTag.match(/\S+\s+\S+/g) || [];
-    for (const pair of pairs) {
-        const [key, ...valueParts] = pair.split(' ');
-        const value = valueParts.join(' ');
+    for (const val of tag) {
+        const parts = val.split(' ');
+        const key = parts[0];
+        const value = parts.slice(1).join(' ');
 
         if (key === 'fallback') {
             fallbacks.push(value);
@@ -47,7 +67,7 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
 
     try {
         console.log('generating blurhash');
-        const blurhash = await Image.generateBlurhashAsync(base64Url, [4, 3]);
+        const blurhash = await Image.generateBlurhashAsync(base64Url, [7, 5]);
         if (blurhash) {
             imeta.blurhash = blurhash;
         }
@@ -65,19 +85,6 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
         imeta.url = url;
     }
 
-    // const buffer = await response.arrayBuffer();
-    // const hashBuffer = await Crypto.digest(
-    //     Crypto.CryptoDigestAlgorithm.SHA256,
-    //     buffer
-    // );
-    // const sha256 = Array.from(new Uint8Array(hashBuffer))
-    //     .map(b => b.toString(16).padStart(2, '0'))
-    //     .join('');
-    // imeta.x = sha256;
-    // tags.push(["x", sha256]);
-
-    console.log('imeta', JSON.stringify(imeta, null, 2));
-
     if (Object.keys(imeta).length > 0) {
         return imeta;
     }
@@ -85,10 +92,15 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
     return null;
 }
 
-export function imetaToTag(imeta: ImetaData): NDKTag {
+export function imetaToTags(imeta: ImetaData): NDKTag[] {
     const val = Object.entries(imeta)
         .map(([key, value]) => `${key} ${value}`)
         .flat()
-        .join(' ');
-    return ['imeta', val];
+    const tags = [
+        ['imeta', ...val]
+    ];
+
+    if (imeta.x) tags.push(['x', imeta.x]);
+    
+    return tags;
 }

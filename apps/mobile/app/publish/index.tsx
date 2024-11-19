@@ -2,7 +2,7 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ImetaData, imetaFromImage, imetaToTag } from '@/ndk-expo/utils/imeta';
+import { ImetaData, imetaFromImage, imetaToTags } from '@/ndk-expo/utils/imeta';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@/ndk-expo';
@@ -207,7 +207,10 @@ export default function ImageUpload() {
                 imetaData.current[tag[0]] = tag[1];
             }
 
-            event.tags = [imetaToTag(imetaData.current)];
+            event.tags = [...event.tags, ...imetaToTags(imetaData.current)];
+
+            // remove the url tag, since it'll go in the imeta
+            event.tags = event.tags.filter((tag) => tag[0] !== 'url');
         }
 
         // if we have an expiration, set the tag

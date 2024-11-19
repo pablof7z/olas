@@ -11,7 +11,6 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
-import { imetaFromEvent } from '@/ndk-expo/utils/imeta';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useMemo, memo } from 'react';
 import { useNDK, useSubscribe } from '@/ndk-expo';

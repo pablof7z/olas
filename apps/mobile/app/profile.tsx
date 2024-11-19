@@ -1,4 +1,5 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import Image from '@/components/media/image';
 import * as User from '@/ndk-expo/components/user';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
@@ -162,7 +163,7 @@ function ImageGridItem({ event }: { event: NDKEvent }) {
                 router.push('/view');
             }}
             style={styles.gridItem}>
-            <Image source={{ uri: url }} style={styles.gridImage} />
+            <Image event={event} style={styles.gridImage} />
         </TouchableOpacity>
     );
 }
