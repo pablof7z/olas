@@ -2,7 +2,7 @@ import { imetaFromEvent } from '@/ndk-expo/utils/imeta';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
 import { Image } from 'expo-image';
-import { Dimensions, ImageProps } from 'react-native';
+import { Dimensions, ImageProps, View } from 'react-native';
 
 const getUrl = (event: NDKEvent) => {
     if (event.kind === NDKKind.Text) {
@@ -32,6 +32,7 @@ export default function ImageComponent({ event, ...props }: { event: NDKEvent } 
     // if (!image?.width || !image?.height || !windowWidth) return null;
 
     return (
+        <View className="bg-red-500 flex-1">
         <Image
             {...props}
             source={{ uri: proxiedUrl }}
@@ -41,6 +42,7 @@ export default function ImageComponent({ event, ...props }: { event: NDKEvent } 
                 ...(typeof props.style === 'object' ? props.style : {}),
             }}
             placeholder={blurhash ? { blurhash } : undefined}
-        />
+            />
+        </View>
     );
 }

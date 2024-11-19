@@ -28,6 +28,8 @@ module.exports = {
         muted: {
           DEFAULT: withOpacity('muted'),
           foreground: withOpacity('muted-foreground'),
+          '100': '#f1f5f9',
+          '200': '#e2e8f0',
         },
         accent: {
           DEFAULT: withOpacity('accent'),
