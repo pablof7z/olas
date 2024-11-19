@@ -31,11 +31,7 @@ export default function Article({ article }: ArticleProps) {
                 />
 
                 <LinearGradient
-                    colors={[
-                        'rgba(0,0,0,0)',
-                        'rgba(0,0,0,0.2)',
-                        'rgba(0,0,0,1)',
-                    ]}
+                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,1)']}
                     style={{
                         position: 'absolute',
                         bottom: 0,
@@ -52,9 +48,7 @@ export default function Article({ article }: ArticleProps) {
                         left: 10,
                         right: 10,
                     }}>
-                    <Text
-                        variant="heading"
-                        className="text-3xl font-bold text-white">
+                    <Text variant="heading" className="text-3xl font-bold text-white">
                         {article.title}
                     </Text>
                 </View>

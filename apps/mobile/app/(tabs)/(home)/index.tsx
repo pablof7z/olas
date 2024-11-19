@@ -1,10 +1,5 @@
 import { useNDK, useSubscribe } from '@/ndk-expo';
-import {
-    NDKEvent,useRef, 
-    NDKFilter,
-    NDKKind,
-    NDKSubscriptionCacheUsage,
-} from '@nostr-dev-kit/ndk';
+import { NDKEvent, useRef, NDKFilter, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { useCallback, useMemo, useState } from 'react';
 import { Button, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import WelcomeConsentScreen from '../../welcome';
@@ -19,9 +14,7 @@ import { Stack } from 'expo-router';
 import { Filter } from 'lucide-react-native';
 import { memo } from 'react';
 import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
-import {
-  createDropdownItem,
-} from '~/components/nativewindui/DropdownMenu/utils';
+import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
 
 const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
     return (
@@ -48,7 +41,7 @@ const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets:
                 <Filter size={24} />
             </Pressable>
         </DropdownMenu>
-    )
+    );
 });
 
 const randomPhotoTags = ['photo', 'photography', 'artstr'];
@@ -61,8 +54,7 @@ export default function HomeScreen() {
         const filters: NDKFilter[] = [{ kinds: [20] }];
 
         if (includeTweets) {
-            if (follows)
-                filters.push({ kinds: [1], authors: follows, limit: 50 });
+            if (follows) filters.push({ kinds: [1], authors: follows, limit: 50 });
             else filters.push({ kinds: [1], authors: myFollows, limit: 50 });
         }
 
@@ -76,19 +68,13 @@ export default function HomeScreen() {
     const selectedEvents = useMemo(() => {
         const selected: NDKEvent[] = [];
         for (const event of events) {
-            if (
-                [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20].includes(
-                    event.kind
-                )
-            ) {
+            if ([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20].includes(event.kind)) {
                 selected.push(event);
             }
 
             if (event.kind === NDKKind.Text) {
                 const content = event.content;
-                const urlMatch = content.match(
-                    /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
-                );
+                const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
                 if (urlMatch) {
                     selected.push(event);
                 }
@@ -107,8 +93,7 @@ export default function HomeScreen() {
 
     const loadUserData = () => {
         // Pick a random tag when refreshing
-        const randomTag =
-            randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
+        const randomTag = randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
         setTagFilter(randomTag);
     };
 
@@ -126,12 +111,7 @@ export default function HomeScreen() {
                     data={debouncedEvents}
                     estimatedItemSize={340}
                     keyExtractor={(item) => item.id}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={loadUserData}
-                        />
-                    }
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
                     renderItem={({ item }) => (
                         <UserProfileProvider pubkey={item.pubkey}>
                             <ImageCard event={item} />

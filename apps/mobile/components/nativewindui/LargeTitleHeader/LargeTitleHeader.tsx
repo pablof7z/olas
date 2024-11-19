@@ -5,22 +5,10 @@ import { Icon } from '@roninoss/icons';
 import { Stack, useNavigation } from 'expo-router';
 import * as React from 'react';
 import { BackHandler, TextInput, View } from 'react-native';
-import Animated, {
-    FadeIn,
-    FadeInRight,
-    FadeInUp,
-    FadeOut,
-    FadeOutRight,
-    ZoomIn,
-    withTiming,
-} from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, ZoomIn, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type {
-    LargeTitleHeaderProps,
-    LargeTitleSearchBarRef,
-    NativeStackNavigationSearchBarOptions,
-} from './types';
+import type { LargeTitleHeaderProps, LargeTitleSearchBarRef, NativeStackNavigationSearchBarOptions } from './types';
 
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
@@ -63,18 +51,15 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
     });
 
     React.useEffect(() => {
-        const backHandler = BackHandler.addEventListener(
-            'hardwareBackPress',
-            () => {
-                if (showSearchBar) {
-                    setShowSearchBar(false);
-                    setSearchValue('');
-                    props.searchBar?.onChangeText?.('');
-                    return true;
-                }
-                return false;
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (showSearchBar) {
+                setShowSearchBar(false);
+                setSearchValue('');
+                props.searchBar?.onChangeText?.('');
+                return true;
             }
-        );
+            return false;
+        });
 
         return () => {
             backHandler.remove();
@@ -110,9 +95,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
 
     return (
         <>
-            <Stack.Screen
-                options={Object.assign(props.screen ?? {}, SCREEN_OPTIONS)}
-            />
+            <Stack.Screen options={Object.assign(props.screen ?? {}, SCREEN_OPTIONS)} />
             {/* Ref is set in View so we can call its methods before the input is mounted */}
             <View ref={augmentedRef as unknown as React.RefObject<View>} />
             <View
@@ -120,11 +103,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                     paddingTop: insets.top + 14,
                     backgroundColor: props.backgroundColor ?? colors.background,
                 }}
-                className={cn(
-                    'px-1 shadow-none',
-                    props.shadowVisible && 'shadow-xl',
-                    isInlined ? 'pb-4' : 'pb-5'
-                )}>
+                className={cn('px-1 shadow-none', props.shadowVisible && 'shadow-xl', isInlined ? 'pb-4' : 'pb-5')}>
                 <View className="flex-row justify-between px-0.5">
                     <View className="flex-1 flex-row items-center">
                         {!!props.leftView ? (
@@ -143,24 +122,13 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                                     onPress={() => {
                                         navigation.goBack();
                                     }}>
-                                    <Icon
-                                        name="arrow-left"
-                                        size={24}
-                                        color={colors.foreground}
-                                    />
+                                    <Icon name="arrow-left" size={24} color={colors.foreground} />
                                 </Button>
                             )
                         )}
                         {isInlined && (
-                            <View
-                                className={cn(
-                                    'flex-1',
-                                    canGoBack ? 'pl-4' : 'pl-3'
-                                )}>
-                                <Text
-                                    variant="title1"
-                                    numberOfLines={1}
-                                    className={props.materialTitleClassName}>
+                            <View className={cn('flex-1', canGoBack ? 'pl-4' : 'pl-3')}>
+                                <Text variant="title1" numberOfLines={1} className={props.materialTitleClassName}>
                                     {props.title ?? route.name}
                                 </Text>
                             </View>
@@ -175,11 +143,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                                 }}
                                 size="icon"
                                 variant="plain">
-                                <Icon
-                                    name="magnify"
-                                    size={24}
-                                    color={colors.foreground}
-                                />
+                                <Icon name="magnify" size={24} color={colors.foreground} />
                             </Button>
                         )}
                         {!!props.rightView && (
@@ -194,12 +158,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                 </View>
                 {!isInlined && (
                     <View className="px-3 pt-6">
-                        <Text
-                            numberOfLines={1}
-                            className={cn(
-                                'text-3xl',
-                                props.materialTitleClassName
-                            )}>
+                        <Text numberOfLines={1} className={cn('text-3xl', props.materialTitleClassName)}>
                             {props.title ?? route.name}
                         </Text>
                     </View>
@@ -207,120 +166,64 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
             </View>
             {!!props.searchBar && showSearchBar && (
                 <Portal name={`large-title:${id}`}>
-                    <Animated.View
-                        exiting={FadeOut}
-                        className="absolute bottom-0 left-0 right-0 top-0">
-                        <View
-                            style={{ paddingTop: insets.top + 6 }}
-                            className="relative z-50 overflow-hidden bg-background">
+                    <Animated.View exiting={FadeOut} className="absolute bottom-0 left-0 right-0 top-0">
+                        <View style={{ paddingTop: insets.top + 6 }} className="relative z-50 overflow-hidden bg-background">
                             <Animated.View
                                 entering={customEntering}
                                 exiting={customExiting}
                                 className="bg-muted/25 absolute bottom-2.5 left-4 right-4 h-14 rounded-full dark:bg-card"
                             />
                             <View className="pb-2.5">
-                                <Animated.View
-                                    entering={FadeIn}
-                                    exiting={FadeOut}
-                                    className="h-14 flex-row items-center pl-3.5 pr-5">
-                                    <Animated.View
-                                        entering={FadeIn}
-                                        exiting={FadeOut}>
-                                        <Button
-                                            variant="plain"
-                                            size="icon"
-                                            onPress={onSearchBackPress}>
-                                            <Icon
-                                                color={colors.grey}
-                                                name={'arrow-left'}
-                                                size={24}
-                                            />
+                                <Animated.View entering={FadeIn} exiting={FadeOut} className="h-14 flex-row items-center pl-3.5 pr-5">
+                                    <Animated.View entering={FadeIn} exiting={FadeOut}>
+                                        <Button variant="plain" size="icon" onPress={onSearchBackPress}>
+                                            <Icon color={colors.grey} name={'arrow-left'} size={24} />
                                         </Button>
                                     </Animated.View>
-                                    <Animated.View
-                                        entering={FadeInRight}
-                                        exiting={FadeOutRight}
-                                        className="flex-1">
+                                    <Animated.View entering={FadeInRight} exiting={FadeOutRight} className="flex-1">
                                         <TextInput
                                             autoFocus
-                                            placeholder={
-                                                props.searchBar.placeholder ??
-                                                'Search...'
-                                            }
+                                            placeholder={props.searchBar.placeholder ?? 'Search...'}
                                             className="flex-1 rounded-r-full p-2 text-[17px]"
                                             style={{
-                                                color:
-                                                    props.searchBar.textColor ??
-                                                    colors.foreground,
+                                                color: props.searchBar.textColor ?? colors.foreground,
                                             }}
                                             placeholderTextColor={colors.grey2}
                                             onBlur={onBlur}
                                             onFocus={props.searchBar?.onFocus}
                                             value={searchValue}
                                             onChangeText={onChangeText}
-                                            autoCapitalize={
-                                                props.searchBar.autoCapitalize
-                                            }
-                                            keyboardType={searchBarInputTypeToKeyboardType(
-                                                props.searchBar.inputType
-                                            )}
+                                            autoCapitalize={props.searchBar.autoCapitalize}
+                                            keyboardType={searchBarInputTypeToKeyboardType(props.searchBar.inputType)}
                                             returnKeyType="search"
-                                            blurOnSubmit={
-                                                props.searchBar
-                                                    .materialBlurOnSubmit
-                                            }
-                                            onSubmitEditing={
-                                                props.searchBar
-                                                    .materialOnSubmitEditing
-                                            }
+                                            blurOnSubmit={props.searchBar.materialBlurOnSubmit}
+                                            onSubmitEditing={props.searchBar.materialOnSubmitEditing}
                                         />
                                     </Animated.View>
 
                                     <View className="flex-row items-center gap-3 pr-0.5">
                                         {!!searchValue && (
-                                            <Animated.View
-                                                entering={FadeIn}
-                                                exiting={FadeOut}>
-                                                <Button
-                                                    size="icon"
-                                                    variant="plain"
-                                                    onPress={onClearText}>
-                                                    <Icon
-                                                        color={colors.grey2}
-                                                        name="close"
-                                                        size={24}
-                                                    />
+                                            <Animated.View entering={FadeIn} exiting={FadeOut}>
+                                                <Button size="icon" variant="plain" onPress={onClearText}>
+                                                    <Icon color={colors.grey2} name="close" size={24} />
                                                 </Button>
                                             </Animated.View>
                                         )}
-                                        {!!props.searchBar
-                                            .materialRightView && (
+                                        {!!props.searchBar.materialRightView && (
                                             <>
-                                                {props.searchBar.materialRightView(
-                                                    {
-                                                        canGoBack,
-                                                        tintColor:
-                                                            colors.foreground,
-                                                    }
-                                                )}
+                                                {props.searchBar.materialRightView({
+                                                    canGoBack,
+                                                    tintColor: colors.foreground,
+                                                })}
                                             </>
                                         )}
                                     </View>
                                 </Animated.View>
                             </View>
-                            {isInlined && (
-                                <Animated.View
-                                    entering={ZoomIn}
-                                    className="h-px bg-border"
-                                />
-                            )}
+                            {isInlined && <Animated.View entering={ZoomIn} className="h-px bg-border" />}
                         </View>
-                        <Animated.View
-                            entering={FadeInUp}
-                            className="flex-1 bg-background ">
-                            <View className="bg-muted/25 flex-1 dark:bg-card">
-                                {props.searchBar.content}
-                            </View>
+                        <Animated.View entering={FadeInUp} className="flex-1 bg-background ">
+                            <View className="bg-muted/25 flex-1 dark:bg-card">{props.searchBar.content}</View>
                         </Animated.View>
                     </Animated.View>
                 </Portal>
@@ -329,9 +232,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
     );
 }
 
-function searchBarInputTypeToKeyboardType(
-    inputType: NativeStackNavigationSearchBarOptions['inputType']
-) {
+function searchBarInputTypeToKeyboardType(inputType: NativeStackNavigationSearchBarOptions['inputType']) {
     switch (inputType) {
         case 'email':
             return 'email-address';

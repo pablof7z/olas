@@ -18,12 +18,8 @@ const NDKWalletContext = createContext<NDKWalletContextType>({
 
 export const useNDKWallet = () => useContext(NDKWalletContext);
 
-export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({
-    children,
-}) => {
-    const [walletService, setWalletService] = useState<NDKWalletService | null>(
-        null
-    );
+export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [walletService, setWalletService] = useState<NDKWalletService | null>(null);
     const [wallets, setWallets] = useState<NDKWallet[]>([]);
     const [defaultWallet, setDefaultWallet] = useState<NDKWallet | null>(null);
     const { ndk, currentUser } = useNDK();
@@ -32,19 +28,12 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({
         if (ndk && currentUser) {
             const initWalletService = async () => {
                 try {
-                    console.log(
-                        'starting ndk wallet service',
-                        ndk.signer,
-                        currentUser.npub
-                    );
+                    console.log('starting ndk wallet service', ndk.signer, currentUser.npub);
                     const service = new NDKWalletService(ndk);
                     setWalletService(service);
 
                     service.on('ready', () => {
-                        console.log(
-                            'wallet service ready',
-                            service.wallets.length
-                        );
+                        console.log('wallet service ready', service.wallets.length);
                         setWallets(service.wallets);
                     });
 
@@ -59,10 +48,7 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
                     service.start(currentUser);
                 } catch (error) {
-                    console.error(
-                        'Failed to initialize NDKWalletService:',
-                        error
-                    );
+                    console.error('Failed to initialize NDKWalletService:', error);
                 }
             };
 
@@ -81,10 +67,5 @@ export const NDKWalletProvider: React.FC<{ children: React.ReactNode }> = ({
         };
     }, [ndk, currentUser]);
 
-    return (
-        <NDKWalletContext.Provider
-            value={{ walletService, wallets, defaultWallet }}>
-            {children}
-        </NDKWalletContext.Provider>
-    );
+    return <NDKWalletContext.Provider value={{ walletService, wallets, defaultWallet }}>{children}</NDKWalletContext.Provider>;
 };

@@ -10,15 +10,12 @@ import RelativeTime from './components/relative-time';
 import EventContent from '@/ndk-expo/components/event/content';
 
 function getUrlFromEvent(event: NDKEvent) {
-    let url =
-        event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
+    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
 
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
     if (!url && event.kind === NDKKind.Text) {
         const content = event.content;
-        const urlMatch = content.match(
-            /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
-        );
+        const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
         if (urlMatch) {
             url = urlMatch[0];
         }
@@ -28,10 +25,7 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 export default function ViewScreen() {
-    const activeEvent = useStore(
-        activeEventStore,
-        (state) => state.activeEvent
-    );
+    const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     if (!activeEvent) {
         return <Text>No active event</Text>;
@@ -51,16 +45,11 @@ export default function ViewScreen() {
                 {/* Header with user info */}
                 <View className="flex-row items-center border-b border-gray-800 p-4">
                     <User.Profile pubkey={activeEvent.pubkey}>
-                        <User.Avatar
-                            className="h-8 w-8 rounded-full"
-                            alt={activeEvent.pubkey}
-                        />
+                        <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} />
                         <View className="ml-3">
                             <User.Name className="font-bold text-white" />
                             <Text className="text-sm text-gray-400">
-                                <RelativeTime
-                                    timestamp={activeEvent.created_at}
-                                />
+                                <RelativeTime timestamp={activeEvent.created_at} />
                             </Text>
                         </View>
                     </User.Profile>
@@ -73,8 +62,7 @@ export default function ViewScreen() {
                             source={{ uri: url }}
                             style={{
                                 width: Dimensions.get('window').width,
-                                minHeight:
-                                    Dimensions.get('window').height * 0.6,
+                                minHeight: Dimensions.get('window').height * 0.6,
                                 flex: 1,
                             }}
                             contentFit="contain"
@@ -85,11 +73,7 @@ export default function ViewScreen() {
 
                 {/* Content */}
                 <View className="p-4">
-                    <EventContent
-                        event={activeEvent}
-                        content={content}
-                        className="text-sm text-white"
-                    />
+                    <EventContent event={activeEvent} content={content} className="text-sm text-white" />
                 </View>
             </View>
         </ScrollView>

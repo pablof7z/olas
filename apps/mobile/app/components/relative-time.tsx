@@ -27,13 +27,9 @@ const RelativeTime: React.FC<RelativeTimeProps & TextProps> = ({
             } else if (elapsed < timeThreshold) {
                 setRelativeTime(`${Math.floor(elapsed / 3600)} hr ago`);
             } else if (elapsed < dateThreshold) {
-                setRelativeTime(
-                    new Date(timestamp * 1000).toLocaleTimeString()
-                );
+                setRelativeTime(new Date(timestamp * 1000).toLocaleTimeString());
             } else {
-                setRelativeTime(
-                    new Date(timestamp * 1000).toLocaleDateString()
-                );
+                setRelativeTime(new Date(timestamp * 1000).toLocaleDateString());
             }
         };
 

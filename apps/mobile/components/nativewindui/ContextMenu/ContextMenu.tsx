@@ -3,31 +3,11 @@ import { useAugmentedRef, useRelativePosition } from '@rn-primitives/hooks';
 import { Icon } from '@roninoss/icons';
 import * as Haptics from 'expo-haptics';
 import * as React from 'react';
-import {
-    Image,
-    LayoutChangeEvent,
-    LayoutRectangle,
-    Pressable,
-    StyleSheet,
-    View,
-    ViewProps,
-} from 'react-native';
-import Animated, {
-    FadeIn,
-    FadeInLeft,
-    FadeOut,
-    FadeOutLeft,
-    LayoutAnimationConfig,
-    LinearTransition,
-} from 'react-native-reanimated';
+import { Image, LayoutChangeEvent, LayoutRectangle, Pressable, StyleSheet, View, ViewProps } from 'react-native';
+import Animated, { FadeIn, FadeInLeft, FadeOut, FadeOutLeft, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-    ContextItem,
-    ContextMenuProps,
-    ContextMenuRef,
-    ContextSubMenu,
-} from './types';
+import { ContextItem, ContextMenuProps, ContextMenuRef, ContextSubMenu } from './types';
 
 import { ActivityIndicator } from '~/components/nativewindui/ActivityIndicator';
 import { Text } from '~/components/nativewindui/Text';
@@ -79,14 +59,11 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
         ref
     ) => {
         const [rootLayout, setRootLayout] = React.useState(ROOT_DEFAULT_LAYOUT);
-        const [auxiliaryContentLayout, setAuxiliaryContentLayout] =
-            React.useState<LayoutRectangle | null>(null);
-        const [contentLayout, setContentLayout] =
-            React.useState<LayoutRectangle | null>(null);
+        const [auxiliaryContentLayout, setAuxiliaryContentLayout] = React.useState<LayoutRectangle | null>(null);
+        const [contentLayout, setContentLayout] = React.useState<LayoutRectangle | null>(null);
         const subMenuRefs = React.useRef<ContextMenuRef[]>([]);
         const insets = useSafeAreaInsets();
-        const triggerRef =
-            React.useRef<ContextMenuPrimitive.ContextMenuTriggerRef>(null);
+        const triggerRef = React.useRef<ContextMenuPrimitive.ContextMenuTriggerRef>(null);
         const rootRef = useAugmentedRef({
             ref,
             methods: {
@@ -155,16 +132,8 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
 
         return (
             <View>
-                <ContextMenuPrimitive.Root
-                    ref={rootRef}
-                    relativeTo="trigger"
-                    onOpenChange={onOpenChange}
-                    {...props}
-                    collapsable={false}>
-                    <ContextMenuPrimitive.Trigger
-                        ref={triggerRef}
-                        onLongPress={onTriggerLongPress}
-                        asChild>
+                <ContextMenuPrimitive.Root ref={rootRef} relativeTo="trigger" onOpenChange={onOpenChange} {...props} collapsable={false}>
+                    <ContextMenuPrimitive.Trigger ref={triggerRef} onLongPress={onTriggerLongPress} asChild>
                         {children}
                     </ContextMenuPrimitive.Trigger>
                     <ContextMenuPrimitive.Portal hostName={materialPortalHost}>
@@ -177,24 +146,19 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
                                 subMenuRefs,
                                 closeSubMenus,
                             }}>
-                            <ContextMenuPrimitive.Overlay
-                                style={StyleSheet.absoluteFill}>
+                            <ContextMenuPrimitive.Overlay style={StyleSheet.absoluteFill}>
                                 <Animated.View
                                     style={StyleSheet.absoluteFill}
                                     entering={FadeIn}
                                     exiting={FadeOut}
-                                    className={cn(
-                                        'bg-black/20',
-                                        materialOverlayClassName
-                                    )}>
-                                    {renderAuxiliaryPreview &&
-                                        contentLayout && (
-                                            <ContextMenuAuxiliaryPreview
-                                                onLayout={onLayout}
-                                                style={positionStyle}
-                                                children={renderAuxiliaryPreview()}
-                                            />
-                                        )}
+                                    className={cn('bg-black/20', materialOverlayClassName)}>
+                                    {renderAuxiliaryPreview && contentLayout && (
+                                        <ContextMenuAuxiliaryPreview
+                                            onLayout={onLayout}
+                                            style={positionStyle}
+                                            children={renderAuxiliaryPreview()}
+                                        />
+                                    )}
                                     <ContextMenuPrimitive.Content
                                         insets={{
                                             top: insets.top,
@@ -205,16 +169,8 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
                                         sideOffset={materialSideOffset}
                                         alignOffset={materialAlignOffset}
                                         align={materialAlign}
-                                        className={cn(
-                                            !title &&
-                                                items.length === 0 &&
-                                                'opacity-0'
-                                        )}
-                                        pointerEvents={
-                                            !title && items.length === 0
-                                                ? 'none'
-                                                : undefined
-                                        }
+                                        className={cn(!title && items.length === 0 && 'opacity-0')}
+                                        pointerEvents={!title && items.length === 0 ? 'none' : undefined}
                                         onLayout={onContentLayout}>
                                         <Animated.View
                                             entering={FadeIn}
@@ -224,14 +180,8 @@ const ContextMenu = React.forwardRef<ContextMenuRef, ContextMenuProps>(
                                                 width: materialWidth,
                                             }}
                                             className="border-border/20 z-50 rounded-md border bg-card py-2 shadow-xl">
-                                            {!!title && (
-                                                <ContextMenuLabel>
-                                                    {title}
-                                                </ContextMenuLabel>
-                                            )}
-                                            <ContextMenuInnerContent
-                                                items={items}
-                                            />
+                                            {!!title && <ContextMenuLabel>{title}</ContextMenuLabel>}
+                                            <ContextMenuInnerContent items={items} />
                                         </Animated.View>
                                     </ContextMenuPrimitive.Content>
                                 </Animated.View>
@@ -251,18 +201,12 @@ export { ContextMenu };
 function useContextMenuContext() {
     const context = React.useContext(ContextMenuContext);
     if (!context) {
-        throw new Error(
-            'ContextMenu compound components cannot be rendered outside the ContextMenu component'
-        );
+        throw new Error('ContextMenu compound components cannot be rendered outside the ContextMenu component');
     }
     return context;
 }
 
-function ContextMenuAuxiliaryPreview({
-    style,
-    onLayout,
-    children,
-}: Required<Pick<ViewProps, 'style' | 'onLayout' | 'children'>>) {
+function ContextMenuAuxiliaryPreview({ style, onLayout, children }: Required<Pick<ViewProps, 'style' | 'onLayout' | 'children'>>) {
     return (
         <Pressable style={style} onLayout={onLayout}>
             {children}
@@ -270,11 +214,7 @@ function ContextMenuAuxiliaryPreview({
     );
 }
 
-function ContextMenuInnerContent({
-    items,
-}: {
-    items: (ContextItem | ContextSubMenu)[];
-}) {
+function ContextMenuInnerContent({ items }: { items: (ContextItem | ContextSubMenu)[] }) {
     const { materialLoadingText } = useContextMenuContext();
     const id = React.useId();
 
@@ -283,17 +223,13 @@ function ContextMenuInnerContent({
             {items.map((item, index) => {
                 if (item.loading) {
                     return (
-                        <ContextMenuPrimitive.Item
-                            key={`loading:${id}-${item.title}-${index}`}
-                            asChild>
+                        <ContextMenuPrimitive.Item key={`loading:${id}-${item.title}-${index}`} asChild>
                             <Button
                                 disabled
                                 variant="plain"
                                 className="h-12 justify-between gap-10 rounded-none px-3"
                                 androidRootClassName="rounded-none ">
-                                <Text className="font-normal opacity-60">
-                                    {materialLoadingText}
-                                </Text>
+                                <Text className="font-normal opacity-60">{materialLoadingText}</Text>
                                 <ActivityIndicator />
                             </Button>
                         </ContextMenuPrimitive.Item>
@@ -312,12 +248,7 @@ function ContextMenuInnerContent({
                     );
                 }
                 const contextMenuItem = item as ContextItem;
-                return (
-                    <ContextMenuItem
-                        key={contextMenuItem.actionKey}
-                        {...contextMenuItem}
-                    />
-                );
+                return <ContextMenuItem key={contextMenuItem.actionKey} {...contextMenuItem} />;
             })}
         </View>
     );
@@ -353,24 +284,15 @@ function ContextMenuItem(props: Omit<ContextItem, 'loading'>) {
                 }}>
                 <Button
                     variant={props.state?.checked ? 'tonal' : 'plain'}
-                    className={cn(
-                        'h-12 justify-between gap-10 rounded-none px-3',
-                        !props.state && !props.title && 'justify-center px-4'
-                    )}
+                    className={cn('h-12 justify-between gap-10 rounded-none px-3', !props.state && !props.title && 'justify-center px-4')}
                     androidRootClassName="rounded-none"
                     accessibilityHint={props.subTitle}
                     onPress={onPress}>
                     {!props.state && !props.title ? null : (
                         <View className="flex-row items-center gap-3 py-0.5">
                             {props.state?.checked && (
-                                <Animated.View
-                                    entering={FadeInLeft}
-                                    exiting={FadeOutLeft}>
-                                    <Icon
-                                        name="check"
-                                        size={21}
-                                        color={colors.foreground}
-                                    />
+                                <Animated.View entering={FadeInLeft} exiting={FadeOutLeft}>
+                                    <Icon name="check" size={21} color={colors.foreground} />
                                 </Animated.View>
                             )}
                             <Animated.View layout={LinearTransition}>
@@ -378,20 +300,13 @@ function ContextMenuItem(props: Omit<ContextItem, 'loading'>) {
                                     numberOfLines={1}
                                     className={cn(
                                         'font-normal',
-                                        props.destructive &&
-                                            'font-medium text-destructive',
+                                        props.destructive && 'font-medium text-destructive',
                                         props.disabled && 'opacity-60'
                                     )}>
                                     {props.title}
                                 </Text>
                             </Animated.View>
-                            {props.state && !props.state?.checked && (
-                                <Icon
-                                    name="check"
-                                    size={21}
-                                    color="#00000000"
-                                />
-                            )}
+                            {props.state && !props.state?.checked && <Icon name="check" size={21} color="#00000000" />}
                         </View>
                     )}
                     {props.image ? (
@@ -401,18 +316,13 @@ function ContextMenuItem(props: Omit<ContextItem, 'loading'>) {
                                 width: 22,
                                 height: 22,
                                 borderRadius:
-                                    typeof props.image.cornerRadius ===
-                                        'number' && props.image.cornerRadius > 0
+                                    typeof props.image.cornerRadius === 'number' && props.image.cornerRadius > 0
                                         ? props.image.cornerRadius / 4
                                         : 0,
                             }}
                         />
                     ) : props.icon ? (
-                        <Icon
-                            color={colors.foreground}
-                            {...props.icon}
-                            size={22}
-                        />
+                        <Icon color={colors.foreground} {...props.icon} size={22} />
                     ) : null}
                 </Button>
             </ContextMenuPrimitive.Item>
@@ -425,11 +335,7 @@ const DEFAULT_LAYOUT = {
     height: 0,
 };
 
-function ContextMenuSubMenu({
-    title,
-    subTitle,
-    items,
-}: Omit<ContextSubMenu, 'loading'>) {
+function ContextMenuSubMenu({ title, subTitle, items }: Omit<ContextSubMenu, 'loading'>) {
     const { colors } = useColorScheme();
     const {
         onItemPress: onContextMenuItemPress,
@@ -438,8 +344,7 @@ function ContextMenuSubMenu({
         subMenuRefs,
         closeSubMenus,
     } = useContextMenuContext();
-    const [triggerLayout, setTriggerLayout] =
-        React.useState<typeof DEFAULT_LAYOUT>(DEFAULT_LAYOUT);
+    const [triggerLayout, setTriggerLayout] = React.useState<typeof DEFAULT_LAYOUT>(DEFAULT_LAYOUT);
 
     function onItemPress(item: Omit<ContextItem, 'icon'>) {
         dismissMenu?.();

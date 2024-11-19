@@ -2,14 +2,7 @@ import { useNDK } from '@/ndk-expo';
 import { useMemo, useState } from 'react';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import {
-    ESTIMATED_ITEM_HEIGHT,
-    List,
-    ListDataItem,
-    ListItem,
-    ListRenderItemInfo,
-    ListSectionHeader,
-} from '~/components/nativewindui/List';
+import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk';
@@ -30,11 +23,7 @@ export default function BlossomScreen() {
         return list;
     }, [events]);
     const [searchText, setSearchText] = useState<string | null>(null);
-    const [blossoms, setBlossoms] = useState<string[]>(
-        blossomList?.items
-            .filter((item) => item[0] === 'server')
-            .map((item) => item[1])
-    );
+    const [blossoms, setBlossoms] = useState<string[]>(blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1]));
     const [url, setUrl] = useState('');
 
     if (blossoms.length === 0) {
@@ -68,17 +57,11 @@ export default function BlossomScreen() {
                     setBlossoms([url, ...blossoms.filter((u) => u !== url)]);
                 },
             }))
-            .filter(
-                (item) =>
-                    (searchText ?? '').trim().length === 0 ||
-                    item.title.match(searchText!)
-            );
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
     }, [ndk?.pool.relays, searchText, blossoms]);
 
     function save() {
-        blossomList.tags = blossomList.tags.filter(
-            (tag) => tag[0] !== 'server'
-        );
+        blossomList.tags = blossomList.tags.filter((tag) => tag[0] !== 'server');
 
         for (const url of blossoms) {
             blossomList.addItem(['server', url]);
@@ -116,17 +99,11 @@ export default function BlossomScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(
-    info: ListRenderItemInfo<T>
-) {
+function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                    info.index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -149,19 +126,13 @@ function renderItem<T extends (typeof data)[number]>(
     }
     return (
         <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
                 info.index > 0 && (
                     <TouchableOpacity onPress={info.item.makeDefault}>
-                        <Text className="mt-2 pr-4 text-xs text-primary">
-                            Make default
-                        </Text>
+                        <Text className="mt-2 pr-4 text-xs text-primary">Make default</Text>
                     </TouchableOpacity>
                 )
             }
@@ -171,8 +142,6 @@ function renderItem<T extends (typeof data)[number]>(
     );
 }
 
-function keyExtractor(
-    item: (Omit<ListDataItem, string> & { id: string }) | string
-) {
+function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
     return typeof item === 'string' ? item : item.id;
 }

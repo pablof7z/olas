@@ -4,10 +4,7 @@ import { ListItem } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useSubscribe } from '@/ndk-expo';
-import {
-    NDKSimpleGroupMetadata,
-    NDKSubscriptionCacheUsage,
-} from '@nostr-dev-kit/ndk';
+import { NDKSimpleGroupMetadata, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { Icon } from '@roninoss/icons';
 import Swipeable from '@/components/ui/Swipable';
 import { cn } from '~/lib/cn';
@@ -25,26 +22,15 @@ const TEXT_STYLE = {
     paddingRight: 96,
 };
 
-export default function GroupRow({
-    groupMetadata,
-    onPress,
-    index,
-    target,
-}: GroupRowProps) {
+export default function GroupRow({ groupMetadata, onPress, index, target }: GroupRowProps) {
     const { colors } = useColorScheme();
 
     const groupId = groupMetadata.dTag;
     const filters = useMemo(() => [{ kinds: [30023], '#h': [groupId!] }], []);
-    const opts = useMemo(
-        () => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }),
-        []
-    );
+    const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }), []);
     const { events: groupEvents } = useSubscribe({ filters, opts });
 
-    const mostRecentEvent = useMemo(
-        () => groupEvents.sort((a, b) => a.created_at! - b.created_at!).pop(),
-        [groupEvents]
-    );
+    const mostRecentEvent = useMemo(() => groupEvents.sort((a, b) => a.created_at! - b.created_at!).pop(), [groupEvents]);
 
     const imageUrl = groupMetadata.picture;
     const name = groupMetadata.name ?? groupId;
@@ -70,11 +56,7 @@ export default function GroupRow({
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn(
-                    'h-[88px]',
-                    index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-lg"
                 leftView={
@@ -89,11 +71,7 @@ export default function GroupRow({
                             </Avatar>
                         ) : (
                             <View className="h-12 w-12 items-center justify-center rounded-lg bg-gray-200">
-                                <Icon
-                                    name="plus"
-                                    size={14}
-                                    color={colors.grey}
-                                />
+                                <Icon name="plus" size={14} color={colors.grey} />
                             </View>
                         )}
                     </View>
@@ -107,16 +85,10 @@ export default function GroupRow({
                             height: '100%',
                         }}>
                         <View className="flex-row items-center">
-                            <Text className="text-sm text-muted-foreground">
-                                {messageCount > 0 ? messageCount : ''}
-                            </Text>
+                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
                         </View>
                         <View className="pr-3">
-                            <Icon
-                                name="chevron-right"
-                                size={14}
-                                color={colors.grey}
-                            />
+                            <Icon name="chevron-right" size={14} color={colors.grey} />
                         </View>
                     </View>
                 }></ListItem>

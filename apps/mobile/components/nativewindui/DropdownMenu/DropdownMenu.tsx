@@ -3,22 +3,10 @@ import { useAugmentedRef } from '@rn-primitives/hooks';
 import { Icon } from '@roninoss/icons';
 import * as React from 'react';
 import { Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
-import Animated, {
-    FadeIn,
-    FadeInLeft,
-    FadeOut,
-    FadeOutLeft,
-    LayoutAnimationConfig,
-    LinearTransition,
-} from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInLeft, FadeOut, FadeOutLeft, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-    DropdownItem,
-    DropdownMenuProps,
-    DropdownMenuRef,
-    DropdownSubMenu,
-} from './types';
+import { DropdownItem, DropdownMenuProps, DropdownMenuRef, DropdownSubMenu } from './types';
 
 import { ActivityIndicator } from '~/components/nativewindui/ActivityIndicator';
 import { Text } from '~/components/nativewindui/Text';
@@ -59,8 +47,7 @@ const DropdownMenu = React.forwardRef<DropdownMenuRef, DropdownMenuProps>(
         },
         ref
     ) => {
-        const triggerRef =
-            React.useRef<DropdownMenuPrimitive.DropdownMenuTriggerRef>(null);
+        const triggerRef = React.useRef<DropdownMenuPrimitive.DropdownMenuTriggerRef>(null);
         const subMenuRefs = React.useRef<DropdownMenuRef[]>([]);
         const insets = useSafeAreaInsets();
         const rootRef = useAugmentedRef({
@@ -105,21 +92,13 @@ const DropdownMenu = React.forwardRef<DropdownMenuRef, DropdownMenuProps>(
                         }}>
                         <DropdownMenuPrimitive.Overlay
                             style={StyleSheet.absoluteFill}
-                            pointerEvents={
-                                materialIsSubMenu ? 'box-none' : undefined
-                            }>
+                            pointerEvents={materialIsSubMenu ? 'box-none' : undefined}>
                             <Animated.View
                                 style={StyleSheet.absoluteFill}
                                 entering={FadeIn}
                                 exiting={FadeOut}
-                                pointerEvents={
-                                    materialIsSubMenu ? 'box-none' : undefined
-                                }
-                                className={cn(
-                                    !materialIsSubMenu && 'bg-black/20',
-                                    !materialIsSubMenu &&
-                                        materialOverlayClassName
-                                )}>
+                                pointerEvents={materialIsSubMenu ? 'box-none' : undefined}
+                                className={cn(!materialIsSubMenu && 'bg-black/20', !materialIsSubMenu && materialOverlayClassName)}>
                                 <DropdownMenuPrimitive.Content
                                     insets={{
                                         top: insets.top,
@@ -132,24 +111,14 @@ const DropdownMenu = React.forwardRef<DropdownMenuRef, DropdownMenuProps>(
                                     align={materialAlign}>
                                     <Animated.View
                                         entering={FadeIn}
-                                        exiting={
-                                            materialIsSubMenu
-                                                ? undefined
-                                                : FadeOut
-                                        }
+                                        exiting={materialIsSubMenu ? undefined : FadeOut}
                                         style={{
                                             minWidth: materialMinWidth,
                                             width: materialWidth,
                                         }}
                                         className="border-border/20 z-50 rounded-md border bg-card py-2 shadow-xl">
-                                        {!!title && (
-                                            <DropdownMenuLabel>
-                                                {title}
-                                            </DropdownMenuLabel>
-                                        )}
-                                        <DropdownMenuInnerContent
-                                            items={items}
-                                        />
+                                        {!!title && <DropdownMenuLabel>{title}</DropdownMenuLabel>}
+                                        <DropdownMenuInnerContent items={items} />
                                     </Animated.View>
                                 </DropdownMenuPrimitive.Content>
                             </Animated.View>
@@ -168,18 +137,12 @@ export { DropdownMenu };
 function useDropdownContext() {
     const context = React.useContext(DropdownContext);
     if (!context) {
-        throw new Error(
-            'DropdownMenu compound components cannot be rendered outside the DropdownMenu component'
-        );
+        throw new Error('DropdownMenu compound components cannot be rendered outside the DropdownMenu component');
     }
     return context;
 }
 
-function DropdownMenuInnerContent({
-    items,
-}: {
-    items: (DropdownItem | DropdownSubMenu)[];
-}) {
+function DropdownMenuInnerContent({ items }: { items: (DropdownItem | DropdownSubMenu)[] }) {
     const { materialLoadingText } = useDropdownContext();
     const id = React.useId();
 
@@ -188,17 +151,13 @@ function DropdownMenuInnerContent({
             {items.map((item, index) => {
                 if (item.loading) {
                     return (
-                        <DropdownMenuPrimitive.Item
-                            key={`loading:${id}-${item.title}-${index}`}
-                            asChild>
+                        <DropdownMenuPrimitive.Item key={`loading:${id}-${item.title}-${index}`} asChild>
                             <Button
                                 disabled
                                 variant="plain"
                                 className="h-12 justify-between gap-10 rounded-none px-3"
                                 androidRootClassName="rounded-none ">
-                                <Text className="font-normal opacity-60">
-                                    {materialLoadingText}
-                                </Text>
+                                <Text className="font-normal opacity-60">{materialLoadingText}</Text>
                                 <ActivityIndicator />
                             </Button>
                         </DropdownMenuPrimitive.Item>
@@ -217,12 +176,7 @@ function DropdownMenuInnerContent({
                     );
                 }
                 const dropdownItem = item as DropdownItem;
-                return (
-                    <DropdownMenuItem
-                        key={dropdownItem.actionKey}
-                        {...dropdownItem}
-                    />
-                );
+                return <DropdownMenuItem key={dropdownItem.actionKey} {...dropdownItem} />;
             })}
         </View>
     );
@@ -258,24 +212,15 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                 }}>
                 <Button
                     variant={props.state?.checked ? 'tonal' : 'plain'}
-                    className={cn(
-                        'h-12 justify-between gap-10 rounded-none px-3',
-                        !props.state && !props.title && 'justify-center px-4'
-                    )}
+                    className={cn('h-12 justify-between gap-10 rounded-none px-3', !props.state && !props.title && 'justify-center px-4')}
                     androidRootClassName="rounded-none"
                     accessibilityHint={props.subTitle}
                     onPress={onPress}>
                     {!props.state && !props.title ? null : (
                         <View className="flex-row items-center gap-3 py-0.5">
                             {props.state?.checked && (
-                                <Animated.View
-                                    entering={FadeInLeft}
-                                    exiting={FadeOutLeft}>
-                                    <Icon
-                                        name="check"
-                                        size={21}
-                                        color={colors.foreground}
-                                    />
+                                <Animated.View entering={FadeInLeft} exiting={FadeOutLeft}>
+                                    <Icon name="check" size={21} color={colors.foreground} />
                                 </Animated.View>
                             )}
                             <Animated.View layout={LinearTransition}>
@@ -283,20 +228,13 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                                     numberOfLines={1}
                                     className={cn(
                                         'font-normal',
-                                        props.destructive &&
-                                            'font-medium text-destructive',
+                                        props.destructive && 'font-medium text-destructive',
                                         props.disabled && 'opacity-60'
                                     )}>
                                     {props.title}
                                 </Text>
                             </Animated.View>
-                            {props.state && !props.state?.checked && (
-                                <Icon
-                                    name="check"
-                                    size={21}
-                                    color="#00000000"
-                                />
-                            )}
+                            {props.state && !props.state?.checked && <Icon name="check" size={21} color="#00000000" />}
                         </View>
                     )}
                     {props.image ? (
@@ -306,18 +244,13 @@ function DropdownMenuItem(props: Omit<DropdownItem, 'loading'>) {
                                 width: 22,
                                 height: 22,
                                 borderRadius:
-                                    typeof props.image.cornerRadius ===
-                                        'number' && props.image.cornerRadius > 0
+                                    typeof props.image.cornerRadius === 'number' && props.image.cornerRadius > 0
                                         ? props.image.cornerRadius / 4
                                         : 0,
                             }}
                         />
                     ) : props.icon ? (
-                        <Icon
-                            color={colors.foreground}
-                            {...props.icon}
-                            size={22}
-                        />
+                        <Icon color={colors.foreground} {...props.icon} size={22} />
                     ) : null}
                 </Button>
             </DropdownMenuPrimitive.Item>
@@ -330,11 +263,7 @@ const DEFAULT_LAYOUT = {
     height: 0,
 };
 
-function DropdownMenuSubMenu({
-    title,
-    subTitle,
-    items,
-}: Omit<DropdownSubMenu, 'loading'>) {
+function DropdownMenuSubMenu({ title, subTitle, items }: Omit<DropdownSubMenu, 'loading'>) {
     const { colors } = useColorScheme();
     const {
         onItemPress: onDropdownItemPress,
@@ -343,8 +272,7 @@ function DropdownMenuSubMenu({
         subMenuRefs,
         closeSubMenus,
     } = useDropdownContext();
-    const [triggerLayout, setTriggerLayout] =
-        React.useState<typeof DEFAULT_LAYOUT>(DEFAULT_LAYOUT);
+    const [triggerLayout, setTriggerLayout] = React.useState<typeof DEFAULT_LAYOUT>(DEFAULT_LAYOUT);
 
     function onItemPress(item: Omit<DropdownItem, 'icon'>) {
         dismissMenu?.();

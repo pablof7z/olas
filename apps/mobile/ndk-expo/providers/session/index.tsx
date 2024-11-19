@@ -1,13 +1,7 @@
 import NDKSessionContext from '@/ndk-expo/context/session';
 import { NDKEventWithFrom } from '@/ndk-expo/hooks';
 import { useNDK } from '@/ndk-expo/hooks/ndk';
-import {
-    NDKEvent,
-    NDKEventId,
-    NDKFilter,
-    NDKKind,
-    NDKSubscription,
-} from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription } from '@nostr-dev-kit/ndk';
 import { PropsWithChildren, useEffect, useState } from 'react';
 
 interface NDKSessionProviderProps {
@@ -15,10 +9,7 @@ interface NDKSessionProviderProps {
     kinds?: Map<NDKKind, { wrapper?: NDKEventWithFrom<any> }>;
 }
 
-const NDKSessionProvider = ({
-    children,
-    ...opts
-}: PropsWithChildren<NDKSessionProviderProps>) => {
+const NDKSessionProvider = ({ children, ...opts }: PropsWithChildren<NDKSessionProviderProps>) => {
     const { ndk, currentUser } = useNDK();
     const [follows, setFollows] = useState<string[] | undefined>(undefined);
     const [events, setEvents] = useState<Map<NDKKind, NDKEvent[]>>(new Map());
@@ -31,11 +22,7 @@ const NDKSessionProvider = ({
     const processFollowEvent = (event: NDKEvent) => {
         if (followEvent && followEvent.created_at! > event.created_at!) return;
 
-        const pubkeys = new Set(
-            event.tags
-                .filter((tag) => tag[0] === 'p' && !!tag[1])
-                .map((tag) => tag[1])
-        );
+        const pubkeys = new Set(event.tags.filter((tag) => tag[0] === 'p' && !!tag[1]).map((tag) => tag[1]));
 
         setFollows(Array.from(pubkeys));
         followEvent = event;
@@ -72,12 +59,7 @@ const NDKSessionProvider = ({
         if (opts.kinds) filters[0].kinds!.push(...opts.kinds.keys());
 
         if (filters[0].kinds!.length > 0) {
-            sub = ndk.subscribe(
-                filters,
-                { closeOnEose: false },
-                undefined,
-                false
-            );
+            sub = ndk.subscribe(filters, { closeOnEose: false }, undefined, false);
             sub.on('event', handleEvent);
             sub.start();
         }

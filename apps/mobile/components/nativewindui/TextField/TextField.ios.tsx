@@ -53,28 +53,11 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
         }
 
         return (
-            <Pressable
-                className={cn(
-                    editable === false && 'opacity-50',
-                    containerClassName
-                )}
-                disabled={editable === false}
-                onPress={focus}>
+            <Pressable className={cn(editable === false && 'opacity-50', containerClassName)} disabled={editable === false} onPress={focus}>
                 {!!label && (
-                    <View
-                        className={cn(
-                            'flex-row pt-2',
-                            !leftView ? 'pl-1.5' : 'pl-2'
-                        )}>
+                    <View className={cn('flex-row pt-2', !leftView ? 'pl-1.5' : 'pl-2')}>
                         {leftView}
-                        <Text
-                            className={cn(
-                                'text-muted-foreground',
-                                !leftView ? 'pl-1' : 'pl-2',
-                                labelClassName
-                            )}>
-                            {label}
-                        </Text>
+                        <Text className={cn('text-muted-foreground', !leftView ? 'pl-1' : 'pl-2', labelClassName)}>{label}</Text>
                     </View>
                 )}
                 <View className="flex-row">
@@ -82,10 +65,7 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                     <TextInput
                         ref={inputRef}
                         editable={editable}
-                        className={cn(
-                            'flex-1 px-2.5 py-3 text-[17px] text-foreground',
-                            className
-                        )}
+                        className={cn('flex-1 px-2.5 py-3 text-[17px] text-foreground', className)}
                         onChangeText={onChangeText}
                         value={value}
                         clearButtonMode="while-editing"

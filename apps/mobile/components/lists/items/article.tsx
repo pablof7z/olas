@@ -15,9 +15,7 @@ type ArticleItemProps = {
 
 export function FeaturedArticle({ article }: ArticleItemProps) {
     return (
-        <View
-            className="relative"
-            style={{ height: Dimensions.get('window').height * 0.5 }}>
+        <View className="relative" style={{ height: Dimensions.get('window').height * 0.5 }}>
             <Image
                 source={article.image}
                 className="h-full w-full flex-1"
@@ -42,10 +40,7 @@ export function FeaturedArticle({ article }: ArticleItemProps) {
                     left: 10,
                     right: 10,
                 }}>
-                <Text
-                    numberOfLines={2}
-                    variant="heading"
-                    className="font-serif text-3xl font-bold text-white">
+                <Text numberOfLines={2} variant="heading" className="font-serif text-3xl font-bold text-white">
                     {article.title}
                 </Text>
 
@@ -91,10 +86,7 @@ export function Article({ article, onPress, index }: ArticleItemProps) {
             onPress={onPress}
             skipTitle={true}
             style={{ height: size }}
-            className={cn(
-                index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}>
+            className={cn(index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}>
             <View style={styles.container}>
                 <View style={styles.content}>
                     <Text style={styles.title} numberOfLines={titleLines}>
@@ -123,11 +115,7 @@ export function Article({ article, onPress, index }: ArticleItemProps) {
             subTitleNumberOfLines={1}
             onLongPress={noop}
             onPress={onPress}
-            className={cn(
-                'h-[88px]',
-                index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('h-[88px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleStyle={TEXT_STYLE}
             titleClassName="font-medium text-lg"
             rightView={

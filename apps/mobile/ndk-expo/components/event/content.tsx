@@ -13,9 +13,7 @@ interface EventContentProps {
     onMentionPress?: (pubkey: string) => void;
 }
 
-const RenderPart: React.FC<
-    { part: string } & React.ComponentProps<typeof Text>
-> = ({ part, ...props }) => {
+const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
     const { onMentionPress } = props as EventContentProps;
 
     if (part.startsWith('https://')) {
@@ -78,13 +76,9 @@ const RenderPart: React.FC<
     return <Text {...props}>{entity.substring(0, 6)}...</Text>;
 };
 
-const EventContent: React.FC<
-    EventContentProps & React.ComponentProps<typeof View>
-> = ({ event, content, ...props }) => {
+const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
     content ??= event.content;
-    const parts = content.split(
-        /(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/
-    );
+    const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/);
 
     return (
         <Text {...props}>

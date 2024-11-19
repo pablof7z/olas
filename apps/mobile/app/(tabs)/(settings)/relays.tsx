@@ -4,29 +4,13 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import * as User from '@/ndk-expo/components/user';
 
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '~/components/nativewindui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import {
-    ESTIMATED_ITEM_HEIGHT,
-    List,
-    ListDataItem,
-    ListItem,
-    ListRenderItemInfo,
-    ListSectionHeader,
-} from '~/components/nativewindui/List';
+import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import {
-    NDKPrivateKeySigner,
-    NDKRelay,
-    NDKRelayStatus,
-    NDKUser,
-} from '@nostr-dev-kit/ndk';
+import { NDKPrivateKeySigner, NDKRelay, NDKRelayStatus, NDKUser } from '@nostr-dev-kit/ndk';
 import * as SecureStore from 'expo-secure-store';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
@@ -60,9 +44,7 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
 export default function RelaysScreen() {
     const { ndk } = useNDK();
     const [searchText, setSearchText] = useState<string | null>(null);
-    const [relays, setRelays] = useState<NDKRelay[]>(
-        Array.from(ndk!.pool.relays.values())
-    );
+    const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
     const [url, setUrl] = useState('');
 
     const addFn = () => {
@@ -100,11 +82,7 @@ export default function RelaysScreen() {
                     </View>
                 ),
             }))
-            .filter(
-                (item) =>
-                    (searchText ?? '').trim().length === 0 ||
-                    item.title.match(searchText!)
-            );
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
     }, [ndk?.pool.relays, searchText, relays]);
 
     function save() {
@@ -140,17 +118,11 @@ export default function RelaysScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(
-    info: ListRenderItemInfo<T>
-) {
+function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                    info.index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -173,28 +145,20 @@ function renderItem<T extends (typeof data)[number]>(
     }
     return (
         <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
                 info.item.rightView ?? (
                     <View className="flex-1 flex-row items-center justify-center gap-2 px-4">
                         {info.item.rightText && (
-                            <Text
-                                variant="callout"
-                                className="ios:px-0 px-2 text-muted-foreground">
+                            <Text variant="callout" className="ios:px-0 px-2 text-muted-foreground">
                                 {info.item.rightText}
                             </Text>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text
-                                    variant="footnote"
-                                    className="font-bold leading-4 text-destructive-foreground">
+                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
                                     {info.item.badge}
                                 </Text>
                             </View>
@@ -214,8 +178,6 @@ function ChevronRight() {
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
 }
 
-function keyExtractor(
-    item: (Omit<ListDataItem, string> & { id: string }) | string
-) {
+function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
     return typeof item === 'string' ? item : item.id;
 }

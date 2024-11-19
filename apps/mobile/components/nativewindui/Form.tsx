@@ -6,17 +6,9 @@ import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 
-const Form = React.forwardRef<View, ViewProps>(
-    ({ className, ...props }, ref) => {
-        return (
-            <View
-                ref={ref}
-                className={cn('flex-1 gap-9', className)}
-                {...props}
-            />
-        );
-    }
-);
+const Form = React.forwardRef<View, ViewProps>(({ className, ...props }, ref) => {
+    return <View ref={ref} className={cn('flex-1 gap-9', className)} {...props} />;
+});
 
 // Add as class when possible: https://github.com/marklawlor/nativewind/issues/522
 const BORDER_CURVE: ViewStyle = {
@@ -34,10 +26,7 @@ type FormSectionProps = ViewProps & {
     materialIconProps?: Omit<IconProps<'material'>, 'namingScheme' | 'ios'>;
 };
 
-const FormSection = React.forwardRef<
-    React.ElementRef<typeof View>,
-    FormSectionProps
->(
+const FormSection = React.forwardRef<React.ElementRef<typeof View>, FormSectionProps>(
     (
         {
             rootClassName,
@@ -63,59 +52,32 @@ const FormSection = React.forwardRef<
                 if (typeof child === 'string') {
                     console.log('FormSection - Invalid asChild element', child);
                 }
-                return React.cloneElement<
-                    ViewProps & { isLast?: boolean },
-                    View
-                >(typeof child === 'string' ? <></> : child, { isLast });
+                return React.cloneElement<ViewProps & { isLast?: boolean }, View>(typeof child === 'string' ? <></> : child, { isLast });
             });
         }, [childrenProps]);
 
         return (
-            <View
-                className={cn(
-                    'relative',
-                    Platform.OS !== 'ios' &&
-                        !!materialIconProps &&
-                        'flex-row gap-4',
-                    rootClassName
-                )}>
+            <View className={cn('relative', Platform.OS !== 'ios' && !!materialIconProps && 'flex-row gap-4', rootClassName)}>
                 {Platform.OS === 'ios' && !!ios?.title && (
-                    <Text
-                        variant="footnote"
-                        className={cn(
-                            'pb-1 pl-3 uppercase text-muted-foreground',
-                            ios?.titleClassName
-                        )}>
+                    <Text variant="footnote" className={cn('pb-1 pl-3 uppercase text-muted-foreground', ios?.titleClassName)}>
                         {ios.title}
                     </Text>
                 )}
                 {!!materialIconProps && (
                     <View className="ios:hidden pt-0.5">
-                        <Icon
-                            color={colors.grey}
-                            size={24}
-                            {...(materialIconProps as IconProps<'material'>)}
-                        />
+                        <Icon color={colors.grey} size={24} {...(materialIconProps as IconProps<'material'>)} />
                     </View>
                 )}
                 <View className="flex-1">
                     <View
                         ref={ref}
-                        className={cn(
-                            'ios:overflow-hidden ios:rounded-lg ios:bg-card ios:gap-0 ios:pl-1 gap-4',
-                            className
-                        )}
+                        className={cn('ios:overflow-hidden ios:rounded-lg ios:bg-card ios:gap-0 ios:pl-1 gap-4', className)}
                         style={style}
                         children={children}
                         {...props}
                     />
                     {!!footnote && (
-                        <Text
-                            className={cn(
-                                'ios:pl-3 ios:pt-1 pl-3 pt-0.5 text-muted-foreground',
-                                footnoteClassName
-                            )}
-                            variant="footnote">
+                        <Text className={cn('ios:pl-3 ios:pt-1 pl-3 pt-0.5 text-muted-foreground', footnoteClassName)} variant="footnote">
                             {footnote}
                         </Text>
                     )}
@@ -135,14 +97,7 @@ const FormItem = React.forwardRef<
     return (
         <>
             <View ref={ref} className={cn('ios:pr-1', className)} {...props} />
-            {Platform.OS === 'ios' && !isLast && (
-                <View
-                    className={cn(
-                        'ml-2 h-px flex-1 bg-border',
-                        iosSeparatorClassName
-                    )}
-                />
-            )}
+            {Platform.OS === 'ios' && !isLast && <View className={cn('ml-2 h-px flex-1 bg-border', iosSeparatorClassName)} />}
         </>
     );
 });

@@ -1,15 +1,5 @@
-import React, {
-    createContext,
-    useContext,
-    useState,
-    useEffect,
-    useMemo,
-} from 'react';
-import {
-    NDKSubscriptionCacheUsage,
-    NDKUser,
-    NDKUserProfile,
-} from '@nostr-dev-kit/ndk';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { useNDK, useSubscribe } from '@/ndk-expo';
 
 interface UserProfileContextProps {
@@ -19,9 +9,7 @@ interface UserProfileContextProps {
     // hasKind20: boolean;
 }
 
-const UserProfileContext = createContext<UserProfileContextProps | undefined>(
-    undefined
-);
+const UserProfileContext = createContext<UserProfileContextProps | undefined>(undefined);
 
 interface UserProfileProviderProps {
     pubkey?: string;
@@ -29,11 +17,7 @@ interface UserProfileProviderProps {
     children: React.ReactNode;
 }
 
-export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
-    pubkey,
-    npub,
-    children,
-}) => {
+export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ pubkey, npub, children }) => {
     const { ndk } = useNDK();
     const [userProfile, setUserProfile] = useState<NDKUserProfile | null>(null);
     const [user, setUser] = useState<NDKUser | null>(null);
@@ -79,9 +63,7 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
 export const useUserProfile = () => {
     const context = useContext(UserProfileContext);
     if (!context) {
-        throw new Error(
-            'useUserProfile must be used within a UserProfileProvider'
-        );
+        throw new Error('useUserProfile must be used within a UserProfileProvider');
     }
     return context;
 };

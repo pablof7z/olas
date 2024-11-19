@@ -1,22 +1,8 @@
-import {
-    FlashList,
-    type FlashListProps,
-    type ListRenderItem as FlashListRenderItem,
-    type ListRenderItemInfo,
-} from '@shopify/flash-list';
+import { FlashList, type FlashListProps, type ListRenderItem as FlashListRenderItem, type ListRenderItemInfo } from '@shopify/flash-list';
 import { cva } from 'class-variance-authority';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
-import {
-    Platform,
-    PressableProps,
-    StyleProp,
-    StyleSheet,
-    TextStyle,
-    View,
-    ViewProps,
-    ViewStyle,
-} from 'react-native';
+import { Platform, PressableProps, StyleProp, StyleSheet, TextStyle, View, ViewProps, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text, TextClassContext } from '~/components/nativewindui/Text';
@@ -40,19 +26,14 @@ type ListRenderItemProps<T extends ListDataItem> = ListRenderItemInfo<T> & {
     sectionHeaderAsGap?: boolean;
 };
 
-type ListProps<T extends ListDataItem> = Omit<
-    FlashListProps<T>,
-    'renderItem'
-> & {
+type ListProps<T extends ListDataItem> = Omit<FlashListProps<T>, 'renderItem'> & {
     renderItem?: ListRenderItem<T>;
     variant?: ListVariant;
     sectionHeaderAsGap?: boolean;
     rootClassName?: string;
     rootStyle?: StyleProp<ViewStyle>;
 };
-type ListRenderItem<T extends ListDataItem> = (
-    props: ListRenderItemProps<T>
-) => ReturnType<FlashListRenderItem<T>>;
+type ListRenderItem<T extends ListDataItem> = (props: ListRenderItemProps<T>) => ReturnType<FlashListRenderItem<T>>;
 
 const rootVariants = cva('min-h-2 flex-1', {
     variants: {
@@ -107,24 +88,14 @@ function ListComponent<T>(
             <FlashList
                 data={data}
                 contentInsetAdjustmentBehavior={contentInsetAdjustmentBehavior}
-                renderItem={renderItemWithVariant(
-                    renderItem,
-                    variant,
-                    data,
-                    sectionHeaderAsGap
-                )}
+                renderItem={renderItemWithVariant(renderItem, variant, data, sectionHeaderAsGap)}
                 contentContainerClassName={cn(
-                    variant === 'insets' &&
-                        (!data || (typeof data?.[0] !== 'string' && 'pt-4')),
+                    variant === 'insets' && (!data || (typeof data?.[0] !== 'string' && 'pt-4')),
                     contentContainerClassName
                 )}
                 contentContainerStyle={{
                     paddingBottom: Platform.select({
-                        ios:
-                            !contentInsetAdjustmentBehavior ||
-                            contentInsetAdjustmentBehavior === 'never'
-                                ? insets.bottom + 16
-                                : 0,
+                        ios: !contentInsetAdjustmentBehavior || contentInsetAdjustmentBehavior === 'never' ? insets.bottom + 16 : 0,
                         default: insets.bottom,
                     }),
                 }}
@@ -155,8 +126,7 @@ function renderItemWithVariant<T extends ListDataItem>(
             ? renderItem({
                   ...args,
                   variant,
-                  isFirstInSection:
-                      !previousItem || typeof previousItem === 'string',
+                  isFirstInSection: !previousItem || typeof previousItem === 'string',
                   isLastInSection: !nextItem || typeof nextItem === 'string',
                   sectionHeaderAsGap,
               })
@@ -164,9 +134,7 @@ function renderItemWithVariant<T extends ListDataItem>(
     };
 }
 
-const List = React.forwardRef(ListComponent) as <T>(
-    props: ListProps<T> & { ref?: ListRef<T> }
-) => React.ReactElement;
+const List = React.forwardRef(ListComponent) as <T>(props: ListProps<T> & { ref?: ListRef<T> }) => React.ReactElement;
 
 function isPressable(props: PressableProps) {
     return (
@@ -246,8 +214,7 @@ const itemVariants = cva('ios:gap-0 flex-row gap-0 bg-card', {
         {
             removeSeparator: false,
             isLastInSection: true,
-            className:
-                'ios:border-b-0 border-b border-border/25 dark:border-border/80',
+            className: 'ios:border-b-0 border-b border-border/25 dark:border-border/80',
         },
         {
             variant: 'insets',
@@ -292,11 +259,7 @@ function ListItemComponent<T extends ListDataItem>(
     ref: ListItemRef
 ) {
     if (typeof item === 'string') {
-        console.log(
-            'List.tsx',
-            'ListItemComponent',
-            "Invalid item of type 'string' was provided. Use ListSectionHeader instead."
-        );
+        console.log('List.tsx', 'ListItemComponent', "Invalid item of type 'string' was provided. Use ListSectionHeader instead.");
         return null;
     }
     return (
@@ -323,26 +286,15 @@ function ListItemComponent<T extends ListDataItem>(
                     <View
                         className={cn(
                             'h-full flex-1 flex-row',
-                            !item.subTitle
-                                ? 'ios:py-3 py-[18px]'
-                                : 'ios:py-2 py-2',
+                            !item.subTitle ? 'ios:py-3 py-[18px]' : 'ios:py-2 py-2',
                             !leftView && 'ml-4',
                             !rightView && 'pr-4',
-                            !removeSeparator &&
-                                (!isLastInSection ||
-                                    variant === 'full-width') &&
-                                'ios:border-b ios:border-border/80',
-                            !removeSeparator &&
-                                isFirstInSection &&
-                                variant === 'full-width' &&
-                                'ios:border-t ios:border-border/80'
+                            !removeSeparator && (!isLastInSection || variant === 'full-width') && 'ios:border-b ios:border-border/80',
+                            !removeSeparator && isFirstInSection && variant === 'full-width' && 'ios:border-t ios:border-border/80'
                         )}>
                         <View className={cn('flex-1', textContentClassName)}>
                             {skipTitle !== true && item.title && (
-                                <Text
-                                    numberOfLines={textNumberOfLines}
-                                    style={titleStyle}
-                                    className={titleClassName}>
+                                <Text numberOfLines={textNumberOfLines} style={titleStyle} className={titleClassName}>
                                     {item.title}
                                 </Text>
                             )}
@@ -351,10 +303,7 @@ function ListItemComponent<T extends ListDataItem>(
                                     numberOfLines={subTitleNumberOfLines}
                                     variant="subhead"
                                     style={subTitleStyle}
-                                    className={cn(
-                                        'text-muted-foreground',
-                                        subTitleClassName
-                                    )}>
+                                    className={cn('text-muted-foreground', subTitleClassName)}>
                                     {item.subTitle}
                                 </Text>
                             )}
@@ -373,9 +322,7 @@ function ListItemComponent<T extends ListDataItem>(
     );
 }
 
-const ListItem = React.forwardRef(ListItemComponent) as <
-    T extends ListDataItem,
->(
+const ListItem = React.forwardRef(ListItemComponent) as <T extends ListDataItem>(
     props: ListItemProps<T> & { ref?: ListItemRef }
 ) => React.ReactElement;
 
@@ -400,23 +347,14 @@ function ListSectionHeaderComponent<T extends ListDataItem>(
     ref: ListSectionHeaderRef
 ) {
     if (typeof item !== 'string') {
-        console.log(
-            'List.tsx',
-            'ListSectionHeaderComponent',
-            "Invalid item provided. Expected type 'string'. Use ListItem instead."
-        );
+        console.log('List.tsx', 'ListSectionHeaderComponent', "Invalid item provided. Expected type 'string'. Use ListItem instead.");
         return null;
     }
 
     if (sectionHeaderAsGap) {
         return (
             <View
-                className={cn(
-                    'bg-background',
-                    Platform.OS !== 'ios' &&
-                        'border-border/25 dark:border-border/80 border-b',
-                    className
-                )}
+                className={cn('bg-background', Platform.OS !== 'ios' && 'border-border/25 dark:border-border/80 border-b', className)}
                 {...props}
                 ref={ref}>
                 <View className="h-8" />
@@ -427,30 +365,22 @@ function ListSectionHeaderComponent<T extends ListDataItem>(
         <View
             className={cn(
                 'ios:pb-1 pb-4 pl-4 pt-4',
-                Platform.OS !== 'ios' &&
-                    'border-border/25 dark:border-border/80 border-b',
-                variant === 'full-width'
-                    ? 'bg-card dark:bg-background'
-                    : 'bg-background',
+                Platform.OS !== 'ios' && 'border-border/25 dark:border-border/80 border-b',
+                variant === 'full-width' ? 'bg-card dark:bg-background' : 'bg-background',
                 className
             )}
             {...props}
             ref={ref}>
             <Text
                 variant={Platform.select({ ios: 'footnote', default: 'body' })}
-                className={cn(
-                    'ios:uppercase ios:text-muted-foreground',
-                    textClassName
-                )}>
+                className={cn('ios:uppercase ios:text-muted-foreground', textClassName)}>
                 {item}
             </Text>
         </View>
     );
 }
 
-const ListSectionHeader = React.forwardRef(ListSectionHeaderComponent) as <
-    T extends ListDataItem,
->(
+const ListSectionHeader = React.forwardRef(ListSectionHeaderComponent) as <T extends ListDataItem>(
     props: ListSectionHeaderProps<T> & { ref?: ListSectionHeaderRef }
 ) => React.ReactElement;
 
@@ -470,17 +400,5 @@ function getStickyHeaderIndices<T extends ListDataItem>(data: T[]) {
     return indices;
 }
 
-export {
-    ESTIMATED_ITEM_HEIGHT,
-    List,
-    ListItem,
-    ListSectionHeader,
-    getStickyHeaderIndices,
-};
-export type {
-    ListDataItem,
-    ListItemProps,
-    ListProps,
-    ListRenderItemInfo,
-    ListSectionHeaderProps,
-};
+export { ESTIMATED_ITEM_HEIGHT, List, ListItem, ListSectionHeader, getStickyHeaderIndices };
+export type { ListDataItem, ListItemProps, ListProps, ListRenderItemInfo, ListSectionHeaderProps };

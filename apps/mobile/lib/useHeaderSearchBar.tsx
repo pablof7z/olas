@@ -15,8 +15,7 @@ export function useHeaderSearchBar(props: SearchBarProps = {}) {
         navigation.setOptions({
             headerSearchBarOptions: {
                 placeholder: 'Search...',
-                barTintColor:
-                    colorScheme === 'dark' ? COLORS.black : COLORS.white,
+                barTintColor: colorScheme === 'dark' ? COLORS.black : COLORS.white,
                 textColor: colors.foreground,
                 tintColor: colors.primary,
                 headerIconColor: colors.foreground,

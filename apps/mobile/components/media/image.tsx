@@ -6,9 +6,7 @@ import { Dimensions, ImageProps } from 'react-native';
 
 const getUrl = (event: NDKEvent) => {
     if (event.kind === NDKKind.Text) {
-        const urls = event.content.match(
-            /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
-        );
+        const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
         if (!urls?.length) return {};
         return { url: urls[0] };
     } else if (event.kind === 20) {
@@ -23,10 +21,7 @@ const getUrl = (event: NDKEvent) => {
     return {};
 };
 
-export default function ImageComponent({
-    event,
-    ...props
-}: { event: NDKEvent } & ImageProps) {
+export default function ImageComponent({ event, ...props }: { event: NDKEvent } & ImageProps) {
     const { url, blurhash } = getUrl(event);
     if (!url) return null;
 

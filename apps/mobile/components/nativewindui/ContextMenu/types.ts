@@ -45,10 +45,7 @@ type ContextMenuSubMenuInline = {
     iOSItemSize?: 'small' | 'medium';
 };
 
-type ContextSubMenu = (
-    | ContextMenuSubMenuDropdown
-    | ContextMenuSubMenuInline
-) & {
+type ContextSubMenu = (ContextMenuSubMenuDropdown | ContextMenuSubMenuInline) & {
     title: string;
     // Displayed on iOS 15 and above only, used as accessibility hint otherwise
     subTitle?: string;
@@ -68,10 +65,7 @@ type ContextMenuConfig = {
 type ContextMenuProps = ContextMenuConfig &
     ViewProps & {
         children: React.ReactNode;
-        onItemPress?: (
-            item: Omit<ContextItem, 'icon'>,
-            isUsingActionSheetFallback?: boolean
-        ) => void;
+        onItemPress?: (item: Omit<ContextItem, 'icon'>, isUsingActionSheetFallback?: boolean) => void;
         enabled?: boolean;
         iosRenderPreview?: () => React.ReactElement;
         iosOnPressMenuPreview?: () => void;
@@ -94,10 +88,4 @@ type ContextMenuRef = React.ElementRef<typeof View> & {
     dismissMenu?: () => void;
 };
 
-export type {
-    ContextMenuProps,
-    ContextMenuConfig,
-    ContextSubMenu,
-    ContextItem,
-    ContextMenuRef,
-};
+export type { ContextMenuProps, ContextMenuConfig, ContextSubMenu, ContextItem, ContextMenuRef };

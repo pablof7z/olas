@@ -39,10 +39,7 @@ export function imetaFromEvent(event: NDKEvent): ImetaData {
     return data;
 }
 
-export async function imetaFromImage(
-    fileContent: string,
-    url?: string
-): Promise<NDKTag[]> {
+export async function imetaFromImage(fileContent: string, url?: string): Promise<NDKTag[]> {
     console.log('imetaFromImage', fileContent.length, url);
     const tags: NDKTag[] = [];
     const imeta: ImetaData = {};

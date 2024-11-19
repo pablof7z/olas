@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    View,
-} from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { useNDK } from '@/ndk-expo';
 import { Stack, useRouter } from 'expo-router';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
@@ -25,10 +17,7 @@ export default function LoginScreen() {
         try {
             await loginWithPayload(payload, { save: true });
         } catch (error) {
-            Alert.alert(
-                'Error',
-                error.message || 'An error occurred during login'
-            );
+            Alert.alert('Error', error.message || 'An error occurred during login');
         }
     };
 
@@ -48,9 +37,7 @@ export default function LoginScreen() {
 
     return (
         <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.container}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                 <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
                     <Text variant="heading" className="text-2xl font-bold">
                         Login
@@ -66,9 +53,7 @@ export default function LoginScreen() {
                         value={payload}
                         onChangeText={setPayload}
                     />
-                    <Button
-                        size={Platform.select({ ios: 'lg', default: 'md' })}
-                        onPress={handleLogin}>
+                    <Button size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
                         <Text>Login</Text>
                     </Button>
 

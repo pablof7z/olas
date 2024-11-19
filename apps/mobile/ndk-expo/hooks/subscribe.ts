@@ -1,12 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import {
-    NDKEvent,
-    NDKEventId,
-    NDKFilter,
-    NDKRelaySet,
-    NDKSubscription,
-    NDKSubscriptionOptions,
-} from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKEventId, NDKFilter, NDKRelaySet, NDKSubscription, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNDK } from './ndk';
 import { useStore } from 'zustand';
@@ -51,15 +44,10 @@ const createSubscribeStore = <T extends NDKEvent>() =>
             }),
         setEose: () => set({ eose: true }),
         clearEvents: () => set({ eventMap: new Map(), eose: false }),
-        setSubscription: (sub) =>
-            set({ subscriptionRef: sub, isSubscribed: !!sub }),
+        setSubscription: (sub) => set({ subscriptionRef: sub, isSubscribed: !!sub }),
     }));
 
-export const useSubscribe = <T extends NDKEvent>({
-    filters,
-    opts = undefined,
-    relays = undefined,
-}: UseSubscribeParams) => {
+export const useSubscribe = <T extends NDKEvent>({ filters, opts = undefined, relays = undefined }: UseSubscribeParams) => {
     const { ndk } = useNDK();
     const store = useMemo(() => createSubscribeStore<T>(), []);
     const storeInstance = useStore(store);
@@ -100,11 +88,7 @@ export const useSubscribe = <T extends NDKEvent>({
 
             if (!shouldAcceptEvent(event)) return;
 
-            if (
-                opts?.includeDeleted !== true &&
-                event.isParamReplaceable() &&
-                event.hasTag('deleted')
-            ) {
+            if (opts?.includeDeleted !== true && event.isParamReplaceable() && event.hasTag('deleted')) {
                 // We mark the event but we don't add the actual event, since
                 // it has been deleted
                 eventIds.current.set(id, event.created_at!);

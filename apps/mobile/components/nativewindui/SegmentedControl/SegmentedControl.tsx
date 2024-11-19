@@ -28,15 +28,11 @@ function SegmentedControl({
         <View className="border-foreground/50 flex-row rounded-full border">
             {values.map((value, index) => {
                 return (
-                    <View
-                        key={`segment:${id}-${index}-${value}`}
-                        className="flex-1">
+                    <View key={`segment:${id}-${index}-${value}`} className="flex-1">
                         <Button
                             disabled={!enabled}
                             size="sm"
-                            variant={
-                                selectedIndex === index ? 'tonal' : 'plain'
-                            }
+                            variant={selectedIndex === index ? 'tonal' : 'plain'}
                             androidRootClassName={cn(
                                 'rounded-none',
                                 index === 0 && 'rounded-l-full',
@@ -45,14 +41,10 @@ function SegmentedControl({
                             className={cn(
                                 'rounded-none py-2.5',
                                 index === 0 && 'rounded-l-full',
-                                index === values?.length - 1
-                                    ? 'rounded-r-full'
-                                    : 'border-foreground/50 border-r'
+                                index === values?.length - 1 ? 'rounded-r-full' : 'border-foreground/50 border-r'
                             )}
                             onPress={onPress(index, value)}>
-                            <Text className={materialTextClassName}>
-                                {value}
-                            </Text>
+                            <Text className={materialTextClassName}>{value}</Text>
                         </Button>
                     </View>
                 );

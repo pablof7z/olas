@@ -6,13 +6,7 @@ import { imetaFromImage } from '@/ndk-expo/utils/imeta';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@/ndk-expo';
-import NDK, {
-    NDKEvent,
-    NDKKind,
-    NDKList,
-    NDKTag,
-    NostrEvent,
-} from '@nostr-dev-kit/ndk';
+import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import * as FileSystem from 'expo-file-system';
 import { Uploader } from '@/ndk-expo/utils/uploader';
 import { Image } from 'expo-image';
@@ -74,9 +68,7 @@ function PostOptions() {
         router.push('/publish/expiration');
     };
 
-    const calculateRelativeExpirationTimeInDaysOrHours = (
-        expiration: number
-    ) => {
+    const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
         const now = new Date().getTime() - 600 * 1000;
         const diff = expiration - now;
         if (diff >= 1000 * 60 * 60 * 24) {
@@ -86,9 +78,7 @@ function PostOptions() {
     };
 
     const data = useMemo(() => {
-        const expirationText = expiration
-            ? new Date(expiration).toLocaleString()
-            : 'None';
+        const expirationText = expiration ? new Date(expiration).toLocaleString() : 'None';
 
         return [
             {
@@ -96,16 +86,10 @@ function PostOptions() {
                 title: 'Expiration',
                 subTitle: 'Delete post after some time',
                 onPress: openExpiration,
-                leftView: (
-                    <IconView
-                        className="bg-blue-500"
-                        name="timer-outline"></IconView>
-                ),
+                leftView: <IconView className="bg-blue-500" name="timer-outline"></IconView>,
                 rightView: (
                     <Text className="text-sm text-muted-foreground">
-                        {expiration
-                            ? `${calculateRelativeExpirationTimeInDaysOrHours(expiration)}`
-                            : 'None'}
+                        {expiration ? `${calculateRelativeExpirationTimeInDaysOrHours(expiration)}` : 'None'}
                     </Text>
                 ),
             },
@@ -114,12 +98,8 @@ function PostOptions() {
 
     return (
         <>
-            <TouchableOpacity
-                onPress={openCaption}
-                className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
-                <Text className="text-sm text-muted-foreground">
-                    {caption.trim().length > 0 ? caption : 'Add a caption'}
-                </Text>
+            <TouchableOpacity onPress={openCaption} className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
+                <Text className="text-sm text-muted-foreground">{caption.trim().length > 0 ? caption : 'Add a caption'}</Text>
             </TouchableOpacity>
             <List
                 data={data}
@@ -127,11 +107,7 @@ function PostOptions() {
                 contentInsetAdjustmentBehavior="automatic"
                 renderItem={({ item, index, target }) => (
                     <ListItem
-                        className={cn(
-                            'ios:pl-0 pl-2',
-                            index === 0 &&
-                                'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                        )}
+                        className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                         item={item}
                         leftView={item.leftView}
                         rightView={item.rightView}
@@ -153,10 +129,7 @@ export default function ImageUpload() {
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
     }, [events, follows]);
     const defaultBlossomServer = useMemo(() => {
-        return (
-            blossomList?.items.find((item) => item[0] === 'server')?.[1] ??
-            'https://blossom.primal.net'
-        );
+        return blossomList?.items.find((item) => item[0] === 'server')?.[1] ?? 'https://blossom.primal.net';
     }, [blossomList]);
     const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
@@ -189,9 +162,7 @@ export default function ImageUpload() {
             contentType = 'image/jpeg';
         }
 
-        const blob = await fetch(
-            `data:${contentType};base64,${fileContent}`
-        ).then((res) => res.blob());
+        const blob = await fetch(`data:${contentType};base64,${fileContent}`).then((res) => res.blob());
 
         const event = new NDKEvent(ndk);
         event.kind = eventKind;
@@ -203,16 +174,9 @@ export default function ImageUpload() {
             console.log('uploading thumbnail?', thumbnail);
             // if we have a thumbnail, upload it
             if (thumbnail) {
-                const thumbnailBlob = await fetch(thumbnail).then((res) =>
-                    res.blob()
-                );
+                const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
                 console.log('uploading thumbnail', thumbnailBlob.size);
-                const { url } = await upload(
-                    ndk,
-                    thumbnailBlob,
-                    description,
-                    defaultBlossomServer
-                );
+                const { url } = await upload(ndk, thumbnailBlob, description, defaultBlossomServer);
                 event.tags = [...event.tags, ['thumb', url]];
                 console.log('thumbnail uploaded', url);
             }
@@ -229,10 +193,7 @@ export default function ImageUpload() {
 
         // if we have an expiration, set the tag
         if (expiration) {
-            event.tags = [
-                ...event.tags,
-                ['expiration', Math.floor(expiration / 1000).toString()],
-            ];
+            event.tags = [...event.tags, ['expiration', Math.floor(expiration / 1000).toString()]];
         }
 
         try {
@@ -258,23 +219,17 @@ export default function ImageUpload() {
             setSelectedImage(result.assets[0].uri);
             setSelectionType(result.assets[0].type);
 
-            const fileContent = await FileSystem.readAsStringAsync(
-                result.assets[0].uri,
-                {
-                    encoding: FileSystem.EncodingType.Base64,
-                }
-            );
+            const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
 
             if (result.assets[0].type === 'video') {
                 imetaPromise = new Promise<void>((resolve, reject) => {
                     try {
-                        VideoThumbnails.getThumbnailAsync(
-                            result.assets[0].uri,
-                            {
-                                time: 0,
-                                quality: 0.7,
-                            }
-                        ).then(({ uri }) => {
+                        VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
+                            time: 0,
+                            quality: 0.7,
+                        }).then(({ uri }) => {
                             console.log('thumbnail', uri);
                             setThumbnail(uri);
                         });
@@ -326,11 +281,7 @@ export default function ImageUpload() {
                     headerShown: true,
                     title: 'Publish',
                     headerRight: () => (
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            onPress={handlePost}
-                            disabled={uploading}>
+                        <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading}>
                             <Text className="text-white">Publish</Text>
                         </Button>
                     ),
@@ -351,9 +302,7 @@ export default function ImageUpload() {
                                                     }}
                                                     style={styles.image}
                                                     useNativeControls
-                                                    resizeMode={
-                                                        ResizeMode.CONTAIN
-                                                    }
+                                                    resizeMode={ResizeMode.CONTAIN}
                                                     posterSource={{
                                                         uri: thumbnail,
                                                     }}
@@ -374,11 +323,7 @@ export default function ImageUpload() {
                                                 setSelectedImage(null);
                                                 setDescription('');
                                             }}>
-                                            <Ionicons
-                                                name="close"
-                                                size={24}
-                                                color="white"
-                                            />
+                                            <Ionicons name="close" size={24} color="white" />
                                         </TouchableOpacity>
                                     </View>
                                 )}
@@ -387,49 +332,25 @@ export default function ImageUpload() {
                             <PostOptions />
                         </View>
 
-                        <Button
-                            size="lg"
-                            variant="primary"
-                            onPress={handlePost}
-                            disabled={uploading}>
-                            {uploading ? (
-                                <ActivityIndicator />
-                            ) : (
-                                <Text className="text-lg text-white">
-                                    Publish
-                                </Text>
-                            )}
+                        <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading}>
+                            {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
                         </Button>
                     </KeyboardAwareScrollView>
                 ) : (
                     <View style={styles.uploadContainer}>
                         <View style={styles.buttonContainer}>
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={pickImage}>
-                                <Ionicons
-                                    name="images"
-                                    size={40}
-                                    color="#666"
-                                />
+                            <TouchableOpacity style={styles.button} onPress={pickImage}>
+                                <Ionicons name="images" size={40} color="#666" />
                                 <Text style={styles.buttonText}>Gallery</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={takePhoto}>
-                                <Ionicons
-                                    name="camera"
-                                    size={40}
-                                    color="#666"
-                                />
+                            <TouchableOpacity style={styles.button} onPress={takePhoto}>
+                                <Ionicons name="camera" size={40} color="#666" />
                                 <Text style={styles.buttonText}>Camera</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={styles.helperText}>
-                            Upload a photo or take a new one
-                        </Text>
+                        <Text style={styles.helperText}>Upload a photo or take a new one</Text>
                     </View>
                 )}
             </View>

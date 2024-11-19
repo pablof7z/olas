@@ -1,9 +1,5 @@
 import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
-import {
-    generateMediaEventFromBlobDescriptor,
-    sign,
-    signWith,
-} from './blossom';
+import { generateMediaEventFromBlobDescriptor, sign, signWith } from './blossom';
 import { NDKSigner } from '@nostr-dev-kit/ndk';
 import NDK, { NDKEvent } from '@nostr-dev-kit/ndk';
 
@@ -44,29 +40,19 @@ export class Uploader {
     }
 
     private encodeAuthorizationHeader(uploadAuth: SignedEvent) {
-        return (
-            'Nostr ' +
-            btoa(unescape(encodeURIComponent(JSON.stringify(uploadAuth))))
-        );
+        return 'Nostr ' + btoa(unescape(encodeURIComponent(JSON.stringify(uploadAuth))));
     }
 
     async start() {
         try {
             console.log('calling start', !!this.ndk);
             let _sign = signWith(this.signer ?? this.ndk.signer);
-            const uploadAuth = await BlossomClient.getUploadAuth(
-                this.blob as Blob,
-                _sign as any,
-                'Upload file'
-            );
-            const encodedAuthHeader =
-                this.encodeAuthorizationHeader(uploadAuth);
+            const uploadAuth = await BlossomClient.getUploadAuth(this.blob as Blob, _sign as any, 'Upload file');
+            const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
 
             this.xhr.open('PUT', this.url.toString(), true);
             this.xhr.setRequestHeader('Authorization', encodedAuthHeader);
-            this.xhr.upload.addEventListener('progress', (e) =>
-                this.xhrOnProgress(e)
-            );
+            this.xhr.upload.addEventListener('progress', (e) => this.xhrOnProgress(e));
             this.xhr.addEventListener('load', (e) => this.xhrOnLoad(e));
             this.xhr.addEventListener('error', (e) => this.xhrOnError(e));
 

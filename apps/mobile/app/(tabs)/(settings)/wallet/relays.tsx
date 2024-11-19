@@ -3,20 +3,9 @@ import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '~/components/nativewindui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import {
-    ESTIMATED_ITEM_HEIGHT,
-    List,
-    ListDataItem,
-    ListItem,
-    ListRenderItemInfo,
-    ListSectionHeader,
-} from '~/components/nativewindui/List';
+import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -85,11 +74,7 @@ export default function RelaysScreen() {
                     </View>
                 ),
             }))
-            .filter(
-                (item) =>
-                    (searchText ?? '').trim().length === 0 ||
-                    item.title.match(searchText!)
-            );
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
     }, [ndk?.pool.relays, relays, searchText]);
 
     const addFn = () => {
@@ -152,17 +137,11 @@ export default function RelaysScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(
-    info: ListRenderItemInfo<T>
-) {
+function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                    info.index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -185,11 +164,7 @@ function renderItem<T extends (typeof data)[number]>(
     }
     return (
         <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -213,9 +188,7 @@ function renderItem<T extends (typeof data)[number]>(
     );
 }
 
-function keyExtractor(
-    item: (Omit<ListDataItem, string> & { id: string }) | string
-) {
+function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
     return typeof item === 'string' ? item : item.id;
 }
 
@@ -241,12 +214,7 @@ async function validateRelay(ndk: NDK, relay: string) {
         { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
     );
     if (req.size !== 1) {
-        alert(
-            'Relay ' +
-                relay +
-                ' returned the wrong number of tokens:' +
-                req.size
-        );
+        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
         return false;
     }
 
@@ -261,12 +229,7 @@ async function validateRelay(ndk: NDK, relay: string) {
         { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }
     );
     if (req2.size !== 0) {
-        alert(
-            'Relay ' +
-                relay +
-                ' returned the wrong number of tokens:' +
-                req.size
-        );
+        alert('Relay ' + relay + ' returned the wrong number of tokens:' + req.size);
         return false;
     }
 

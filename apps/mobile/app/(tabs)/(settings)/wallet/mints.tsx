@@ -4,14 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import {
-    ESTIMATED_ITEM_HEIGHT,
-    List,
-    ListDataItem,
-    ListItem,
-    ListRenderItemInfo,
-    ListSectionHeader,
-} from '~/components/nativewindui/List';
+import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -32,14 +25,9 @@ export default function RelaysScreen() {
     const [mints, setMints] = useState<string[]>(activeWallet?.mints ?? []);
 
     const filter = useMemo(() => [{ kinds: [38172], limit: 50 }], [1]);
-    const opts = useMemo(
-        () => ({ groupable: false, closeOnEose: true, subId: 'mints' }),
-        []
-    );
+    const opts = useMemo(() => ({ groupable: false, closeOnEose: true, subId: 'mints' }), []);
     const { events: mintList } = useSubscribe({ filters: filter, opts });
-    const [mintInfos, setMintInfos] = useState<
-        Record<string, GetInfoResponse | null>
-    >({});
+    const [mintInfos, setMintInfos] = useState<Record<string, GetInfoResponse | null>>({});
 
     if (!activeWallet && defaultWallet) {
         setActiveWallet(defaultWallet as NDKCashuWallet);
@@ -69,11 +57,7 @@ export default function RelaysScreen() {
                 title: mint,
                 removeFn: () => removeMint(mint),
             }))
-            .filter(
-                (item) =>
-                    (searchText ?? '').trim().length === 0 ||
-                    item.title.match(regexp!)
-            );
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(regexp!));
 
         m.push({ id: 'add', addFn: addFn, set: setUrl });
 
@@ -158,17 +142,11 @@ export default function RelaysScreen() {
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(
-    info: ListRenderItemInfo<T>
-) {
+function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                    info.index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -190,11 +168,7 @@ function renderItem<T extends (typeof data)[number]>(
     }
     return (
         <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 &&
-                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
+            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -218,8 +192,6 @@ function ChevronRight() {
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
 }
 
-function keyExtractor(
-    item: (Omit<ListDataItem, string> & { id: string }) | string
-) {
+function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
     return typeof item === 'string' ? item : item.id;
 }

@@ -4,12 +4,7 @@ import { ListItem, ListRenderItemInfo } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useNDK } from '@/ndk-expo';
-import {
-    NDKUserProfile,
-    NDKUser,
-    NDKEvent,
-    NDKEventId,
-} from '@nostr-dev-kit/ndk';
+import { NDKUserProfile, NDKUser, NDKEvent, NDKEventId } from '@nostr-dev-kit/ndk';
 import { useDebounce } from '@uidotdev/usehooks';
 import { Icon } from '@roninoss/icons';
 import Swipeable from '@/components/ui/Swipable';
@@ -39,12 +34,7 @@ const TIMESTAMP_CONTAINER_STYLE = {
     maxWidth: 96,
 };
 
-export default function ThreadItem({
-    thread,
-    onPress,
-    index,
-    target,
-}: ThreadItemProps) {
+export default function ThreadItem({ thread, onPress, index, target }: ThreadItemProps) {
     const { colors } = useColorScheme();
 
     const { ndk } = useNDK();
@@ -56,11 +46,7 @@ export default function ThreadItem({
     });
     const rootEventId = useMemo(() => thread.rootEventId, [thread]);
     const events = useMemo(() => thread.events, [thread]);
-    const rootEvent = useMemo(
-        () =>
-            rootEventId ? events.find((e) => e.id === rootEventId) : undefined,
-        [events, rootEventId]
-    );
+    const rootEvent = useMemo(() => (rootEventId ? events.find((e) => e.id === rootEventId) : undefined), [events, rootEventId]);
 
     useEffect(() => {
         if (!ndk || !rootEvent) return;
@@ -68,13 +54,7 @@ export default function ThreadItem({
         fetchedUser.fetchProfile().then(setUserProfile);
     }, [ndk, rootEvent?.pubkey]);
 
-    const mostRecentEvent = useMemo(
-        () =>
-            events
-                ? events.sort((a, b) => a.created_at! - b.created_at!).pop()
-                : undefined,
-        [events]
-    );
+    const mostRecentEvent = useMemo(() => (events ? events.sort((a, b) => a.created_at! - b.created_at!).pop() : undefined), [events]);
 
     const messageCount = useDebounce(events?.length, 1000);
 
@@ -109,11 +89,7 @@ export default function ThreadItem({
                 subTitleNumberOfLines={1}
                 onLongPress={noop}
                 onPress={onPress}
-                className={cn(
-                    'h-[94px]',
-                    index === 0 &&
-                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
+                className={cn('h-[94px]', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 titleStyle={TEXT_STYLE}
                 titleClassName="font-medium text-base"
                 subTitleClassName="pt-0.5"
@@ -125,11 +101,7 @@ export default function ThreadItem({
                             </User.Profile>
                         ) : (
                             <View className="h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                                <Icon
-                                    name="plus"
-                                    size={14}
-                                    color={colors.grey}
-                                />
+                                <Icon name="plus" size={14} color={colors.grey} />
                             </View>
                         )}
                     </View>
@@ -143,16 +115,10 @@ export default function ThreadItem({
                             height: '100%',
                         }}>
                         <View className="flex-row items-center">
-                            <Text className="text-sm text-muted-foreground">
-                                {messageCount > 0 ? messageCount : ''}
-                            </Text>
+                            <Text className="text-sm text-muted-foreground">{messageCount > 0 ? messageCount : ''}</Text>
                         </View>
                         <View className="pr-3">
-                            <Icon
-                                name="chevron-right"
-                                size={14}
-                                color={colors.grey}
-                            />
+                            <Icon name="chevron-right" size={14} color={colors.grey} />
                         </View>
                     </View>
                 }>
@@ -160,13 +126,8 @@ export default function ThreadItem({
                     <AvatarGroup events={events} avatarSize={6} threshold={5} />
                 </View>
             </ListItem>
-            <View
-                style={TIMESTAMP_CONTAINER_STYLE}
-                className="absolute right-8 top-1.5">
-                <Text
-                    numberOfLines={1}
-                    variant="footnote"
-                    className="text-muted-foreground">
+            <View style={TIMESTAMP_CONTAINER_STYLE} className="absolute right-8 top-1.5">
+                <Text numberOfLines={1} variant="footnote" className="text-muted-foreground">
                     {timestamp}
                 </Text>
             </View>

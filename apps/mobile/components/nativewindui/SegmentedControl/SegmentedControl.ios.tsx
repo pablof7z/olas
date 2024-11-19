@@ -11,9 +11,7 @@ function SegmentedControl({
     iosMomentary,
     materialTextClassName: _materialTextClassName,
 }: SegmentControlProps) {
-    function onChange(event: {
-        nativeEvent: { selectedSegmentIndex: number };
-    }) {
+    function onChange(event: { nativeEvent: { selectedSegmentIndex: number } }) {
         onIndexChange?.(event.nativeEvent.selectedSegmentIndex);
     }
 

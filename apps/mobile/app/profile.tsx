@@ -1,12 +1,4 @@
-import {
-    View,
-    Text,
-    Image,
-    StyleSheet,
-    TouchableOpacity,
-    Dimensions,
-    Animated,
-} from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import * as User from '@/ndk-expo/components/user';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
@@ -22,9 +14,7 @@ export default function Profile() {
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
-        const filters: NDKFilter[] = [
-            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!], },
-        ];
+        const filters: NDKFilter[] = [{ kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] }];
 
         if (filtersExpanded) {
             filters.push({ kinds: [1], authors: [pubkey!], limit: 50 });
@@ -32,7 +22,7 @@ export default function Profile() {
 
         return filters;
     }, [filtersExpanded]);
-    const opts = useMemo( () => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
+    const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
     if (!pubkey) {
@@ -80,15 +70,10 @@ export default function Profile() {
                             transform: [{ translateY: headerTranslateY }],
                         },
                     ]}>
-                    <User.Avatar
-                        style={styles.profileImage}
-                        alt="Profile image"
-                    />
+                    <User.Avatar style={styles.profileImage} alt="Profile image" />
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>
-                                {events.length}
-                            </Text>
+                            <Text style={styles.statNumber}>{events.length}</Text>
                             <Text style={styles.statLabel}>Posts</Text>
                         </View>
                         <View style={styles.statItem}>
@@ -104,29 +89,18 @@ export default function Profile() {
 
                 <Animated.View
                     className="flex-col items-center justify-between"
-                    style={[
-                        styles.compactHeader,
-                        { opacity: compactHeaderOpacity },
-                    ]}>
-                    <User.Avatar
-                        style={styles.smallProfileImage}
-                        alt="Profile image"
-                    />
-                    <Text
-                        style={styles.username}
-                        className="grow text-lg font-bold">
+                    style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+                    <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
+                    <Text style={styles.username} className="grow text-lg font-bold">
                         <User.Name />
                     </Text>
                     <FollowButton />
                 </Animated.View>
 
                 <Animated.ScrollView
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        {
-                            useNativeDriver: true,
-                        }
-                    )}
+                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                        useNativeDriver: true,
+                    })}
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
                         <Text style={styles.username}>
@@ -141,17 +115,11 @@ export default function Profile() {
 
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>
-                            <Text style={styles.noEventsText}>
-                                No posts yet
-                            </Text>
+                            <Text style={styles.noEventsText}>No posts yet</Text>
 
                             {!filtersExpanded && (
-                                <TouchableOpacity
-                                    style={styles.browseButton}
-                                    onPress={expandFilters}>
-                                    <Text style={styles.browseButtonText}>
-                                        Browse tweet images
-                                    </Text>
+                                <TouchableOpacity style={styles.browseButton} onPress={expandFilters}>
+                                    <Text style={styles.browseButtonText}>Browse tweet images</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -161,9 +129,7 @@ export default function Profile() {
                             numColumns={3}
                             estimatedItemSize={100}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
-                                <ImageGridItem event={item} />
-                            )}
+                            renderItem={({ item }) => <ImageGridItem event={item} />}
                         />
                     )}
                 </Animated.ScrollView>
@@ -173,16 +139,13 @@ export default function Profile() {
 }
 
 function ImageGridItem({ event }: { event: NDKEvent }) {
-    let url =
-        event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
+    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
     const { setActiveEvent } = useStore(activeEventStore);
 
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
     if (!url && event.kind === NDKKind.Text) {
         const content = event.content;
-        const urlMatch = content.match(
-            /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i
-        );
+        const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
         if (urlMatch) {
             url = urlMatch[0];
         }

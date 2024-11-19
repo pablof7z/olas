@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { useSubscribe } from '@/ndk-expo/hooks/subscribe';
-import {
-    NDKEvent,
-    NDKKind,
-    NDKSubscriptionCacheUsage,
-} from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { List, ListItem, ListItemProps } from '@/components/nativewindui/List';
 import AvatarGroup from '@/ndk-expo/components/user/AvatarGroup';
 
@@ -34,13 +30,7 @@ const RelayListItem: React.FC<
         relays,
     });
 
-    const adminPubkeys = useMemo(
-        () =>
-            groupEvents
-                .map((event) => event.getMatchingTags('p').map((tag) => tag[1]))
-                .flat(),
-        [groupEvents]
-    );
+    const adminPubkeys = useMemo(() => groupEvents.map((event) => event.getMatchingTags('p').map((tag) => tag[1])).flat(), [groupEvents]);
 
     return (
         <ListItem item={item} index={index} target={target}>
@@ -55,9 +45,7 @@ const RelayListScreen: React.FC = () => {
             {
                 kinds: [30166],
                 '#N': ['29'],
-                authors: [
-                    '9bbbb845e5b6c831c29789900769843ab43bb5047abe697870cb50b6fc9bf923',
-                ],
+                authors: ['9bbbb845e5b6c831c29789900769843ab43bb5047abe697870cb50b6fc9bf923'],
             },
         ],
         []
@@ -82,21 +70,13 @@ const RelayListScreen: React.FC = () => {
         [events]
     );
 
-    const renderRelayListItem = ({
-        item,
-        index,
-    }: {
-        item: { id: string; title: string };
-        index: number;
-    }) => <RelayListItem item={item} index={index} target={undefined} />;
+    const renderRelayListItem = ({ item, index }: { item: { id: string; title: string }; index: number }) => (
+        <RelayListItem item={item} index={index} target={undefined} />
+    );
 
     return (
         <View style={{ flex: 1, padding: 16 }}>
-            <List
-                data={listData}
-                keyExtractor={(item) => item.id}
-                renderItem={renderRelayListItem}
-            />
+            <List data={listData} keyExtractor={(item) => item.id} renderItem={renderRelayListItem} />
         </View>
     );
 };

@@ -7,12 +7,7 @@ import { RenderTarget } from '@shopify/flash-list';
 import NDK, { NDKUser } from '@nostr-dev-kit/ndk';
 import { router } from 'expo-router';
 
-const renderItem = (
-    ndk: NDK,
-    entry: UnpublishedEventEntry,
-    index: number,
-    target: RenderTarget
-) => {
+const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, target: RenderTarget) => {
     const discard = () => {
         ndk?.cacheAdapter?.discardUnpublishedEvent?.(entry.event.id);
     };
@@ -64,9 +59,7 @@ export default function Unpublished() {
             <List
                 data={Array.from(unpublishedEvents.values())}
                 keyExtractor={(i) => i.event.id}
-                renderItem={(info) =>
-                    renderItem(ndk, info.item, info.index, info.target)
-                }
+                renderItem={(info) => renderItem(ndk, info.item, info.index, info.target)}
             />
         </View>
     );
