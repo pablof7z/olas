@@ -40,8 +40,10 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
                 <User.Profile key={pubkey} pubkey={pubkey}>
                     <User.Avatar
                         alt={pubkey}
-                        className={`h-${avatarSize} w-${avatarSize}`}
+                        size={avatarSize}
                         style={{
+                            height: avatarSize,
+                            width: avatarSize,
                             marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
                         }}
                     />

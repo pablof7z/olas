@@ -15,6 +15,7 @@ import { memo } from 'react';
 import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
 import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useScroll } from '~/contexts/ScrollContext';
 
 const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
     const { colors } = useColorScheme();
@@ -46,14 +47,17 @@ const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets:
     );
 });
 
-const randomPhotoTags = ['photo', 'photography', 'artstr'];
+const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
 
 export default function HomeScreen() {
     const { follows } = useNDKSession();
     const [tagFilter, setTagFilter] = useState<string | null>(null);
     const [includeTweets, setIncludeTweets] = useState(false);
     const filters = useMemo(() => {
-        const filters: NDKFilter[] = [{ kinds: [20] }];
+        const filters: NDKFilter[] = [
+            { kinds: [20] },
+            { kinds: [1], "#k": ["20"] } // cheating!!!
+        ];
 
         if (includeTweets) {
             if (follows) filters.push({ kinds: [1], authors: follows, limit: 50 });
@@ -99,6 +103,8 @@ export default function HomeScreen() {
         setTagFilter(randomTag);
     };
 
+    const scrollRef = useScroll();
+
     return (
         <>
             <Stack.Screen
@@ -110,6 +116,7 @@ export default function HomeScreen() {
             />
             <View className="flex-1 gap-2 bg-card">
                 <FlashList
+                    ref={scrollRef}
                     data={debouncedEvents}
                     estimatedItemSize={340}
                     keyExtractor={(item) => item.id}

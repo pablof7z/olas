@@ -16,14 +16,17 @@ import {
     Wallet2,
 } from 'lucide-react-native';
 import * as User from '@/ndk-expo/components/user';
-import { View } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useNDK } from '@/ndk-expo';
-import { Text } from '@/components/nativewindui/Text';
+import { useScrollToTop } from '@react-navigation/native';
+import { useScroll } from '~/contexts/ScrollContext';
 
 export default function HomeLayout() {
     const { currentUser } = useNDK();
     const { colors } = useColorScheme();
+    const scrollRef = useScroll();
+
+    // Hook to handle scroll to top
+    useScrollToTop(scrollRef);
 
     return (
         <Tabs
@@ -46,6 +49,13 @@ export default function HomeLayout() {
                     title: 'Home',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                }}
+                listeners={{
+                    tabPress: (e) => {
+                        if (scrollRef.current) {
+                            scrollRef.current.scrollToOffset({ offset: 0, animated: true });
+                        }
+                    },
                 }}
             />
 

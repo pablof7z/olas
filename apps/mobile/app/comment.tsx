@@ -37,7 +37,7 @@ export default function CommentScreen() {
                     <View className="w-full flex-row items-start justify-between">
                         <User.Profile pubkey={currentUser!.pubkey}>
                             <View className="mb-4 flex-row items-center gap-2">
-                                <User.Avatar alt="Profile image" />
+                                <User.Avatar size={48} alt="Profile image" />
                                 <Text className="text-lg font-bold">
                                     <User.Name />
                                 </Text>

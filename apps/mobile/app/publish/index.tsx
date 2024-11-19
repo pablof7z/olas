@@ -218,6 +218,9 @@ export default function ImageUpload() {
         // if this is a generic post, add the URL to the content's end
         if (type === 'generic') {
             event.content = [ event.content, ...mediaUrls ].filter(text => text?.trim().length > 0).join('\n');
+
+            // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
+            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : 20).toString() ]];
         }
 
         try {

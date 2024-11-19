@@ -23,7 +23,7 @@ import { Icon } from '@roninoss/icons';
 import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
 import NDKSessionProvider from '@/ndk-expo/providers/session';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
-import { BlurView } from 'expo-blur';
+import { ScrollProvider } from '~/contexts/ScrollContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,7 +65,6 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
     useInitialAndroidBarSync();
-    const { colors } = useColorScheme();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
 
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
@@ -89,7 +88,7 @@ export default function RootLayout() {
     }
 
     return (
-        <>
+        <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
@@ -184,6 +183,6 @@ export default function RootLayout() {
                     </NDKWalletProvider>
                 </NDKCacheCheck>
             </NDKProvider>
-        </>
+        </ScrollProvider>
     );
 }

@@ -9,6 +9,7 @@ import { useStore } from "zustand";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Text } from "@/components/nativewindui/Text";
 import { StyleSheet } from "react-native";
+import AvatarGroup from "@/ndk-expo/components/user/AvatarGroup";
 
 export function Reactions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
@@ -67,9 +68,13 @@ export function Reactions({ event }: { event: NDKEvent }) {
                 </TouchableOpacity>
             </View>
             {reactions.length > 0 && (
-                <Text className="text-sm font-medium" style={{ color: colors.muted }}>
-                    {reactions.length} reactions
-                </Text>
+                <View className="flex-row items-center gap-1 w-full flex-1 justify-between">
+                    <Text className="text-sm font-medium" style={{ color: colors.muted }}>
+                        {reactions.length} reactions
+                    </Text>
+
+                    <AvatarGroup events={relatedEvents} avatarSize={24} threshold={5} />
+                </View>
             )}
         </View>
     );
