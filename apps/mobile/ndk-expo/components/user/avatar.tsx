@@ -11,16 +11,18 @@ import { useColorScheme } from '@/lib/useColorScheme';
 interface AvatarProps extends React.ComponentProps<typeof Avatar> {}
 
 const UserAvatar: React.FC<AvatarProps> = ({ ...props }) => {
-    const { user, userProfile, hasKind20 } = useUserProfile();
+    const { user, userProfile } = useUserProfile();
+    // const { user, userProfile, hasKind20 } = useUserProfile();
     const { colors } = useColorScheme();
 
     return (
         <View
-            style={{
-                borderRadius: 9999,
-                borderWidth: hasKind20 ? 4 : 0,
-                borderColor: colors.accent,
-            }}>
+            // style={{
+            //     borderRadius: 9999,
+            //     borderWidth: hasKind20 ? 4 : 0,
+            //     borderColor: colors.accent,
+            // }}
+        >
             <Avatar {...props}>
                 {userProfile?.image && (
                     <AvatarImage

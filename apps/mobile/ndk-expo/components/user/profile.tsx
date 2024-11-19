@@ -16,7 +16,7 @@ interface UserProfileContextProps {
     userProfile: NDKUserProfile | null;
     user: NDKUser | null;
     loading: boolean;
-    hasKind20: boolean;
+    // hasKind20: boolean;
 }
 
 const UserProfileContext = createContext<UserProfileContextProps | undefined>(
@@ -49,19 +49,19 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
             .finally(() => setLoading(false));
     }, [ndk, pubkey]);
 
-    const filters = useMemo(
-        () => [{ kinds: [20], authors: [user?.pubkey!], limit: 1 }],
-        [user?.pubkey]
-    );
-    const opts = useMemo(
-        () => ({
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
-            groupable: false,
-            closeOnEose: true,
-        }),
-        []
-    );
-    const { events: kind20Events } = useSubscribe({ filters, opts });
+    // const filters = useMemo(
+    //     () => [{ kinds: [20], authors: [user?.pubkey!], limit: 1 }],
+    //     [user?.pubkey]
+    // );
+    // const opts = useMemo(
+    //     () => ({
+    //         cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
+    //         groupable: false,
+    //         closeOnEose: true,
+    //     }),
+    //     []
+    // );
+    // const { events: kind20Events } = useSubscribe({ filters, opts });
 
     return (
         <UserProfileContext.Provider
@@ -69,7 +69,7 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({
                 userProfile,
                 user,
                 loading,
-                hasKind20: kind20Events.length > 0,
+                // hasKind20: kind20Events.length > 0,
             }}>
             {children}
         </UserProfileContext.Provider>

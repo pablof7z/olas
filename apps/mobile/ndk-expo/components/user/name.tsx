@@ -7,14 +7,15 @@ import { useColorScheme } from '@/lib/useColorScheme';
  * Renders the name of a user
  */
 const Name: React.FC<Text['props']> = (props) => {
-    const { userProfile, user, hasKind20 } = useUserProfile();
+    // const { userProfile, user, hasKind20 } = useUserProfile();
+    const { userProfile, user, } = useUserProfile();
     const { colors } = useColorScheme();
 
     return (
         <Text
-        style={[
-                { color: hasKind20 ? colors.accent : colors.foreground },
-                { fontWeight: hasKind20 ? 'bold' : 'normal' },
+            style={[
+            //     { color: hasKind20 ? colors.accent : colors.foreground },
+            //     { fontWeight: hasKind20 ? 'bold' : 'normal' },
                 props.style,
             ]}
             {...props}>
