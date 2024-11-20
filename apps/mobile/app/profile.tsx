@@ -15,7 +15,10 @@ export default function Profile() {
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
-        const filters: NDKFilter[] = [{ kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] }];
+        const filters: NDKFilter[] = [
+            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
+            { kinds: [NDKKind.Text], "#k": ["20"], authors: [pubkey!] },
+        ];
 
         if (filtersExpanded) {
             filters.push({ kinds: [1], authors: [pubkey!], limit: 50 });
