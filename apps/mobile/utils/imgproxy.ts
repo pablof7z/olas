@@ -31,7 +31,7 @@ export function getProxiedImageUrl(
 ) {
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
-    finalConfig.modifiers.width = (size * factor).toString();
+    finalConfig.modifiers.width = Math.floor(size * factor).toString();
     
     return getImageUrl(url, finalConfig);
 }
