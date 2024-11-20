@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: 'red',
         flexGrow: 1,
         minHeight: 240,
     },

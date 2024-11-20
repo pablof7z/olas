@@ -76,11 +76,16 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
         console.error('Error generating blurhash', error);
     }
 
-    const response = await fetch(base64Url);
-    const mime = response.headers.get('content-type');
-    if (mime) {
-        imeta.m = mime;
+    try {
+        const response = await fetch(base64Url);
+        const mime = response.headers.get('content-type');
+        if (mime) {
+            imeta.m = mime;
+        }
+    } catch (error) {
+        console.error('Error fetching image', error);
     }
+
     if (url) {
         imeta.url = url;
     }

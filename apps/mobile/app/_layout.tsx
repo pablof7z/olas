@@ -87,6 +87,8 @@ export default function RootLayout() {
         relays.push('wss://relay.damus.io');
     }
 
+    relays.push('wss://relay.nsec.app/');
+
     return (
         <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
@@ -94,7 +96,9 @@ export default function RootLayout() {
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
                 clientName="olas"
-                clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505">
+                clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
+                netDebug={netDebug}
+            >
                 <NDKCacheCheck>
                     <NDKWalletProvider>
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>

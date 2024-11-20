@@ -20,7 +20,6 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { router, Stack } from 'expo-router';
 import { publishStore } from '../stores/publish';
 import { useStore } from 'zustand';
-import { IconView } from '../(tabs)/(settings)';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 import { Timer, Type } from 'lucide-react-native';
@@ -152,16 +151,18 @@ export default function ImageUpload() {
             return;
         }
 
-        let fileContent: string;
         let contentType: string;
         let eventKind: number;
+        let blob: Blob;
 
-        fileContent = await FileSystem.readAsStringAsync(selectedImage, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
-
-        console.log('selectedImage', selectedImage);
-
+        try {
+            const f = await fetch(selectedImage);
+            blob = await f.blob();
+            contentType = f.headers.get('content-type') ?? 'image/jpeg';
+        } catch (error) {
+            console.error('Error fetching image', error);
+        }
+        
         if (type === 'generic') {
             eventKind = NDKKind.Text;
         } else if (selectionType === 'video') {
@@ -172,8 +173,6 @@ export default function ImageUpload() {
             contentType = 'image/jpeg';
         }
 
-        const blob = await fetch(`data:${contentType};base64,${fileContent}`).then((res) => res.blob());
-
         const event = new NDKEvent(ndk);
         event.kind = eventKind;
         event.content = caption;
@@ -183,19 +182,16 @@ export default function ImageUpload() {
 
         const uploadPromise = new Promise<void>(async (resolve, reject) => {
             setUploading(true);
-            console.log('uploading thumbnail?', thumbnail);
-            // if we have a thumbnail, upload it
             if (thumbnail) {
                 const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
-                console.log('uploading thumbnail', thumbnailBlob.size);
                 const { url } = await upload(ndk, thumbnailBlob, defaultBlossomServer);
                 event.tags = [...event.tags, ['thumb', url]];
-                console.log('thumbnail uploaded', url);
             }
 
             upload(ndk, blob, defaultBlossomServer).then((ret) => {
                 event.tags = [...event.tags, ...(ret.mediaEvent?.tags ?? [])];
                 mediaUrls.push(ret.url);
+                console.log('resolving upload promise')
                 resolve();
             });
         });
@@ -203,6 +199,8 @@ export default function ImageUpload() {
         await Promise.all([uploadPromise, imetaPromise]);
 
         if (selectionType === 'image') {
+            imetaData.current ??= {};
+
             for (const tag of event.tags) {
                 imetaData.current[tag[0]] = tag[1];
             }
@@ -281,7 +279,7 @@ export default function ImageUpload() {
                             })
                             .catch((error) => {
                                 console.error('imetaFromImage error', error);
-                                reject(error);
+                                resolve();
                             });
                     })
                 );
