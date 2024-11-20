@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import Image from '@/components/media/image';
-import * as User from '@/ndk-expo/components/user';
+import * as User from '@/components/ui/user';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
-import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
-import { NDKKind } from '@nostr-dev-kit/ndk';
-import { useSubscribe } from '@/ndk-expo';
+import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
 

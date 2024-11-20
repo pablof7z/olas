@@ -1,4 +1,4 @@
-import { useNDK } from '@/ndk-expo';
+import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -10,13 +10,11 @@ import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import * as User from '@/ndk-expo/components/user';
-import { useNDKWallet } from '@/ndk-expo/providers/wallet';
+import * as User from '@/components/ui/user';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 export default function SettingsIosStyleScreen() {
-    const { currentUser, logout } = useNDK();
     const { walletService } = useNDKWallet();
     const { activeWallet, setActiveWallet } = useStore(walleteStore);
 

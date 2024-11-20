@@ -1,14 +1,14 @@
-import { useSubscribe } from '@/ndk-expo';
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
+import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, Pressable, View, ViewToken } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import { ResizeMode, Video } from 'expo-av';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as User from '@/ndk-expo/components/user';
+import * as User from '@/components/ui/user';
 import { router } from 'expo-router';
-import EventContent from '@/ndk-expo/components/event/content';
+import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
 import { memo } from 'react';
 

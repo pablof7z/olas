@@ -1,4 +1,4 @@
-import { useNDK } from '@/ndk-expo';
+import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -10,8 +10,7 @@ import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import * as User from '@/ndk-expo/components/user';
-import { useNDKWallet } from '@/ndk-expo/providers/wallet';
+import * as User from '@/components/ui/user';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';

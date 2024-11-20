@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import { NDKEvent } from '@nostr-dev-kit/ndk';
-import { Text } from '@/components/nativewindui/Text';
-import * as User from '@/ndk-expo/components/user';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import * as User from '../user';
 import { Image } from 'expo-image';
 import { nip19 } from 'nostr-tools';
 

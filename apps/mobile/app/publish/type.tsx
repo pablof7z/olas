@@ -8,7 +8,7 @@ import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 import { Image, Type,  } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { NDKKind } from '@nostr-dev-kit/ndk';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 export default function Caption() {
     const { type, setType } = useStore(publishStore);

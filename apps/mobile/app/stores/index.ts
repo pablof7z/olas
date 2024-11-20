@@ -1,4 +1,4 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 

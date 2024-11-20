@@ -1,7 +1,7 @@
 import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
 import { generateMediaEventFromBlobDescriptor, sign, signWith } from './blossom';
-import { NDKSigner } from '@nostr-dev-kit/ndk';
-import NDK, { NDKEvent } from '@nostr-dev-kit/ndk';
+import { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
 export class Uploader {
     private blob: Blob;
@@ -45,7 +45,6 @@ export class Uploader {
 
     async start() {
         try {
-            console.log('calling start', !!this.ndk);
             let _sign = signWith(this.signer ?? this.ndk.signer);
             const uploadAuth = await BlossomClient.getUploadAuth(this.blob as Blob, _sign as any, 'Upload file');
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);

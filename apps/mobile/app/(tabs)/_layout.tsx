@@ -1,22 +1,8 @@
-import { Link, router, Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Icon } from '@roninoss/icons';
-import {
-    BoltIcon,
-    Home,
-    Mic,
-    PlaySquare,
-    PlusSquare,
-    Search,
-    Speaker,
-    SpeakerIcon,
-    SquarePlay,
-    UserCircle2,
-    Wallet,
-    Wallet2,
-} from 'lucide-react-native';
-import * as User from '@/ndk-expo/components/user';
-import { useNDK } from '@/ndk-expo';
+import { Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
+import * as User from '@/components/ui/user';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { useScroll } from '~/contexts/ScrollContext';
 

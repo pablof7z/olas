@@ -2,18 +2,15 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ImetaData, imetaFromImage, imetaToTags } from '@/ndk-expo/utils/imeta';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
-import { useNDK } from '@/ndk-expo';
-import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as FileSystem from 'expo-file-system';
-import { Uploader } from '@/ndk-expo/utils/uploader';
 import { Image } from 'expo-image';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ResizeMode } from 'expo-av';
-import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { Video } from 'expo-av';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -23,6 +20,8 @@ import { useStore } from 'zustand';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 import { Timer, Type } from 'lucide-react-native';
+import { Uploader } from '@/utils/uploader';
+import { ImetaData } from '@/utils/imeta';
 
 async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {

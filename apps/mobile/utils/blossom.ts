@@ -1,6 +1,6 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
-import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk';
+import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk-mobile';
 import { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;

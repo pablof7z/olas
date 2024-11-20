@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
-import { useNDK, useSubscribe } from '@/ndk-expo';
-
+import { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 interface UserProfileContextProps {
     userProfile: NDKUserProfile | null;
     user: NDKUser | null;

@@ -1,11 +1,15 @@
+console.log('global crypto');
+import 'react-native-get-random-values';
+console.log(!!global.crypto.getRandomValues);
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
-import { useNDK } from '@/ndk-expo';
-import { Stack, useRouter } from 'expo-router';
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useRouter } from 'expo-router';
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
+import * as Crypto from 'expo-crypto';
 
 export default function LoginScreen() {
     const [payload, setPayload] = useState<string | undefined>(undefined);

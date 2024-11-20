@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
-import { Text } from '~/components/nativewindui/Text';
-import * as User from '@/ndk-expo/components/user';
-import { Hexpubkey, NDKEvent } from '@nostr-dev-kit/ndk';
+import { View, Text } from 'react-native';
+import * as User from '../user';
+import { Hexpubkey, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
 interface AvatarGroupProps {
     events?: NDKEvent[];

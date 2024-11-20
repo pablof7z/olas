@@ -5,7 +5,7 @@ import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { NDKCacheAdapterSqlite, useNDK } from '@/ndk-expo';
+import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Link, router, Stack, Tabs, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -13,15 +13,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { NDKWalletProvider } from '@/ndk-expo/providers/wallet';
 
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKProvider } from '~/ndk-expo';
+import { NDKProvider } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
-import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
-import NDKSessionProvider from '@/ndk-expo/providers/session';
+import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
+import { NDKWalletProvider, NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ScrollProvider } from '~/contexts/ScrollContext';
 

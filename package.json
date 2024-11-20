@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "honeypot",
+  "name": "olas",
   "scripts": {
     "dev": "turbo dev",
     "dev:mobile": "turbo dev --filter=\"{./apps/mobile}...\"",
@@ -33,6 +33,7 @@
     "packages/eslint-config",
     "packages/ndk/ndk",
     "packages/ndk/ndk-wallet",
+    "packages/ndk/ndk-mobile",
     "packages/ndk/packages/eslint-config-custom",
     "packages/ndk/packages/tsconfig"
   ]

@@ -1,9 +1,9 @@
-import { imetasFromEvent } from '@/ndk-expo/utils/imeta';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { Dimensions, ImageProps, ScrollView, View } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { imetasFromEvent } from '@/utils/imeta';
 
 const getUrls = (event: NDKEvent): { url?: string, blurhash?: string }[] => {
     if (event.kind === NDKKind.Text) {

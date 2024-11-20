@@ -1,6 +1,5 @@
 import { activeEventStore } from "@/app/stores";
-import { useNDK, useSubscribe } from "@/ndk-expo";
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk";
+import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { Heart, MessageCircle, BookmarkIcon } from "lucide-react-native";
 import { useMemo } from "react";
@@ -9,7 +8,8 @@ import { useStore } from "zustand";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Text } from "@/components/nativewindui/Text";
 import { StyleSheet } from "react-native";
-import AvatarGroup from "@/ndk-expo/components/user/AvatarGroup";
+import { useNDK, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
+import AvatarGroup from "@/components/ui/user/AvatarGroup";
 
 export function Reactions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
