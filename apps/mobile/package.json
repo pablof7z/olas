@@ -2,7 +2,7 @@
   "private": true,
   "name": "snapstr",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "app/expo/index.js",
   "scripts": {
     "dev": "expo start",
     "lint": "eslint --ext js,ts,tsx .",
