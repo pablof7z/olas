@@ -106,28 +106,10 @@ export default function RootLayout() {
                                     <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                         <PortalHost />
                                         <Stack>
-                                            <Stack.Screen
-                                                name="login"
-                                                options={{
-                                                    headerShown: false,
-                                                    presentation: 'modal',
-                                                }}
-                                            />
+                                            <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal', }} />
 
-                                            <Stack.Screen
-                                                name="publish/index"
-                                                options={{
-                                                    headerShown: true,
-                                                    presentation: 'modal',
-                                                }}
-                                            />
-                                            <Stack.Screen
-                                                name="publish/caption"
-                                                options={{
-                                                    headerShown: true,
-                                                    presentation: 'modal',
-                                                }}
-                                            />
+                                            <Stack.Screen name="publish/index" options={{ headerShown: true, presentation: 'modal', }} />
+                                            <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal', }} />
                                             <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
                                             <Stack.Screen name="publish/type" options={{ headerShown: true, presentation: 'modal' }} />
                                             

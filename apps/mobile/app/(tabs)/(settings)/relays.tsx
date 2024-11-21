@@ -34,7 +34,8 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
                 width: 8,
                 height: 8,
                 backgroundColor: color,
-            }}></View>
+            }}
+        />
     );
 }
 

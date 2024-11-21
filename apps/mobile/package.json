@@ -15,10 +15,8 @@
   },
   "dependencies": {
     "@bacons/text-decoder": "^0.0.0",
-    "@bitpatty/imgproxy-url-builder": "1.8.0-rc1",
     "@cashu/cashu-ts": "^1.2.1",
     "@expo/vector-icons": "^14.0.4",
-    "@imgproxy/imgproxy-js-core": "^1.0.8",
     "@misaon/imgproxy": "^1.0.1",
     "@nostr-dev-kit/ndk-mobile": "workspace:*",
     "@nostr-dev-kit/ndk-wallet": "workspace:*",

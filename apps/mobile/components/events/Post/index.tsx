@@ -52,12 +52,12 @@ export function VideoContainer({ url }: { url: string }) {
     return <Video style={styles.video} source={{ uri: url }} />;
 }
 
-export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {
+export const CardMedia = memo(function CardMedia({ event, onPress }: { event: NDKEvent, onPress: () => void }) {
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
 
-    return <Image event={event} style={styles.image} />;
+    return <Image event={event} style={styles.image} onPress={onPress} />;
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
@@ -116,14 +116,10 @@ export default function Post({ event }: { event: NDKEvent }) {
                 )}
             </View>
 
-            <Pressable
-                onPress={() => {
-                    setActiveEvent(event);
-                    router.push('/view');
-                }}
-                style={styles.container}>
-                <CardMedia event={event} />
-            </Pressable>
+            <CardMedia event={event} onPress={() => {
+                setActiveEvent(event);
+                router.push('/view');
+            }} />
 
             <Reactions event={event} />
 

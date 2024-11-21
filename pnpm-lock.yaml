@@ -20,18 +20,12 @@ importers:
       '@bacons/text-decoder':
         specifier: ^0.0.0
         version: 0.0.0(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))
-      '@bitpatty/imgproxy-url-builder':
-        specifier: 1.8.0-rc1
-        version: 1.8.0-rc1
       '@cashu/cashu-ts':
         specifier: ^1.2.1
         version: 1.2.1
       '@expo/vector-icons':
         specifier: ^14.0.4
         version: 14.0.4
-      '@imgproxy/imgproxy-js-core':
-        specifier: ^1.0.8
-        version: 1.0.8
       '@misaon/imgproxy':
         specifier: ^1.0.1
         version: 1.0.1
@@ -407,17 +401,8 @@ importers:
         specifier: workspace:*
         version: link:../ndk-wallet
       expo:
-        specifier: '>=51.0.0'
+        specifier: 51.0.39
         version: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      react:
-        specifier: 18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: 18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-native:
-        specifier: 0.74.5
-        version: 0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10)
       react-native-get-random-values:
         specifier: ~1.11.0
         version: 1.11.0(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(bufferutil@4.0.8)(react@18.2.0)(utf-8-validate@5.0.10))
@@ -1310,9 +1295,6 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@bitpatty/imgproxy-url-builder@1.8.0-rc1':
-    resolution: {integrity: sha512-UXcPNbC4lRy39jX1kW6f/m7e0bfx6j6+5C9C6+hOW663EM5NlXEstq9ND7gTXsr7x/yui/OPdYf+kQoq/u4OwA==}
-
   '@cashu/cashu-ts@1.2.1':
     resolution: {integrity: sha512-B0+e02S8DQA8KBt2FgKHgGYvtHQokXJ3sZcTyAdHqvb0T0jfo1zF7nHn19eU9iYcfk8VSWf5xNBTocpTfj1aNg==}
 
@@ -1800,9 +1782,6 @@ packages:
 
   '@ide/backoff@1.0.0':
     resolution: {integrity: sha512-F0YfUDjvT+Mtt/R4xdl2X0EYCHMMiJqNLdxHD++jDT5ydEFIyqbCHh51Qx2E211dgZprPKhV7sHmnXKpLuvc5g==}
-
-  '@imgproxy/imgproxy-js-core@1.0.8':
-    resolution: {integrity: sha512-3oBneumj7b/YCeyLteKyKaidQSrDhEHnZMiVBHO0Hshju/YSplbzSeACZGwai7LyD3YMMpsK/kLIodXU6wbtMw==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -9431,8 +9410,6 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@bitpatty/imgproxy-url-builder@1.8.0-rc1': {}
-
   '@cashu/cashu-ts@1.2.1':
     dependencies:
       '@cashu/crypto': 0.2.7
@@ -10026,8 +10003,6 @@ snapshots:
   '@humanwhocodes/retry@0.4.1': {}
 
   '@ide/backoff@1.0.0': {}
-
-  '@imgproxy/imgproxy-js-core@1.0.8': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

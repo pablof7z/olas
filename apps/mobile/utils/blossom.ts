@@ -18,7 +18,6 @@ export async function sign(draft: EventTemplate, signer?: NDKSigner) {
 export function generateMediaEventFromBlobDescriptor(ndk: NDK, blob: BlobDescriptor) {
     const mediaEvent = new NDKEvent(ndk);
     mediaEvent.kind = NDKKind.Media;
-    console.log('blob', JSON.stringify(blob, null, 4));
     if (blob.type) mediaEvent.tags.push(['m', blob.type]);
     if (blob.sha256) mediaEvent.tags.push(['x', blob.sha256]);
     if (blob.url) mediaEvent.tags.push(['url', blob.url]);

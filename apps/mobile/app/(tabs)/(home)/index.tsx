@@ -1,5 +1,5 @@
 import { useSubscribe, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
