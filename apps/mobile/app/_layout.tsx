@@ -6,7 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, useNDK } from '@/ndk-expo';
-import { Link, router, Stack, Tabs, useNavigation } from 'expo-router';
+import { Link, router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,10 +20,9 @@ import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '~/ndk-expo';
 import { Text } from '@/components/nativewindui/Text';
 import { Icon } from '@roninoss/icons';
-import { NDKEvent, NDKKind, NDKList, NDKPrivateKeySigner, NDKRelay, NDKRelaySet, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk';
 import NDKSessionProvider from '@/ndk-expo/providers/session';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
-import { BlurView } from 'expo-blur';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -66,8 +65,7 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
     useInitialAndroidBarSync();
     const { colors } = useColorScheme();
-    const { colorScheme, isDarkColorScheme } = useColorScheme();
-
+    const { colorScheme, isDarkColorScheme } = useColorScheme(); 
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
         if (direction === 'send') console.log('👉', url.hostname, msg);
@@ -101,7 +99,7 @@ export default function RootLayout() {
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
                             <GestureHandlerRootView style={{ flex: 1 }}>
                                 <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                    <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                    {/* <NavThemeProvider value={NAV_THEME[colorScheme]}> */}
                                         <PortalHost />
                                         <Stack>
                                             <Stack.Screen
@@ -182,7 +180,7 @@ export default function RootLayout() {
                                                 }}
                                             />
                                         </Stack>
-                                    </NavThemeProvider>
+                                    {/* </NavThemeProvider> */}
                                 </KeyboardProvider>
                             </GestureHandlerRootView>
                         </NDKSessionProvider>

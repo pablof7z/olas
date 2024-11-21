@@ -27,7 +27,8 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "resourceClass": "medium"
     },
     "production": {
       "extends": "monorepo",
