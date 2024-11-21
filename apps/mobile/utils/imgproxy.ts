@@ -23,15 +23,10 @@ const DEFAULT_CONFIG: ImgProxyConfig = {
     },
 };
 
-export function getProxiedImageUrl(
-    url: string,
-    size: number = WINDOW_WIDTH,
-    factor: number = 3,
-    config: Partial<ImgProxyConfig> = {},
-) {
+export function getProxiedImageUrl(url: string, size: number = WINDOW_WIDTH, factor: number = 3, config: Partial<ImgProxyConfig> = {}) {
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
     finalConfig.modifiers.width = Math.floor(size * factor).toString();
-    
+
     return getImageUrl(url, finalConfig);
 }

@@ -17,7 +17,7 @@ export default function Profile() {
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
             { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
-            { kinds: [NDKKind.Text], "#k": ["20"], authors: [pubkey!] },
+            { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey!] },
         ];
 
         if (filtersExpanded) {

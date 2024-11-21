@@ -11,8 +11,7 @@ const RelayListItem: React.FC<
         title: string;
     }>
 > = ({ item, index, target }) => {
-    const groupFilters = useMemo( () => ([{ kinds: [NDKKind.GroupMembers - 1], }]), [item.title]
-    );
+    const groupFilters = useMemo(() => [{ kinds: [NDKKind.GroupMembers - 1] }], [item.title]);
     const opts = useMemo(
         () => ({
             cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,

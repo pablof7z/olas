@@ -100,12 +100,10 @@ export async function imetaFromImage(fileContent: string, url?: string): Promise
 export function imetaToTags(imeta: ImetaData): NDKTag[] {
     const val = Object.entries(imeta)
         .map(([key, value]) => `${key} ${value}`)
-        .flat()
-    const tags = [
-        ['imeta', ...val]
-    ];
+        .flat();
+    const tags = [['imeta', ...val]];
 
     if (imeta.x) tags.push(['x', imeta.x]);
-    
+
     return tags;
 }

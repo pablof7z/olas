@@ -45,14 +45,13 @@ const styles = StyleSheet.create({
         gap: 10,
         padding: 2,
     },
-    
 });
 
 export function VideoContainer({ url }: { url: string }) {
     return <Video style={styles.video} source={{ uri: url }} />;
 }
 
-export const CardMedia = memo(function CardMedia({ event, onPress }: { event: NDKEvent, onPress: () => void }) {
+export const CardMedia = memo(function CardMedia({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
@@ -102,7 +101,7 @@ export default function Post({ event }: { event: NDKEvent }) {
                             </TouchableOpacity>
 
                             <View className="flex-col">
-                                <User.Name className="text-foreground font-bold" />
+                                <User.Name className="font-bold text-foreground" />
                                 <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             </View>
                         </User.Profile>
@@ -116,10 +115,13 @@ export default function Post({ event }: { event: NDKEvent }) {
                 )}
             </View>
 
-            <CardMedia event={event} onPress={() => {
-                setActiveEvent(event);
-                router.push('/view');
-            }} />
+            <CardMedia
+                event={event}
+                onPress={() => {
+                    setActiveEvent(event);
+                    router.push('/view');
+                }}
+            />
 
             <Reactions event={event} />
 

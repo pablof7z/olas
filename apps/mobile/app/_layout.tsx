@@ -96,8 +96,7 @@ export default function RootLayout() {
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
-                netDebug={netDebug}
-            >
+                netDebug={netDebug}>
                 <NDKCacheCheck>
                     <NDKWalletProvider>
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
@@ -106,13 +105,16 @@ export default function RootLayout() {
                                     <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                         <PortalHost />
                                         <Stack>
-                                            <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal', }} />
+                                            <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                            <Stack.Screen name="publish/index" options={{ headerShown: true, presentation: 'modal', }} />
-                                            <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal', }} />
-                                            <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen name="publish/index" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
+                                            <Stack.Screen
+                                                name="publish/expiration"
+                                                options={{ headerShown: true, presentation: 'modal' }}
+                                            />
                                             <Stack.Screen name="publish/type" options={{ headerShown: true, presentation: 'modal' }} />
-                                            
+
                                             <Stack.Screen
                                                 name="(tabs)"
                                                 options={{

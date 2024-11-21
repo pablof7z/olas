@@ -17,7 +17,7 @@ import { useScroll } from '~/contexts/ScrollContext';
 import * as User from '@/components/ui/user';
 const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
     const { colors } = useColorScheme();
-    
+
     return (
         <DropdownMenu
             items={[
@@ -54,7 +54,7 @@ export default function HomeScreen() {
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
             { kinds: [20] },
-            { kinds: [1], "#k": ["20"] } // cheating!!!
+            { kinds: [1], '#k': ['20'] }, // cheating!!!
         ];
 
         if (includeTweets) {

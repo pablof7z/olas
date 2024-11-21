@@ -1,15 +1,15 @@
-import { activeEventStore } from "@/app/stores";
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { router } from "expo-router";
-import { Heart, MessageCircle, BookmarkIcon } from "lucide-react-native";
-import { useMemo } from "react";
-import { View, TouchableOpacity } from "react-native";
-import { useStore } from "zustand";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { Text } from "@/components/nativewindui/Text";
-import { StyleSheet } from "react-native";
-import { useNDK, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
-import AvatarGroup from "@/components/ui/user/AvatarGroup";
+import { activeEventStore } from '@/app/stores';
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
+import { useMemo } from 'react';
+import { View, TouchableOpacity } from 'react-native';
+import { useStore } from 'zustand';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { Text } from '@/components/nativewindui/Text';
+import { StyleSheet } from 'react-native';
+import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 export function Reactions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
@@ -55,7 +55,11 @@ export function Reactions({ event }: { event: NDKEvent }) {
             <View className="w-full flex-1 flex-row justify-between gap-4">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
                     <TouchableOpacity onPress={react} className="!text-green-500">
-                        <Heart size={24} fill={reactedByUser ? colors.foreground : 'transparent'} color={reactedByUser ? colors.foreground : colors.muted} />
+                        <Heart
+                            size={24}
+                            fill={reactedByUser ? colors.foreground : 'transparent'}
+                            color={reactedByUser ? colors.foreground : colors.muted}
+                        />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.reactionButton} onPress={comment}>
@@ -68,7 +72,7 @@ export function Reactions({ event }: { event: NDKEvent }) {
                 </TouchableOpacity>
             </View>
             {reactions.length > 0 && (
-                <View className="flex-row items-center gap-1 w-full flex-1 justify-between">
+                <View className="w-full flex-1 flex-row items-center justify-between gap-1">
                     <Text className="text-sm font-medium" style={{ color: colors.muted }}>
                         {reactions.length} reactions
                     </Text>

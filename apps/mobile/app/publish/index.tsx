@@ -47,7 +47,19 @@ async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ ur
     });
 }
 
-function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { handlePost: () => void, uploading: boolean, media: Media[], pickImage: () => void, takePhoto: () => void }) {
+function PostOptions({
+    handlePost,
+    uploading,
+    media,
+    pickImage,
+    takePhoto,
+}: {
+    handlePost: () => void;
+    uploading: boolean;
+    media: Media[];
+    pickImage: () => void;
+    takePhoto: () => void;
+}) {
     const { caption, expiration, type } = useStore(publishStore);
     const { colors } = useColorScheme();
 
@@ -71,7 +83,11 @@ function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { h
                 title: 'Expiration',
                 subTitle: 'Delete post after some time',
                 onPress: openExpiration,
-                leftView: <View style={{ paddingHorizontal: 10}}><Timer size={24} color={colors.muted} /></View>,
+                leftView: (
+                    <View style={{ paddingHorizontal: 10 }}>
+                        <Timer size={24} color={colors.muted} />
+                    </View>
+                ),
                 rightView: (
                     <View className="flex-1 justify-center">
                         <Text className="text-sm text-muted-foreground">
@@ -85,12 +101,16 @@ function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { h
                 title: 'Post type',
                 subTitle: 'Choose the type of post',
                 onPress: openType,
-                leftView: <View style={{ paddingHorizontal: 10}}><Type size={24} color={colors.muted} /></View>,
+                leftView: (
+                    <View style={{ paddingHorizontal: 10 }}>
+                        <Type size={24} color={colors.muted} />
+                    </View>
+                ),
                 rightView: (
                     <View className="flex-1 justify-center">
                         <Text className="text-sm text-muted-foreground">
-                            { type === 'generic' && 'Generic' }
-                            { type === 'high-quality' && 'High-quality' }
+                            {type === 'generic' && 'Generic'}
+                            {type === 'high-quality' && 'High-quality'}
                         </Text>
                     </View>
                 ),
@@ -99,20 +119,26 @@ function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { h
                 id: 'add-more',
                 title: 'Add more media',
                 subTitle: 'Add more photos or videos',
-                leftView: <View style={{ paddingHorizontal: 10}}><Plus size={24} color={colors.muted} /></View>,
-                rightView: <View className="flex-1 justify-center flex-row gap-2">
-                    <Button variant="tonal" onPress={pickImage}>
-                        <ImageIcon size={24} color={colors.muted} />
-                    </Button>
+                leftView: (
+                    <View style={{ paddingHorizontal: 10 }}>
+                        <Plus size={24} color={colors.muted} />
+                    </View>
+                ),
+                rightView: (
+                    <View className="flex-1 flex-row justify-center gap-2">
+                        <Button variant="tonal" onPress={pickImage}>
+                            <ImageIcon size={24} color={colors.muted} />
+                        </Button>
 
-                    <Button variant="tonal" onPress={takePhoto}>
-                        <VideoIcon size={24} color={colors.muted} />
-                    </Button>
-                </View>,
+                        <Button variant="tonal" onPress={takePhoto}>
+                            <VideoIcon size={24} color={colors.muted} />
+                        </Button>
+                    </View>
+                ),
             },
             {
-                id: 'publish'
-            }
+                id: 'publish',
+            },
         ];
     }, [expiration, type]);
 
@@ -129,12 +155,7 @@ function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { h
                 renderItem={({ item, index, target }) => {
                     if (item.id === 'publish') {
                         return (
-                            <Button
-                                size="lg"
-                                variant="primary"
-                                onPress={handlePost}
-                                disabled={uploading || media.length === 0}
-                            >
+                            <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading || media.length === 0}>
                                 {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
                             </Button>
                         );
@@ -148,7 +169,8 @@ function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { h
                             rightView={item.rightView}
                             onPress={item.onPress}
                             index={index}
-                            target={target} />
+                            target={target}
+                        />
                     );
                 }}
             />
@@ -180,7 +202,7 @@ export default function ImageUpload() {
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [ refresh, setRefresh ] = useState(0);
+    const [refresh, setRefresh] = useState(0);
 
     const media = useRef<Media[]>([]);
 
@@ -213,7 +235,7 @@ export default function ImageUpload() {
                 const { url, x } = await upload(ndk, mediaBlob, defaultBlossomServer);
                 console.log('uploaded media', url);
                 media.current[index].imeta ??= {};
-                console.log('adding url to index', index, {url});
+                console.log('adding url to index', index, { url });
                 media.current[index].imeta.url = url;
                 media.current[index].imeta.x = x;
                 resolve();
@@ -232,29 +254,26 @@ export default function ImageUpload() {
         // });
 
         console.log('waiting for', media.current.length, 'uploads');
-        await Promise.all([
-            ...media.current.map((m) => m.uploadPromise),
-            ...media.current.map((m) => m.imetaPromise),
-        ]);
+        await Promise.all([...media.current.map((m) => m.uploadPromise), ...media.current.map((m) => m.imetaPromise)]);
         console.log('all uploads done', media.current);
 
         // if (selectionType === 'image') {
-            // imetaData.current ??= {};
+        // imetaData.current ??= {};
 
-            // for (const tag of event.tags) {
-            //     imetaData.current[tag[0]] = tag[1];
-            // }
+        // for (const tag of event.tags) {
+        //     imetaData.current[tag[0]] = tag[1];
+        // }
 
-            event.tags = [
-                ...event.tags,
-                ...media.current
-                    .filter((media) => media.imeta)
-                    .map((media) => imetaToTags(media.imeta))
-                    .flat()
-            ];
+        event.tags = [
+            ...event.tags,
+            ...media.current
+                .filter((media) => media.imeta)
+                .map((media) => imetaToTags(media.imeta))
+                .flat(),
+        ];
 
-            // remove the url tag, since it'll go in the imeta
-            // event.tags = event.tags.filter((tag) => tag[0] !== 'url');
+        // remove the url tag, since it'll go in the imeta
+        // event.tags = event.tags.filter((tag) => tag[0] !== 'url');
         // }
 
         // if we have an expiration, set the tag
@@ -264,10 +283,10 @@ export default function ImageUpload() {
 
         // if this is a generic post, add the URL to the content's end
         if (type === 'generic') {
-            event.content = [ event.content, ...media.current.map((m) => m.imeta.url).filter((text) => text?.trim().length > 0) ].join('\n');
+            event.content = [event.content, ...media.current.map((m) => m.imeta.url).filter((text) => text?.trim().length > 0)].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
-            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : 20).toString() ]];
+            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : 20).toString()]];
         }
 
         try {
@@ -288,7 +307,7 @@ export default function ImageUpload() {
         }
     }, [error]);
 
-    const processMedia = async(mediaUri: string) => {
+    const processMedia = async (mediaUri: string) => {
         // generate imeta, add the promise to imetaPromises
         // when the promise resolves, add the imeta to the imetas record using the mediaUri as the key
         // and add the url to addMedia
@@ -308,7 +327,7 @@ export default function ImageUpload() {
         });
         media.current.push(m);
         setRefresh(refresh + 1);
-    }
+    };
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -349,82 +368,74 @@ export default function ImageUpload() {
                     headerShown: true,
                     title: 'Publish',
                     headerRight: () => (
-                        <Button 
-                            variant="primary" 
-                            size="sm" 
-                            onPress={handlePost} 
-                            disabled={uploading || media.length === 0}>
+                        <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading || media.length === 0}>
                             <Text className="text-white">Publish</Text>
                         </Button>
                     ),
                 }}
             />
-            <View style={styles.container} className="flex-1 bg-card flex-row">
-                {error && (
-                    <Text className="text-red-500 mb-4 text-center">{error}</Text>
-                )}
-                    <View className="mb-4 flex-1 grow">
-                        <ScrollView 
-                            horizontal 
-                            showsHorizontalScrollIndicator={false} 
-                        style={{ flex: 1 }}
-                    >
+            <View style={styles.container} className="flex-1 flex-row bg-card">
+                {error && <Text className="mb-4 text-center text-red-500">{error}</Text>}
+                <View className="mb-4 flex-1 grow">
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
                         {media.current.map((m, index) => (
-                            <View key={m.internalUri} style={[styles.imageContainer, {
-                                    marginRight: 10,
-                                    width: Dimensions.get('screen').width * 0.8,
-                                }]}>
-                                    {selectionType === 'video' ? (
-                                        <Video
-                                            source={{ uri: m.internalUri }}
-                                            style={styles.image}
-                                            useNativeControls
-                                            resizeMode={ResizeMode.CONTAIN}
-                                            posterSource={{ uri: thumbnail }}
-                                            usePoster
-                                        />
-                                    ) : (
-                                        <Image
-                                            source={{ uri: m.internalUri }}
-                                            style={styles.image}
-                                            contentFit="cover"
-                                            contentPosition="center"
-                                        />
-                                    )}
-                                    <TouchableOpacity
-                                        style={styles.removeButton}
-                                        onPress={() => {
-                                            media.current = media.current.filter((m, j) => j !== index);
-                                            setRefresh(refresh + 1);
-                                        }}>
-                                        <Ionicons name="close" size={24} color="white" />
-                                    </TouchableOpacity>
-                                </View>
-                            ))}
                             <View
-                                style={styles.buttonContainer}
-                                 className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2"
-                            >
-                                    <Button variant="tonal" style={styles.button} onPress={pickImage}>
-                                        <ImageIcon size={40} color="#666" />
-                                        <Text className="text-foreground text-lg px-4">Gallery</Text>
-                                    </Button>
+                                key={m.internalUri}
+                                style={[
+                                    styles.imageContainer,
+                                    {
+                                        marginRight: 10,
+                                        width: Dimensions.get('screen').width * 0.8,
+                                    },
+                                ]}>
+                                {selectionType === 'video' ? (
+                                    <Video
+                                        source={{ uri: m.internalUri }}
+                                        style={styles.image}
+                                        useNativeControls
+                                        resizeMode={ResizeMode.CONTAIN}
+                                        posterSource={{ uri: thumbnail }}
+                                        usePoster
+                                    />
+                                ) : (
+                                    <Image
+                                        source={{ uri: m.internalUri }}
+                                        style={styles.image}
+                                        contentFit="cover"
+                                        contentPosition="center"
+                                    />
+                                )}
+                                <TouchableOpacity
+                                    style={styles.removeButton}
+                                    onPress={() => {
+                                        media.current = media.current.filter((m, j) => j !== index);
+                                        setRefresh(refresh + 1);
+                                    }}>
+                                    <Ionicons name="close" size={24} color="white" />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                        <View style={styles.buttonContainer} className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2">
+                            <Button variant="tonal" style={styles.button} onPress={pickImage}>
+                                <ImageIcon size={40} color="#666" />
+                                <Text className="px-4 text-lg text-foreground">Gallery</Text>
+                            </Button>
 
-                                    <Button variant="tonal" style={styles.button} onPress={takePhoto}>
-                                        <VideoIcon size={40} color="#666" />
-                                        <Text className="text-foreground text-lg px-4">Camera</Text>
-                                    </Button>
-                                </View>
-                        </ScrollView>
+                            <Button variant="tonal" style={styles.button} onPress={takePhoto}>
+                                <VideoIcon size={40} color="#666" />
+                                <Text className="px-4 text-lg text-foreground">Camera</Text>
+                            </Button>
+                        </View>
+                    </ScrollView>
 
-                        <PostOptions
-                            handlePost={handlePost}
-                            uploading={uploading}
-                            media={media.current}
-                            pickImage={() => pickImage()}
-                            takePhoto={() => takePhoto()}
-                        />
-                    </View>
+                    <PostOptions
+                        handlePost={handlePost}
+                        uploading={uploading}
+                        media={media.current}
+                        pickImage={() => pickImage()}
+                        takePhoto={() => takePhoto()}
+                    />
+                </View>
             </View>
         </>
     );
@@ -451,8 +462,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 8,
     },
-    uploadContainer: {
-    },
+    uploadContainer: {},
     buttonContainer: {
         width: Dimensions.get('screen').width - 20,
         flex: 1,
