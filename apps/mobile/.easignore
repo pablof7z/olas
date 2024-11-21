@@ -24,5 +24,3 @@ web-build/
 
 expo-env.d.ts
 # @end expo-cli
-
-*.apk

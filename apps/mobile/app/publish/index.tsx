@@ -291,9 +291,7 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
-            console.log('event', JSON.stringify(event.rawEvent()));
             await event.publish();
-            console.log('published event', `https://njump.me/${event.encode()}`);
             setUploading(false);
             router.back();
         } catch (error) {
@@ -415,7 +413,14 @@ export default function ImageUpload() {
                                 </TouchableOpacity>
                             </View>
                         ))}
-                        <View style={styles.buttonContainer} className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2">
+                        <View style={{
+                            ...styles.buttonContainer,
+                            ...media.current.length === 0 ? {
+                                width: Dimensions.get('screen').width - 20,
+                            } : {
+                                flexDirection: 'column'
+                            }
+                        }} className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2">
                             <Button variant="tonal" style={styles.button} onPress={pickImage}>
                                 <ImageIcon size={40} color="#666" />
                                 <Text className="px-4 text-lg text-foreground">Gallery</Text>
@@ -464,7 +469,6 @@ const styles = StyleSheet.create({
     },
     uploadContainer: {},
     buttonContainer: {
-        width: Dimensions.get('screen').width - 20,
         flex: 1,
         gap: 16,
         flexDirection: 'row',

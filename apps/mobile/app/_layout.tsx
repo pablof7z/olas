@@ -6,7 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { Link, router, Stack, Tabs, useNavigation } from 'expo-router';
+import { Link, router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -64,8 +64,7 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
     useInitialAndroidBarSync();
-    const { colorScheme, isDarkColorScheme } = useColorScheme();
-
+    const { isDarkColorScheme } = useColorScheme(); 
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
         if (direction === 'send') console.log('👉', url.hostname, msg);
@@ -102,7 +101,7 @@ export default function RootLayout() {
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
                             <GestureHandlerRootView style={{ flex: 1 }}>
                                 <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                    <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                    {/* <NavThemeProvider value={NAV_THEME[colorScheme]}> */}
                                         <PortalHost />
                                         <Stack>
                                             <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
@@ -163,7 +162,7 @@ export default function RootLayout() {
                                                 }}
                                             />
                                         </Stack>
-                                    </NavThemeProvider>
+                                    {/* </NavThemeProvider> */}
                                 </KeyboardProvider>
                             </GestureHandlerRootView>
                         </NDKSessionProvider>

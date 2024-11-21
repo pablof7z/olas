@@ -1,7 +1,7 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { Image } from 'expo-image';
-import { Dimensions, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { useImage, Image } from 'expo-image';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { imetasFromEvent } from '@/utils/imeta';
 import React, { memo, useMemo } from 'react';
@@ -49,17 +49,20 @@ const SingleImage = memo(function SingleImage({
     colors: any;
     props: any;
 }) {
+    const image = useImage({ uri: getProxiedImageUrl(url.url) });
+
+    const width = image?.width;
+    const height = image?.height;
     return (
         <View style={{ position: 'relative', flex: 1 }}>
             {url.blurhash && (
                 <Image
                     source={undefined}
                     placeholder={{ blurhash: url.blurhash }}
-                    contentFit="cover"
                     style={{
                         position: 'absolute',
                         width: windowWidth,
-                        height: '100%',
+                        height: height ? height / (width / windowWidth) : undefined,
                     }}
                 />
             )}
@@ -71,9 +74,9 @@ const SingleImage = memo(function SingleImage({
                     style={[
                         {
                             width: windowWidth,
+                            height: height ? height / (width / windowWidth) : undefined,
                             backgroundColor: colors.background,
                         },
-                        props.style || {},
                     ]}
                     placeholder={url.blurhash ? { blurhash: url.blurhash } : undefined}
                 />
@@ -101,17 +104,33 @@ export default memo(function ImageComponent({
     }
 
     return (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            minimumZoomScale={1}
-            maximumZoomScale={5}
-            contentContainerStyle={{ flexGrow: 1 }}
-            style={{ flex: 1, width: '100%' }}>
-            {urls.map((url, index) => (
-                <SingleImage key={index} url={url} windowWidth={windowWidth} onPress={onPress} colors={colors} props={props} />
-            ))}
-        </ScrollView>
+        <View style={{ flex: 1 }}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                pagingEnabled
+                minimumZoomScale={1}
+                maximumZoomScale={5}
+                contentContainerStyle={{ flexGrow: 1 }}
+                style={{ flex: 1, width: '100%' }}>
+                {urls.map((url, index) => (
+                    <SingleImage key={index} url={url} windowWidth={windowWidth} onPress={onPress} colors={colors} props={props} />
+                ))}
+            </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 8 }}>
+                {urls.map((_, index) => (
+                    <View
+                        key={index}
+                        style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 10,
+                            backgroundColor: colors.primary,
+                            opacity: 1
+                        }}
+                    />
+                ))}
+            </View>
+        </View>
     );
 });
