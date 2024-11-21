@@ -1,7 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { useUserProfile } from './profile';
-import { useColorScheme } from '@/lib/useColorScheme';
 
 /**
  * Renders the name of a user
@@ -9,7 +8,6 @@ import { useColorScheme } from '@/lib/useColorScheme';
 const Name: React.FC<Text['props']> = (props) => {
     // const { userProfile, user, hasKind20 } = useUserProfile();
     const { userProfile, user } = useUserProfile();
-    const { colors } = useColorScheme();
 
     return (
         <Text

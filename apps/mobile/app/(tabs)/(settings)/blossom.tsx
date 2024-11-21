@@ -1,14 +1,13 @@
-import { useNDK } from '@/ndk-expo';
+import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
-import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import { useNDKSession } from '@/ndk-expo/hooks/session';
 
 export default function BlossomScreen() {
     const { ndk } = useNDK();

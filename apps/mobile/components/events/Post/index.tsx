@@ -1,25 +1,23 @@
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
 import { View, Text } from 'react-native';
-import * as User from '@/ndk-expo/components/user';
-import EventContent from '@/ndk-expo/components/event/content';
+import * as User from '@/components/ui/user';
+import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
 import { Video } from 'expo-av';
 import { Button } from '../../nativewindui/Button';
-import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useMemo, memo } from 'react';
-import { useNDK, useSubscribe } from '@/ndk-expo';
-import { BookmarkIcon, Heart, MessageCircle } from 'lucide-react-native';
-import { useNDKSession } from '@/ndk-expo/hooks/session';
+import { memo } from 'react';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Reactions } from './Reactions';
+import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -54,12 +52,12 @@ export function VideoContainer({ url }: { url: string }) {
     return <Video style={styles.video} source={{ uri: url }} />;
 }
 
-export const CardMedia = memo(function CardMedia({ event }: { event: NDKEvent }) {
+export const CardMedia = memo(function CardMedia({ event, onPress }: { event: NDKEvent, onPress: () => void }) {
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
 
-    return <Image event={event} style={styles.image} />;
+    return <Image event={event} style={styles.image} onPress={onPress} />;
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
@@ -118,14 +116,10 @@ export default function Post({ event }: { event: NDKEvent }) {
                 )}
             </View>
 
-            <Pressable
-                onPress={() => {
-                    setActiveEvent(event);
-                    router.push('/view');
-                }}
-                style={styles.container}>
-                <CardMedia event={event} />
-            </Pressable>
+            <CardMedia event={event} onPress={() => {
+                setActiveEvent(event);
+                router.push('/view');
+            }} />
 
             <Reactions event={event} />
 

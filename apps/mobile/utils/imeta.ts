@@ -1,4 +1,4 @@
-import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 
 export interface ImetaData {

@@ -1,4 +1,7 @@
 packages:
-  - 'apps/*'
-  - 'packages/eslint-config'
-  - 'packages/feature-home'
+    - 'apps/*'
+    - 'packages/eslint-config'
+    - 'packages/ndk/ndk'
+    - 'packages/ndk/ndk-mobile'
+    - 'packages/ndk/ndk-wallet'
+    - 'packages/ndk/packages/*'

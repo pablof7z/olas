@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/nativewindui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { useUserProfile } from './profile';
-import { getProxiedImageUrl } from '@/utils/imgproxy';
+
+const getProxiedImageUrl = (url: string) => url;
 
 interface AvatarProps extends React.ComponentProps<typeof Avatar> {
     size?: number;

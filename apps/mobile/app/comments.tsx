@@ -1,18 +1,12 @@
-import { TextInput } from 'react-native-gesture-handler';
-import { KeyboardAvoidingView, Platform } from 'react-native';
-import { router, Stack } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Dimensions, View } from 'react-native';
-import { useNDK, useSubscribe } from '@/ndk-expo';
-import * as User from '@/ndk-expo/components/user';
-import { Text } from '@/components/nativewindui/Text';
-import { Button } from '@/components/nativewindui/Button';
-import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
+import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import * as User from '@/components/ui/user';
+import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
 import { useStore } from 'zustand';
 import { FlashList } from '@shopify/flash-list';
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
-import EventContent from '@/ndk-expo/components/event/content';
+import EventContent from '@/components/ui/event/content';
 import RelativeTime from './components/relative-time';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

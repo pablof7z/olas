@@ -1,35 +1,30 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ImetaData, imetaFromImage, imetaToTags } from '@/ndk-expo/utils/imeta';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
-import { useNDK } from '@/ndk-expo';
-import NDK, { NDKEvent, NDKKind, NDKList, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKEvent, NDKKind, NDKList } from '@nostr-dev-kit/ndk-mobile';
 import * as FileSystem from 'expo-file-system';
-import { Uploader } from '@/ndk-expo/utils/uploader';
 import { Image } from 'expo-image';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ResizeMode } from 'expo-av';
-import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { Video } from 'expo-av';
-import * as VideoThumbnails from 'expo-video-thumbnails';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router, Stack } from 'expo-router';
 import { publishStore } from '../stores/publish';
 import { useStore } from 'zustand';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
-import { Timer, Type } from 'lucide-react-native';
+import { ImageIcon, Plus, Timer, Type, VideoIcon } from 'lucide-react-native';
+import { Uploader } from '@/utils/uploader';
+import { ImetaData, imetaFromImage, imetaToTags } from '@/utils/imeta';
 
 async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
         // Create an Uploader instance with the blob
         const uploader = new Uploader(ndk, blob, blossomServer);
-
-        console.log('uploading to', blossomServer);
 
         // Set up progress and error handlers if needed
         uploader.onProgress = (progress) => {
@@ -43,7 +38,8 @@ async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ ur
 
         uploader.onUploaded = async (url) => {
             const mediaEvent = await uploader.mediaEvent();
-            resolve({ url, mediaEvent });
+            const x = mediaEvent?.tagValue('x');
+            resolve({ url, x, mediaEvent });
         };
 
         // Start the upload
@@ -51,7 +47,7 @@ async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ ur
     });
 }
 
-function PostOptions() {
+function PostOptions({ handlePost, uploading, media, pickImage, takePhoto }: { handlePost: () => void, uploading: boolean, media: Media[], pickImage: () => void, takePhoto: () => void }) {
     const { caption, expiration, type } = useStore(publishStore);
     const { colors } = useColorScheme();
 
@@ -98,6 +94,24 @@ function PostOptions() {
                         </Text>
                     </View>
                 ),
+            },
+            {
+                id: 'add-more',
+                title: 'Add more media',
+                subTitle: 'Add more photos or videos',
+                leftView: <View style={{ paddingHorizontal: 10}}><Plus size={24} color={colors.muted} /></View>,
+                rightView: <View className="flex-1 justify-center flex-row gap-2">
+                    <Button variant="tonal" onPress={pickImage}>
+                        <ImageIcon size={24} color={colors.muted} />
+                    </Button>
+
+                    <Button variant="tonal" onPress={takePhoto}>
+                        <VideoIcon size={24} color={colors.muted} />
+                    </Button>
+                </View>,
+            },
+            {
+                id: 'publish'
             }
         ];
     }, [expiration, type]);
@@ -107,28 +121,50 @@ function PostOptions() {
             <TouchableOpacity onPress={openCaption} className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
                 <Text className="text-sm text-muted-foreground">{caption.trim().length > 0 ? caption : 'Add a caption'}</Text>
             </TouchableOpacity>
+
             <List
                 data={data}
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
-                renderItem={({ item, index, target }) => (
-                    <ListItem
-                        className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-                        item={item}
-                        leftView={item.leftView}
-                        rightView={item.rightView}
-                        onPress={item.onPress}
-                        index={index}
-                        target={target}></ListItem>
-                )}
+                renderItem={({ item, index, target }) => {
+                    if (item.id === 'publish') {
+                        return (
+                            <Button
+                                size="lg"
+                                variant="primary"
+                                onPress={handlePost}
+                                disabled={uploading || media.length === 0}
+                            >
+                                {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
+                            </Button>
+                        );
+                    }
+
+                    return (
+                        <ListItem
+                            className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                            item={item}
+                            leftView={item.leftView}
+                            rightView={item.rightView}
+                            onPress={item.onPress}
+                            index={index}
+                            target={target} />
+                    );
+                }}
             />
         </>
     );
 }
 
+type Media = {
+    internalUri: string;
+    imeta?: ImetaData;
+    imetaPromise?: Promise<void>;
+    uploadPromise?: Promise<void>;
+};
+
 export default function ImageUpload() {
-    const { type, reset: resetStore } = useStore(publishStore);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const { type } = useStore(publishStore);
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
         console.log('event kinds', events.keys(), follows?.length);
@@ -139,38 +175,29 @@ export default function ImageUpload() {
     }, [blossomList]);
     const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
-    const [imetaPromise, setImetaPromise] = useState<Promise<void> | null>(null);
-    const imetaData = useRef<ImetaData | null>(null);
+
     const { expiration, caption } = useStore(publishStore);
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [ refresh, setRefresh ] = useState(0);
+
+    const media = useRef<Media[]>([]);
 
     async function handlePost() {
-        if (!selectedImage) {
-            console.error('No media to upload');
+        if (media.current.length === 0) {
+            setError('No media to upload');
             return;
         }
 
-        let contentType: string;
         let eventKind: number;
-        let blob: Blob;
 
-        try {
-            const f = await fetch(selectedImage);
-            blob = await f.blob();
-            contentType = f.headers.get('content-type') ?? 'image/jpeg';
-        } catch (error) {
-            console.error('Error fetching image', error);
-        }
-        
         if (type === 'generic') {
             eventKind = NDKKind.Text;
         } else if (selectionType === 'video') {
             eventKind = NDKKind.VerticalVideo;
-            contentType = 'video/mp4';
         } else {
             eventKind = 20;
-            contentType = 'image/jpeg';
         }
 
         const event = new NDKEvent(ndk);
@@ -178,38 +205,57 @@ export default function ImageUpload() {
         event.content = caption;
         event.tags = [];
 
-        let mediaUrls: string[] = [];
-
-        const uploadPromise = new Promise<void>(async (resolve, reject) => {
-            setUploading(true);
-            if (thumbnail) {
-                const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
-                const { url } = await upload(ndk, thumbnailBlob, defaultBlossomServer);
-                event.tags = [...event.tags, ['thumb', url]];
-            }
-
-            upload(ndk, blob, defaultBlossomServer).then((ret) => {
-                event.tags = [...event.tags, ...(ret.mediaEvent?.tags ?? [])];
-                mediaUrls.push(ret.url);
-                console.log('resolving upload promise')
+        console.log('media with', media.current.length);
+        for (const [index, m] of media.current.entries()) {
+            const promise = new Promise<void>(async (resolve, reject) => {
+                console.log('uploading media', m.internalUri);
+                const mediaBlob = await fetch(m.internalUri).then((res) => res.blob());
+                const { url, x } = await upload(ndk, mediaBlob, defaultBlossomServer);
+                console.log('uploaded media', url);
+                media.current[index].imeta ??= {};
+                console.log('adding url to index', index, {url});
+                media.current[index].imeta.url = url;
+                media.current[index].imeta.x = x;
                 resolve();
             });
-        });
 
-        await Promise.all([uploadPromise, imetaPromise]);
+            media.current[index].uploadPromise = promise;
+        }
 
-        if (selectionType === 'image') {
-            imetaData.current ??= {};
+        // const uploadPromise = new Promise<void>(async (resolve, reject) => {
+        //     setUploading(true);
+        //     if (thumbnail) {
+        //         const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
+        //         const { url } = await upload(ndk, thumbnailBlob, defaultBlossomServer);
+        //         event.tags = [...event.tags, ['thumb', url]];
+        //     }
+        // });
 
-            for (const tag of event.tags) {
-                imetaData.current[tag[0]] = tag[1];
-            }
+        console.log('waiting for', media.current.length, 'uploads');
+        await Promise.all([
+            ...media.current.map((m) => m.uploadPromise),
+            ...media.current.map((m) => m.imetaPromise),
+        ]);
+        console.log('all uploads done', media.current);
 
-            event.tags = [...event.tags, ...imetaToTags(imetaData.current)];
+        // if (selectionType === 'image') {
+            // imetaData.current ??= {};
+
+            // for (const tag of event.tags) {
+            //     imetaData.current[tag[0]] = tag[1];
+            // }
+
+            event.tags = [
+                ...event.tags,
+                ...media.current
+                    .filter((media) => media.imeta)
+                    .map((media) => imetaToTags(media.imeta))
+                    .flat()
+            ];
 
             // remove the url tag, since it'll go in the imeta
-            event.tags = event.tags.filter((tag) => tag[0] !== 'url');
-        }
+            // event.tags = event.tags.filter((tag) => tag[0] !== 'url');
+        // }
 
         // if we have an expiration, set the tag
         if (expiration) {
@@ -218,7 +264,7 @@ export default function ImageUpload() {
 
         // if this is a generic post, add the URL to the content's end
         if (type === 'generic') {
-            event.content = [ event.content, ...mediaUrls ].filter(text => text?.trim().length > 0).join('\n');
+            event.content = [ event.content, ...media.current.map((m) => m.imeta.url).filter((text) => text?.trim().length > 0) ].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
             event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : 20).toString() ]];
@@ -226,12 +272,42 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
+            console.log('event', JSON.stringify(event.rawEvent()));
             await event.publish();
+            console.log('published event', `https://njump.me/${event.encode()}`);
             setUploading(false);
             router.back();
         } catch (error) {
-            console.error('Error uploading media:', error);
+            setError('Error publishing post!');
         }
+    }
+
+    useEffect(() => {
+        if (error && uploading) {
+            setUploading(false);
+        }
+    }, [error]);
+
+    const processMedia = async(mediaUri: string) => {
+        // generate imeta, add the promise to imetaPromises
+        // when the promise resolves, add the imeta to the imetas record using the mediaUri as the key
+        // and add the url to addMedia
+
+        // push the media to the medias array
+        console.log('set refresh is ', refresh);
+        const index = media.current.length;
+        const m: Media = { internalUri: mediaUri };
+
+        const fileContent = await FileSystem.readAsStringAsync(mediaUri, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+        m.imetaPromise = imetaFromImage(fileContent).then((imeta) => {
+            console.log('generated imeta for ' + mediaUri, imeta);
+            media.current[index].imeta = { ...media.current[index].imeta, ...imeta };
+            console.log('updated media', media.current);
+        });
+        media.current.push(m);
+        setRefresh(refresh + 1);
     }
 
     const pickImage = async () => {
@@ -243,47 +319,7 @@ export default function ImageUpload() {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
-            setSelectionType(result.assets[0].type);
-
-            const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
-
-            if (result.assets[0].type === 'video') {
-                setImetaPromise(
-                    new Promise<void>((resolve, reject) => {
-                        try {
-                            VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
-                                time: 0,
-                                quality: 0.7,
-                            }).then(({ uri }) => {
-                                console.log('thumbnail', uri);
-                                setThumbnail(uri);
-                            });
-                        } catch (e) {
-                            console.warn('Error generating thumbnail:', e);
-                        }
-                        resolve();
-                    })
-                );
-            } else {
-                console.log('generating imeta');
-                setImetaPromise(
-                    new Promise<void>((resolve, reject) => {
-                        imetaFromImage(fileContent)
-                            .then((imeta) => {
-                                imetaData.current = imeta;
-                                console.log('resolving imetaData', imetaData.current);
-                                resolve();
-                            })
-                            .catch((error) => {
-                                console.error('imetaFromImage error', error);
-                                resolve();
-                            });
-                    })
-                );
-            }
+            processMedia(result.assets[0].uri);
         }
     };
 
@@ -302,7 +338,7 @@ export default function ImageUpload() {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+            processMedia(result.assets[0].uri);
         }
     };
 
@@ -313,78 +349,82 @@ export default function ImageUpload() {
                     headerShown: true,
                     title: 'Publish',
                     headerRight: () => (
-                        <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading}>
+                        <Button 
+                            variant="primary" 
+                            size="sm" 
+                            onPress={handlePost} 
+                            disabled={uploading || media.length === 0}>
                             <Text className="text-white">Publish</Text>
                         </Button>
                     ),
                 }}
             />
-            <View style={styles.container} className="flex-1 bg-card">
-                {selectedImage ? (
-                    <KeyboardAwareScrollView>
-                        <View className="mb-4 flex-1 grow">
-                            <View className="flex-1 flex-row items-center">
-                                {selectedImage && (
-                                    <View style={styles.imageContainer}>
-                                        {selectionType === 'video' ? (
-                                            <View style={styles.imageContainer}>
-                                                <Video
-                                                    source={{
-                                                        uri: selectedImage,
-                                                    }}
-                                                    style={styles.image}
-                                                    useNativeControls
-                                                    resizeMode={ResizeMode.CONTAIN}
-                                                    posterSource={{
-                                                        uri: thumbnail,
-                                                    }}
-                                                    usePoster
-                                                />
-                                            </View>
-                                        ) : (
-                                            <Image
-                                                source={{ uri: selectedImage }}
-                                                style={styles.image}
-                                                contentFit="cover"
-                                                contentPosition="center"
-                                            />
-                                        )}
-                                        <TouchableOpacity
-                                            style={styles.removeButton}
-                                            onPress={() => {
-                                                setSelectedImage(null);
-                                                resetStore();
-                                            }}>
-                                            <Ionicons name="close" size={24} color="white" />
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-                            </View>
-
-                            <PostOptions />
-                        </View>
-
-                        <Button size="lg" variant="primary" onPress={handlePost} disabled={uploading}>
-                            {uploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
-                        </Button>
-                    </KeyboardAwareScrollView>
-                ) : (
-                    <View style={styles.uploadContainer}>
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity style={styles.button} onPress={pickImage}>
-                                <Ionicons name="images" size={40} color="#666" />
-                                <Text className="text-foreground text-lg px-4">Gallery</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.button} onPress={takePhoto}>
-                                <Ionicons name="camera" size={40} color="#666" />
-                                <Text className="text-foreground text-lg px-4">Camera</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <Text style={styles.helperText}>Upload a photo or take a new one</Text>
-                    </View>
+            <View style={styles.container} className="flex-1 bg-card flex-row">
+                {error && (
+                    <Text className="text-red-500 mb-4 text-center">{error}</Text>
                 )}
+                    <View className="mb-4 flex-1 grow">
+                        <ScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={false} 
+                        style={{ flex: 1 }}
+                    >
+                        {media.current.map((m, index) => (
+                            <View key={m.internalUri} style={[styles.imageContainer, {
+                                    marginRight: 10,
+                                    width: Dimensions.get('screen').width * 0.8,
+                                }]}>
+                                    {selectionType === 'video' ? (
+                                        <Video
+                                            source={{ uri: m.internalUri }}
+                                            style={styles.image}
+                                            useNativeControls
+                                            resizeMode={ResizeMode.CONTAIN}
+                                            posterSource={{ uri: thumbnail }}
+                                            usePoster
+                                        />
+                                    ) : (
+                                        <Image
+                                            source={{ uri: m.internalUri }}
+                                            style={styles.image}
+                                            contentFit="cover"
+                                            contentPosition="center"
+                                        />
+                                    )}
+                                    <TouchableOpacity
+                                        style={styles.removeButton}
+                                        onPress={() => {
+                                            media.current = media.current.filter((m, j) => j !== index);
+                                            setRefresh(refresh + 1);
+                                        }}>
+                                        <Ionicons name="close" size={24} color="white" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                            <View
+                                style={styles.buttonContainer}
+                                 className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2"
+                            >
+                                    <Button variant="tonal" style={styles.button} onPress={pickImage}>
+                                        <ImageIcon size={40} color="#666" />
+                                        <Text className="text-foreground text-lg px-4">Gallery</Text>
+                                    </Button>
+
+                                    <Button variant="tonal" style={styles.button} onPress={takePhoto}>
+                                        <VideoIcon size={40} color="#666" />
+                                        <Text className="text-foreground text-lg px-4">Camera</Text>
+                                    </Button>
+                                </View>
+                        </ScrollView>
+
+                        <PostOptions
+                            handlePost={handlePost}
+                            uploading={uploading}
+                            media={media.current}
+                            pickImage={() => pickImage()}
+                            takePhoto={() => takePhoto()}
+                        />
+                    </View>
             </View>
         </>
     );
@@ -396,9 +436,6 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         position: 'relative',
-        maxHeight: 240,
-        aspectRatio: 1,
-        width: '100%',
     },
     image: {
         flex: 1,
@@ -415,26 +452,20 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     uploadContainer: {
-        padding: 32,
     },
     buttonContainer: {
-        height: 250,
-        gap: 16,
-        flexDirection: 'column',
-        justifyContent: 'space-around',
-        marginBottom: 16,
-    },
-    button: {
+        width: Dimensions.get('screen').width - 20,
         flex: 1,
+        gap: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
-        borderWidth: 2,
-        borderStyle: 'dashed',
-        borderColor: '#ccc',
-        borderRadius: 12,
-        marginHorizontal: 8,
+    },
+    button: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 40,
     },
     buttonText: {
         fontSize: 16,

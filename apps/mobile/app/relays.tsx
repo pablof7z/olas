@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { useSubscribe } from '@/ndk-expo/hooks/subscribe';
-import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { List, ListItem, ListItemProps } from '@/components/nativewindui/List';
-import AvatarGroup from '@/ndk-expo/components/user/AvatarGroup';
+import { useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 const RelayListItem: React.FC<
     ListItemProps<{
@@ -11,11 +11,7 @@ const RelayListItem: React.FC<
         title: string;
     }>
 > = ({ item, index, target }) => {
-    const groupFilters = useMemo(
-        () => ({
-            kinds: [NDKKind.GroupMembers - 1],
-        }),
-        [item.title]
+    const groupFilters = useMemo( () => ([{ kinds: [NDKKind.GroupMembers - 1], }]), [item.title]
     );
     const opts = useMemo(
         () => ({

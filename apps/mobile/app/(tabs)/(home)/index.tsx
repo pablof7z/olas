@@ -1,13 +1,11 @@
-import { useSubscribe } from '@/ndk-expo';
-import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk';
+import { useSubscribe, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import Post from '@/components/events/Post';
-import { useNDKSession } from '@/ndk-expo/hooks/session';
 import { useThrottle } from '@uidotdev/usehooks';
 import { RefreshControl } from 'react-native-gesture-handler';
-import { UserProfileProvider } from '@/ndk-expo/components/user/profile';
 import { myFollows } from '@/utils/myfollows';
 import { Stack } from 'expo-router';
 import { Filter } from 'lucide-react-native';
@@ -16,7 +14,7 @@ import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
 import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useScroll } from '~/contexts/ScrollContext';
-
+import * as User from '@/components/ui/user';
 const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
     const { colors } = useColorScheme();
     
@@ -122,9 +120,9 @@ export default function HomeScreen() {
                     keyExtractor={(item) => item.id}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
                     renderItem={({ item }) => (
-                        <UserProfileProvider pubkey={item.pubkey}>
+                        <User.Profile pubkey={item.pubkey}>
                             <Post event={item} />
-                        </UserProfileProvider>
+                        </User.Profile>
                     )}
                     contentContainerStyle={styles.listContainer}
                 />

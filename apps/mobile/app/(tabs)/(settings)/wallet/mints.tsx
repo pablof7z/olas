@@ -1,4 +1,3 @@
-import { useNDK, useSubscribe } from '@/ndk-expo';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
@@ -13,8 +12,9 @@ import { useStore } from 'zustand';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { CashuMint, GetInfoResponse } from '@cashu/cashu-ts';
-import { useNDKWallet } from '@/ndk-expo/providers/wallet';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 
 export default function RelaysScreen() {
     const { ndk } = useNDK();

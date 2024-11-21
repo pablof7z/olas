@@ -1,13 +1,13 @@
 import { useStore } from 'zustand';
 import { activeEventStore } from './stores';
 import { Text } from '@/components/nativewindui/Text';
-import { NDKKind } from '@nostr-dev-kit/ndk';
-import { NDKEvent } from '@nostr-dev-kit/ndk';
-import * as User from '@/ndk-expo/components/user';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import * as User from '@/components/ui/user';
 import { Dimensions, View, ScrollView } from 'react-native';
 import Image from '@/components/media/image';
 import RelativeTime from './components/relative-time';
-import EventContent from '@/ndk-expo/components/event/content';
+import EventContent from '@/components/ui/event/content';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');

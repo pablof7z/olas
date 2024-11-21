@@ -1,16 +1,14 @@
-import { useNDK } from '@/ndk-expo';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import * as User from '@/ndk-expo/components/user';
+import * as User from '@/components/ui/user';
 
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKPrivateKeySigner, NDKUser } from '@nostr-dev-kit/ndk';
+import { NDKPrivateKeySigner, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 
 export default function SettingsIosStyleScreen() {

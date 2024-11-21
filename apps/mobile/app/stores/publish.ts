@@ -1,3 +1,4 @@
+import { ImetaData } from '@/utils/imeta';
 import '@bacons/text-decoder/install';
 import { create } from 'zustand';
 
@@ -37,6 +38,7 @@ export const publishStore = create<PublishStoreState>((set) => ({
 
     reset(): void {
         set(() => ({
+            media: [],
             caption: '',
             tags: [],
             expiration: null,

@@ -1,6 +1,6 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
-import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk';
+import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk-mobile';
 import { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;
@@ -18,7 +18,6 @@ export async function sign(draft: EventTemplate, signer?: NDKSigner) {
 export function generateMediaEventFromBlobDescriptor(ndk: NDK, blob: BlobDescriptor) {
     const mediaEvent = new NDKEvent(ndk);
     mediaEvent.kind = NDKKind.Media;
-    console.log('blob', JSON.stringify(blob, null, 4));
     if (blob.type) mediaEvent.tags.push(['m', blob.type]);
     if (blob.sha256) mediaEvent.tags.push(['x', blob.sha256]);
     if (blob.url) mediaEvent.tags.push(['url', blob.url]);

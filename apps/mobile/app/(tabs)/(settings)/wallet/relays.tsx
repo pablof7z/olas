@@ -1,4 +1,4 @@
-import { useNDK } from '@/ndk-expo';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -19,7 +19,7 @@ import NDK, {
     NDKSubscriptionCacheUsage,
     NDKUser,
     NostrEvent,
-} from '@nostr-dev-kit/ndk';
+} from '@nostr-dev-kit/ndk-mobile';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
