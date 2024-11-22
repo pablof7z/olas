@@ -140,7 +140,7 @@ function PostOptions({
                 id: 'publish',
             },
         ];
-    }, [expiration, type]);
+    }, [expiration, type, media.length]);
 
     return (
         <>
@@ -189,7 +189,6 @@ export default function ImageUpload() {
     const { type } = useStore(publishStore);
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
-        console.log('event kinds', events.keys(), follows?.length);
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
     }, [events, follows]);
     const defaultBlossomServer = useMemo(() => {
@@ -219,7 +218,7 @@ export default function ImageUpload() {
         } else if (selectionType === 'video') {
             eventKind = NDKKind.VerticalVideo;
         } else {
-            eventKind = 20;
+            eventKind = NDKKind.Image;
         }
 
         const event = new NDKEvent(ndk);
@@ -283,10 +282,16 @@ export default function ImageUpload() {
 
         // if this is a generic post, add the URL to the content's end
         if (type === 'generic') {
-            event.content = [event.content, ...media.current.map((m) => m.imeta.url).filter((text) => text?.trim().length > 0)].join('\n');
+            event.content = [
+                event.content,
+                ...media.current
+                    .map((m) => m.imeta.url)
+                    .filter((text) => text?.trim().length > 0)
+                    .map((text) => text + '.jpg')
+            ].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
-            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : 20).toString()]];
+            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : NDKKind.Image).toString()]];
         }
 
         try {
@@ -311,7 +316,6 @@ export default function ImageUpload() {
         // and add the url to addMedia
 
         // push the media to the medias array
-        console.log('set refresh is ', refresh);
         const index = media.current.length;
         const m: Media = { internalUri: mediaUri };
 
@@ -319,9 +323,7 @@ export default function ImageUpload() {
             encoding: FileSystem.EncodingType.Base64,
         });
         m.imetaPromise = imetaFromImage(fileContent).then((imeta) => {
-            console.log('generated imeta for ' + mediaUri, imeta);
             media.current[index].imeta = { ...media.current[index].imeta, ...imeta };
-            console.log('updated media', media.current);
         });
         media.current.push(m);
         setRefresh(refresh + 1);
@@ -414,13 +416,10 @@ export default function ImageUpload() {
                             </View>
                         ))}
                         <View style={{
-                            ...styles.buttonContainer,
-                            ...media.current.length === 0 ? {
+                                ...styles.buttonContainer,
                                 width: Dimensions.get('screen').width - 20,
-                            } : {
-                                flexDirection: 'column'
-                            }
-                        }} className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2">
+                            }}
+                            className="dark:border-border/80 min-h-24 rounded-lg p-2">
                             <Button variant="tonal" style={styles.button} onPress={pickImage}>
                                 <ImageIcon size={40} color="#666" />
                                 <Text className="px-4 text-lg text-foreground">Gallery</Text>

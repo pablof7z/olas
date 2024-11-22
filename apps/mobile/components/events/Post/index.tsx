@@ -60,6 +60,7 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
+    const { isDarkColorScheme } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();
     const { currentUser } = useNDK();
@@ -78,7 +79,7 @@ export default function Post({ event }: { event: NDKEvent }) {
     }
 
     return (
-        <View className="overflow-hidden border-b border-gray-200 bg-card py-2">
+        <View className="overflow-hidden border-b bg-card py-2" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
             <View className="w-full flex-row items-center justify-between gap-2 p-2">
                 <View style={styles.profileContainer}>
                     {loading ? (
