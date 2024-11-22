@@ -46,7 +46,7 @@ export default function Notifications() {
     const filters = useMemo(() => ([
         { kinds: [NDKKind.Text], "#k": ["20"], "#p": [currentUser?.pubkey] },
         { kinds: [22], "#K": ["20"], "#p": [currentUser?.pubkey] },
-        { kinds: [NDKKind.Reaction], "#k": ["20"], "#p": [currentUser?.pubkey] }
+        { kinds: [NDKKind.Reaction], "#k": ["20"], "#p": [currentUser?.pubkey] },
         { kinds: [NDKKind.Reaction], "#K": ["20"], "#p": [currentUser?.pubkey] }
     ]), [currentUser?.pubkey]);
     const opts = useMemo(() => ({ closeOnEose: false, groupable: false }), [filters]);
