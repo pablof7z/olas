@@ -11,7 +11,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
@@ -23,8 +23,17 @@ import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { NDKWalletProvider, NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ScrollProvider } from '~/contexts/ScrollContext';
+import * as Notifications from 'expo-notifications';
 
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+});
 
 function UnpublishedEventIndicator() {
     const { ndk, unpublishedEvents } = useNDK();
@@ -64,11 +73,11 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
     useInitialAndroidBarSync();
-    const { isDarkColorScheme } = useColorScheme(); 
-    const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-        const url = new URL(relay.url);
-        if (direction === 'send') console.log('👉', url.hostname, msg);
-    };
+    const { colorScheme, isDarkColorScheme } = useColorScheme(); 
+    // const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+    //     const url = new URL(relay.url);
+    //     if (direction === 'send') console.log('👉', url.hostname, msg);
+    // };
 
     let relays = (SecureStore.getItem('relays') || '').split(',');
 
@@ -92,16 +101,14 @@ export default function RootLayout() {
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
-                cacheAdapter={new NDKCacheAdapterSqlite('olas')}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
-                netDebug={netDebug}>
-                <NDKCacheCheck>
+            >
                     <NDKWalletProvider>
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
                             <GestureHandlerRootView style={{ flex: 1 }}>
                                 <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                    {/* <NavThemeProvider value={NAV_THEME[colorScheme]}> */}
+                                    <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                         <PortalHost />
                                         <Stack>
                                             <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
@@ -118,16 +125,12 @@ export default function RootLayout() {
                                                 name="(tabs)"
                                                 options={{
                                                     headerShown: false,
+                                                    title: 'Home',
                                                 }}
                                             />
 
-                                            <Stack.Screen
-                                                name="profile"
-                                                options={{
-                                                    headerShown: false,
-                                                    presentation: 'modal',
-                                                }}
-                                            />
+                                            <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
+                                            <Stack.Screen name="notifications" options={{ headerShown: false }} />
 
                                             <Stack.Screen
                                                 name="comment"
@@ -141,7 +144,7 @@ export default function RootLayout() {
                                             <Stack.Screen
                                                 name="comments"
                                                 options={{
-                                                    headerShown: true,
+                                                    headerShown: Platform.OS === 'android',
                                                     presentation: 'modal',
                                                     title: '',
                                                     headerRight: () => (
@@ -162,12 +165,11 @@ export default function RootLayout() {
                                                 }}
                                             />
                                         </Stack>
-                                    {/* </NavThemeProvider> */}
+                                    </NavThemeProvider>
                                 </KeyboardProvider>
                             </GestureHandlerRootView>
                         </NDKSessionProvider>
                     </NDKWalletProvider>
-                </NDKCacheCheck>
             </NDKProvider>
         </ScrollProvider>
     );

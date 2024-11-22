@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
 import Image from '@/components/media/image';
 import * as User from '@/components/ui/user';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
-import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Profile() {
+    const { follows } = useNDKSession();
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -63,9 +65,11 @@ export default function Profile() {
         setFiltersExpanded(true);
     }
 
+    const insets = useSafeAreaInsets();
+
     return (
         <User.Profile pubkey={pubkey}>
-            <View style={styles.container}>
+            <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
                 <Animated.View
                     style={[
                         styles.header,
@@ -92,7 +96,6 @@ export default function Profile() {
                 </Animated.View>
 
                 <Animated.View
-                    className="flex-col items-center justify-between"
                     style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
                     <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
                     <Text style={styles.username} className="grow text-lg font-bold">
@@ -115,7 +118,7 @@ export default function Profile() {
                         </Text>
                     </View>
 
-                    <FollowButton />
+                    {!follows.includes(pubkey) ? <FollowButton /> : null}
 
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>
@@ -128,13 +131,15 @@ export default function Profile() {
                             )}
                         </View>
                     ) : (
-                        <MasonryFlashList
-                            data={events}
-                            numColumns={3}
-                            estimatedItemSize={100}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => <ImageGridItem event={item} />}
-                        />
+                        <View style={{ flex: 1, backgroundColor: 'red' }}>
+                            <MasonryFlashList
+                                data={events}
+                                numColumns={3}
+                                estimatedItemSize={100}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => <ImageGridItem event={item} />}
+                            />
+                        </View>
                     )}
                 </Animated.ScrollView>
             </View>

@@ -8,42 +8,10 @@ import { useThrottle } from '@uidotdev/usehooks';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { myFollows } from '@/utils/myfollows';
 import { Stack } from 'expo-router';
-import { Filter } from 'lucide-react-native';
-import { memo } from 'react';
-import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
-import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { useScroll } from '~/contexts/ScrollContext';
 import * as User from '@/components/ui/user';
-const FilterButton = memo(({ includeTweets, setIncludeTweets }: { includeTweets: boolean; setIncludeTweets: (value: boolean) => void }) => {
-    const { colors } = useColorScheme();
-
-    return (
-        <DropdownMenu
-            items={[
-                createDropdownItem({
-                    actionKey: 'high-quality',
-                    title: 'High-quality content',
-                    subTitle: 'High quality posts at a lower velocity',
-                    state: { checked: !includeTweets },
-                }),
-                createDropdownItem({
-                    actionKey: 'generic',
-                    title: 'Generic content',
-                    subTitle: 'Include lower-quality generic content',
-                    state: { checked: includeTweets },
-                }),
-            ]}
-            onItemPress={(item) => {
-                if (item.actionKey === 'high-quality') setIncludeTweets(false);
-                if (item.actionKey === 'generic') setIncludeTweets(true);
-            }}>
-            <Pressable>
-                <Filter size={24} color={colors.foreground} />
-            </Pressable>
-        </DropdownMenu>
-    );
-});
+import FilterButton from '@/components/FilterButton';
+import NotificationsButton from '@/components/NotificationsButton';
 
 const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
 
@@ -109,7 +77,12 @@ export default function HomeScreen() {
                 options={{
                     headerShown: true,
                     title: 'Home',
-                    headerRight: () => <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />,
+                    headerRight: () => (
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />
+                            <NotificationsButton />
+                        </View>
+                    ),
                 }}
             />
             <View className="flex-1 gap-2 bg-card">

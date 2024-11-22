@@ -55,17 +55,6 @@ const SingleImage = memo(function SingleImage({
     const height = image?.height;
     return (
         <View style={{ position: 'relative', flex: 1 }}>
-            {url.blurhash && (
-                <Image
-                    source={undefined}
-                    placeholder={{ blurhash: url.blurhash }}
-                    style={{
-                        position: 'absolute',
-                        width: windowWidth,
-                        height: height ? height / (width / windowWidth) : undefined,
-                    }}
-                />
-            )}
             <Pressable onPress={onPress}>
                 <Image
                     {...props}

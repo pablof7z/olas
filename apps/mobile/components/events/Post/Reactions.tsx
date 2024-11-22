@@ -29,7 +29,7 @@ export function Reactions({ event }: { event: NDKEvent }) {
 
     const react = async () => {
         const r = await event.react('+1', false);
-        r.tags.push(['k', event.kind.toString()]);
+        r.tags.push(['K', event.kind.toString()]);
         await r.sign();
         console.log('reaction', JSON.stringify(r, null, 2));
         await r.publish();

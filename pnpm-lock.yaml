@@ -488,7 +488,7 @@ importers:
         version: 9.1.0(eslint@9.15.0(jiti@1.21.6))
       eslint-config-turbo:
         specifier: latest
-        version: 2.3.0(eslint@9.15.0(jiti@1.21.6))
+        version: 2.3.1(eslint@9.15.0(jiti@1.21.6))
       eslint-plugin-svelte:
         specifier: ^2.33.2
         version: 2.46.0(eslint@9.15.0(jiti@1.21.6))(ts-node@10.9.2(@types/node@22.9.1)(typescript@5.6.3))
@@ -4058,8 +4058,8 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-config-turbo@2.3.0:
-    resolution: {integrity: sha512-Nm9WZgNoUIJw4bpYQugGCDjzYy1TlUD4sQ/nGblL+HdNqJWCj5NqXbJ1k+TBfYedhr65dlGoAFPYUOfjUOmKVg==}
+  eslint-config-turbo@2.3.1:
+    resolution: {integrity: sha512-pxxCLLgnZYCjJoGrzUu3jAcb67bKVykLblyMtgTzHN7DlNu6tnp89K3/5fznc6ALyXwXFp0K+nM+Sxst43oaoA==}
     peerDependencies:
       eslint: '>6.6.0'
 
@@ -4158,8 +4158,8 @@ packages:
       svelte:
         optional: true
 
-  eslint-plugin-turbo@2.3.0:
-    resolution: {integrity: sha512-2iVUoIhrjp6kI8p0J4NewKPpXaKrHvL4K4eRnNXbqZvP/7xsm4Of+33B3b7m7OsS0UgX8HHOjlB9bEjigKMkMA==}
+  eslint-plugin-turbo@2.3.1:
+    resolution: {integrity: sha512-M5MBYBkcQsv11MFHJ+6WpzLpiTBx0OApeUMAHlO4L0eHqQxY03GrmHXjXfozqB+9HwGrW9fqihBzVRllyixJDA==}
     peerDependencies:
       eslint: '>6.6.0'
 
@@ -12610,10 +12610,10 @@ snapshots:
     dependencies:
       eslint: 9.15.0(jiti@1.21.6)
 
-  eslint-config-turbo@2.3.0(eslint@9.15.0(jiti@1.21.6)):
+  eslint-config-turbo@2.3.1(eslint@9.15.0(jiti@1.21.6)):
     dependencies:
       eslint: 9.15.0(jiti@1.21.6)
-      eslint-plugin-turbo: 2.3.0(eslint@9.15.0(jiti@1.21.6))
+      eslint-plugin-turbo: 2.3.1(eslint@9.15.0(jiti@1.21.6))
 
   eslint-config-universe@12.1.0(eslint@8.57.1)(prettier@3.3.3)(typescript@5.6.3):
     dependencies:
@@ -12871,7 +12871,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-node
 
-  eslint-plugin-turbo@2.3.0(eslint@9.15.0(jiti@1.21.6)):
+  eslint-plugin-turbo@2.3.1(eslint@9.15.0(jiti@1.21.6)):
     dependencies:
       dotenv: 16.0.3
       eslint: 9.15.0(jiti@1.21.6)

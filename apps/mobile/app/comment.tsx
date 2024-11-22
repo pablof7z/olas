@@ -22,6 +22,7 @@ export default function CommentScreen() {
             content: comment,
         } as NostrEvent);
         event.tag(activeEvent, 'root');
+        event.tags.push(['K', activeEvent.kind.toString()]);
 
         await event.sign();
         event.publish();
