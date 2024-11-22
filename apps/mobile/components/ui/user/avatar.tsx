@@ -2,8 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { useUserProfile } from './profile';
-
-const getProxiedImageUrl = (url: string) => url;
+import { getProxiedImageUrl } from '@/utils/imgproxy';
 
 interface AvatarProps extends React.ComponentProps<typeof Avatar> {
     size?: number;
@@ -16,8 +15,6 @@ const UserAvatar: React.FC<AvatarProps> = ({ size, ...props }) => {
     size ??= 64;
 
     const proxiedImageUrl = useMemo(() => userProfile?.image && getProxiedImageUrl(userProfile.image, size), [userProfile?.image, size]);
-
-    console.log(proxiedImageUrl);
 
     return (
         <View
