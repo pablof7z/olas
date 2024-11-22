@@ -4,7 +4,7 @@ import { useImage, Image } from 'expo-image';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { imetasFromEvent } from '@/utils/imeta';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 
 // Extract URLs from the event
 const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
@@ -38,21 +38,37 @@ const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
 
 const SingleImage = memo(function SingleImage({
     url,
-    windowWidth,
+    maxWidth,
     onPress,
     colors,
     props,
 }: {
     url: { url?: string; blurhash?: string };
-    windowWidth: number;
+    maxWidth: number;
     onPress: () => void;
     colors: any;
     props: any;
 }) {
-    const image = useImage({ uri: getProxiedImageUrl(url.url) });
+    const [error, setError] = useState(false);
+    const image = useImage(
+        { uri: getProxiedImageUrl(url.url) },
+        {
+            onError: (error) => {
+                console.warn('Error loading image:', error);
+                setError(true);
+            },
+        }
+    );
 
-    const width = image?.width;
-    const height = image?.height;
+    if (error) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+
+    // Return null if image failed to load or URL is invalid
+    if (!image?.width || !image?.height || !url.url) {
+        return null;
+    }
+
+    const width = image.width;
+    const height = image.height;
     return (
         <View style={{ position: 'relative', flex: 1 }}>
             <Pressable onPress={onPress}>
@@ -62,8 +78,8 @@ const SingleImage = memo(function SingleImage({
                     contentFit="contain"
                     style={[
                         {
-                            width: windowWidth,
-                            height: height ? height / (width / windowWidth) : undefined,
+                            width: maxWidth,
+                            height: height ? height / (width / maxWidth) : undefined,
                             backgroundColor: colors.background,
                         },
                     ]}
@@ -76,20 +92,26 @@ const SingleImage = memo(function SingleImage({
 
 export default memo(function ImageComponent({
     event,
+    singleImageMode,
+    maxWidth,
     onPress,
     ...props
 }: {
     event: NDKEvent;
+    singleImageMode?: boolean;
+    maxWidth?: number;
     onPress: () => void;
 } & Partial<Image>) {
     const { colors } = useColorScheme();
     const urls = useMemo(() => getUrls(event), [event]);
-    const { width: windowWidth } = useWindowDimensions();
+    let { width: windowWidth } = useWindowDimensions();
+
+    maxWidth ??= windowWidth;
 
     if (urls.length === 0) return null;
 
-    if (urls.length === 1) {
-        return <SingleImage url={urls[0]} windowWidth={windowWidth} onPress={onPress} colors={colors} props={props} />;
+    if (urls.length === 1 || singleImageMode) {
+        return <SingleImage url={urls[0]} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />;
     }
 
     return (
@@ -103,7 +125,7 @@ export default memo(function ImageComponent({
                 contentContainerStyle={{ flexGrow: 1 }}
                 style={{ flex: 1, width: '100%' }}>
                 {urls.map((url, index) => (
-                    <SingleImage key={index} url={url} windowWidth={windowWidth} onPress={onPress} colors={colors} props={props} />
+                    <SingleImage key={index} url={url} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />
                 ))}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 8 }}>
@@ -115,7 +137,7 @@ export default memo(function ImageComponent({
                             height: 8,
                             borderRadius: 10,
                             backgroundColor: colors.primary,
-                            opacity: 1
+                            opacity: 1,
                         }}
                     />
                 ))}

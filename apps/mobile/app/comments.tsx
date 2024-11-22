@@ -1,18 +1,20 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
-import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
 import { useStore } from 'zustand';
 import { FlashList } from '@shopify/flash-list';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from './components/relative-time';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from '@/components/nativewindui/Text';
+import { MessageCircle } from 'lucide-react-native';
+import { Button } from '@/components/nativewindui/Button';
+import { router } from 'expo-router';
 
 export default function CommentScreen() {
-    const { ndk, currentUser } = useNDK();
-    const [comment, setComment] = useState('');
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     const filters = useMemo(
@@ -27,6 +29,16 @@ export default function CommentScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-card">
+            {events.length === 0 && (
+                <View style={{ flex: 1 }} className="items-center justify-center gap-4">
+                    <MessageCircle size={Dimensions.get('window').width / 2} strokeWidth={1} color="gray" style={{ opacity: 0.5 }} />
+                    <Text className="text-center text-xl text-muted-foreground">Be the first one to comment</Text>
+
+                    <Button variant="tonal" onPress={() => router.push('/comment')} style={{ marginTop: 16 }}>
+                        <Text>Add a comment</Text>
+                    </Button>
+                </View>
+            )}
             <FlashList
                 data={events}
                 keyExtractor={(i) => i.id}

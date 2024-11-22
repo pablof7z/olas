@@ -35,7 +35,7 @@ export default function SettingsIosStyleScreen() {
                 id: '2',
                 title: 'Relays',
                 leftView: <IconView name="wifi" className="bg-blue-500" />,
-                onPress: () => router.push('/(settings)/relays'),
+                onPress: () => router.push('/(tabs)/(settings)/relays'),
             },
         ];
 

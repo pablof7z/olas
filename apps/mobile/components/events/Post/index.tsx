@@ -110,19 +110,21 @@ export default function Post({ event }: { event: NDKEvent }) {
                 </View>
 
                 {!follows?.includes(event.pubkey) && event.pubkey !== currentUser?.pubkey && (
-                    <Button style={{ backgroundColor: colors.grey5 }} onPress={follow}>
-                        <Text className="text-primary-secondary">Follow</Text>
+                    <Button className="border border-primary bg-transparent" onPress={follow}>
+                        <Text className="text-primary">Follow</Text>
                     </Button>
                 )}
             </View>
 
-            <CardMedia
-                event={event}
-                onPress={() => {
-                    setActiveEvent(event);
-                    router.push('/view');
-                }}
-            />
+            <View style={{ minHeight: Dimensions.get('window').width }}>
+                <CardMedia
+                    event={event}
+                    onPress={() => {
+                        setActiveEvent(event);
+                        router.push('/view');
+                    }}
+                />
+            </View>
 
             <Reactions event={event} />
 
@@ -131,7 +133,7 @@ export default function Post({ event }: { event: NDKEvent }) {
                     <EventContent
                         event={event}
                         content={content}
-                        className="text-sm"
+                        className="text-sm text-foreground"
                         onMentionPress={(pubkey) => {
                             router.push(`/profile?pubkey=${pubkey}`);
                         }}

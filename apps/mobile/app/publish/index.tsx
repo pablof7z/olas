@@ -77,7 +77,7 @@ function PostOptions({
     };
 
     const data = useMemo(() => {
-        return [
+        const data = [
             {
                 id: 'expiration',
                 title: 'Expiration',
@@ -115,10 +115,14 @@ function PostOptions({
                     </View>
                 ),
             },
-            {
+        ];
+
+        if (media.length > 0) {
+            data.push({
                 id: 'add-more',
                 title: 'Add more media',
                 subTitle: 'Add more photos or videos',
+                onPress: () => {},
                 leftView: (
                     <View style={{ paddingHorizontal: 10 }}>
                         <Plus size={24} color={colors.muted} />
@@ -135,11 +139,12 @@ function PostOptions({
                         </Button>
                     </View>
                 ),
-            },
-            {
-                id: 'publish',
-            },
-        ];
+            });
+        }
+
+        data.push({ id: 'publish', onPress: handlePost });
+
+        return data;
     }, [expiration, type, media.length]);
 
     return (
@@ -287,7 +292,7 @@ export default function ImageUpload() {
                 ...media.current
                     .map((m) => m.imeta.url)
                     .filter((text) => text?.trim().length > 0)
-                    .map((text) => text + '.jpg')
+                    .map((text) => text + '.jpg'),
             ].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
@@ -296,8 +301,9 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
-            await event.publish();
+            // await event.publish();
             setUploading(false);
+            console.log('publishing done, going back');
             router.back();
         } catch (error) {
             setError('Error publishing post!');
@@ -415,7 +421,8 @@ export default function ImageUpload() {
                                 </TouchableOpacity>
                             </View>
                         ))}
-                        <View style={{
+                        <View
+                            style={{
                                 ...styles.buttonContainer,
                                 width: Dimensions.get('screen').width - 20,
                             }}

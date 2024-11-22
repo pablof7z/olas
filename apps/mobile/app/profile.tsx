@@ -31,6 +31,10 @@ export default function Profile() {
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
+    const sortedEvents = useMemo(() => {
+        return events.sort((a, b) => b.created_at - a.created_at);
+    }, [events]);
+
     if (!pubkey) {
         return null;
     }
@@ -81,24 +85,35 @@ export default function Profile() {
                     <User.Avatar style={styles.profileImage} alt="Profile image" />
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>{events.length}</Text>
-                            <Text style={styles.statLabel}>Posts</Text>
+                            <Text style={styles.statNumber} className="text-foreground">
+                                {events.length}
+                            </Text>
+                            <Text style={styles.statLabel} className="text-foreground">
+                                Posts
+                            </Text>
                         </View>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>1.5K</Text>
-                            <Text style={styles.statLabel}>Followers</Text>
+                            <Text style={styles.statNumber} className="text-foreground">
+                                1.5K
+                            </Text>
+                            <Text style={styles.statLabel} className="text-foreground">
+                                Followers
+                            </Text>
                         </View>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>890</Text>
-                            <Text style={styles.statLabel}>Following</Text>
+                            <Text style={styles.statNumber} className="text-foreground">
+                                890
+                            </Text>
+                            <Text style={styles.statLabel} className="text-foreground">
+                                Following
+                            </Text>
                         </View>
                     </View>
                 </Animated.View>
 
-                <Animated.View
-                    style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+                <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
                     <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
-                    <Text style={styles.username} className="grow text-lg font-bold">
+                    <Text style={styles.username} className="grow text-lg font-bold text-foreground">
                         <User.Name />
                     </Text>
                     <FollowButton />
@@ -110,10 +125,10 @@ export default function Profile() {
                     })}
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
-                        <Text style={styles.username}>
+                        <Text style={styles.username} className="text-foreground">
                             <User.Name />
                         </Text>
-                        <Text style={styles.bio}>
+                        <Text style={styles.bio} className="text-muted-foreground">
                             <User.Field label="about" />
                         </Text>
                     </View>
@@ -131,9 +146,9 @@ export default function Profile() {
                             )}
                         </View>
                     ) : (
-                        <View style={{ flex: 1, backgroundColor: 'red' }}>
+                        <View style={{ flex: 1 }}>
                             <MasonryFlashList
-                                data={events}
+                                data={sortedEvents}
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
@@ -165,21 +180,23 @@ function ImageGridItem({ event }: { event: NDKEvent }) {
     }
 
     return (
-        <TouchableOpacity
-            onPress={() => {
-                setActiveEvent(event);
-                router.push('/view');
-            }}
-            style={styles.gridItem}>
-            <Image event={event} style={styles.gridImage} />
-        </TouchableOpacity>
+        <View style={styles.gridItem}>
+            <Image
+                event={event}
+                onPress={() => {
+                    setActiveEvent(event);
+                    router.push('/view');
+                }}
+                singleImageMode
+                maxWidth={Dimensions.get('window').width / 3}
+            />
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
@@ -203,9 +220,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
-    statLabel: {
-        color: '#666',
-    },
+    statLabel: {},
     bioSection: {
         paddingHorizontal: 20,
     },
@@ -228,7 +243,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     gridItem: {
-        aspectRatio: 1,
+        width: Dimensions.get('window').width / 3,
         height: Dimensions.get('window').width / 3,
         backgroundColor: '#eee',
         margin: 1,
@@ -246,7 +261,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 20,
-        backgroundColor: '#fff',
         zIndex: 1,
     },
     smallProfileImage: {

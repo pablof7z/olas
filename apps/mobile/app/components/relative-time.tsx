@@ -10,7 +10,7 @@ interface RelativeTimeProps {
 const RelativeTime: React.FC<RelativeTimeProps & TextProps> = ({
     timestamp,
     dateThreshold = 24 * 60 * 60, // 24 hours in seconds
-    timeThreshold = 2 * 60 * 60, // 2 hours in seconds
+    timeThreshold = 24 * 60 * 60, // 2 hours in seconds
     ...props
 }) => {
     const [relativeTime, setRelativeTime] = useState<string>('');
