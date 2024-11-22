@@ -13,12 +13,6 @@
     "monorepo": {
       "pnpm": "9.14.2",
       "node": "22.9.0",
-      "cache": {
-        "key": "turbo",
-        "paths": [
-          "../../node_modules/.cache/turbo"
-        ]
-      },
       "env": {
         "EXPO_USE_FAST_RESOLVER": "true"
       }

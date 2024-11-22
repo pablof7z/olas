@@ -18,39 +18,12 @@ import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
-import { Icon } from '@roninoss/icons';
 import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { NDKWalletProvider, NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ScrollProvider } from '~/contexts/ScrollContext';
-import * as Notifications from 'expo-notifications';
 
 SplashScreen.preventAutoHideAsync();
-
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-    }),
-});
-
-function UnpublishedEventIndicator() {
-    const { ndk, unpublishedEvents } = useNDK();
-
-    if (unpublishedEvents.size === 0) return null;
-
-    return (
-        <Link href="/unpublished">
-            <View className="flex-row items-center">
-                <Icon name="archive-outline" />
-                <View className="flex-row items-center gap-2 rounded-md bg-red-500 px-2 py-0.5">
-                    <Text className="text-xs text-white">{unpublishedEvents.size}</Text>
-                </View>
-            </View>
-        </Link>
-    );
-}
 
 function NDKCacheCheck({ children }: { children: React.ReactNode }) {
     const { ndk, cacheInitialized } = useNDK();
@@ -101,9 +74,11 @@ export default function RootLayout() {
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
+                cacheAdapter={new NDKCacheAdapterSqlite('olas')}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
             >
+                <NDKCacheCheck>
                     <NDKWalletProvider>
                         <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
                             <GestureHandlerRootView style={{ flex: 1 }}>
@@ -170,6 +145,7 @@ export default function RootLayout() {
                             </GestureHandlerRootView>
                         </NDKSessionProvider>
                     </NDKWalletProvider>
+                </NDKCacheCheck>
             </NDKProvider>
         </ScrollProvider>
     );
