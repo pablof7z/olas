@@ -60,6 +60,7 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
+    const { ndk } = useNDK();
     const { isDarkColorScheme } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();
@@ -68,6 +69,15 @@ export default function Post({ event }: { event: NDKEvent }) {
     const { loading } = User.useUserProfile();
 
     const follow = async () => {
+        const followEvent = new NDKEvent(ndk);
+        followEvent.kind = 967;
+        followEvent.tags = [
+            ['p', event.pubkey],
+            ['k', NDKKind.Image.toString()],
+            ['k', NDKKind.VerticalVideo.toString()],
+        ];
+        await followEvent.publish();
+
         await currentUser?.follow(event.author);
     };
 

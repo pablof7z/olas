@@ -5,7 +5,7 @@ import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, NDKEventWithFrom, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Link, router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -47,10 +47,10 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
-    // const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-    //     const url = new URL(relay.url);
-    //     if (direction === 'send') console.log('👉', url.hostname, msg);
-    // };
+    const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+        const url = new URL(relay.url);
+        if (direction === 'send') console.log('👉', url.hostname, msg);
+    };
 
     let relays = (SecureStore.getItem('relays') || '').split(',');
 
@@ -69,17 +69,24 @@ export default function RootLayout() {
 
     relays.push('wss://promenade.fiatjaf.com/');
 
+    const sessionKinds = new Map([
+        [NDKKind.BlossomList, { wrapper: NDKList }],
+        [NDKKind.ImageCurationSet, { wrapper: NDKList }],
+        [967],
+    ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
+
     return (
         <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
+                netDebug={netDebug}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505">
                 <NDKCacheCheck>
                     <NDKWalletProvider>
-                        <NDKSessionProvider follows={true} kinds={new Map([[NDKKind.BlossomList, { wrapper: NDKList }]])}>
+                        <NDKSessionProvider follows={true} kinds={sessionKinds}>
                             <GestureHandlerRootView style={{ flex: 1 }}>
                                 <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                                     <NavThemeProvider value={NAV_THEME[colorScheme]}>

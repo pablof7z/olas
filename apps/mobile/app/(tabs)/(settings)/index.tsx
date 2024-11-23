@@ -1,7 +1,7 @@
 import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
@@ -28,6 +28,15 @@ export default function SettingsIosStyleScreen() {
             });
         }
     }, [activeWallet]);
+
+    const appVersion = useMemo(() => {
+        return `${Platform.OS} ${Platform.Version}`;
+    }, []);
+    // read the app version from expo's app.json
+    const buildVersion = useMemo(() => {
+        const appJson = require('../../../app.json');
+        return appJson.expo.version;
+    }, []);
 
     const data = useMemo(() => {
         const opts = [
@@ -98,6 +107,12 @@ export default function SettingsIosStyleScreen() {
                 },
             });
         }
+
+        opts.push('gap 5');
+        opts.push({
+            id: 'version',
+            title: `Version ${appVersion} (${buildVersion})`,
+        });
 
         return opts;
     }, [currentUser, defaultWallet, balance]);

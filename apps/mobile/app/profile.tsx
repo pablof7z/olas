@@ -133,7 +133,7 @@ export default function Profile() {
                         </Text>
                     </View>
 
-                    {!follows.includes(pubkey) ? <FollowButton /> : null}
+                    {!follows?.includes(pubkey) ? <FollowButton /> : null}
 
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>

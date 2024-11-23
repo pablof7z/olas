@@ -1,8 +1,8 @@
 import { activeEventStore } from '@/app/stores';
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, useNDKSession, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { Heart, MessageCircle, BookmarkIcon, RecycleIcon, RepeatIcon } from 'lucide-react-native';
+import { useEffect, useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -12,6 +12,7 @@ import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 export function Reactions({ event }: { event: NDKEvent }) {
+    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const { currentUser } = useNDK();
     const filters = useMemo(
         () => [
@@ -27,11 +28,14 @@ export function Reactions({ event }: { event: NDKEvent }) {
     const { colors } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
 
+    useEffect(() => {
+        console.log('imageCurationSet', imageCurationSet?.items);
+    }, [imageCurationSet]);
+
     const react = async () => {
         const r = await event.react('+1', false);
         r.tags.push(['K', event.kind.toString()]);
         await r.sign();
-        console.log('reaction', JSON.stringify(r, null, 2));
         await r.publish();
     };
 
@@ -41,7 +45,12 @@ export function Reactions({ event }: { event: NDKEvent }) {
     };
 
     const bookmark = async () => {
-        alert('Not implemented yet');
+        if (imageCurationSet.has(event.id)) {
+            await imageCurationSet.removeItemByValue(event.id);
+        } else {
+            await imageCurationSet.addItem(event);
+        }
+        await imageCurationSet.publishReplaceable();
     };
 
     const reactions = useMemo(() => relatedEvents.filter((r) => r.kind === NDKKind.Reaction), [relatedEvents]);
@@ -50,11 +59,13 @@ export function Reactions({ event }: { event: NDKEvent }) {
     const comments = useMemo(() => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)), [relatedEvents]);
     const commentedByUser = useMemo(() => comments.find((c) => c.pubkey === currentUser?.pubkey), [comments, currentUser?.pubkey]);
 
+    const isBookmarkedByUser = useMemo(() => imageCurationSet.has(event.id), [imageCurationSet, event.id]);
+
     return (
         <View className="flex-1 flex-col gap-1 p-2">
             <View className="w-full flex-1 flex-row justify-between gap-4">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <TouchableOpacity onPress={react} className="!text-green-500">
+                    <TouchableOpacity onPress={react}>
                         <Heart
                             size={24}
                             fill={reactedByUser ? colors.foreground : 'transparent'}
@@ -68,7 +79,7 @@ export function Reactions({ event }: { event: NDKEvent }) {
                 </View>
 
                 <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
-                    <BookmarkIcon size={24} color={colors.muted} />
+                    <BookmarkIcon size={24} fill={isBookmarkedByUser ? 'red' : 'transparent'} color={isBookmarkedByUser ? 'red' : colors.muted} />
                 </TouchableOpacity>
             </View>
             {reactions.length > 0 && (

@@ -1,6 +1,6 @@
 import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
+import { Bookmark, Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
@@ -44,6 +44,14 @@ export default function HomeLayout() {
                     },
                 }}
             />
+{/* 
+            <Tabs.Screen
+                name="bookmarks"
+                options={{
+                    title: 'Bookmarks',
+                    tabBarIcon: ({ color, focused }) => <Bookmark size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                }}
+            /> */}
 
             <Tabs.Screen
                 name="publish2"

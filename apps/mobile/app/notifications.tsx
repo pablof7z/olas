@@ -1,10 +1,12 @@
-import { NDKEvent, NDKKind, useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDK, useNDKSessionEvents, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { Stack } from 'expo-router';
 import { memo, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
 import { FlashList } from '@shopify/flash-list';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { useDebounce, useThrottle } from '@uidotdev/usehooks';
 
 type NotificationItem = {
     id: string;
@@ -24,11 +26,13 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
                 return 'reacted to your post';
             case (NDKKind.Text, 22):
                 return 'commented on your post';
+            case 967:
+                return 'followed you';
         }
     }, [event.kind]);
 
     return (
-        <TouchableOpacity style={styles.notificationItem}>
+        <TouchableOpacity style={styles.notificationItem} className="border-b border-border">
             <User.Profile pubkey={event.pubkey}>
                 <User.Avatar size={44} style={styles.avatar} />
 
@@ -36,7 +40,7 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
                     <Text>
                         <User.Name style={styles.username} /> {label}
                     </Text>
-                    <Text style={styles.timestamp}>
+                    <Text style={styles.timestamp} className="text-muted-foreground">
                         <RelativeTime timestamp={event.created_at} />
                     </Text>
                 </View>
@@ -46,7 +50,9 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
 });
 
 export default function Notifications() {
+    const { colors } = useColorScheme();
     const { currentUser } = useNDK();
+    const events = useNDKSessionEvents([967 as NDKKind, NDKKind.Reaction]);
     const filters = useMemo(
         () => [
             { kinds: [NDKKind.Text], '#k': ['20'], '#p': [currentUser?.pubkey] },
@@ -57,13 +63,17 @@ export default function Notifications() {
         [currentUser?.pubkey]
     );
     const opts = useMemo(() => ({ closeOnEose: false, groupable: false }), [filters]);
-    const { events } = useSubscribe({ filters, opts });
+    const { events: notifications } = useSubscribe({ filters, opts });
+
+    const mixedEvents = useThrottle([events, notifications], 1000);
+    const sortedEvents = useMemo(() => [...events, ...notifications].sort((a, b) => b.created_at - a.created_at), [mixedEvents]);
+    // const mixedEvents = useDebounce(() => [...events, ...notifications].sort((a, b) => a.created_at - b.created_at), 1000);
 
     return (
         <>
             <Stack.Screen options={{ headerShown: true, title: 'Notifications' }} />
-            <View style={styles.container}>
-                <FlashList data={events} renderItem={({ item }) => <NotificationItem event={item} />} keyExtractor={(item) => item.id} />
+            <View style={styles.container} className="bg-card">
+                <FlashList data={sortedEvents} renderItem={({ item }) => <NotificationItem event={item} />} keyExtractor={(item) => item.id} />
             </View>
         </>
     );
