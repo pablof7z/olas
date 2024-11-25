@@ -231,7 +231,14 @@ export default function ImageUpload() {
         event.content = caption;
         event.tags = [];
 
+        if (event.kind === NDKKind.Image) {
+            event.alt = "This is an image event published via Olas.";
+        } else if (event.kind === NDKKind.VerticalVideo) {
+            event.alt = "This is a video event published via Olas.";
+        }
+
         setUploading(true);
+        
         for (const [index, m] of media.current.entries()) {
             const promise = new Promise<void>(async (resolve, reject) => {
                 const mediaBlob = await fetch(m.internalUri).then((res) => res.blob());
