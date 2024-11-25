@@ -50,7 +50,6 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
 });
 
 export default function Notifications() {
-    const { colors } = useColorScheme();
     const { currentUser } = useNDK();
     const events = useNDKSessionEvents([967 as NDKKind, NDKKind.Reaction]);
     const filters = useMemo(

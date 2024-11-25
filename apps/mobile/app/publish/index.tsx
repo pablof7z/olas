@@ -21,7 +21,7 @@ import { ImageIcon, Plus, Timer, Type, VideoIcon } from 'lucide-react-native';
 import { Uploader } from '@/utils/uploader';
 import { ImetaData, imetaFromImage, imetaToTags } from '@/utils/imeta';
 
-async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; mediaEvent: NDKEvent | null }> {
+async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; x: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
         // Create an Uploader instance with the blob
         const uploader = new Uploader(ndk, blob, blossomServer);
@@ -231,15 +231,12 @@ export default function ImageUpload() {
         event.content = caption;
         event.tags = [];
 
-        console.log('media with', media.current.length);
+        setUploading(true);
         for (const [index, m] of media.current.entries()) {
             const promise = new Promise<void>(async (resolve, reject) => {
-                console.log('uploading media', m.internalUri);
                 const mediaBlob = await fetch(m.internalUri).then((res) => res.blob());
                 const { url, x } = await upload(ndk, mediaBlob, defaultBlossomServer);
-                console.log('uploaded media', url);
                 media.current[index].imeta ??= {};
-                console.log('adding url to index', index, { url });
                 media.current[index].imeta.url = url;
                 media.current[index].imeta.x = x;
                 resolve();
@@ -248,25 +245,7 @@ export default function ImageUpload() {
             media.current[index].uploadPromise = promise;
         }
 
-        // const uploadPromise = new Promise<void>(async (resolve, reject) => {
-        //     setUploading(true);
-        //     if (thumbnail) {
-        //         const thumbnailBlob = await fetch(thumbnail).then((res) => res.blob());
-        //         const { url } = await upload(ndk, thumbnailBlob, defaultBlossomServer);
-        //         event.tags = [...event.tags, ['thumb', url]];
-        //     }
-        // });
-
-        console.log('waiting for', media.current.length, 'uploads');
         await Promise.all([...media.current.map((m) => m.uploadPromise), ...media.current.map((m) => m.imetaPromise)]);
-        console.log('all uploads done', media.current);
-
-        // if (selectionType === 'image') {
-        // imetaData.current ??= {};
-
-        // for (const tag of event.tags) {
-        //     imetaData.current[tag[0]] = tag[1];
-        // }
 
         event.tags = [
             ...event.tags,
@@ -275,10 +254,6 @@ export default function ImageUpload() {
                 .map((media) => imetaToTags(media.imeta))
                 .flat(),
         ];
-
-        // remove the url tag, since it'll go in the imeta
-        // event.tags = event.tags.filter((tag) => tag[0] !== 'url');
-        // }
 
         // if we have an expiration, set the tag
         if (expiration) {
@@ -301,7 +276,7 @@ export default function ImageUpload() {
 
         try {
             await event.sign();
-            // await event.publish();
+            await event.publish();
             setUploading(false);
             console.log('publishing done, going back');
             router.back();
