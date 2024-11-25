@@ -1,10 +1,10 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useImage, Image } from 'expo-image';
-import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { imetasFromEvent } from '@/utils/imeta';
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 // Extract URLs from the event
 const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
@@ -50,31 +50,56 @@ const SingleImage = memo(function SingleImage({
     props: any;
 }) {
     const [error, setError] = useState(false);
-    const image = useImage(
-        { uri: getProxiedImageUrl(url.url) },
-        {
-            onError: (error) => {
-                console.warn('Error loading image:', error);
-                setError(true);
-            },
-        }
-    );
+    const [imageDimensions, setImageDimensions] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const pUri = getProxiedImageUrl(url.url); 
+    useEffect(() => {
+        const loadImage = async () => {
+            try {
+                const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
+                setImageDimensions({ width, height });
+            } catch (error) {
+                console.error('Error loading image dimensions', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadImage();
+    }, [pUri]);
+    console.log('image ', imageDimensions);
+    if (isLoading || !imageDimensions) {
+        return (
+            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator />
+            </View>
+        );
+    }
+    // const image = useImage(
+    //     { uri: getProxiedImageUrl(url.url) },
+    //     {
+    //         onError: (error) => {
+    //             console.warn('Error loading image:', error);
+    //             setError(true);
+    //         },
+    //     }
+    // );
 
     if (error) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 
     // Return null if image failed to load or URL is invalid
-    if (!image?.width || !image?.height || !url.url) {
-        return null;
-    }
+    // if (!image?.width || !image?.height || !url.url) {
+    //     return null;
+    // }
 
-    const width = image.width;
-    const height = image.height;
+    const width = imageDimensions.width;
+    const height = imageDimensions.height;
     return (
         <View style={{ position: 'relative', flex: 1 }}>
             <Pressable onPress={onPress}>
                 <Image
                     {...props}
-                    source={{ uri: getProxiedImageUrl(url.url) }}
+                    source={{ uri: pUri }}
                     contentFit="contain"
                     style={[
                         {

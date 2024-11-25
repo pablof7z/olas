@@ -49,8 +49,8 @@ export default function RootLayout() {
     const { colorScheme, isDarkColorScheme } = useColorScheme();
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
-        if (direction === 'send') console.log('👉', url.hostname, msg);
-        if (direction === 'recv') console.log('👈', url.hostname, msg);
+        // if (direction === 'send') console.log('👉', url.hostname, msg);
+        // if (direction === 'recv') console.log('👈', url.hostname, msg);
     };
 
     let relays = (SecureStore.getItem('relays') || '').split(',');

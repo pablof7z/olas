@@ -55,7 +55,6 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
     const url = event.tagValue('url');
 
     if (url && isVideo(url)) return <VideoContainer url={url} />;
-
     return <Image event={event} style={styles.image} onPress={onPress} />;
 });
 
