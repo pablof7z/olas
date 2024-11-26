@@ -138,7 +138,6 @@ export default memo(function ImageComponent({
                     <SingleImage key={index} url={url} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />
                 ))}
             </ScrollView>
-            <View style={{height:100,width:100,backgroundColor:'red'}}></View>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 8 }}>
                 {urls.map((_, index) => (
                     <View
