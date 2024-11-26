@@ -8,7 +8,6 @@ export default function SettingsLayout() {
     return (
         <Stack
             screenOptions={{
-                // animation: 'ios',
                 title: 'Settings',
                 headerShown: true,
                 headerTintColor: Platform.OS === 'ios' ? undefined : colors.foreground,
