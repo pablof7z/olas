@@ -1,14 +1,16 @@
 import React from 'react';
-import { Text } from 'react-native';
-import { useUserProfile } from './profile';
+import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Text, TextProps } from 'react-native';
+
+interface NameProps extends TextProps {
+    userProfile: NDKUserProfile | null;
+    pubkey: string;
+}
 
 /**
  * Renders the name of a user
  */
-const Name: React.FC<Text['props']> = (props) => {
-    // const { userProfile, user, hasKind20 } = useUserProfile();
-    const { userProfile, user } = useUserProfile();
-
+const Name: React.FC<NameProps> = ({ userProfile, pubkey, ...props }) => {
     return (
         <Text
             style={[
@@ -17,7 +19,7 @@ const Name: React.FC<Text['props']> = (props) => {
                 props.style,
             ]}
             {...props}>
-            {userProfile?.displayName || userProfile?.name || user?.npub.substring(0, 6)}
+            {userProfile?.displayName || userProfile?.name || pubkey.substring(0, 6)}
         </Text>
     );
 };

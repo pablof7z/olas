@@ -6,12 +6,12 @@ import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, NDKEventWithFrom, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { Link, router, Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { View, Platform } from 'react-native';
+import { View } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
@@ -22,6 +22,7 @@ import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { NDKWalletProvider, NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ScrollProvider } from '~/contexts/ScrollContext';
+import { useCallback } from 'react';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -75,6 +76,13 @@ export default function RootLayout() {
         [NDKKind.ImageCurationSet, { wrapper: NDKList }],
         [967],
     ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
+
+    const onInteractiveCallback = useCallback((TTI: number, listName: string) => {
+        console.log(`${listName}'s TTI: ${TTI}`);
+    }, []);
+    const onBlankAreaCallback = useCallback((offsetStart: number, offsetEnd: number, listName: string) => {
+        console.log(`Blank area for ${listName}: ${Math.max(offsetStart, offsetEnd)}`);
+    }, []);
 
     return (
         <ScrollProvider>

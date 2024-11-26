@@ -1,4 +1,4 @@
-import { NDKEvent, NDKKind, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useUserProfile, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, StyleSheet } from 'react-native';
 import { View } from 'react-native';
 import * as User from '@/components/ui/user';
@@ -10,7 +10,7 @@ import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useMemo } from 'react';
+import { memo, useRef, useMemo } from 'react';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
@@ -58,10 +58,16 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
+    const renderCounter = useRef<Record<string, number>>({});
+
+    renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
+    console.log(`Post ${event.id.substring(0, 8)} render #${renderCounter.current}`);
+
+    const state = useRef({ loading: undefined })
     const { isDarkColorScheme } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();
-    const { loading } = User.useUserProfile();
+    const { userProfile, loading } = useUserProfile(event.pubkey);
 
     let content = event.content.trim();
 
@@ -85,26 +91,26 @@ export default function Post({ event }: { event: NDKEvent }) {
                             </SkeletonPlaceholder.Item>
                         </SkeletonPlaceholder>
                     ) : (
-                        <User.Profile pubkey={event.pubkey}>
+                        <>
                             <TouchableOpacity
                                 onPress={() => {
                                     router.push(`/profile?pubkey=${event.pubkey}`);
                                 }}>
-                                <User.Avatar alt={event.pubkey} />
+                                <User.Avatar userProfile={userProfile} />
                             </TouchableOpacity>
 
                             <View className="flex-col">
-                                <User.Name className="font-bold text-foreground" />
+                                <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" />
                                 <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             </View>
-                        </User.Profile>
+                        </>
                     )}
                 </View>
 
                 <FollowButton pubkey={event.pubkey} />
             </View>
 
-            <View style={{ minHeight: Dimensions.get('window').width }}>
+            <View style={{ minHeight: Dimensions.get('window').width*0.4 }}>
                 <CardMedia
                     event={event}
                     onPress={() => {

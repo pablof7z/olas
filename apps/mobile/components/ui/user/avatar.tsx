@@ -1,17 +1,16 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
-import { useUserProfile } from './profile';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
+import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 
-interface AvatarProps extends React.ComponentProps<typeof Avatar> {
+interface AvatarProps extends Omit<React.ComponentProps<typeof Avatar>, 'alt'> {
     size?: number;
+    userProfile: NDKUserProfile | null;
+    alt?: string;
 }
 
-const UserAvatar: React.FC<AvatarProps> = ({ size, ...props }) => {
-    const { user, userProfile } = useUserProfile();
-    // const { user, userProfile, hasKind20 } = useUserProfile();
-
+const UserAvatar: React.FC<AvatarProps> = ({ size, userProfile, ...props }) => {
     size ??= 64;
 
     const proxiedImageUrl = useMemo(() => userProfile?.image && getProxiedImageUrl(userProfile.image, size), [userProfile?.image, size]);
@@ -27,7 +26,7 @@ const UserAvatar: React.FC<AvatarProps> = ({ size, ...props }) => {
             <Avatar {...props}>
                 {userProfile?.image && <AvatarImage source={{ uri: proxiedImageUrl }} {...props} />}
                 <AvatarFallback>
-                    <Text className="text-foreground">{user?.pubkey.slice(0, 2).toUpperCase()}</Text>
+                    <Text className="text-foreground">...</Text>
                 </AvatarFallback>
             </Avatar>
         </View>

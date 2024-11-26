@@ -1,8 +1,8 @@
 import { activeEventStore } from '@/app/stores';
-import { NDKEvent, NDKKind, NDKList, useNDKSession, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
-import { useEffect, useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -11,14 +11,15 @@ import { StyleSheet } from 'react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEvents: NDKEvent[] }) {
+    const renderCounter = useRef<Record<string, number>>({});
+
+    renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
+    console.log(`Reactions for ${event.id.substring(0, 8)} render #${renderCounter.current[event.id]}`);
+
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const { currentUser } = useNDK();
     const { colors } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
-
-    useEffect(() => {
-        console.log('imageCurationSet', imageCurationSet?.items);
-    }, [imageCurationSet]);
 
     const react = async () => {
         const r = await event.react('+1', false);

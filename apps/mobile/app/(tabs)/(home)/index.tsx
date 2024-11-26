@@ -82,6 +82,12 @@ export default function HomeScreen() {
 
     const scrollRef = useScroll();
 
+    const renderItem = useMemo(() => ({ item }: { item: NDKEvent }) => (
+        <User.Profile pubkey={item.pubkey}>
+            <Post event={item} />
+        </User.Profile>
+    ), []);
+
     return (
         <>
             <Stack.Screen
@@ -101,16 +107,12 @@ export default function HomeScreen() {
                     ref={scrollRef}
                     data={debouncedEvents}
                     estimatedItemSize={340}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item) => item.id}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
-                    renderItem={({ item }) => (
-                        <User.Profile pubkey={item.pubkey}>
-                            <Post event={item} />
-                        </User.Profile>
-                    )}
+                    renderItem={renderItem}
                     disableIntervalMomentum={true}
                     contentContainerStyle={styles.listContainer}
-                />
+                    />
             </View>
         </>
     );

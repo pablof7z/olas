@@ -3,7 +3,11 @@ module.exports = function (api) {
   const plugins = [];
 
   return {
-    presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }], 'nativewind/babel'],
+    presets: [
+      ['babel-preset-expo',
+        { jsxImportSource: ['nativewind', "@welldone-software/why-did-you-render"] }],
+      'nativewind/babel'
+    ],
 
     plugins,
   };

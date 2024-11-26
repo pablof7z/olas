@@ -1,10 +1,11 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useImage, Image } from 'expo-image';
+import { Image, useImage } from 'expo-image';
 import { ActivityIndicator, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { imetasFromEvent } from '@/utils/imeta';
 import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Text } from '../nativewindui/Text';
 
 // Extract URLs from the event
 const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
@@ -49,54 +50,42 @@ const SingleImage = memo(function SingleImage({
     colors: any;
     props: any;
 }) {
-    const [error, setError] = useState(false);
-    const [imageDimensions, setImageDimensions] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
     const pUri = getProxiedImageUrl(url.url); 
-    useEffect(() => {
-        const loadImage = async () => {
-            try {
-                const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
-                setImageDimensions({ width, height });
-            } catch (error) {
-                console.error('Error loading image dimensions', error);
-            } finally {
-                setIsLoading(false);
-            }
-        }; 
+    const image = useImage({
+        uri: pUri,
+        blurhash: url.blurhash,
+    },);
 
-        loadImage();
-    }, [pUri]); 
-
-    if (isLoading || !imageDimensions) {
+    try {
+        // expo-image seems to throw every once in a while for some reason -- this should catch the error
+        image?.width;
+    } catch (e) {
+        console.log('error', e);
         return (
-            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', height: maxWidth, width: maxWidth }}>
                 <ActivityIndicator />
             </View>
-        );
+        )
     }
-    if (error) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+    
+    const width = image?.width;
+    const height = image?.height;
 
-    const width = imageDimensions.width;
-    const height = imageDimensions.height;
     return (
-        <View style={{ position: 'relative', flex: 1 }}>
-            <Pressable onPress={onPress}>
-                <Image
-                    {...props}
-                    source={{ uri: pUri }}
-                    contentFit="contain"
-                    style={[
-                        {
-                            width: maxWidth,
-                            height: height ? height / (width / maxWidth) : undefined,
-                            backgroundColor: colors.background,
-                        },
-                    ]}
-                    placeholder={url.blurhash ? { blurhash: url.blurhash } : undefined}
-                />
-            </Pressable>
-        </View>
+        <Pressable onPress={onPress}>
+            <Image
+                {...props}
+                source={image}
+                contentFit="fill"
+                style={[
+                    {
+                        width: maxWidth,
+                        height: height ? height / (width / maxWidth) : undefined,
+                        backgroundColor: colors.background,
+                    },
+                ]}
+            />
+        </Pressable>
     );
 });
 

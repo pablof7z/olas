@@ -2,7 +2,7 @@ import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Bookmark, Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { useScroll } from '~/contexts/ScrollContext';
 
@@ -10,6 +10,7 @@ export default function HomeLayout() {
     const { currentUser } = useNDK();
     const { colors } = useColorScheme();
     const scrollRef = useScroll();
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
 
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
@@ -95,9 +96,10 @@ export default function HomeLayout() {
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) =>
                         currentUser ? (
-                            <User.Profile pubkey={currentUser.pubkey}>
-                                <User.Avatar alt="Profile image" className="h-6 w-6" />
-                            </User.Profile>
+                            <User.Avatar
+                                userProfile={userProfile}
+                                size={24}
+                            />
                         ) : (
                             <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
                         ),
