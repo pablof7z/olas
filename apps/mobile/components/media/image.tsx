@@ -67,6 +67,7 @@ const SingleImage = memo(function SingleImage({
 
         loadImage();
     }, [pUri]); 
+
     if (isLoading || !imageDimensions) {
         return (
             <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
@@ -74,22 +75,7 @@ const SingleImage = memo(function SingleImage({
             </View>
         );
     }
-    // const image = useImage(
-    //     { uri: getProxiedImageUrl(url.url) },
-    //     {
-    //         onError: (error) => {
-    //             console.warn('Error loading image:', error);
-    //             setError(true);
-    //         },
-    //     }
-    // );
-
     if (error) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
-
-    // Return null if image failed to load or URL is invalid
-    // if (!image?.width || !image?.height || !url.url) {
-    //     return null;
-    // }
 
     const width = imageDimensions.width;
     const height = imageDimensions.height;
