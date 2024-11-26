@@ -145,7 +145,7 @@ function PostOptions({
         data.push({ id: 'publish', onPress: handlePost });
 
         return data;
-    }, [expiration, type, media.length]);
+    }, [expiration, type, media.length, handlePost]);
 
     return (
         <>
@@ -191,7 +191,7 @@ type Media = {
 };
 
 export default function ImageUpload() {
-    const { type } = useStore(publishStore);
+    const { type, expiration, caption, reset } = useStore(publishStore);
     const { follows, events } = useNDKSession();
     const blossomList = useMemo(() => {
         return events?.get(NDKKind.BlossomList)?.[0] as NDKList | null;
@@ -202,7 +202,6 @@ export default function ImageUpload() {
     const { ndk } = useNDK();
     const [uploading, setUploading] = useState(false);
 
-    const { expiration, caption } = useStore(publishStore);
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -285,6 +284,9 @@ export default function ImageUpload() {
             await event.sign();
             await event.publish();
             setUploading(false);
+
+            reset();
+            
             router.back();
         } catch (error) {
             setError('Error publishing post!');
@@ -355,7 +357,7 @@ export default function ImageUpload() {
                     headerShown: true,
                     title: 'Publish',
                     headerRight: () => (
-                        <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading || media.length === 0}>
+                        <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading || media.current.length === 0}>
                             <Text className="text-white">Publish</Text>
                         </Button>
                     ),
