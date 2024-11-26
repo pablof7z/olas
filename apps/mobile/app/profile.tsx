@@ -70,7 +70,6 @@ export default function Profile() {
     }
 
     const insets = useSafeAreaInsets();
-
     return (
         <User.Profile pubkey={pubkey}>
             <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
@@ -134,7 +133,6 @@ export default function Profile() {
                     </View>
 
                     {!follows?.includes(pubkey) ? <FollowButton /> : null}
-
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>
                             <Text style={styles.noEventsText}>No posts yet</Text>
@@ -163,9 +161,9 @@ export default function Profile() {
 }
 
 function ImageGridItem({ event }: { event: NDKEvent }) {
+    // is these conditions are necessary?
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
     const { setActiveEvent } = useStore(activeEventStore);
-
     // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
     if (!url && event.kind === NDKKind.Text) {
         const content = event.content;
@@ -175,9 +173,9 @@ function ImageGridItem({ event }: { event: NDKEvent }) {
         }
     }
 
-    if (!url) {
-        return null;
-    }
+    // if (!url) {
+    //     return null;
+    // }
 
     return (
         <View style={styles.gridItem}>

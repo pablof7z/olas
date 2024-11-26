@@ -63,11 +63,10 @@ const SingleImage = memo(function SingleImage({
             } finally {
                 setIsLoading(false);
             }
-        };
+        }; 
 
         loadImage();
-    }, [pUri]);
-    console.log('image ', imageDimensions);
+    }, [pUri]); 
     if (isLoading || !imageDimensions) {
         return (
             <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
@@ -137,7 +136,7 @@ export default memo(function ImageComponent({
 
     if (urls.length === 1 || singleImageMode) {
         return <SingleImage url={urls[0]} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />;
-    }
+    } 
 
     return (
         <View style={{ flex: 1 }}>
@@ -153,6 +152,7 @@ export default memo(function ImageComponent({
                     <SingleImage key={index} url={url} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />
                 ))}
             </ScrollView>
+            <View style={{height:100,width:100,backgroundColor:'red'}}></View>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 8 }}>
                 {urls.map((_, index) => (
                     <View
