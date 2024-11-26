@@ -57,8 +57,11 @@ export default function HomeLayout() {
                 name="publish2"
                 listeners={{
                     tabPress: (e) => {
-                        e.preventDefault();
-                        router.push('/publish');
+                        if (!currentUser) {
+                            router.push('/login');
+                        } else {
+                            router.push('/publish');
+                        }
                     },
                 }}
                 options={{
