@@ -59,12 +59,12 @@ export default function LoginScreen() {
                     </Text>
 
                     {scanQR && (
-                        <View style={{ flex: 1, height: Dimensions.get('window').width * 0.75, width: Dimensions.get('window').width *0.75 }}>
+                        <View style={{ borderRadius: 8, height: Dimensions.get('window').width * 0.75, width: Dimensions.get('window').width *0.75 }}>
                             <CameraView
                                 barcodeScannerSettings={{
                                     barcodeTypes: ['qr']
                                 }}
-                                style={{ flex: 1, width: '100%' }}
+                                style={{ flex: 1, width: '100%', borderRadius: 8 }}
                                 onBarcodeScanned={handleBarcodeScanned}
                             />
                         </View>
