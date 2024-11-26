@@ -18,6 +18,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Reactions } from './Reactions';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import FollowButton from '@/components/buttons/follow';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -67,19 +68,6 @@ export default function Post({ event }: { event: NDKEvent }) {
     const { follows } = useNDKSession();
     const { loading } = User.useUserProfile();
 
-    const follow = async () => {
-        const followEvent = new NDKEvent(ndk);
-        followEvent.kind = 967;
-        followEvent.tags = [
-            ['p', event.pubkey],
-            ['k', NDKKind.Image.toString()],
-            ['k', NDKKind.VerticalVideo.toString()],
-        ];
-        await followEvent.publish();
-
-        await currentUser?.follow(event.author);
-    };
-
     let content = event.content.trim();
 
     if (event.kind === NDKKind.Text) {
@@ -118,11 +106,7 @@ export default function Post({ event }: { event: NDKEvent }) {
                     )}
                 </View>
 
-                {!follows?.includes(event.pubkey) && event.pubkey !== currentUser?.pubkey && (
-                    <Button className="border border-primary bg-transparent" onPress={follow}>
-                        <Text className="text-primary">Follow</Text>
-                    </Button>
-                )}
+                <FollowButton pubkey={event.pubkey} />
             </View>
 
             <View style={{ minHeight: Dimensions.get('window').width }}>
