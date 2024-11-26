@@ -69,8 +69,9 @@ export default function Profile() {
         setFiltersExpanded(true);
     }
 
-    const insets = useSafeAreaInsets();
+    const {setActiveEvent} = useStore(activeEventStore);
 
+    const insets = useSafeAreaInsets();
     return (
         <User.Profile pubkey={pubkey}>
             <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
@@ -134,7 +135,6 @@ export default function Profile() {
                     </View>
 
                     {!follows?.includes(pubkey) ? <FollowButton /> : null}
-
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>
                             <Text style={styles.noEventsText}>No posts yet</Text>
@@ -152,7 +152,14 @@ export default function Profile() {
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => <ImageGridItem event={item} />}
+                                renderItem={({ item }) => (
+                                    <ImageGridItem
+                                        event={item}
+                                        onPress={() => {
+                                            setActiveEvent(item);
+                                            router.push('/view');
+                                    }} />
+                                )}
                             />
                         </View>
                     )}
@@ -162,31 +169,12 @@ export default function Profile() {
     );
 }
 
-function ImageGridItem({ event }: { event: NDKEvent }) {
-    let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
-    const { setActiveEvent } = useStore(activeEventStore);
-
-    // if this is a kind:1 see if there is a URL in the content that ends with .jpg, .jpeg, .png, .gif, .webp
-    if (!url && event.kind === NDKKind.Text) {
-        const content = event.content;
-        const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
-        if (urlMatch) {
-            url = urlMatch[0];
-        }
-    }
-
-    if (!url) {
-        return null;
-    }
-
+function ImageGridItem({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
     return (
         <View style={styles.gridItem}>
             <Image
                 event={event}
-                onPress={() => {
-                    setActiveEvent(event);
-                    router.push('/view');
-                }}
+                onPress={onPress}
                 singleImageMode
                 maxWidth={Dimensions.get('window').width / 3}
             />

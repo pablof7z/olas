@@ -1,42 +1,39 @@
 {
-  "cli": {
-    "promptToConfigurePushNotifications": false,
-    "version": ">= 12.6.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "preview": {
-      "android": {
-        "buildType": "apk"
-      }
+    "cli": {
+        "promptToConfigurePushNotifications": false,
+        "version": ">= 12.6.0",
+        "appVersionSource": "remote"
     },
-    "monorepo": {
-      "pnpm": "9.14.2",
-      "node": "22.9.0",
-      "env": {
-        "EXPO_USE_FAST_RESOLVER": "true"
-      }
+    "build": {
+        "preview": {
+            "android": {
+                "buildType": "apk"
+            }
+        },
+        "monorepo": {
+            "pnpm": "9.14.2",
+            "node": "22.9.0",
+            "env": {
+                "EXPO_USE_FAST_RESOLVER": "true"
+            }
+        },
+        "development": {
+            "extends": "monorepo",
+            "developmentClient": true,
+            "distribution": "internal",
+            "resourceClass": "large"
+        },
+        "production": {
+            "extends": "monorepo",
+            "distribution": "store",
+            "autoIncrement": true,
+            "android": {
+                "buildType": "apk"
+            },
+            "resourceClass": "large"
+        }
     },
-    "development": {
-      "extends": "monorepo",
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "resourceClass": "large"
-    },
-    "production": {
-      "extends": "monorepo",
-      "distribution": "store",
-      "autoIncrement": true,
-      "android": {
-        "buildType": "apk"
-      },
-      "resourceClass": "large"
+    "submit": {
+        "production": {}
     }
-  },
-  "submit": {
-    "production": {
-    }
-  }
 }
