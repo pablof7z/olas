@@ -34,6 +34,12 @@
         }
     },
     "submit": {
-        "production": {}
+        "production": {
+            "ios": {
+                "appleId": "intransigenthodl@protonmail.com",
+                "ascAppId": "6738208592",
+                "appleTeamId": "456SHKPP26"
+            }
+        }
     }
 }
