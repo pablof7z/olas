@@ -4,12 +4,13 @@ import * as User from '@/components/ui/user';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
-import { NDKEvent, NDKFilter, NDKSubscriptionCacheUsage, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FollowButton from '@/components/buttons/follow';
 
 export default function Profile() {
     const { follows } = useNDKSession();
@@ -18,8 +19,9 @@ export default function Profile() {
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
-            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20], authors: [pubkey!] },
+            { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image], authors: [pubkey!] },
             { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey!] },
+            { kinds: [NDKKind.Contacts], authors: [pubkey!] },
         ];
 
         if (filtersExpanded) {
@@ -31,6 +33,10 @@ export default function Profile() {
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
+    const followCount = useMemo(() => new Set(
+        events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
+    ).size, [events]);
+
     const sortedEvents = useMemo(() => {
         return events.sort((a, b) => b.created_at - a.created_at);
     }, [events]);
@@ -38,14 +44,6 @@ export default function Profile() {
     if (!pubkey) {
         return null;
     }
-
-    const FollowButton = () => {
-        return (
-            <TouchableOpacity style={styles.editButton}>
-                <Text style={styles.editButtonText}>Follow</Text>
-            </TouchableOpacity>
-        );
-    };
 
     const headerTranslateY = scrollY.interpolate({
         inputRange: [0, 100],
@@ -101,14 +99,16 @@ export default function Profile() {
                                 Followers
                             </Text>
                         </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber} className="text-foreground">
-                                890
-                            </Text>
-                            <Text style={styles.statLabel} className="text-foreground">
-                                Following
-                            </Text>
-                        </View>
+                        {followCount ? (
+                            <View style={styles.statItem}>
+                                <Text style={styles.statNumber} className="text-foreground">
+                                    {followCount}
+                                </Text>
+                                <Text style={styles.statLabel} className="text-foreground">
+                                    Following
+                                </Text>
+                            </View>
+                        ) : null}
                     </View>
                 </Animated.View>
 
@@ -117,7 +117,7 @@ export default function Profile() {
                     <Text style={styles.username} className="grow text-lg font-bold text-foreground">
                         <User.Name />
                     </Text>
-                    <FollowButton />
+                    <FollowButton pubkey={pubkey} />
                 </Animated.View>
 
                 <Animated.ScrollView
@@ -134,7 +134,7 @@ export default function Profile() {
                         </Text>
                     </View>
 
-                    {!follows?.includes(pubkey) ? <FollowButton /> : null}
+                    {!follows?.includes(pubkey) ? <FollowButton pubkey={pubkey} size="sm" className="mx-4" /> : null}
                     {events.length === 0 ? (
                         <View style={styles.noEventsContainer}>
                             <Text style={styles.noEventsText}>No posts yet</Text>
