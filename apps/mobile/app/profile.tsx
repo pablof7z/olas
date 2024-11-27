@@ -12,7 +12,6 @@ import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
-import { ArrowLeft, CircleX } from 'lucide-react-native';
 
 export default function Profile() {
     const { follows } = useNDKSession();
@@ -36,10 +35,9 @@ export default function Profile() {
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
-    const followCount = useMemo(
-        () => new Set(events.find((e) => e.kind === NDKKind.Contacts)?.tags.find((t) => t[0] === 'p')?.[1]).size,
-        [events]
-    );
+    const followCount = useMemo(() => new Set(
+        events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
+    ).size, [events]);
 
     const sortedEvents = useMemo(() => {
         return events.sort((a, b) => b.created_at - a.created_at);
@@ -71,12 +69,11 @@ export default function Profile() {
         setFiltersExpanded(true);
     }
 
-    const { setActiveEvent } = useStore(activeEventStore);
+    const {setActiveEvent} = useStore(activeEventStore);
 
     const insets = useSafeAreaInsets();
     return (
-        <User.Profile pubkey={pubkey}>
-            <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
+        <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
                 <Animated.View
                     style={[
                         styles.header,
@@ -156,29 +153,33 @@ export default function Profile() {
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
-                                contentContainerStyle={{ paddingBottom: 60 }}
+                                contentContainerStyle={{paddingBottom:60}}
                                 renderItem={({ item }) => (
                                     <ImageGridItem
                                         event={item}
                                         onPress={() => {
                                             setActiveEvent(item);
                                             router.push('/view');
-                                        }}
-                                    />
+                                    }} />
                                 )}
                             />
                         </View>
                     )}
                 </Animated.ScrollView>
             </View>
-        </User.Profile>
+
     );
 }
 
 function ImageGridItem({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
     return (
         <View style={styles.gridItem}>
-            <Image event={event} onPress={onPress} singleImageMode maxWidth={Dimensions.get('window').width / 3} />
+            <Image
+                event={event}
+                onPress={onPress}
+                singleImageMode
+                maxWidth={Dimensions.get('window').width / 3}
+            />
         </View>
     );
 }
