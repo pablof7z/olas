@@ -76,9 +76,7 @@ export default function Profile() {
     const insets = useSafeAreaInsets();
     return (
         <User.Profile pubkey={pubkey}>
-          
             <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
-              
                 <Animated.View
                     style={[
                         styles.header,
@@ -158,7 +156,7 @@ export default function Profile() {
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
-                                contentContainerStyle={{paddingBottom:60}}
+                                contentContainerStyle={{ paddingBottom: 60 }}
                                 renderItem={({ item }) => (
                                     <ImageGridItem
                                         event={item}
@@ -173,7 +171,7 @@ export default function Profile() {
                     )}
                 </Animated.ScrollView>
             </View>
-
+        </User.Profile>
     );
 }
 

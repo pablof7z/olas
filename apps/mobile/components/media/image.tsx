@@ -57,8 +57,16 @@ const SingleImage = memo(function SingleImage({
     useEffect(() => {
         const loadImage = async () => {
             try {
-                const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
-                setImageDimensions({ width, height });
+                const path = await Image.getCachePathAsync(pUri);
+                if (path) {
+                    const { width, height } = await Image.loadAsync(path);
+                    setImageDimensions({ width, height });
+                    console.log('no network request for image');
+                } else {
+                    const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
+                    setImageDimensions({ width, height });
+                    console.log('network request for image');
+                }
             } catch (error) {
                 console.error('Error loading image dimensions', error);
             } finally {
@@ -71,12 +79,20 @@ const SingleImage = memo(function SingleImage({
 
     if (isLoading || !imageDimensions) {
         return (
-            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', height: maxWidth, width: maxWidth }}>
+            <View
+                style={{
+                    flex: 1,
+                    backgroundColor: colors.background,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: maxWidth,
+                    width: maxWidth,
+                }}>
                 <ActivityIndicator />
             </View>
-        )
+        );
     }
-    
+
     const width = imageDimensions?.width;
     const height = imageDimensions?.height;
 
