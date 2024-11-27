@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Dimensions, View } from 'react-native';
-import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { useMemo } from 'react';
+import { Dimensions, SafeAreaView, View } from 'react-native';
+import { useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
@@ -8,7 +8,6 @@ import { useStore } from 'zustand';
 import { FlashList } from '@shopify/flash-list';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from './components/relative-time';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/nativewindui/Text';
 import { MessageCircle } from 'lucide-react-native';
 import { Button } from '@/components/nativewindui/Button';
@@ -43,22 +42,23 @@ export default function CommentScreen() {
                 data={events}
                 keyExtractor={(i) => i.id}
                 estimatedItemSize={100}
-                renderItem={({ item }) => (
-                    <View className="w-full flex-1 flex-row gap-2 p-4">
-                        <User.Profile pubkey={item.pubkey}>
-                            <User.Avatar alt="Profile image" className="h-8 w-8" />
+                renderItem={({ item }) => {
+                    const { userProfile } = useUserProfile(item.pubkey);
+                    return (
+                        <View className="w-full flex-1 flex-row gap-2 p-4">
+                            <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
 
                             <View className="flex-col">
                                 <View className="flex-row items-center gap-1">
-                                    <User.Name className="font-bold" />
+                                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold" />
                                     <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
                                 </View>
 
                                 <EventContent event={item} className="text-sm" />
                             </View>
-                        </User.Profile>
-                    </View>
-                )}
+                        </View>
+                    )
+                }}
             />
 
             {/* <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="border-t border-border p-4">

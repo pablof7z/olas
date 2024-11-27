@@ -98,7 +98,8 @@ export default function HomeLayout() {
                         currentUser ? (
                             <User.Avatar
                                 userProfile={userProfile}
-                                size={24}
+                                size={16}
+                                className="h-6 w-6 rounded-full"
                             />
                         ) : (
                             <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />

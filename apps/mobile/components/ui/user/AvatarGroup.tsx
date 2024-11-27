@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import * as User from '../user';
-import { Hexpubkey, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 
 interface AvatarGroupProps {
     events?: NDKEvent[];
@@ -9,6 +9,23 @@ interface AvatarGroupProps {
     avatarSize: number;
     threshold: number;
 }
+
+const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: number }> = ({ pubkey, avatarSize, index }) => {
+    const { userProfile } = useUserProfile(pubkey);
+
+    return (
+        <User.Avatar
+            userProfile={userProfile}
+            alt={pubkey}
+            size={avatarSize}
+            style={{
+                height: avatarSize,
+                width: avatarSize,
+                marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
+            }}
+        />
+    );
+};
 
 /**
  * This component renders a list of avatars that slightly overlap. Useful to show
@@ -36,17 +53,7 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
     return (
         <View className="flex flex-row">
             {sortedPubkeys.slice(0, threshold).map((pubkey, index) => (
-                <User.Profile key={pubkey} pubkey={pubkey}>
-                    <User.Avatar
-                        alt={pubkey}
-                        size={avatarSize}
-                        style={{
-                            height: avatarSize,
-                            width: avatarSize,
-                            marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
-                        }}
-                    />
-                </User.Profile>
+                <AvatarGroupItem pubkey={pubkey} avatarSize={avatarSize} index={index} key={pubkey} />
             ))}
 
             {sortedPubkeys.length > threshold && (

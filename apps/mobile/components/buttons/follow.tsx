@@ -36,8 +36,8 @@ export default function FollowButton({
             setEnabling(false);
         }, 2500);
 
-        const user = await ndk.getUser({ pubkey });
-        await currentUser?.follow(user);
+        const user = ndk.getUser({ pubkey });
+        currentUser?.follow(user);
     };
 
     if (follows?.includes(pubkey) || pubkey === currentUser?.pubkey) {

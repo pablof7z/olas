@@ -11,12 +11,14 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
     const { defaultWallet } = useNDKWallet();
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet } = useStore(walleteStore);
 
     const [balance, setBalance] = useState<NDKWalletBalance | null>(null);
@@ -57,16 +59,16 @@ export default function SettingsIosStyleScreen() {
                 },
                 title: (
                     <View className="flex-row items-center gap-2">
-                        <User.Profile pubkey={currentUser.pubkey}>
-                            <User.Avatar size={32} />
+                        <View className="flex-col">
+                            <User.Avatar userProfile={userProfile} size={32} />
 
                             <View className="flex-col">
                                 <Text className="text-lg">
                                     {' '}
-                                    <User.Name />{' '}
+                                    <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} />{' '}
                                 </Text>
                             </View>
-                        </User.Profile>
+                        </View>
                     </View>
                 ),
             });

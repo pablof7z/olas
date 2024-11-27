@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
@@ -14,6 +15,7 @@ import { useStore } from 'zustand';
 export default function CommentScreen() {
     const { ndk, currentUser } = useNDK();
     const [comment, setComment] = useState('');
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     const postComment = async () => {
@@ -36,14 +38,12 @@ export default function CommentScreen() {
             <View className="flex-1 items-start bg-card p-4">
                 <KeyboardAwareScrollView>
                     <View className="w-full flex-row items-start justify-between">
-                        <User.Profile pubkey={currentUser!.pubkey}>
-                            <View className="mb-4 flex-row items-center gap-2">
-                                <User.Avatar size={48} alt="Profile image" />
-                                <Text className="text-lg font-bold">
-                                    <User.Name />
-                                </Text>
-                            </View>
-                        </User.Profile>
+                        <View className="mb-4 flex-row items-center gap-2">
+                            <User.Avatar userProfile={userProfile} size={48} alt="Profile image" />
+                            <Text className="text-lg font-bold">
+                                <User.Name userProfile={userProfile} pubkey={currentUser?.pubkey} />
+                            </Text>
+                        </View>
 
                         <Button variant="plain" onPress={postComment}>
                             <Text>Post</Text>

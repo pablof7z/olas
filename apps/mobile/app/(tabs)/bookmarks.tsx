@@ -77,9 +77,7 @@ export default function Bookmarks() {
                 <FlashList
                     data={sortedEvents}
                     renderItem={({ item }) => (
-                        <User.Profile pubkey={item.pubkey}>
-                            <Post event={item} />
-                        </User.Profile>
+                        <Post event={item} />
                     )}
                     keyExtractor={(item) => item.id}
                 />

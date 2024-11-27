@@ -9,7 +9,6 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import { myFollows } from '@/utils/myfollows';
 import { Stack } from 'expo-router';
 import { useScroll } from '~/contexts/ScrollContext';
-import * as User from '@/components/ui/user';
 import FilterButton from '@/components/FilterButton';
 import NotificationsButton from '@/components/NotificationsButton';
 import { Text } from '@/components/nativewindui/Text';
@@ -83,9 +82,7 @@ export default function HomeScreen() {
     const scrollRef = useScroll();
 
     const renderItem = useMemo(() => ({ item }: { item: NDKEvent }) => (
-        <User.Profile pubkey={item.pubkey}>
-            <Post event={item} />
-        </User.Profile>
+        <Post event={item} />
     ), []);
 
     return (

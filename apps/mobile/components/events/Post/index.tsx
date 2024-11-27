@@ -61,9 +61,8 @@ export default function Post({ event }: { event: NDKEvent }) {
     const renderCounter = useRef<Record<string, number>>({});
 
     renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
-    console.log(`Post ${event.id.substring(0, 8)} render #${renderCounter.current}`);
+    console.log(`Post ${event.id.substring(0, 8)} render #${renderCounter.current[event.id]}`);
 
-    const state = useRef({ loading: undefined })
     const { isDarkColorScheme } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();

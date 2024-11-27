@@ -2,7 +2,7 @@ import { activeEventStore } from '@/app/stores';
 import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -42,13 +42,21 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         await imageCurationSet.publishReplaceable();
     };
 
-    const reactions = useMemo(() => relatedEvents.filter((r) => r.kind === NDKKind.Reaction), [relatedEvents]);
-    const reactedByUser = useMemo(() => reactions.find((r) => r.pubkey === currentUser?.pubkey), [reactions, currentUser?.pubkey]);
+    const debouncedReactions = useDebounce(relatedEvents, 500);
 
-    const comments = useMemo(() => relatedEvents.filter((r) => [NDKKind.Text, 22].includes(r.kind)), [relatedEvents]);
-    const commentedByUser = useMemo(() => comments.find((c) => c.pubkey === currentUser?.pubkey), [comments, currentUser?.pubkey]);
-
-    const isBookmarkedByUser = useMemo(() => imageCurationSet.has(event.id), [imageCurationSet, event.id]);
+    const {
+        reactions,
+        reactedByUser,
+        comments,
+        commentedByUser,
+        isBookmarkedByUser
+    } = useMemo(() => ({
+        reactions: debouncedReactions.filter((r) => r.kind === NDKKind.Reaction),
+        reactedByUser: debouncedReactions.find((r) => r.kind === NDKKind.Reaction && r.pubkey === currentUser?.pubkey),
+        comments: debouncedReactions.filter((r) => [NDKKind.Text, 22].includes(r.kind)),
+        commentedByUser: debouncedReactions.find((r) => [NDKKind.Text, 22].includes(r.kind) && r.pubkey === currentUser?.pubkey),
+        isBookmarkedByUser: imageCurationSet.has(event.id)
+    }), [debouncedReactions, currentUser?.pubkey, imageCurationSet, event.id]);
 
     return (
         <View className="flex-1 flex-col gap-1 p-2">

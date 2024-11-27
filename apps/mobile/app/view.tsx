@@ -1,7 +1,7 @@
 import { useStore } from 'zustand';
 import { activeEventStore } from './stores';
 import { Text } from '@/components/nativewindui/Text';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { Dimensions, View, ScrollView } from 'react-native';
@@ -26,6 +26,7 @@ function getUrlFromEvent(event: NDKEvent) {
 
 export default function ViewScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
+    const { userProfile } = useUserProfile(activeEvent.pubkey);
 
     if (!activeEvent) {
         return <Text>No active event</Text>;
@@ -44,15 +45,13 @@ export default function ViewScreen() {
             <View className="flex-1">
                 {/* Header with user info */}
                 <View className="flex-row items-center border-b border-gray-800 p-4">
-                    <User.Profile pubkey={activeEvent.pubkey}>
-                        <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} />
-                        <View className="ml-3">
-                            <User.Name className="font-bold text-white" />
-                            <Text className="text-sm text-gray-400">
-                                <RelativeTime timestamp={activeEvent.created_at} />
-                            </Text>
-                        </View>
-                    </User.Profile>
+                    <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} userProfile={userProfile} />
+                    <View className="ml-3">
+                        <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} className="font-bold text-white" />
+                        <Text className="text-sm text-gray-400">
+                            <RelativeTime timestamp={activeEvent.created_at} />
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Image */}
