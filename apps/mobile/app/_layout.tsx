@@ -77,13 +77,6 @@ export default function RootLayout() {
         [967],
     ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
-    const onInteractiveCallback = useCallback((TTI: number, listName: string) => {
-        console.log(`${listName}'s TTI: ${TTI}`);
-    }, []);
-    const onBlankAreaCallback = useCallback((offsetStart: number, offsetEnd: number, listName: string) => {
-        console.log(`Blank area for ${listName}: ${Math.max(offsetStart, offsetEnd)}`);
-    }, []);
-
     return (
         <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />

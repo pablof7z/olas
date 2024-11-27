@@ -5,7 +5,7 @@ module.exports = function (api) {
   return {
     presets: [
       ['babel-preset-expo',
-        { jsxImportSource: ['nativewind', "@welldone-software/why-did-you-render"] }],
+        { jsxImportSource: 'nativewind' }],
       'nativewind/babel'
     ],
 
