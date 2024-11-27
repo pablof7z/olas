@@ -210,6 +210,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     listContainer: {
-        paddingBottom: 20,
+        paddingBottom: 100,
     },
 });
