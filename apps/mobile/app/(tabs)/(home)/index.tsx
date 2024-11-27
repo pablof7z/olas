@@ -90,13 +90,14 @@ export default function HomeScreen() {
                     ref={scrollRef}
                     data={debouncedEvents}
                     estimatedItemSize={340}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.id.toString()}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
                     renderItem={({ item }) => (
                         <User.Profile pubkey={item.pubkey}>
                             <Post event={item} />
                         </User.Profile>
                     )}
+                    disableIntervalMomentum={true}
                     contentContainerStyle={styles.listContainer}
                 />
             </View>

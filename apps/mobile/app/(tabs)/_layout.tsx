@@ -44,21 +44,25 @@ export default function HomeLayout() {
                     },
                 }}
             />
-{/* 
+
             <Tabs.Screen
                 name="bookmarks"
                 options={{
                     title: 'Bookmarks',
                     tabBarIcon: ({ color, focused }) => <Bookmark size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
                 }}
-            /> */}
+            />
 
             <Tabs.Screen
                 name="publish2"
                 listeners={{
                     tabPress: (e) => {
-                        e.preventDefault();
-                        router.push('/publish');
+                        e.preventDefault()
+                        if (!currentUser) {
+                            router.push('/login');
+                        } else {
+                            router.push('/publish');
+                        }
                     },
                 }}
                 options={{

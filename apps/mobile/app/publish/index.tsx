@@ -285,7 +285,6 @@ export default function ImageUpload() {
             await event.sign();
             await event.publish();
             setUploading(false);
-            console.log('publishing done, going back');
             router.back();
         } catch (error) {
             setError('Error publishing post!');
