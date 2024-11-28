@@ -1,7 +1,7 @@
 import 'react-native-get-random-values';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions } from 'react-native';
-import { CameraView } from 'expo-camera';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useRouter } from 'expo-router';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
@@ -14,6 +14,8 @@ export default function LoginScreen() {
     const [payload, setPayload] = useState<string | undefined>(undefined);
     const { ndk, loginWithPayload, currentUser } = useNDK();
     const router = useRouter();
+    const [facing, setFacing] = useState<CameraType>('back');
+    const [permission, requestPermission] = useCameraPermissions();
 
     const handleLogin = async () => {
         if (!ndk) return;
@@ -59,11 +61,17 @@ export default function LoginScreen() {
                     </Text>
 
                     {scanQR && (
-                        <View style={{ borderRadius: 8, height: Dimensions.get('window').width * 0.75, width: Dimensions.get('window').width *0.75 }}>
+                        <View
+                            style={{
+                                borderRadius: 8,
+                                height: Dimensions.get('window').width * 0.75,
+                                width: Dimensions.get('window').width * 0.75,
+                            }}>
                             <CameraView
                                 barcodeScannerSettings={{
-                                    barcodeTypes: ['qr']
+                                    barcodeTypes: ['qr'],
                                 }}
+                                facing={facing}
                                 style={{ flex: 1, width: '100%', borderRadius: 8 }}
                                 onBarcodeScanned={handleBarcodeScanned}
                             />
@@ -91,11 +99,19 @@ export default function LoginScreen() {
                     </Button>
 
                     {!scanQR && (
-                        <View className='flex-row justify-center w-full'>
-                            <Button variant="plain" onPress={() => {
-                                ndk.signer = undefined;
-                                setScanQR(true);
-                            }} className="border border-border bg-muted/10" style={{ flexDirection: 'column', gap: 8 }}>
+                        <View className="w-full flex-row justify-center">
+                            <Button
+                                variant="plain"
+                                onPress={() => {
+                                    ndk.signer = undefined;
+                                    if (!permission.granted) {
+                                        requestPermission().then(() => setScanQR(true));
+                                    } else {
+                                        setScanQR(true);
+                                    }
+                                }}
+                                className="bg-muted/10 border border-border"
+                                style={{ flexDirection: 'column', gap: 8 }}>
                                 <QrCode size={64} />
                                 <Text>Scan QR</Text>
                             </Button>
