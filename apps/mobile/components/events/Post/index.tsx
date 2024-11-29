@@ -10,13 +10,14 @@ import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useMemo, useRef, useMemo } from 'react';
+import { memo, useRef, useMemo } from 'react';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { InlinedComments, Reactions } from './Reactions';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import FollowButton from '@/components/buttons/follow';
+import { Text } from '@/components/nativewindui/Text';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -77,11 +78,17 @@ const MediaSection = memo(function MediaSection({
     );
 }, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
-const MemoizedReactions = memo(function MemoizedReactions({ event }: { event: NDKEvent }) {
-    return <Reactions event={event} />;
-}, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
+// const MemoizedReactions = memo(function MemoizedReactions({ event }: { event: NDKEvent }) {
+//     return <Reactions event={event} />;
+// }, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
 export default function Post({ event }: { event: NDKEvent }) {
+    return (
+        <View style={{ height: 300, flex: 1 }}>
+            <Text>{event.id.substring(0, 8)}</Text>
+        </View>
+    )
+    
     const renderCounter = useRef<Record<string, number>>({});
 
     renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
@@ -135,9 +142,36 @@ export default function Post({ event }: { event: NDKEvent }) {
 
             <MediaSection event={event} setActiveEvent={setActiveEvent} />
 
-            <MemoizedReactions event={event} />
+            <PostBottom event={event} trimmedContent={content} />
+        </View>
+    )
+}
 
-            {event.content.trim().length > 0 && (
+function PostBottom({ event, trimmedContent }: { event: NDKEvent, trimmedContent: string }) {
+    const { follows } = useNDKSession();
+    const filters = useMemo(
+        () => [
+            {
+                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.BookmarkList],
+                ...event.filter(),
+            },
+        ],
+        [event.id]
+    );
+    const opts = useMemo(() => ({ groupable: true }), []);
+    const { events: relatedEvents } = useSubscribe({ filters, opts });
+
+    const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
+
+    const commentsByFollows = useMemo(() => relatedEvents
+        .filter(isComment)
+        .filter((c) => follows.includes(c.pubkey)), [relatedEvents, follows]);
+
+    return (
+        <View className="flex-1 flex-col gap-1 p-2">
+            <Reactions event={event} relatedEvents={relatedEvents} />
+
+            {trimmedContent.length > 0 && (
                 <View className="p-2">
                     <EventContent
                         event={event}

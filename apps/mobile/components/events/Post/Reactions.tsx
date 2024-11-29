@@ -2,13 +2,14 @@ import { activeEventStore } from '@/app/stores';
 import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useDebounce } from '@uidotdev/usehooks';
 
 export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEvents: NDKEvent[] }) {
     const renderCounter = useRef<Record<string, number>>({});
@@ -96,7 +97,7 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
 export function InlinedComments({ comments, allCommentsCount }: { comments: NDKEvent[], allCommentsCount: number }) {
     return (
         <View className="flex-1 flex-col gap-0">
-            {comments.slice(0, 3).map((c) => <InlineComment comment={c} />)}
+            {comments.slice(0, 3).map((c) => <InlineComment key={c.id} comment={c} />)}
             {allCommentsCount > 3 && <Text className="text-sm text-muted-foreground">+{allCommentsCount - 3} more</Text>}
         </View>
     );
