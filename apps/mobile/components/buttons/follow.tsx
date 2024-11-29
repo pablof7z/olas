@@ -4,7 +4,6 @@ import { Button } from "../nativewindui/Button";
 import { ButtonProps } from "../nativewindui/Button";
 import { Text } from "../nativewindui/Text";
 import { useState } from "react";
-import { ActivityIndicator } from "react-native";
 import { Check } from "lucide-react-native";
 
 export default function FollowButton({ 
@@ -30,14 +29,17 @@ export default function FollowButton({
             ['k', NDKKind.VerticalVideo.toString()],
         ];
         await followEvent.sign();
+        await followEvent.publish();
 
-        setEnabling(true);
-        setTimeout(async () => {
-            setEnabling(false);
-        }, 2500);
+        // // setEnabling(true);
+        // // setTimeout(async () => {
+        // //     setEnabling(false);
+        // // }, 2500);
 
         const user = ndk.getUser({ pubkey });
-        currentUser?.follow(user);
+        // console.log('following user', { pubkey: pubkey.slice(0, 6) });
+        if (currentUser) currentUser.follow(user);
+        // console.log('followed user', { pubkey: pubkey.slice(0, 6) });
     };
 
     if (follows?.includes(pubkey) || pubkey === currentUser?.pubkey) {
@@ -45,11 +47,9 @@ export default function FollowButton({
     }
 
     return <Button
-        {...props}
         variant={variant}
         size={size}
         onPress={follow}
-        disabled={enabling}
     >
         {enabling ? (
             <Check size={18} strokeWidth={2} />

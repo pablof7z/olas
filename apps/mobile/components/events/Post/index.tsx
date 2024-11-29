@@ -10,7 +10,7 @@ import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useRef, useMemo } from 'react';
+import { memo, useMemo, useRef, useMemo } from 'react';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
@@ -56,6 +56,30 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
     if (url && isVideo(url)) return <VideoContainer url={url} />;
     return <Image event={event} style={styles.image} onPress={onPress} />;
 });
+
+const MediaSection = memo(function MediaSection({ 
+    event, 
+    setActiveEvent 
+}: { 
+    event: NDKEvent;
+    setActiveEvent: (event: NDKEvent) => void;
+}) {
+    return (
+        <View style={{ minHeight: Dimensions.get('window').width*0.4 }}>
+            <CardMedia
+                event={event}
+                onPress={() => {
+                    setActiveEvent(event);
+                    router.push('/view');
+                }}
+            />
+        </View>
+    );
+}, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
+
+const MemoizedReactions = memo(function MemoizedReactions({ event }: { event: NDKEvent }) {
+    return <Reactions event={event} />;
+}, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
 export default function Post({ event }: { event: NDKEvent }) {
     const renderCounter = useRef<Record<string, number>>({});
@@ -109,46 +133,11 @@ export default function Post({ event }: { event: NDKEvent }) {
                 <FollowButton pubkey={event.pubkey} />
             </View>
 
-            <View style={{ minHeight: Dimensions.get('window').width*0.4 }}>
-                <CardMedia
-                    event={event}
-                    onPress={() => {
-                        setActiveEvent(event);
-                        router.push('/view');
-                    }}
-                />
-            </View>
+            <MediaSection event={event} setActiveEvent={setActiveEvent} />
 
-            <PostBottom event={event} trimmedContent={content} />
-        </View>
-    );
-}
+            <MemoizedReactions event={event} />
 
-function PostBottom({ event, trimmedContent }: { event: NDKEvent, trimmedContent: string }) {
-    const { follows } = useNDKSession();
-    const filters = useMemo(
-        () => [
-            {
-                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.BookmarkList],
-                ...event.filter(),
-            },
-        ],
-        [event.id]
-    );
-    const opts = useMemo(() => ({ groupable: true }), []);
-    const { events: relatedEvents } = useSubscribe({ filters, opts });
-
-    const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
-
-    const commentsByFollows = useMemo(() => relatedEvents
-        .filter(isComment)
-        .filter((c) => follows.includes(c.pubkey)), [relatedEvents, follows]);
-
-    return (
-        <View className="flex-1 flex-col gap-1 p-2">
-            <Reactions event={event} relatedEvents={relatedEvents} />
-
-            {trimmedContent.length > 0 && (
+            {event.content.trim().length > 0 && (
                 <View className="p-2">
                     <EventContent
                         event={event}

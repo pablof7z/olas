@@ -50,7 +50,6 @@ const SingleImage = memo(function SingleImage({
     colors: any;
     props: any;
 }) {
-    const [error, setError] = useState(false);
     const [imageDimensions, setImageDimensions] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const pUri = getProxiedImageUrl(url.url);
@@ -61,11 +60,9 @@ const SingleImage = memo(function SingleImage({
                 if (path) {
                     const { width, height } = await Image.loadAsync(path);
                     setImageDimensions({ width, height });
-                    console.log('no network request for image');
                 } else {
                     const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
                     setImageDimensions({ width, height });
-                    console.log('network request for image');
                 }
             } catch (error) {
                 console.error('Error loading image dimensions', error);

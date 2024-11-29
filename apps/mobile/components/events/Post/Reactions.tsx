@@ -14,7 +14,7 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
     const renderCounter = useRef<Record<string, number>>({});
 
     renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
-    console.log(`Reactions for ${event.id.substring(0, 8)} render #${renderCounter.current[event.id]}`);
+    // console.log(`Reactions for ${event.id.substring(0, 8)} render #${renderCounter.current[event.id]}`);
 
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const { currentUser } = useNDK();
