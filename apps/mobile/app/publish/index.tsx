@@ -321,8 +321,6 @@ export default function ImageUpload() {
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [1, 1],
             quality: 1,
         });
 
@@ -340,7 +338,6 @@ export default function ImageUpload() {
 
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
-            aspect: [1, 1],
             quality: 1,
             mediaTypes: ImagePicker.MediaTypeOptions.All,
         });
@@ -388,10 +385,9 @@ export default function ImageUpload() {
                                     />
                                 ) : (
                                     <Image
+                                        contentFit="contain"
                                         source={{ uri: m.internalUri }}
                                         style={styles.image}
-                                        contentFit="cover"
-                                        contentPosition="center"
                                     />
                                 )}
                                 <TouchableOpacity
