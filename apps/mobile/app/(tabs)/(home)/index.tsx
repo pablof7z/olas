@@ -1,4 +1,4 @@
-import { useSubscribe, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDKSession, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
@@ -12,6 +12,11 @@ import { useScroll } from '~/contexts/ScrollContext';
 import * as User from '@/components/ui/user';
 import FilterButton from '@/components/FilterButton';
 import NotificationsButton from '@/components/NotificationsButton';
+import { Text } from '@/components/nativewindui/Text';
+import { ChevronDown } from 'lucide-react-native';
+import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
+import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
 
@@ -19,11 +24,17 @@ export default function HomeScreen() {
     const { follows } = useNDKSession();
     const [tagFilter, setTagFilter] = useState<string | null>(null);
     const [includeTweets, setIncludeTweets] = useState(false);
+    const [feedType, setFeedType] = useState<'follows' | 'local' | string>('follows');
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
             { kinds: [20] },
             { kinds: [1], '#k': ['20'] }, // cheating!!!
         ];
+
+        if (feedType === 'follows') {
+            filters[0].authors = follows;
+            filters[1].authors = follows;
+        }
 
         if (includeTweets) {
             if (follows) filters.push({ kinds: [1], authors: follows, limit: 50 });
@@ -33,7 +44,7 @@ export default function HomeScreen() {
         if (tagFilter) filters.push({ kinds: [1], '#t': [tagFilter] });
 
         return filters;
-    }, [follows, includeTweets, tagFilter]);
+    }, [follows, includeTweets, tagFilter, feedType]);
     const opts = useMemo(() => ({}), []);
     const { events } = useSubscribe({ filters, opts });
 
@@ -76,7 +87,7 @@ export default function HomeScreen() {
             <Stack.Screen
                 options={{
                     headerShown: true,
-                    title: 'Home',
+                    headerTitle: () => <HomeTitle feedType={feedType} setFeedType={setFeedType} />,
                     headerRight: () => (
                         <View style={{ flexDirection: 'row', gap: 10 }}>
                             <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />
@@ -102,6 +113,54 @@ export default function HomeScreen() {
                 />
             </View>
         </>
+    );
+}
+
+function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (feedType: string) => void }) {
+    const { colors } = useColorScheme();
+    const { ndk } = useNDK();
+    const [i, setI] = useState(0);
+
+    ndk.pool.on('relay:ready', () => setI(i + 1));
+    ndk.pool.on('relay:disconnect', () => setI(i - 1));
+
+    const relays = useMemo(() => ndk.pool.connectedRelays().map((r) => r.url), [ndk, i]);
+
+    return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: colors.card }}>
+            <DropdownMenu
+                items={[
+                    createDropdownItem({
+                    actionKey: 'follows',
+                    title: 'Follows',
+                    subTitle: 'Posts from people you follow',
+                    state: { checked: feedType === 'follows' },
+                }),
+                createDropdownItem({
+                    actionKey: 'local',
+                    title: 'Local',
+                    subTitle: 'Posts from all relays you are connected to',
+                    state: { checked: feedType === 'local' },
+                }),
+                ...relays.map((relay) => createDropdownItem({
+                    actionKey: relay,
+                    title: relay,
+                        subTitle: relay,
+                        state: { checked: feedType === relay },
+                    })),
+            ]}
+            onItemPress={(item) => {
+                if (item.actionKey === 'follows') setFeedType('follows');
+                if (item.actionKey === 'local') setFeedType('local');
+            }}>
+            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text className="font-medium">
+                    {feedType === 'follows' ? 'Follows' : 'Global'}
+                </Text>
+                <ChevronDown size={16} color={colors.foreground} />
+            </Pressable>
+            </DropdownMenu>
+        </View>
     );
 }
 

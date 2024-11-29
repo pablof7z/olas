@@ -1,23 +1,21 @@
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
-import { View, Text } from 'react-native';
+import { NDKEvent, NDKKind, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
 import { Video } from 'expo-av';
-import { Button } from '../../nativewindui/Button';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { isVideo } from '@/utils/media';
 import Image from '@/components/media/image';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { Reactions } from './Reactions';
+import { InlinedComments, Reactions } from './Reactions';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import FollowButton from '@/components/buttons/follow';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
@@ -60,12 +58,9 @@ export const CardMedia = memo(function CardMedia({ event, onPress }: { event: ND
 });
 
 export default function Post({ event }: { event: NDKEvent }) {
-    const { ndk } = useNDK();
     const { isDarkColorScheme } = useColorScheme();
     const { setActiveEvent } = useStore(activeEventStore, (state) => state);
     const { colors } = useColorScheme();
-    const { currentUser } = useNDK();
-    const { follows } = useNDKSession();
     const { loading } = User.useUserProfile();
 
     let content = event.content.trim();
@@ -119,13 +114,40 @@ export default function Post({ event }: { event: NDKEvent }) {
                 />
             </View>
 
-            <Reactions event={event} />
+            <PostBottom event={event} trimmedContent={content} />
+        </View>
+    );
+}
 
-            {event.content.trim().length > 0 && (
+function PostBottom({ event, trimmedContent }: { event: NDKEvent, trimmedContent: string }) {
+    const { follows } = useNDKSession();
+    const filters = useMemo(
+        () => [
+            {
+                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.BookmarkList],
+                ...event.filter(),
+            },
+        ],
+        [event.id]
+    );
+    const opts = useMemo(() => ({ groupable: true }), []);
+    const { events: relatedEvents } = useSubscribe({ filters, opts });
+
+    const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
+
+    const commentsByFollows = useMemo(() => relatedEvents
+        .filter(isComment)
+        .filter((c) => follows.includes(c.pubkey)), [relatedEvents, follows]);
+
+    return (
+        <View className="flex-1 flex-col gap-1 p-2">
+            <Reactions event={event} relatedEvents={relatedEvents} />
+
+            {trimmedContent.length > 0 && (
                 <View className="p-2">
                     <EventContent
                         event={event}
-                        content={content}
+                        content={trimmedContent}
                         className="text-sm text-foreground"
                         onMentionPress={(pubkey) => {
                             router.push(`/profile?pubkey=${pubkey}`);
@@ -133,6 +155,8 @@ export default function Post({ event }: { event: NDKEvent }) {
                     />
                 </View>
             )}
+
+            <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} />
         </View>
-    );
+    )
 }
