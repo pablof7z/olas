@@ -21,7 +21,7 @@
             "extends": "monorepo",
             "developmentClient": true,
             "distribution": "internal",
-            "resourceClass": "large"
+            "resourceClass": "medium"
         },
         "production": {
             "extends": "monorepo",
@@ -30,7 +30,7 @@
             "android": {
                 "buildType": "apk"
             },
-            "resourceClass": "large"
+            "resourceClass": "medium"
         }
     },
     "submit": {

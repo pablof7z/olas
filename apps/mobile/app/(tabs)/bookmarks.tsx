@@ -55,7 +55,7 @@ export default function Bookmarks() {
                     headerShown: true,
                     title: 'Bookmarks',
                     headerRight: () => (
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <View style={{ flexDirection: 'row',  paddingRight:10 }}>
                             <Pressable onPress={() => setShowOthers(!showOthers)}>
                                 <Globe size={24} strokeWidth={showOthers ? 3 : 1} color="gray" />
                             </Pressable>
@@ -77,11 +77,10 @@ export default function Bookmarks() {
                 <FlashList
                     data={sortedEvents}
                     renderItem={({ item }) => (
-                        <User.Profile pubkey={item.pubkey}>
-                            <Post event={item} />
-                        </User.Profile>
+                        <Post event={item} />
                     )}
                     keyExtractor={(item) => item.id}
+                    contentContainerStyle={{paddingBottom:30}}
                 />
             </View>
         </>

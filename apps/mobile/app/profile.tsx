@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
 import Image from '@/components/media/image';
 import * as User from '@/components/ui/user';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
@@ -15,6 +16,7 @@ import FollowButton from '@/components/buttons/follow';
 export default function Profile() {
     const { follows } = useNDKSession();
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
+    const { userProfile } = useUserProfile(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
@@ -37,8 +39,10 @@ export default function Profile() {
         events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
     ).size, [events]);
 
-    const sortedEvents = useMemo(() => {
-        return events.sort((a, b) => b.created_at - a.created_at);
+    const sortedContent = useMemo(() => {
+        return events
+            .filter(e => [NDKKind.Text, NDKKind.Image].includes(e.kind))
+            .sort((a, b) => b.created_at - a.created_at);
     }, [events]);
 
     if (!pubkey) {
@@ -71,8 +75,7 @@ export default function Profile() {
 
     const insets = useSafeAreaInsets();
     return (
-        <User.Profile pubkey={pubkey}>
-            <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
+        <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
                 <Animated.View
                     style={[
                         styles.header,
@@ -81,11 +84,11 @@ export default function Profile() {
                             transform: [{ translateY: headerTranslateY }],
                         },
                     ]}>
-                    <User.Avatar style={styles.profileImage} alt="Profile image" />
+                    <User.Avatar userProfile={userProfile} style={styles.profileImage} alt="Profile image" />
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber} className="text-foreground">
-                                {events.length}
+                                {sortedContent.length}
                             </Text>
                             <Text style={styles.statLabel} className="text-foreground">
                                 Posts
@@ -113,9 +116,9 @@ export default function Profile() {
                 </Animated.View>
 
                 <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
-                    <User.Avatar style={styles.smallProfileImage} alt="Profile image" />
+                    <User.Avatar userProfile={userProfile} style={styles.smallProfileImage} alt="Profile image" />
                     <Text style={styles.username} className="grow text-lg font-bold text-foreground">
-                        <User.Name />
+                        <User.Name userProfile={userProfile} pubkey={pubkey} />
                     </Text>
                     <FollowButton pubkey={pubkey} />
                 </Animated.View>
@@ -127,10 +130,10 @@ export default function Profile() {
                     scrollEventThrottle={16}>
                     <View style={styles.bioSection}>
                         <Text style={styles.username} className="text-foreground">
-                            <User.Name />
+                            <User.Name userProfile={userProfile} pubkey={pubkey} />
                         </Text>
                         <Text style={styles.bio} className="text-muted-foreground">
-                            <User.Field label="about" />
+                            <User.Field userProfile={userProfile} label="about" />
                         </Text>
                     </View>
 
@@ -148,10 +151,11 @@ export default function Profile() {
                     ) : (
                         <View style={{ flex: 1 }}>
                             <MasonryFlashList
-                                data={sortedEvents}
+                                data={sortedContent}
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
+                                contentContainerStyle={{paddingBottom:60}}
                                 renderItem={({ item }) => (
                                     <ImageGridItem
                                         event={item}
@@ -165,18 +169,21 @@ export default function Profile() {
                     )}
                 </Animated.ScrollView>
             </View>
-        </User.Profile>
+
     );
 }
 
 function ImageGridItem({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
+    const size = Dimensions.get('window').width / 3;
+    
     return (
         <View style={styles.gridItem}>
             <Image
                 event={event}
                 onPress={onPress}
                 singleImageMode
-                maxWidth={Dimensions.get('window').width / 3}
+                maxWidth={size}
+                maxHeight={size}
             />
         </View>
     );

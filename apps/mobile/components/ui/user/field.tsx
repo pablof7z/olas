@@ -1,8 +1,8 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { useUserProfile } from './profile';
-
+import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 interface FieldProps {
+    userProfile: NDKUserProfile | null; 
     label: string;
     fallback?: string;
 }
@@ -10,9 +10,7 @@ interface FieldProps {
 /**
  * Renders the name of a user
  */
-const Field: React.FC<FieldProps> = ({ label, fallback, ...props }) => {
-    const { userProfile } = useUserProfile();
-
+const Field: React.FC<FieldProps> = ({ userProfile, label, fallback, ...props }) => {
     if (!userProfile?.[label] && !fallback) {
         return null;
     }

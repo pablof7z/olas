@@ -1,17 +1,19 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useImage, Image } from 'expo-image';
-import { ActivityIndicator, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Image, ImageContentFit, ImageRef, ImageSource, useImage } from 'expo-image';
+import { ActivityIndicator, ImageStyle, Pressable, ScrollView, StyleProp, View, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { imetasFromEvent } from '@/utils/imeta';
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { Text } from '../nativewindui/Text';
+import { Button } from '../nativewindui/Button';
 
 // Extract URLs from the event
 const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
     try {
         if (event.kind === NDKKind.Text) {
             const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/gi);
-            return urls?.length ? urls.map((url) => ({ url })) : [];
+            if (urls?.length) return urls.map((url) => ({ url }));
         }
 
         if (event.kind === 20) {
@@ -19,17 +21,15 @@ const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
             if (imetas.length > 0) {
                 return imetas.map((imeta) => ({ url: imeta.url, blurhash: imeta.blurhash }));
             }
-            const url = event.tagValue('url');
-            const blurhash = event.tagValue('blurhash');
-            return url ? [{ url, blurhash }] : [];
         }
 
         if (event.kind === NDKKind.VerticalVideo || event.kind === NDKKind.HorizontalVideo) {
             const url = event.tagValue('thumb');
-            return url ? [{ url }] : [];
+            if (url) return [{ url }];
         }
 
-        return [];
+        // didn't find anything, try a last-ditch url tag
+        return event.getMatchingTags('url').map(t => ({ url: t[1] }));
     } catch (e) {
         console.warn('Error parsing image URLs:', e);
         return [];
@@ -39,43 +39,92 @@ const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] => {
 const SingleImage = memo(function SingleImage({
     url,
     maxWidth,
+    maxHeight,
     onPress,
-    colors,
-    props,
 }: {
     url: { url?: string; blurhash?: string };
     maxWidth: number;
+    maxHeight: number;
     onPress: () => void;
-    colors: any;
-    props: any;
 }) {
-    const [error, setError] = useState(false);
+    const [image, setImage] = useState<ImageSource | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [imageDimensions, setImageDimensions] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const pUri = getProxiedImageUrl(url.url); 
     useEffect(() => {
+        let isValid = true;
+        const requestedUrl = url.url;
+        
+        const loadImageFromUrl = async (imgUrl: string) => {
+            const res = await Image.loadAsync({
+                uri: imgUrl,
+                cacheKey: requestedUrl,
+                blurhash: url.blurhash,
+            }, {
+                onError: (e) => {
+                    if (!isValid) return;
+                    console.error('Error loading image2', imgUrl, e, {originalUrl: url.url});
+                    setError(e.message);
+                },
+            }); // Load the image and get its dimensions
+            
+            if (!isValid) {
+                return;
+            }
+            setImage(res);
+            setImageDimensions({ width: res.width, height: res.height });
+        }
+        
         const loadImage = async () => {
             try {
-                const { width, height } = await Image.loadAsync(pUri); // Load the image and get its dimensions
-                setImageDimensions({ width, height });
+                const cachePath = await Image.getCachePathAsync(url.url);
+                if (cachePath) {
+                    await loadImageFromUrl(cachePath);
+                    setIsLoading(false);
+                    return;
+                }
             } catch (error) {
-                console.error('Error loading image dimensions', error);
-            } finally {
-                setIsLoading(false);
+                console.error('Error getting cache path', error);
             }
-        }; 
+
+            try {
+                await loadImageFromUrl(pUri);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error loading image', error, pUri, {originalUrl: url.url});
+                setError(error.message);
+            }
+        };
 
         loadImage();
-    }, [pUri]); 
 
-    if (isLoading || !imageDimensions) {
+        return () => {
+            isValid = false;
+        };
+    }, [url.url]); 
+
+    if (isLoading || !imageDimensions || error) {
         return (
-            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator />
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: maxHeight/2, position: 'relative' }}>
+                <Image
+                    source={{ blurhash: url.blurhash }}
+                    style={{ width: maxWidth, height: maxHeight/2 }}
+                />
+                {error ? (
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text>Whoops, something's wrong with this image</Text>
+                        <Text className="p-10 text-xs text-muted-foreground">{error}</Text>
+                    </View>
+                ) : (
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator />
+                    </View>
+                )}
             </View>
         );
     }
-    if (error) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+    if (error) return <View style={{ flex: 1 }} />;
 
     const width = imageDimensions.width;
     const height = imageDimensions.height;
@@ -83,46 +132,53 @@ const SingleImage = memo(function SingleImage({
         <View style={{ position: 'relative', flex: 1 }}>
             <Pressable onPress={onPress}>
                 <Image
-                    {...props}
-                    source={{ uri: pUri }}
-                    contentFit="contain"
+                    source={image}
+                    contentFit={ height && height > maxHeight ? 'cover' : 'contain' }
                     style={[
                         {
                             width: maxWidth,
-                            height: height ? height / (width / maxWidth) : undefined,
-                            backgroundColor: colors.background,
+                            height: height ? Math.min(height / (width / maxWidth), maxHeight) : undefined,
                         },
                     ]}
-                    placeholder={url.blurhash ? { blurhash: url.blurhash } : undefined}
                 />
             </Pressable>
         </View>
     );
 });
 
-export default memo(function ImageComponent({
+export default function ImageComponent({
     event,
     singleImageMode,
     maxWidth,
+    maxHeight,
     onPress,
     ...props
 }: {
     event: NDKEvent;
     singleImageMode?: boolean;
     maxWidth?: number;
+    maxHeight: number;
     onPress: () => void;
 } & Partial<Image>) {
     const { colors } = useColorScheme();
-    const urls = useMemo(() => getUrls(event), [event]);
+    const urls = getUrls(event);
     let { width: windowWidth } = useWindowDimensions();
 
     maxWidth ??= windowWidth;
 
-    if (urls.length === 0) return null;
+    if (urls.length === 0) {
+        console.log('no urls', event.tags);
+    }
+
+    if (urls.length === 0) return (
+        <View style={{ flex: 1, width: maxWidth, height: maxHeight }}>
+            <Text>no images</Text>
+        </View>
+    );
 
     if (urls.length === 1 || singleImageMode) {
-        return <SingleImage url={urls[0]} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />;
-    } 
+        return <SingleImage url={urls[0]} maxWidth={maxWidth} maxHeight={maxHeight} onPress={onPress} />;
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -135,7 +191,7 @@ export default memo(function ImageComponent({
                 contentContainerStyle={{ flexGrow: 1 }}
                 style={{ flex: 1, width: '100%' }}>
                 {urls.map((url, index) => (
-                    <SingleImage key={index} url={url} maxWidth={maxWidth} onPress={onPress} colors={colors} props={props} />
+                    <SingleImage key={index} url={url} maxWidth={maxWidth} maxHeight={maxHeight} onPress={onPress} />
                 ))}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 8 }}>
@@ -154,4 +210,4 @@ export default memo(function ImageComponent({
             </View>
         </View>
     );
-});
+}

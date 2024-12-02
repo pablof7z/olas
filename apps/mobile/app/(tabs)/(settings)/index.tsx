@@ -1,4 +1,4 @@
-import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -11,12 +11,13 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { walleteStore } from '@/app/stores';
 import { useStore } from 'zustand';
 import { NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
-    const { defaultWallet } = useNDKWallet();
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet } = useStore(walleteStore);
 
     const [balance, setBalance] = useState<NDKWalletBalance | null>(null);
@@ -57,16 +58,16 @@ export default function SettingsIosStyleScreen() {
                 },
                 title: (
                     <View className="flex-row items-center gap-2">
-                        <User.Profile pubkey={currentUser.pubkey}>
-                            <User.Avatar size={32} />
+                        <View className="flex-col">
+                            <User.Avatar userProfile={userProfile} size={32} />
 
                             <View className="flex-col">
                                 <Text className="text-lg">
                                     {' '}
-                                    <User.Name />{' '}
+                                    <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} />{' '}
                                 </Text>
                             </View>
-                        </User.Profile>
+                        </View>
                     </View>
                 ),
             });
@@ -82,9 +83,8 @@ export default function SettingsIosStyleScreen() {
                 id: '12',
                 title: 'Wallet',
                 leftView: <IconView name="lightning-bolt" className="bg-green-500" />,
-                rightText: !!defaultWallet ? `${balance?.amount.toString() ?? '42k'} ${balance?.unit ?? 'sats'}` : 'no',
-                onPress: () => router.push('/(settings)/wallet'),
             });
+            // onPress: () => router.push('/(settings)/wallet'),
             opts.push('gap 5');
             opts.push({
                 id: 'blossom',
@@ -115,7 +115,7 @@ export default function SettingsIosStyleScreen() {
         });
 
         return opts;
-    }, [currentUser, defaultWallet, balance]);
+    }, [currentUser, balance]);
 
     return (
         <>

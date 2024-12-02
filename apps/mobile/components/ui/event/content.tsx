@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '../user';
 import { Image } from 'expo-image';
 import { nip19 } from 'nostr-tools';
@@ -10,6 +10,19 @@ interface EventContentProps {
     content?: string;
 
     onMentionPress?: (pubkey: string) => void;
+}
+
+const RenderMention = ({ entity, onMentionPress }: { entity: string | null; onMentionPress?: (pubkey: string) => void }) => {
+    const pubkey = nip19.decode(entity).data as string;
+    const { userProfile } = useUserProfile(pubkey);
+
+    return (
+        <Pressable onPress={() => onMentionPress?.(pubkey)}>
+            <Text style={style.mention}>
+                @<User.Name userProfile={userProfile} pubkey={pubkey} style={style.mention} />
+            </Text>
+        </Pressable>
+    );
 }
 
 const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
@@ -38,16 +51,8 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
 
     // if the entity is a user, return the user's profile
     if (entity.startsWith('npub')) {
-        const pubkey = nip19.decode(entity).data as string;
-
         return (
-            <User.Profile npub={entity}>
-                <Pressable onPress={() => onMentionPress?.(pubkey)}>
-                    <Text style={style.mention}>
-                        @<User.Name style={style.mention} />
-                    </Text>
-                </Pressable>
-            </User.Profile>
+            <RenderMention entity={entity} onMentionPress={onMentionPress} />
         );
     } else if (entity.startsWith('nprofile')) {
         let pubkey: string | undefined;
@@ -62,13 +67,7 @@ const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>>
         }
 
         return (
-            <User.Profile pubkey={pubkey}>
-                <Pressable onPress={() => onMentionPress?.(pubkey)}>
-                    <Text style={style.mention}>
-                        @<User.Name style={style.mention} />
-                    </Text>
-                </Pressable>
-            </User.Profile>
+            <RenderMention entity={entity} onMentionPress={onMentionPress} />
         );
     }
 

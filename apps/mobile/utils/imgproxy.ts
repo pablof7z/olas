@@ -5,9 +5,9 @@ const WINDOW_WIDTH = Dimensions.get('window').width;
 
 interface ImgProxyConfig {
     baseURL?: string;
-    secret?: string;
-    salt?: string;
-    modifiers?: {
+    secret: string;
+    salt: string;
+    modifiers: {
         width?: string;
         height?: string;
         [key: string]: string | undefined;
@@ -28,7 +28,5 @@ export function getProxiedImageUrl(url: string, size: number = WINDOW_WIDTH, fac
 
     finalConfig.modifiers.width = Math.floor(size * factor).toString();
     const imageUrl = getImageUrl(url, finalConfig);
-   // console.log('imageUrl:', imageUrl);
     return imageUrl;
-    //return getImageUrl(url, finalConfig);
 }

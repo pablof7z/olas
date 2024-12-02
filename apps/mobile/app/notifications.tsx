@@ -1,11 +1,10 @@
-import { NDKEvent, NDKKind, useNDK, useNDKSessionEvents, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDK, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Stack } from 'expo-router';
 import { memo, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
 import { FlashList } from '@shopify/flash-list';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { useDebounce, useThrottle } from '@uidotdev/usehooks';
 
 type NotificationItem = {
@@ -20,6 +19,8 @@ type NotificationItem = {
 };
 
 const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
+    const { userProfile } = useUserProfile(event.pubkey);
+    
     const label = useMemo(() => {
         switch (event.kind) {
             case NDKKind.Reaction:
@@ -33,18 +34,16 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
 
     return (
         <TouchableOpacity style={styles.notificationItem} className="border-b border-border">
-            <User.Profile pubkey={event.pubkey}>
-                <User.Avatar size={44} style={styles.avatar} />
+            <User.Avatar userProfile={userProfile} alt={event.pubkey} size={44} style={styles.avatar} />
 
-                <View style={styles.content}>
-                    <Text>
-                        <User.Name style={styles.username} /> {label}
-                    </Text>
-                    <Text style={styles.timestamp} className="text-muted-foreground">
-                        <RelativeTime timestamp={event.created_at} />
-                    </Text>
-                </View>
-            </User.Profile>
+            <View style={styles.content}>
+                <Text>
+                    <User.Name userProfile={userProfile} pubkey={event.pubkey} style={styles.username} /> {label}
+                </Text>
+                <Text style={styles.timestamp} className="text-muted-foreground">
+                    <RelativeTime timestamp={event.created_at} />
+                </Text>
+            </View>
         </TouchableOpacity>
     );
 });

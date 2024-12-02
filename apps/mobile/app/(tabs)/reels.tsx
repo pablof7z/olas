@@ -7,6 +7,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { ResizeMode, Video } from 'expo-av';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as User from '@/components/ui/user';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
@@ -15,6 +16,7 @@ import { memo } from 'react';
 const Reel = memo(
     ({ event, isVisible }: { event: NDKEvent; isVisible: boolean }) => {
         const [isLoading, setIsLoading] = useState(true);
+        const { userProfile } = useUserProfile(event.pubkey);
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
         const videoRef = useRef<Video>(null);
@@ -64,14 +66,12 @@ const Reel = memo(
                     }}
                 />
                 <SafeAreaView className="absolute bottom-4 left-4 flex-col items-start gap-2">
-                    <User.Profile pubkey={event.pubkey}>
-                        <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
-                            <User.Avatar alt="Profile image" className="h-8 w-8" />
-                            <Text className="text-base font-semibold text-white">
-                                <User.Name />
-                            </Text>
-                        </Pressable>
-                    </User.Profile>
+                    <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
+                        <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+                        <Text className="text-base font-semibold text-white">
+                            <User.Name userProfile={userProfile} pubkey={event.pubkey} />
+                        </Text>
+                    </Pressable>
                     <EventContent event={event} className="text-sm text-white" />
                 </SafeAreaView>
             </View>
