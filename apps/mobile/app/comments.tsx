@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Dimensions, SafeAreaView, View } from 'react-native';
-import { useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
@@ -12,6 +12,25 @@ import { Text } from '@/components/nativewindui/Text';
 import { MessageCircle } from 'lucide-react-native';
 import { Button } from '@/components/nativewindui/Button';
 import { router } from 'expo-router';
+
+const Comment = ({ item }: { item: NDKEvent }) => {
+    const { userProfile } = useUserProfile(item.pubkey);
+
+    return (
+        <View className="w-full flex-1 flex-row gap-2 p-4">
+            <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+
+            <View className="flex-col">
+                <View className="flex-row items-center gap-1">
+                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold" />
+                    <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
+                </View>
+
+                <EventContent event={item} className="text-sm" />
+            </View>
+        </View>
+    )
+}
 
 export default function CommentScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
@@ -42,23 +61,7 @@ export default function CommentScreen() {
                 data={events}
                 keyExtractor={(i) => i.id}
                 estimatedItemSize={100}
-                renderItem={({ item }) => {
-                    const { userProfile } = useUserProfile(item.pubkey);
-                    return (
-                        <View className="w-full flex-1 flex-row gap-2 p-4">
-                            <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
-
-                            <View className="flex-col">
-                                <View className="flex-row items-center gap-1">
-                                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold" />
-                                    <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
-                                </View>
-
-                                <EventContent event={item} className="text-sm" />
-                            </View>
-                        </View>
-                    )
-                }}
+                renderItem={({ item }) => <Comment item={item} />}
             />
 
             {/* <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="border-t border-border p-4">

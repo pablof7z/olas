@@ -1,38 +1,69 @@
-import { useSubscribe, useNDKSession, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDKSession, useNDK, NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo, useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import Post from '@/components/events/Post';
-import { useThrottle } from '@uidotdev/usehooks';
+import Post, { PostHeader } from '@/components/events/Post';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { myFollows } from '@/utils/myfollows';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useScroll } from '~/contexts/ScrollContext';
 import FilterButton from '@/components/FilterButton';
+import * as User from '@/components/ui/user';
 import NotificationsButton from '@/components/NotificationsButton';
 import { Text } from '@/components/nativewindui/Text';
-import { ChevronDown } from 'lucide-react-native';
+import { ChevronDown, Repeat } from 'lucide-react-native';
 import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
 import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
 import { useColorScheme } from '@/lib/useColorScheme';
+import RelativeTime from '@/app/components/relative-time';
 
 const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
 
 export default function HomeScreen() {
+    const [includeTweets, setIncludeTweets] = useState(false);
+    const [feedType, setFeedType] = useState<'follows' | 'local' | string>('local');
+
+    return (
+        <>
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    headerTitle: () =>
+                        <HomeTitle feedType={feedType} setFeedType={setFeedType} />,
+                    headerRight: () => (
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />
+                            <NotificationsButton />
+                        </View>
+                    ),
+                }}
+            />
+            
+            <DataList feedType={feedType} includeTweets={includeTweets} />
+        </>
+    );
+}
+
+function DataList({ feedType, includeTweets }: { feedType: string; includeTweets: boolean }) {
+    const { currentUser } = useNDK();
     const { follows } = useNDKSession();
     const [tagFilter, setTagFilter] = useState<string | null>(null);
-    const [includeTweets, setIncludeTweets] = useState(false);
-    const [feedType, setFeedType] = useState<'follows' | 'local' | string>('follows');
+    const scrollRef = useScroll();
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
-            { kinds: [20] },
-            { kinds: [1], '#k': ['20'] }, // cheating!!!
+            { kinds: [NDKKind.Image] },
+            { kinds: [NDKKind.Text], '#k': ['20'] },
+            { kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': [NDKKind.Image.toString()] },
         ];
 
-        if (feedType === 'follows') {
-            filters[0].authors = follows;
-            filters[1].authors = follows;
+        if (feedType === 'follows' && follows?.length > 2) {
+            filters[0].authors = [...follows];
+            filters[1].authors = [...follows];
+            if (currentUser) {
+                filters[0].authors?.push(currentUser.pubkey);
+                filters[1].authors?.push(currentUser.pubkey);
+            }
         }
 
         if (includeTweets) {
@@ -43,14 +74,15 @@ export default function HomeScreen() {
         if (tagFilter) filters.push({ kinds: [1], '#t': [tagFilter] });
 
         return filters;
-    }, [follows, includeTweets, tagFilter, feedType]);
-    const opts = useMemo(() => ({}), []);
+    }, [follows?.length, includeTweets, tagFilter, feedType, currentUser]);
+    const opts = useMemo(() => ({
+    }), []);
     const { events } = useSubscribe({ filters, opts });
 
     const selectedEvents = useMemo(() => {
         const selected: NDKEvent[] = [];
         for (const event of events) {
-            if ([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, 20].includes(event.kind)) {
+            if ([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image, NDKKind.GenericRepost].includes(event.kind)) {
                 selected.push(event);
             }
 
@@ -64,55 +96,78 @@ export default function HomeScreen() {
         }
 
         // sort by created at
-        selected.sort((a, b) => b.created_at - a.created_at).slice(0, 100);
-
-        return selected;
+        return selected.sort((a, b) => b.created_at - a.created_at);
     }, [events]);
-
-    const debouncedEvents = useThrottle(selectedEvents, 100);
-
-    const [refreshing, setRefreshing] = useState(false);
 
     const loadUserData = () => {
         // Pick a random tag when refreshing
         const randomTag = randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
         setTagFilter(randomTag);
     };
-
-    const scrollRef = useScroll();
-
-    const renderItem = useMemo(() => ({ item }: { item: NDKEvent }) => (
-        <Post event={item} />
-    ), []);
-
+    
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    headerShown: true,
-                    headerTitle: () => <HomeTitle feedType={feedType} setFeedType={setFeedType} />,
-                    headerRight: () => (
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <FilterButton includeTweets={includeTweets} setIncludeTweets={setIncludeTweets} />
-                            <NotificationsButton />
-                        </View>
-                    ),
-                }}
-            />
-            <View className="flex-1 gap-2 bg-card">
-                <FlashList
-                    ref={scrollRef}
-                    data={debouncedEvents}
-                    estimatedItemSize={340}
-                    keyExtractor={(item) => item.id}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadUserData} />}
-                    renderItem={renderItem}
-                    disableIntervalMomentum={true}
-                    contentContainerStyle={styles.listContainer}
-                    />
+        <View className="flex-1 gap-2 bg-card">
+            <FlashList
+                ref={scrollRef}
+                data={selectedEvents}
+                estimatedItemSize={500}
+                keyExtractor={(item) => item.id}
+                refreshControl={<RefreshControl refreshing={false} onRefresh={loadUserData} />}
+                renderItem={({ item }) => (
+                    item.kind === NDKKind.GenericRepost ? (
+                        <Repost event={item} />
+                    ) : (
+                        <Post event={item} />
+                    )
+                )}
+                disableIntervalMomentum={true}
+                contentContainerStyle={styles.listContainer}
+                />
+        </View>
+    )
+}
+
+function Repost({ event }: { event: NDKEvent }) {
+    const { userProfile } = useUserProfile(event.pubkey);
+    const originalEvent = useMemo(() => {
+        try {
+            const payload = JSON.parse(event.content);
+            return new NDKEvent(event.ndk, payload);
+        } catch (e) {
+            console.log('failed to parse repost event', event.rawEvent());
+            return null;
+        }
+    }, [event.id]);
+
+    if (!originalEvent) return null;
+    
+    return (
+        <View style={{ flex: 1, flexDirection: 'column' }}>
+            <View className="w-full flex-row items-center justify-between gap-2 p-2">
+                <View style={{ flexDirection: 'row', gap: 4}}>
+                    <TouchableOpacity
+                        onPress={() => {
+                             router.push(`/profile?pubkey=${event.pubkey}`);
+                    }}>
+                        <User.Avatar userProfile={userProfile} size={24} style={{ width: 20, height: 20 }} />
+                    </TouchableOpacity>
+                    <Repeat size={16} color={'green'} />
+
+                    <View className="flex-col gap-1">
+                        <Text className="text-xs text-muted-foreground">
+                            {'Reposted '}
+                            <RelativeTime timestamp={event.created_at} />
+                        </Text>
+                    </View>
+
+                    
             </View>
-        </>
-    );
+        </View>
+            
+            
+            <Post event={originalEvent} />
+        </View>
+    )
 }
 
 function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (feedType: string) => void }) {
@@ -126,7 +181,7 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
     const relays = useMemo(() => ndk.pool.connectedRelays().map((r) => r.url), [ndk, i]);
 
     return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: colors.card }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'end' }}>
             <DropdownMenu
                 items={[
                     createDropdownItem({
@@ -154,7 +209,7 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
             }}>
             <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text className="font-medium">
-                    {feedType === 'follows' ? 'Follows' : 'Global'}
+                    {feedType === 'follows' ? 'Follows' : 'Local'}
                 </Text>
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>

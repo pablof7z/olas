@@ -1,4 +1,4 @@
-import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -17,7 +17,6 @@ import { useStore } from 'zustand';
 import { NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
-    const { defaultWallet } = useNDKWallet();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet } = useStore(walleteStore);
 
@@ -84,9 +83,8 @@ export default function SettingsIosStyleScreen() {
                 id: '12',
                 title: 'Wallet',
                 leftView: <IconView name="lightning-bolt" className="bg-green-500" />,
-                rightText: !!defaultWallet ? `${balance?.amount.toString() ?? '42k'} ${balance?.unit ?? 'sats'}` : 'no',
-                onPress: () => router.push('/(settings)/wallet'),
             });
+            // onPress: () => router.push('/(settings)/wallet'),
             opts.push('gap 5');
             opts.push({
                 id: 'blossom',
@@ -117,7 +115,7 @@ export default function SettingsIosStyleScreen() {
         });
 
         return opts;
-    }, [currentUser, defaultWallet, balance]);
+    }, [currentUser, balance]);
 
     return (
         <>

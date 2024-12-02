@@ -58,12 +58,8 @@ export default function ViewScreen() {
                 <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
                     <Image
                         event={activeEvent}
-                        style={{
-                            width: Dimensions.get('window').width,
-                            minHeight: Dimensions.get('window').height * 0.6,
-                            flex: 1,
-                        }}
-                        transition={200}
+                        maxWidth={Dimensions.get('window').width}
+                        maxHeight={Dimensions.get('window').height}
                     />
                 </ScrollView>
 

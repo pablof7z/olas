@@ -39,8 +39,10 @@ export default function Profile() {
         events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
     ).size, [events]);
 
-    const sortedEvents = useMemo(() => {
-        return events.sort((a, b) => b.created_at - a.created_at);
+    const sortedContent = useMemo(() => {
+        return events
+            .filter(e => [NDKKind.Text, NDKKind.Image].includes(e.kind))
+            .sort((a, b) => b.created_at - a.created_at);
     }, [events]);
 
     if (!pubkey) {
@@ -86,7 +88,7 @@ export default function Profile() {
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber} className="text-foreground">
-                                {events.length}
+                                {sortedContent.length}
                             </Text>
                             <Text style={styles.statLabel} className="text-foreground">
                                 Posts
@@ -149,7 +151,7 @@ export default function Profile() {
                     ) : (
                         <View style={{ flex: 1 }}>
                             <MasonryFlashList
-                                data={sortedEvents}
+                                data={sortedContent}
                                 numColumns={3}
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
@@ -172,13 +174,16 @@ export default function Profile() {
 }
 
 function ImageGridItem({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
+    const size = Dimensions.get('window').width / 3;
+    
     return (
         <View style={styles.gridItem}>
             <Image
                 event={event}
                 onPress={onPress}
                 singleImageMode
-                maxWidth={Dimensions.get('window').width / 3}
+                maxWidth={size}
+                maxHeight={size}
             />
         </View>
     );

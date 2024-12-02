@@ -1,7 +1,7 @@
 import { activeEventStore } from '@/app/stores';
 import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { Heart, MessageCircle, BookmarkIcon } from 'lucide-react-native';
+import { Heart, MessageCircle, BookmarkIcon, Repeat } from 'lucide-react-native';
 import { useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
@@ -9,14 +9,10 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useDebounce } from '@uidotdev/usehooks';
+
+const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
 
 export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEvents: NDKEvent[] }) {
-    const renderCounter = useRef<Record<string, number>>({});
-
-    renderCounter.current[event.id] = (renderCounter.current[event.id] || 0) + 1;
-    // console.log(`Reactions for ${event.id.substring(0, 8)} render #${renderCounter.current[event.id]}`);
-
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const { currentUser } = useNDK();
     const { colors } = useColorScheme();
@@ -34,6 +30,16 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         router.push(`/comments`);
     };
 
+    const repost = async () => {
+        const repostEvent = await event.repost(false);
+        if (repostEvent.kind === NDKKind.Repost) {
+            repostEvent.tags.push(['k', "20"]);
+        }
+        await repostEvent.sign();
+        console.log('reposting', repostEvent.rawEvent());
+        repostEvent.publish();
+    };
+
     const bookmark = async () => {
         if (imageCurationSet.has(event.id)) {
             await imageCurationSet.removeItemByValue(event.id);
@@ -43,24 +49,26 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         await imageCurationSet.publishReplaceable();
     };
 
-    const debouncedReactions = useDebounce(relatedEvents, 500);
-
     const {
         reactions,
         reactedByUser,
         comments,
         commentedByUser,
+        reposts,
+        repostedByUser,
         isBookmarkedByUser
     } = useMemo(() => ({
-        reactions: debouncedReactions.filter((r) => r.kind === NDKKind.Reaction),
-        reactedByUser: debouncedReactions.find((r) => r.kind === NDKKind.Reaction && r.pubkey === currentUser?.pubkey),
-        comments: debouncedReactions.filter((r) => [NDKKind.Text, 22].includes(r.kind)),
-        commentedByUser: debouncedReactions.find((r) => [NDKKind.Text, 22].includes(r.kind) && r.pubkey === currentUser?.pubkey),
+        reactions: relatedEvents.filter((r) => r.kind === NDKKind.Reaction),
+        reactedByUser: relatedEvents.find((r) => r.kind === NDKKind.Reaction && r.pubkey === currentUser?.pubkey),
+        comments: relatedEvents.filter((r) => [NDKKind.Text, 1111].includes(r.kind)),
+        commentedByUser: relatedEvents.find((r) => [NDKKind.Text, 1111].includes(r.kind) && r.pubkey === currentUser?.pubkey),
+        reposts: relatedEvents.filter((r) => repostKinds.includes(r.kind)),
+        repostedByUser: relatedEvents.find((r) => repostKinds.includes(r.kind) && r.pubkey === currentUser?.pubkey),
         isBookmarkedByUser: imageCurationSet.has(event.id)
-    }), [debouncedReactions, currentUser?.pubkey, imageCurationSet, event.id]);
+    }), [relatedEvents, currentUser?.pubkey, imageCurationSet, event.id]);
 
     return (
-        <View className="flex-1 flex-col gap-1 p-2">
+        <View className="flex-1 flex-col gap-1">
             <View className="w-full flex-1 flex-row justify-between gap-4">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
                     <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
@@ -84,6 +92,15 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
                             <Text className="text-sm font-medium" style={{ color: colors.muted }}>{comments.length}</Text>
                         )}
                     </View>
+
+                    <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity style={styles.reactionButton} onPress={repost}>
+                            <Repeat size={24} color={repostedByUser ? colors.foreground : colors.muted} />
+                        </TouchableOpacity>
+                        {reposts.length > 0 && (
+                            <Text className="text-sm font-medium" style={{ color: colors.muted }}>{reposts.length}</Text>
+                        )}
+                    </View>
                 </View>
 
                 <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
@@ -95,8 +112,10 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
 }
 
 export function InlinedComments({ comments, allCommentsCount }: { comments: NDKEvent[], allCommentsCount: number }) {
+    if (comments.length === 0) return null;
+    
     return (
-        <View className="flex-1 flex-col gap-0">
+        <View className="flex-1 flex-col gap-0 p-2">
             {comments.slice(0, 3).map((c) => <InlineComment key={c.id} comment={c} />)}
             {allCommentsCount > 3 && <Text className="text-sm text-muted-foreground">+{allCommentsCount - 3} more</Text>}
         </View>
@@ -108,7 +127,7 @@ export function InlineComment({ comment }: { comment: NDKEvent }) {
     return (
         <Text>
             <Text className="text-sm font-medium">@{userProfile?.name}{' '}</Text>
-            <Text className="text-sm">{comment.content}</Text>
+            <Text numberOfLines={2} className="text-sm">{comment.content}</Text>
         </Text>
     )
 }
