@@ -78,17 +78,26 @@ export default function RootLayout() {
         [967],
     ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
+    const walletCode = SecureStore.getItem('nwc');
+
     return (
         <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
+                netDebug={netDebug}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
             >
                 <NDKCacheCheck>
-                    <NDKSessionProvider muteList={true} follows={true} kinds={sessionKinds}>
+                    <NDKSessionProvider
+                        muteList={true}
+                        follows={true}
+                        wallet={true}
+                        walletConfig={walletCode ? { type: 'nwc', pairingCode: walletCode } : undefined}
+                        kinds={sessionKinds}
+                    >
                         <GestureHandlerRootView style={{ flex: 1 }}>
                             <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>

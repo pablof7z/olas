@@ -137,7 +137,7 @@ const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: 
     const filters = useMemo(
         () => [
             {
-                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList],
+                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap],
                 ...event.filter(),
             },
         ],

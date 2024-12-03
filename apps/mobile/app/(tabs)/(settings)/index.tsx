@@ -1,4 +1,4 @@
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -12,23 +12,22 @@ import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { walleteStore } from '@/app/stores';
-import { useStore } from 'zustand';
-import { NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
+import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
+
+const prettyBalance = (balance: NDKWalletBalance) => {
+    if (balance.unit.startsWith('msat')) {
+        return nicelyFormattedMilliSatNumber(balance.amount) + ' sats';
+    }
+    
+    return `${balance.amount} ${balance.unit}`;
+}
+
+
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const { activeWallet } = useStore(walleteStore);
-
-    const [balance, setBalance] = useState<NDKWalletBalance | null>(null);
-
-    useEffect(() => {
-        if (activeWallet) {
-            activeWallet.balance().then((b) => {
-                setBalance(b[0]);
-            });
-        }
-    }, [activeWallet]);
+    const { activeWallet, balances } = useNDKSession();
 
     const appVersion = useMemo(() => {
         return `${Platform.OS} ${Platform.Version}`;
@@ -83,8 +82,26 @@ export default function SettingsIosStyleScreen() {
                 id: '12',
                 title: 'Wallet',
                 leftView: <IconView name="lightning-bolt" className="bg-green-500" />,
+                rightText: balances.length > 0 ? prettyBalance(balances[0]) : activeWallet?.walletId,
+                onPress: () => router.push('/(settings)/wallets'),
             });
-            // onPress: () => router.push('/(settings)/wallet'),
+
+            if (activeWallet instanceof NDKCashuWallet) {
+                opts.push({
+                    id: 'deposit',
+                    title: 'Deposit',
+                    onPress: () => {
+                        const dep = activeWallet.deposit(1000, activeWallet.mints[0], 'sat');
+                        dep.on("success", (token) => {
+                            console.log('deposit success', token);
+                        });
+                        dep.start().then((qr) => {
+                            console.log('deposit qr', qr);
+                        });
+                    }
+                });
+            }
+            
             opts.push('gap 5');
             opts.push({
                 id: 'blossom',
@@ -115,7 +132,7 @@ export default function SettingsIosStyleScreen() {
         });
 
         return opts;
-    }, [currentUser, balance]);
+    }, [currentUser, activeWallet, balances]);
 
     return (
         <>
