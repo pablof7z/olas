@@ -22,11 +22,11 @@ const Comment = ({ item }: { item: NDKEvent }) => {
 
             <View className="flex-col">
                 <View className="flex-row items-center gap-1">
-                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold" />
+                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold text-foreground" />
                     <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
                 </View>
 
-                <EventContent event={item} className="text-sm" />
+                <EventContent event={item} className="text-sm text-foreground" />
             </View>
         </View>
     )
