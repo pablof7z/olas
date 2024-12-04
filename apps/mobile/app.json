@@ -50,7 +50,8 @@
           "imageWidth": 200
         }
       ],
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

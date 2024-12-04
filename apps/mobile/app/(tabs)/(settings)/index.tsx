@@ -13,21 +13,18 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
-import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
-
-const prettyBalance = (balance: NDKWalletBalance) => {
-    if (balance.unit.startsWith('msat')) {
-        return nicelyFormattedMilliSatNumber(balance.amount) + ' sats';
-    }
-    
-    return `${balance.amount} ${balance.unit}`;
-}
-
+import { formatMoney, nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
 
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet, balances } = useNDKSession();
+
+    console.log('balances', balances);
+
+    useEffect(() => {
+        console.log('use effect balances', balances);
+    }, [balances]);
 
     const appVersion = useMemo(() => {
         return `${Platform.OS} ${Platform.Version}`;
@@ -82,25 +79,9 @@ export default function SettingsIosStyleScreen() {
                 id: '12',
                 title: 'Wallet',
                 leftView: <IconView name="lightning-bolt" className="bg-green-500" />,
-                rightText: balances.length > 0 ? prettyBalance(balances[0]) : activeWallet?.walletId,
-                onPress: () => router.push('/(settings)/wallets'),
+                rightText: balances?.length > 0 ? formatMoney(balances[0]) : activeWallet?.walletId,
+                onPress: () => router.push(activeWallet ? '/(wallet)' : '/(settings)/wallets'),
             });
-
-            if (activeWallet instanceof NDKCashuWallet) {
-                opts.push({
-                    id: 'deposit',
-                    title: 'Deposit',
-                    onPress: () => {
-                        const dep = activeWallet.deposit(1000, activeWallet.mints[0], 'sat');
-                        dep.on("success", (token) => {
-                            console.log('deposit success', token);
-                        });
-                        dep.start().then((qr) => {
-                            console.log('deposit qr', qr);
-                        });
-                    }
-                });
-            }
             
             opts.push('gap 5');
             opts.push({
@@ -125,7 +106,7 @@ export default function SettingsIosStyleScreen() {
             });
         }
 
-        opts.push('gap 5');
+        opts.push('gap 9');
         opts.push({
             id: 'version',
             title: `Version ${appVersion} (${buildVersion})`,

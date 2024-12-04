@@ -1,7 +1,7 @@
 import { activeEventStore } from '@/app/stores';
 import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { Heart, MessageCircle, BookmarkIcon, Repeat } from 'lucide-react-native';
+import { Heart, MessageCircle, BookmarkIcon, Repeat, Zap } from 'lucide-react-native';
 import { useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { useStore } from 'zustand';
@@ -9,8 +9,10 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import Zaps from './Reactions/Zaps';
 
 const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
+const zapKinds = [NDKKind.Zap, NDKKind.Nutzap] as const;
 
 export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEvents: NDKEvent[] }) {
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
@@ -56,6 +58,8 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         commentedByUser,
         reposts,
         repostedByUser,
+        zaps,
+        zappedByUser,
         isBookmarkedByUser
     } = useMemo(() => ({
         reactions: relatedEvents.filter((r) => r.kind === NDKKind.Reaction),
@@ -64,6 +68,8 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         commentedByUser: relatedEvents.find((r) => [NDKKind.Text, 1111].includes(r.kind) && r.pubkey === currentUser?.pubkey),
         reposts: relatedEvents.filter((r) => repostKinds.includes(r.kind)),
         repostedByUser: relatedEvents.find((r) => repostKinds.includes(r.kind) && r.pubkey === currentUser?.pubkey),
+        zaps: relatedEvents.filter((r) => zapKinds.includes(r.kind)),
+        zappedByUser: relatedEvents.find((r) => zapKinds.includes(r.kind) && r.pubkey === currentUser?.pubkey),
         isBookmarkedByUser: imageCurationSet.has(event.id)
     }), [relatedEvents, currentUser?.pubkey, imageCurationSet, event.id]);
 
@@ -101,6 +107,8 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
                             <Text className="text-sm font-medium" style={{ color: colors.muted }}>{reposts.length}</Text>
                         )}
                     </View>
+
+                    <Zaps event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} zappedByUser={!!zappedByUser} zaps={zaps} />
                 </View>
 
                 <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>

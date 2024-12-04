@@ -30,3 +30,34 @@ export function nicelyFormattedSatNumber(amount: number) {
 
     return `${format((amount / 100_000_000).toFixed(2))} btc`;
 }
+
+export function formatMoney({ amount, unit, hideUnit, hideAmount }: { amount: number, unit: string, hideUnit?: boolean, hideAmount?: boolean }) {
+    let number: string;
+    let displayUnit: string;
+    
+    switch (unit) {
+        case 'msat':
+        case 'msats':
+            number = nicelyFormattedMilliSatNumber(amount);
+            displayUnit = 'sats';
+            break;
+        case 'sat':
+        case 'sats':
+            number = nicelyFormattedSatNumber(amount);
+            displayUnit = 'sats';
+            break;
+        case 'usd':
+            number = amount.toFixed(2);
+            displayUnit = 'USD';
+            break;
+        default:
+            number = amount.toString();
+            displayUnit = unit;
+            break;
+    }
+
+    if (hideAmount) return displayUnit;
+    if (hideUnit) return number;
+    
+    return `${number} ${displayUnit}`;
+}

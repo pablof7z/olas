@@ -4,7 +4,6 @@ import '@bacons/text-decoder/install';
 import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
-// import { ReactScan } from 'react-scan/native';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { NDKCacheAdapterSqlite, NDKEventWithFrom, useNDK } from '@nostr-dev-kit/ndk-mobile';
@@ -86,7 +85,6 @@ export default function RootLayout() {
             <NDKProvider
                 explicitRelayUrls={relays}
                 cacheAdapter={new NDKCacheAdapterSqlite('olas')}
-                netDebug={netDebug}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
             >
@@ -163,6 +161,14 @@ export default function RootLayout() {
                                                 presentation: 'modal',
                                             }}
                                         />
+
+                                        <Stack.Screen
+                                            name="(wallet)"
+                                            options={{
+                                                headerShown: false,
+                                                presentation: 'modal',
+                                            }}
+                                        ></Stack.Screen>
                                         </Stack>
                                     {/* </ReactScan> */}
                                 </NavThemeProvider>

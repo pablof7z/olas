@@ -41,7 +41,7 @@ export default function NwcScreen() {
         const nwc = new NDKNWCWallet(ndk);
         await nwc.initWithPairingCode(connectString);
 
-        await nwc.syncBalance();
+        await nwc.updateBalance();
         console.log('nwc', nwc.balance());
 
         setActiveWallet(nwc);

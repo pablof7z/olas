@@ -14,6 +14,7 @@ export default function SettingsLayout() {
             }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="wallets" options={{ headerShown: false }} />
+            <Stack.Screen name="wallet" options={{ headerShown: true, presentation: 'modal'     }} />
             <Stack.Screen name="nwc" options={{ headerShown: false, }} />
         </Stack>
     );

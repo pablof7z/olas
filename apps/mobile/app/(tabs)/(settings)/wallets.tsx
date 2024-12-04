@@ -1,4 +1,4 @@
-import { NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -12,7 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { IconView } from '.';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
@@ -22,6 +23,12 @@ export default function WalletsScreen() {
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
     const [url, setUrl] = useState('');
 
+    const activateWallet = async (wallet: NDKEvent) => {
+        router.back();
+        const w = await NDKCashuWallet.from(wallet);
+        setActiveWallet(w);
+    }
+
     const data = useMemo(() => {
         if (!ndk) return [];
 
@@ -30,9 +37,10 @@ export default function WalletsScreen() {
                 id: walletEvent.id,
                 title: walletEvent.dTag,
                 subTitle: walletEvent.getMatchingTags('mint').length + ' mint(s)',
+                onPress: () => activateWallet(walletEvent),
                 rightView: (
                     <View className="flex-1 items-center px-2">
-                        <Button variant="secondary" size="sm" onPress={() => NDKCashuWallet.from(walletEvent).then(setActiveWallet)}>
+                        <Button variant="secondary" size="sm" onPress={() => activateWallet(walletEvent)}>
                             <Text>Use</Text>
                         </Button>
                     </View>
@@ -40,11 +48,28 @@ export default function WalletsScreen() {
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
         
-        options.push('gap 1');
+        if (options.length > 0) {
+            options.unshift('Existing Wallets');
+        }
+        
+        options.push('New Wallet');
+
+        options.push({
+            id: 'nip60',
+            title: 'Nostr-Native Wallet',
+            leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
+            subTitle: 'Create a new NIP-60 wallet',
+            onPress: () => {
+                newWallet().then(() => {
+                    router.back();
+                });
+            },
+        });
 
         options.push({
             id: 'nwc',
             title: 'Nostr Wallet Connect',
+            leftView: <IconView name="link" className="bg-gray-500" />,
             subTitle: 'Connect to a Nostr Wallet',
             onPress: () => {
                 router.push('nwc')
@@ -59,10 +84,25 @@ export default function WalletsScreen() {
         router.back();
     }
 
+    async function newWallet() {
+        console.log('creating new wallet');
+        const wallet = NDKCashuWallet.create(ndk, ['https://mint.coinos.io'], Array.from(ndk!.pool.relays.values()).map((r) => r.url));
+        wallet.name = 'My Wallet';
+        await wallet.getP2pk();
+        await wallet.publish().then(() => {
+            setActiveWallet(wallet);
+            const mintList = new NDKCashuMintList(ndk);
+            mintList.mints = wallet.mints;
+            mintList.p2pk = wallet.p2pk;
+            mintList.relays = wallet.relays;
+            mintList.publishReplaceable();
+        });
+    }
+    
     return (
         <>
             <LargeTitleHeader
-                title={`Wallets (${data?.length})`}
+                title={`Wallets`}
                 searchBar={{
                     iosHideWhenScrolling: true,
                     onChangeText: setSearchText,
@@ -81,7 +121,6 @@ export default function WalletsScreen() {
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                sectionHeaderAsGap
             />
         </>
     );
