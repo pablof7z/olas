@@ -2,7 +2,6 @@
 	import { page } from "$app/stores";
 	import ndk from "$lib/stores/ndk.svelte";
 	import { NDKEvent, NDKKind, NDKRelaySet } from "@nostr-dev-kit/ndk";
-	import Image from "$lib/components/Image/Image.svelte";
 	import PostModal from "$lib/components/Post/Modal.svelte";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
@@ -49,26 +48,7 @@
         placeholder="search"
     />
 
-    <div class="grid grid-cols-3 gap-1">
-		{#each events as event (event.id)}
-            {#if event.content.match(imageUrlRegexp)}
-                <button onclick={() => {openModal = true; selectedEvent = event}} class="bg-secondary overflow-clip">
-                    {#if event.getMatchingTags("imeta")?.[0]?.[1]}
-                        <Image event={event} width={300} class="w-full h-full object-cover" containerClass="aspect-square" />
-                    {/if}
-                </button>
-            {/if}
-		{/each}
-        {#each search as event (event.id)}
-            {#if event.content.match(imageUrlRegexp)}
-                <button onclick={() => {openModal = true; selectedEvent = event}} class="bg-secondary overflow-clip">
-                    {#if event.getMatchingTags("imeta")?.[0]?.[1]}
-                        <Image event={event} width={300} class="w-full h-full object-cover" containerClass="aspect-square" />
-                    {/if}
-                </button>
-            {/if}
-		{/each}
-	</div>
+    <Post.Grid events={[...events, ...search]} />
 </div>
 
 {#if openModal}

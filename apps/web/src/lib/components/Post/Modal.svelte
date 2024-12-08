@@ -1,10 +1,10 @@
 <script lang="ts">
     import * as Dialog from '$lib/components/ui/dialog';
-    import Image from '$lib/components/Image/Image.svelte';
+    import Image from '$lib/components/Post/Image.svelte';
     import ndk from '$lib/stores/ndk.svelte';
     import { imetasFromEvent } from '../../../utils/imeta';
     import { page } from '$app/stores';
-    import Comment from '$lib/components/Image/Comment.svelte';
+    import Comment from './Comment.svelte';
     import { replaceState } from '$app/navigation';
     import { onDestroy } from 'svelte';
 

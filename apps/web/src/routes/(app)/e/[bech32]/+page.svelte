@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/stores";
-	import ImageCard from "$lib/components/Image/Card.svelte";
+	import * as Post from "$lib/components/Post";
     import ndk from "$lib/stores/ndk.svelte";
 
     const { bech32 } = $page.params;
@@ -12,7 +12,7 @@
             {#await ndk.fetchEvent(bech32)}
                 loading
             {:then event}
-                <ImageCard event={event} containerClass="w-full" maxComments={999999} />
+                <Post.Card event={event} containerClass="w-full" maxComments={999999} />
             {/await}
         </div>
     </div>

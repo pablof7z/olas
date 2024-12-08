@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { NDKKind, NDKUser, type NDKEvent, type NDKUserProfile } from '@nostr-dev-kit/ndk';
-	import Image from '$lib/components/Image/Image.svelte';
 	import ndk from '$lib/stores/ndk.svelte';
-	import PostModal from '$lib/components/Post/Modal.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { getCurrentUser } from '$lib/stores/currentUser.svelte';
 	import { page } from '$app/stores';
-	import { onDestroy } from 'svelte';
+	import * as Post from '$lib/components/Post';
 
 	// get the pubkey from the url
 	const { npub } = $page.params;
@@ -111,16 +109,10 @@
 		</div>
 	</div>
 
-	<div class="grid grid-cols-3 gap-1">
-		{#each selectedEvents as event (event.id)}
-			<button onclick={() => {openModal = true; selectedEvent = event}} class="bg-secondary overflow-clip">
-				<Image event={event} width={300} class="w-full h-full object-cover" containerClass="aspect-square" />
-			</button>
-		{/each}
-	</div>
+	<Post.Grid events={selectedEvents} />
 </div>
 {/if}
 
 {#if openModal}
-	<PostModal event={selectedEvent} bind:opened={openModal} />
+	<Post.Modal event={selectedEvent} bind:opened={openModal} />
 {/if}

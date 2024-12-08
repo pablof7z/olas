@@ -1,11 +1,8 @@
 <script lang="ts">
-	import ImageCard from '$lib/components/Image/Card.svelte';
 	import PostModal from '$lib/components/Post/Modal.svelte';
-	import { myFollows } from '$lib/myfollows';
-	import { getCurrentUser } from '$lib/stores/currentUser.svelte';
 	import ndk from '$lib/stores/ndk.svelte';
 	import { NDKKind, type NDKEvent } from '@nostr-dev-kit/ndk';
-	import { CircleUser } from 'lucide-svelte';
+	import * as Post from '$lib/components/Post';
 
 	const events = ndk.$subscribe([
 		{ kinds: [NDKKind.Image], limit: 100 },
@@ -40,13 +37,7 @@
 			</div>
 			
 			<!-- <Stories /> -->
-			{#each events as event (event.id)}
-				<div class="mt-5 space-y-5 px-5 md:px-10">
-					<button class="text-left w-full" onclick={() => openEvent(event)}>
-						<ImageCard event={event} class="w-full" containerClass="w-full" />
-					</button>
-				</div>
-			{/each}
+			<Post.List {events} />
 		</div>
 	</div>
 
