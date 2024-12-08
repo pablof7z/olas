@@ -59,7 +59,6 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         reposts,
         repostedByUser,
         zaps,
-        zappedByUser,
         isBookmarkedByUser
     } = useMemo(() => ({
         reactions: relatedEvents.filter((r) => r.kind === NDKKind.Reaction),
@@ -69,7 +68,6 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
         reposts: relatedEvents.filter((r) => repostKinds.includes(r.kind)),
         repostedByUser: relatedEvents.find((r) => repostKinds.includes(r.kind) && r.pubkey === currentUser?.pubkey),
         zaps: relatedEvents.filter((r) => zapKinds.includes(r.kind)),
-        zappedByUser: relatedEvents.find((r) => zapKinds.includes(r.kind) && r.pubkey === currentUser?.pubkey),
         isBookmarkedByUser: imageCurationSet.has(event.id)
     }), [relatedEvents, currentUser?.pubkey, imageCurationSet, event.id]);
 
@@ -108,7 +106,7 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
                         )}
                     </View>
 
-                    <Zaps event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} zappedByUser={!!zappedByUser} zaps={zaps} />
+                    <Zaps event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} zaps={zaps} />
                 </View>
 
                 <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>

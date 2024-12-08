@@ -273,7 +273,15 @@ export default function ImageUpload() {
                 ...media.current
                     .map((m) => m.imeta.url)
                     .filter((text) => text?.trim().length > 0)
-                    .map((text) => text + '.jpg'),
+                    .map((text) => {
+                        // check if the text ends with any extension (a . followed by between 3 and 4 characters)
+                        const extensionRegexp = /\.([a-zA-Z0-9]{3,4})$/;
+                        if (extensionRegexp.test(text)) {
+                            return text;
+                        } else {
+                            return text + '.jpg';
+                        }
+                    }),
             ].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily

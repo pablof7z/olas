@@ -3,44 +3,52 @@ import { Animated, PanResponder, View, Text, TouchableOpacity } from "react-nati
 import { Zap } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { nicelyFormattedMilliSatNumber } from "@/utils/bitcoin";
-import { NDKKind, NDKNutzap, NDKZapper, useNDK, zapInvoiceFromEvent } from "@nostr-dev-kit/ndk-mobile";
+import { NDKKind, NDKNutzap, NDKZapper, useNDK, useNDKSession, zapInvoiceFromEvent } from "@nostr-dev-kit/ndk-mobile";
+import { router } from "expo-router";
 
-export default function Zaps({ event, zaps, style, zappedByUser }) {
+export default function Zaps({ event, zaps, style }) {
+    const { currentUser } = useNDK();
+    const { activeWallet } = useNDKSession();
     const { colors } = useColorScheme();
     const [amount, setAmount] = useState(0);
     const [canceled, setCanceled] = useState(false);
-    const animation = useRef(new Animated.Value(0)).current;
     const amountRef = useRef(0);
     const touchTimer = useRef(null);
     const directionRef = useRef<"up" | "down" | null>(null);
     const growthFactorRef = useRef(1);
 
-    const totalZapped = useMemo(() => {
-        return zaps.reduce((acc, zap) => {
+    const {totalZapped, zappedByUser} = useMemo(() => {
+        let zappedByUser = false;
+
+        const totalZapped = zaps.reduce((acc, zap) => {
             if (zap.kind === NDKKind.Nutzap) {
                 const nutzap = NDKNutzap.from(zap);
+                if (nutzap.pubkey === currentUser?.pubkey) {
+                    zappedByUser = true;
+                }
                 let amountInMilliSats = nutzap.amount;
 
                 if (nutzap.unit.startsWith("sat")) {
                     amountInMilliSats = nutzap.amount * 1000;
                 }
 
-                console.log("amountInMilliSats", {amountInMilliSats}, nutzap.tags);
-
                 return acc + amountInMilliSats;
             } else {
                 const invoice = zapInvoiceFromEvent(zap);
-                console.log("invoice", invoice);
+                if (invoice.zappee === currentUser?.pubkey) {
+                    zappedByUser = true;
+                }
                 return acc + invoice.amount;
             }
         }, 0);
+
+        return { totalZapped, zappedByUser }
     }, [zaps]);
 
     const updateAmount = (dy) => {
         stopCounting();
 
         const factor = -(dy / 200);
-        console.log("update amount", dy, factor);
 
         // determine the direction
         if (directionRef.current === null) {
@@ -132,10 +140,11 @@ export default function Zaps({ event, zaps, style, zappedByUser }) {
     const { ndk } = useNDK();
 
     const sendZap = async (sats) => {
-        // Uncomment for real zap logic
-        // event = ndk.getUser({ pubkey: '1f66b45d2cccd4ae9b15919147b8c0482adbe9920668069d184014bd5082ac76'})
-
-        console.log('sending zap', Math.round(sats) * 1000);
+        if (!activeWallet) {
+            alert("You don't have a wallet connected yet.");
+            router.push("/wallets");
+            return;
+        }
         
         try {
             const zapper = new NDKZapper(event, Math.round(sats) * 1000, "msat", {

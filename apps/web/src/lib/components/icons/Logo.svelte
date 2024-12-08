@@ -1,0 +1,1 @@
+<h1 class="text-2xl font-black text-blue-500">Olas</h1>

@@ -1,4 +1,4 @@
-import { useSubscribe, useNDKSession, useNDK, NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDKSession, useNDK, useUserProfile, NDKEventId } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useRef, useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -79,24 +79,56 @@ function DataList({ feedType, includeTweets }: { feedType: string; includeTweets
     }), []);
     const { events } = useSubscribe({ filters, opts });
 
+    type EventWithReposts = { event: NDKEvent | undefined, reposts: NDKEvent[], timestamp: number };
+
     const selectedEvents = useMemo(() => {
+        const eventMap = new Map<NDKEventId, EventWithReposts>();
+
+        const addEvent = (event: NDKEvent) => {
+            if (event.kind === NDKKind.GenericRepost) {
+                const eventId = event.tagValue("e");
+
+                if (!eventId) return;
+                if (!eventMap.has(eventId)) {
+                    // add the event to the map
+                    try {
+                        const payload = JSON.parse(event.content);
+                        const originalEvent = new NDKEvent(event.ndk, payload);
+                        eventMap.set(eventId, { event: originalEvent, reposts: [event], timestamp: event.created_at });
+                    } catch (e) {
+                        eventMap.set(eventId, { event: undefined, reposts: [], timestamp: event.created_at });
+                    }
+                } else {
+                    // update the reposts and timestamp
+                    const current = eventMap.get(eventId)!;
+                    current.reposts.push(event);
+                    if (current.timestamp < event.created_at) {
+                        // TODO: don't update the timestamp if the event has already been seen (we need a ref to keep track of seen posts)
+                        current.timestamp = event.created_at;
+                    }
+                    eventMap.set(eventId, current);
+                }
+            }
+        }
+
         const selected: NDKEvent[] = [];
         for (const event of events) {
             if ([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image, NDKKind.GenericRepost].includes(event.kind)) {
-                selected.push(event);
+                addEvent(event);
             }
 
             if (event.kind === NDKKind.Text) {
                 const content = event.content;
                 const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
                 if (urlMatch) {
-                    selected.push(event);
+                    addEvent(event);
                 }
             }
         }
 
-        // sort by created at
-        return selected.sort((a, b) => b.created_at - a.created_at);
+        return Array.from(eventMap.values())
+            .filter((event) => event.event !== undefined)
+            .sort((a, b) => b.timestamp - a.timestamp);
     }, [events]);
 
     const loadUserData = () => {
@@ -111,14 +143,10 @@ function DataList({ feedType, includeTweets }: { feedType: string; includeTweets
                 ref={scrollRef}
                 data={selectedEvents}
                 estimatedItemSize={500}
-                keyExtractor={(item) => item.id}
+                keyExtractor={({event}) => event.id}
                 refreshControl={<RefreshControl refreshing={false} onRefresh={loadUserData} />}
                 renderItem={({ item }) => (
-                    item.kind === NDKKind.GenericRepost ? (
-                        <Repost event={item} />
-                    ) : (
-                        <Post event={item} />
-                    )
+                    <Post event={item.event} reposts={item.reposts} />
                 )}
                 disableIntervalMomentum={true}
                 contentContainerStyle={styles.listContainer}

@@ -100,13 +100,6 @@ export default function RootLayout() {
                             <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                     <PortalHost />
-                                    {/* <ReactScan
-                                        options={{
-                                        enabled: true,
-                                        log: true,
-                                        animationWhenFlashing: false,
-                                        }}
-                                    > */}
                                     <Stack screenOptions={{}}>
                                         <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
 
@@ -170,7 +163,6 @@ export default function RootLayout() {
                                             }}
                                         ></Stack.Screen>
                                         </Stack>
-                                    {/* </ReactScan> */}
                                 </NavThemeProvider>
                             </KeyboardProvider>
                         </GestureHandlerRootView>

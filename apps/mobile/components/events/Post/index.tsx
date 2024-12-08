@@ -1,6 +1,7 @@
 import { NDKEvent, NDKKind, useUserProfile, useSubscribe, useNDK, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, StyleSheet } from 'react-native';
 import { View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
@@ -16,6 +17,10 @@ import { InlinedComments, Reactions } from './Reactions';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
+import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
+import { MoreVertical, Repeat } from 'lucide-react-native';
+import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -74,7 +79,7 @@ const MediaSection = function MediaSection({
 //     return <Reactions event={event} />;
 // }, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
-export default function Post({ event }: { event: NDKEvent }) {
+export default function Post({ event, reposts }: { event: NDKEvent, reposts: NDKEvent[] }) {
     const { isDarkColorScheme } = useColorScheme();
     const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
     const { colors } = useColorScheme();
@@ -88,7 +93,7 @@ export default function Post({ event }: { event: NDKEvent }) {
 
     return (
         <View className="overflow-hidden border-b bg-card" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
-            <PostHeader event={event} />
+            <PostHeader event={event} reposts={reposts} />
 
             <MediaSection event={event} setActiveEvent={setActiveEvent} />
 
@@ -97,37 +102,89 @@ export default function Post({ event }: { event: NDKEvent }) {
     )
 }
 
-export function PostHeader({ event }: { event: NDKEvent }) {
+export function PostHeader({ event, reposts }: { event: NDKEvent, reposts: NDKEvent[] }) {
     const { userProfile } = useUserProfile(event.pubkey);
     const clientName = event.tagValue('client');
     
     return (
-        <View className="w-full flex-row items-center justify-between gap-2 p-2">
-            <View style={styles.profileContainer}>
-                <TouchableOpacity
-                    onPress={() => {
-                        router.push(`/profile?pubkey=${event.pubkey}`);
-                    }}>
-                    <User.Avatar userProfile={userProfile} />
-                </TouchableOpacity>
+        <View className="flex-col">
+            <View className="w-full flex-row items-center justify-between gap-2 p-2">
+                <View style={styles.profileContainer}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            router.push(`/profile?pubkey=${event.pubkey}`);
+                        }}>
+                        <User.Avatar userProfile={userProfile} />
+                    </TouchableOpacity>
 
-                <View className="flex-col">
-                    <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" />
-                    <Text>
-                        <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
-                        {clientName && (
-                            <Text className="text-xs text-muted-foreground">
-                                {` via ${clientName}`}
-                            </Text>
+                    <View className="flex-col">
+                        <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" />
+                        <Text>
+                            <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                            {clientName && (
+                                <Text className="text-xs text-muted-foreground">
+                                    {` via ${clientName}`}
+                                </Text>
+                            )}
+                        </Text>
+
+                        {reposts.length > 0 && (
+                            <View className="flex-row gap-1 items-center">
+                                <Repeat size={14} color={'green'} />
+                                <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
+                            </View>
                         )}
-                    </Text>
+                    </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                    <FollowButton pubkey={event.pubkey} />
+                    <PostOptions event={event} />
                 </View>
             </View>
-
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-                <FollowButton pubkey={event.pubkey} />
-            </View>
         </View>
+    )
+}
+
+function PostOptions({ event }: { event: NDKEvent }) {
+    const { currentUser } = useNDK();
+    const options = [
+        createDropdownItem({
+            actionKey: 'copy',
+            title: 'Copy ID',
+        }),
+    ];
+
+    if (currentUser?.pubkey === event.pubkey) {
+        options.push(createDropdownItem({
+            actionKey: 'delete',
+            title: 'Delete',
+        }));
+    }
+
+    const deletePost = async (event: NDKEvent) => {
+        event.delete();
+    }
+
+    const copyId = async (event: NDKEvent) => Clipboard.setStringAsync(event.encode());
+
+    const copyLink = async (event: NDKEvent) => {
+        Clipboard.setUrlAsync('https://njump.me/' + event.encode());
+    }
+    
+    return (
+        <DropdownMenu
+            items={options}
+            onItemPress={(item) => {
+                if (item.actionKey === 'delete') {
+                    deletePost(event);
+                } else if (item.actionKey === 'copy') {
+                    copyId(event);
+                }
+            }}
+        >
+            <MoreVertical size={20} />
+        </DropdownMenu>
     )
 }
 
