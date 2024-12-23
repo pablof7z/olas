@@ -52,7 +52,7 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
 
     return (
         <View className="flex flex-row">
-            {sortedPubkeys.slice(0, threshold).map((pubkey, index) => (
+            {Array.from(new Set(sortedPubkeys.slice(0, threshold))).map((pubkey, index) => (
                 <AvatarGroupItem pubkey={pubkey} avatarSize={avatarSize} index={index} key={pubkey} />
             ))}
 

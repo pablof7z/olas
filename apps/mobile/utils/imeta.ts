@@ -59,11 +59,11 @@ export function imetaFromTag(tag: NDKTag): ImetaData {
     return data;
 }
 
-export async function imetaFromImage(fileContent: string, url?: string): Promise<ImetaData> {
+export async function imetaFromImage(fileContent: string, mimeType: string, url?: string): Promise<ImetaData> {
     console.log('imetaFromImage', fileContent.length, url);
     const imeta: ImetaData = {};
 
-    const base64Url = `data:image/jpeg;base64,${fileContent}`;
+    const base64Url = `data:${mimeType};base64,${fileContent}`;
 
     try {
         console.log('generating blurhash');

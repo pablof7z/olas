@@ -1,11 +1,11 @@
-import { NDKEvent, NDKKind, useUserProfile, useSubscribe, useNDK, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useUserProfile, useSubscribe, useNDK, NDKSubscriptionOptions, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, StyleSheet } from 'react-native';
 import { View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
-import { Video } from 'expo-av';
+import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useStore } from 'zustand';
@@ -21,6 +21,9 @@ import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
 import { MoreVertical, Repeat } from 'lucide-react-native';
 import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { useEvent } from 'expo';
+import { imetasFromEvent } from '@/utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -32,9 +35,6 @@ const styles = StyleSheet.create({
     },
     video: {
         width: WINDOW_WIDTH,
-        aspectRatio: 1.5,
-        minHeight: 240,
-        maxHeight: WINDOW_HEIGHT - 100,
     },
     container: {
         flex: 1,
@@ -51,7 +51,31 @@ const styles = StyleSheet.create({
 });
 
 export function VideoContainer({ url }: { url: string }) {
-    return <Video style={styles.video} source={{ uri: url }} />;
+    const videoSource = { uri: url };
+    const inset = useSafeAreaInsets();
+    
+    const player = useVideoPlayer(videoSource, player => {
+        player.loop = true;
+        player.muted = true;
+        player.addListener('statusChange', (status) => {
+            if (player.status === 'readyToPlay') {
+                player.play();
+            }
+        });
+    });
+    const { status, error } = useEvent(player, 'statusChange', { status: player.status });
+
+    console.log('video status', status);
+    
+    return (
+        <VideoView
+            style={{...styles.video, height: (WINDOW_HEIGHT * 0.8) - inset.top - inset.bottom}}
+            contentFit='cover'
+            player={player}
+            allowsFullscreen
+            allowsPictureInPicture
+        />
+    )
 }
 
 const MediaSection = function MediaSection({ 
@@ -67,6 +91,19 @@ const MediaSection = function MediaSection({
         setActiveEvent(event);
         router.push('/view');
     }, [ event.id ])
+
+    const isVideo = [NDKKind.HorizontalVideo, NDKKind.VerticalVideo].includes(event.kind);
+
+    if (isVideo) {
+        const video = NDKVideo.from(event);
+        let url = video.url;
+        if (!url) {
+            const imeta = imetasFromEvent(event)[0];
+            url = imeta?.url;
+        }
+
+        return <VideoContainer url={url} />;
+    }
     
     return (
         <View style={{ flex: 1 }}>
@@ -79,7 +116,7 @@ const MediaSection = function MediaSection({
 //     return <Reactions event={event} />;
 // }, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
-export default function Post({ event, reposts }: { event: NDKEvent, reposts: NDKEvent[] }) {
+export default function Post({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
     const { isDarkColorScheme } = useColorScheme();
     const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
     const { colors } = useColorScheme();
@@ -93,7 +130,7 @@ export default function Post({ event, reposts }: { event: NDKEvent, reposts: NDK
 
     return (
         <View className="overflow-hidden border-b bg-card" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
-            <PostHeader event={event} reposts={reposts} />
+            <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
             <MediaSection event={event} setActiveEvent={setActiveEvent} />
 
@@ -102,13 +139,32 @@ export default function Post({ event, reposts }: { event: NDKEvent, reposts: NDK
     )
 }
 
-export function PostHeader({ event, reposts }: { event: NDKEvent, reposts: NDKEvent[] }) {
+export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
-    const clientName = event.tagValue('client');
+    let clientName = event.tagValue('client');
+
+    if (clientName?.startsWith('31990')) clientName = undefined;
     
     return (
-        <View className="flex-col">
-            <View className="w-full flex-row items-center justify-between gap-2 p-2">
+        <View className="flex-col p-2">
+            {reposts.length > 0 && (
+                <View style={{ flex: 1, flexDirection: 'column' }}>
+                    <View className="w-full flex-row items-center justify-between gap-2 pb-0">
+                        <View style={{ flexDirection: 'row', gap: 4}}>
+                            <Repeat size={16} color={'green'} />
+
+                            <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
+
+                            <Text className="text-xs text-muted-foreground">
+                                {'Reposted '}
+                                <RelativeTime timestamp={timestamp} />
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            )}
+                
+            <View className="w-full flex-row items-center justify-between gap-2">
                 <View style={styles.profileContainer}>
                     <TouchableOpacity
                         onPress={() => {
@@ -122,18 +178,11 @@ export function PostHeader({ event, reposts }: { event: NDKEvent, reposts: NDKEv
                         <Text>
                             <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             {clientName && (
-                                <Text className="text-xs text-muted-foreground">
+                                <Text className="text-xs text-muted-foreground truncate" numberOfLines={1}>
                                     {` via ${clientName}`}
                                 </Text>
                             )}
                         </Text>
-
-                        {reposts.length > 0 && (
-                            <View className="flex-row gap-1 items-center">
-                                <Repeat size={14} color={'green'} />
-                                <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
-                            </View>
-                        )}
                     </View>
                 </View>
 
@@ -194,7 +243,7 @@ const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: 
     const filters = useMemo(
         () => [
             {
-                kinds: [NDKKind.Text, 1111, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap],
+                kinds: [NDKKind.Text, NDKKind.GenericReply, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap],
                 ...event.filter(),
             },
         ],

@@ -1,4 +1,3 @@
-import { ImetaData } from '@/utils/imeta';
 import '@bacons/text-decoder/install';
 import { create } from 'zustand';
 

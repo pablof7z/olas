@@ -83,7 +83,7 @@ export default function LoginScreen() {
                     />
 
                     <Button size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
-                        <Text>Login</Text>
+                        <Text>Login2</Text>
                     </Button>
 
                     <Button variant="tonal" onPress={createAccount}>

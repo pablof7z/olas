@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
-import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { NDKTag, useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import NDK, { NDKEvent, NDKKind, NDKList } from '@nostr-dev-kit/ndk-mobile';
 import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
@@ -20,6 +20,7 @@ import { cn } from '@/lib/cn';
 import { ImageIcon, Plus, Timer, Type, VideoIcon } from 'lucide-react-native';
 import { Uploader } from '@/utils/uploader';
 import { ImetaData, imetaFromImage, imetaToTags } from '@/utils/imeta';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ url: string | null; x: string | null; mediaEvent: NDKEvent | null }> {
     return new Promise((resolve, reject) => {
@@ -32,6 +33,7 @@ async function upload(ndk: NDK, blob: Blob, blossomServer: string): Promise<{ ur
         };
 
         uploader.onError = (error) => {
+            toast.error('Upload error: ' + error.message);
             console.error('Upload error:', error);
             reject(error);
         };
@@ -203,6 +205,7 @@ export default function ImageUpload() {
     const [uploading, setUploading] = useState(false);
 
     const [selectionType, setSelectionType] = useState<'image' | 'video' | null>(null);
+    const [videoKind, setVideoKind] = useState<NDKKind.HorizontalVideo | NDKKind.VerticalVideo | null>(null);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [refresh, setRefresh] = useState(0);
@@ -220,7 +223,7 @@ export default function ImageUpload() {
         if (type === 'generic') {
             eventKind = NDKKind.Text;
         } else if (selectionType === 'video') {
-            eventKind = NDKKind.VerticalVideo;
+            eventKind = videoKind;
         } else {
             eventKind = NDKKind.Image;
         }
@@ -231,9 +234,9 @@ export default function ImageUpload() {
         event.tags = [];
 
         if (event.kind === NDKKind.Image) {
-            event.alt = "This is an image event published via Olas.";
+            event.alt = "This is an image published via Olas.";
         } else if (event.kind === NDKKind.VerticalVideo) {
-            event.alt = "This is a video event published via Olas.";
+            event.alt = "This is a video published via Olas.";
         }
 
         setUploading(true);
@@ -279,13 +282,13 @@ export default function ImageUpload() {
                         if (extensionRegexp.test(text)) {
                             return text;
                         } else {
-                            return text + '.jpg';
+                            return text + (selectionType === 'video' ? '.mp4' : '.jpg');
                         }
                     }),
             ].join('\n');
 
             // ok, this is cheating, I know -- ading a k tag to be able to find this post easily
-            event.tags = [...event.tags, ['k', (selectionType === 'video' ? NDKKind.VerticalVideo : NDKKind.Image).toString()]];
+            event.tags = [...event.tags, ['k', (selectionType === 'video' ? videoKind : NDKKind.Image).toString()]];
         }
 
         try {
@@ -297,6 +300,7 @@ export default function ImageUpload() {
             
             router.back();
         } catch (error) {
+            toast.error('Error publishing post! ' + error.message);
             setError('Error publishing post!');
         }
     }
@@ -307,7 +311,7 @@ export default function ImageUpload() {
         }
     }, [error]);
 
-    const processMedia = async (mediaUri: string) => {
+    const processMedia = async (mediaUri: string, mimeType: string) => {
         // generate imeta, add the promise to imetaPromises
         // when the promise resolves, add the imeta to the imetas record using the mediaUri as the key
         // and add the url to addMedia
@@ -319,7 +323,7 @@ export default function ImageUpload() {
         const fileContent = await FileSystem.readAsStringAsync(mediaUri, {
             encoding: FileSystem.EncodingType.Base64,
         });
-        m.imetaPromise = imetaFromImage(fileContent).then((imeta) => {
+        m.imetaPromise = imetaFromImage(fileContent, mimeType).then((imeta) => {
             media.current[index].imeta = { ...media.current[index].imeta, ...imeta };
         });
         media.current.push(m);
@@ -332,8 +336,17 @@ export default function ImageUpload() {
             quality: 1,
         });
 
+        console.log(result);
+        const { type, width, height, mimeType } = result.assets[0];
+        setSelectionType(type as 'image' | 'video');
+
+        if (type === 'video') {
+            const verticalVideo = width < height;
+            setVideoKind(verticalVideo ? NDKKind.VerticalVideo : NDKKind.HorizontalVideo);
+        }
+
         if (!result.canceled) {
-            processMedia(result.assets[0].uri);
+            processMedia(result.assets[0].uri, mimeType);
         }
     };
 
@@ -350,8 +363,11 @@ export default function ImageUpload() {
             mediaTypes: ImagePicker.MediaTypeOptions.All,
         });
 
+        const { type, width, height, mimeType } = result.assets[0];
+        
+
         if (!result.canceled) {
-            processMedia(result.assets[0].uri);
+            processMedia(result.assets[0].uri, mimeType);
         }
     };
 
@@ -360,7 +376,7 @@ export default function ImageUpload() {
             <Stack.Screen
                 options={{
                     headerShown: true,
-                    title: 'Publish',
+                    title: selectionType === 'video' ? 'Video' : 'Image',
                     headerRight: () => (
                         <Button variant="primary" size="sm" onPress={handlePost} disabled={uploading || media.current.length === 0}>
                             <Text className="text-white">Publish</Text>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "scheme": "olas",
     "web": {
       "bundler": "metro",
@@ -51,7 +51,15 @@
         }
       ],
       "expo-build-properties",
-      "expo-video"
+      "expo-video",
+      "expo-sqlite",
+      [
+        "expo-asset",
+        {
+          "assets": ["./assets/reel.svg"]
+        }
+      ]
+
     ],
     "experiments": {
       "typedRoutes": true,

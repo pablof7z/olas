@@ -1,6 +1,5 @@
 module.exports = function (api) {
   api.cache(true);
-  const plugins = [];
 
   return {
     presets: [
@@ -9,6 +8,6 @@ module.exports = function (api) {
       'nativewind/babel'
     ],
 
-    plugins,
+    plugins: ['babel-plugin-transform-vite-meta-env', '@babel/plugin-syntax-import-attributes'],
   };
 };

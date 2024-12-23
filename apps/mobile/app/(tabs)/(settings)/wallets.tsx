@@ -59,6 +59,7 @@ export default function WalletsScreen() {
             title: 'Nostr-Native Wallet',
             leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
             subTitle: 'Create a new NIP-60 wallet',
+            disabled: true,
             onPress: () => {
                 newWallet().then(() => {
                     router.back();

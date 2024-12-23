@@ -4,17 +4,16 @@ import '@bacons/text-decoder/install';
 import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
+import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { NDKCacheAdapterSqlite, NDKEventWithFrom, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { NDKProvider } from '@nostr-dev-kit/ndk-mobile';
@@ -23,15 +22,29 @@ import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { ScrollProvider } from '~/contexts/ScrollContext';
+import { useEffect, useMemo, useRef } from 'react';
+import { Button } from '@/components/nativewindui/Button';
 
 SplashScreen.preventAutoHideAsync();
+
+const sessionKinds = new Map([
+    [NDKKind.BlossomList, { wrapper: NDKList }],
+    [NDKKind.ImageCurationSet, { wrapper: NDKList }],
+    [967],
+] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
+
+const settingsStore = {
+    get: SecureStore.getItemAsync,
+    set: SecureStore.setItemAsync,
+    delete: SecureStore.deleteItemAsync,
+};
 
 function NDKCacheCheck({ children }: { children: React.ReactNode }) {
     const { ndk, cacheInitialized } = useNDK();
 
     console.log('cacheInitialized', { cacheInitialized });
 
-    if (cacheInitialized === false) {
+    if (cacheInitialized === false && false) {
         return (
             <View className="flex-1 flex-col items-center justify-center gap-4">
                 <Text>Initializing cache...</Text>
@@ -39,7 +52,7 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
                 <ActivityIndicator />
             </View>
         );
-    } else if (cacheInitialized === true) {
+    } else {
         SplashScreen.hideAsync();
         return <>{children}</>;
     }
@@ -50,7 +63,7 @@ export default function RootLayout() {
     const { colorScheme, isDarkColorScheme } = useColorScheme();
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
-        if (direction === 'send') console.log('👉', url.hostname, msg);
+        if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 250));
         // if (direction === 'recv') console.log('👈', url.hostname, msg);
     };
 
@@ -70,32 +83,34 @@ export default function RootLayout() {
     }
 
     relays.push('wss://promenade.fiatjaf.com/');
-
-    const sessionKinds = new Map([
-        [NDKKind.BlossomList, { wrapper: NDKList }],
-        [NDKKind.ImageCurationSet, { wrapper: NDKList }],
-        [967],
-    ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
-
-    const walletCode = SecureStore.getItem('nwc');
+    // check if we have relay.olas.app, if not, add it
+    if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
+        relays.unshift('wss://relay.olas.app');
+    }
 
     return (
         <ScrollProvider>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <NDKProvider
                 explicitRelayUrls={relays}
-                cacheAdapter={new NDKCacheAdapterSqlite('olas')}
+                cacheAdapter={new NDKCacheAdapterSqlite('olas2')}
+                enableOutboxModel={false}
+                initialValidationRatio={0.0}
+                netDebug={netDebug}
+                lowestValidationRatio={0.0}
                 clientName="olas"
                 clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
+                settingsStore={settingsStore}
             >
                 <NDKCacheCheck>
                     <NDKSessionProvider
                         muteList={true}
                         follows={true}
-                        wallet={true}
-                        walletConfig={walletCode ? { type: 'nwc', pairingCode: walletCode } : undefined}
+                        wallet={false}
+                        wot={true}
                         kinds={sessionKinds}
                     >
+                        {/* <NutzapMonitor /> */}
                         <GestureHandlerRootView style={{ flex: 1 }}>
                             <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -164,6 +179,7 @@ export default function RootLayout() {
                                         ></Stack.Screen>
                                         </Stack>
                                 </NavThemeProvider>
+                                <Toasts />
                             </KeyboardProvider>
                         </GestureHandlerRootView>
                     </NDKSessionProvider>
@@ -171,4 +187,26 @@ export default function RootLayout() {
             </NDKProvider>
         </ScrollProvider>
     );
+}
+
+function NutzapMonitor() {
+    const { nutzapMonitor } = useNDKSession();
+    const connected = useRef(false);
+
+    if (!nutzapMonitor) return null;
+    if (connected.current) {
+        return null;
+    }
+
+    connected.current = true;
+
+    nutzapMonitor.on("seen", (event) => {
+        console.log("seen", JSON.stringify(event.rawEvent(), null, 4));
+        console.log(`https://njump.me/${event.encode()}`)
+        // toast.success("Received a nutzap for " + event.amount + " " + event.unit);
+    });
+    nutzapMonitor.on("redeem", (event) => {
+        const nutzap = NDKNutzap.from(event);
+        toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);
+    });
 }

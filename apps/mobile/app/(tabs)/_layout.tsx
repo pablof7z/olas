@@ -5,6 +5,7 @@ import * as User from '@/components/ui/user';
 import { useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { useScroll } from '~/contexts/ScrollContext';
+import { BlurView } from 'expo-blur';
 
 export default function HomeLayout() {
     const { currentUser } = useNDK();
@@ -21,6 +22,7 @@ export default function HomeLayout() {
                 headerShown: true,
                 tabBarShowLabel: false,
                 tabBarActiveTintColor: colors.foreground,
+                tabBarInactiveTintColor: colors.muted,
                 tabBarStyle: {
                     position: 'absolute',
                     bottom: 0,
