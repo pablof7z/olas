@@ -2,23 +2,23 @@ import 'react-native-get-random-values';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions } from 'react-native';
 import { CameraView } from 'expo-camera';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useRouter } from 'expo-router';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { QrCode } from 'lucide-react-native';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 export default function LoginScreen() {
     const [payload, setPayload] = useState<string | undefined>(undefined);
-    const { ndk, loginWithPayload, currentUser } = useNDK();
+    const { ndk, login, currentUser } = useNDK();
     const router = useRouter();
 
     const handleLogin = async () => {
         if (!ndk) return;
         try {
-            await loginWithPayload(payload, { save: true });
+            await login(payload);
         } catch (error) {
             Alert.alert('Error', error.message || 'An error occurred during login');
         }
@@ -33,7 +33,7 @@ export default function LoginScreen() {
     const createAccount = async () => {
         const signer = NDKPrivateKeySigner.generate();
         const nsec = nip19.nsecEncode(signer._privateKey!);
-        await loginWithPayload(nsec, { save: true });
+        await login(nsec);
 
         router.replace('/');
     };
@@ -44,7 +44,7 @@ export default function LoginScreen() {
         setPayload(data.trim());
         setScanQR(false);
         try {
-            await loginWithPayload(data.trim(), { save: true });
+            await login(data.trim());
         } catch (error) {
             Alert.alert('Error', error.message || 'An error occurred during login');
         }

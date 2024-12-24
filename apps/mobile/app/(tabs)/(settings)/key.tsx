@@ -8,8 +8,9 @@ import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKPrivateKeySigner, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 export default function SettingsIosStyleScreen() {
     const { ndk, currentUser } = useNDK();

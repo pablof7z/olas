@@ -1,11 +1,11 @@
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
-import { UnpublishedEventEntry, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile';
 import { TouchableOpacity, View } from 'react-native';
 import { RenderTarget } from '@shopify/flash-list';
-import NDK, { NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
+import NDK, { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, target: RenderTarget) => {
     const discard = () => {

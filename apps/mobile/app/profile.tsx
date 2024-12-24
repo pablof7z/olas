@@ -33,7 +33,8 @@ export default function Profile() {
         return filters;
     }, [filtersExpanded]);
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
-    const { events } = useSubscribe({ filters, opts });
+    const { ndk } = useNDK();
+    const { events } = useSubscribe({ ndk, filters, opts });
 
     const followCount = useMemo(() => new Set(
         events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]

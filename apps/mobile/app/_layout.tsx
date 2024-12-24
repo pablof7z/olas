@@ -7,7 +7,7 @@ import * as SecureStore from 'expo-secure-store';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -16,16 +16,13 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View } from 'react-native';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKProvider } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
-import { NDKSessionProvider } from '@nostr-dev-kit/ndk-mobile';
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
-import { ScrollProvider } from '~/contexts/ScrollContext';
-import { useEffect, useMemo, useRef } from 'react';
-import { Button } from '@/components/nativewindui/Button';
-
-SplashScreen.preventAutoHideAsync();
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { NDKUser } from '../../../packages/ndk/ndk/dist';
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
@@ -37,14 +34,15 @@ const settingsStore = {
     get: SecureStore.getItemAsync,
     set: SecureStore.setItemAsync,
     delete: SecureStore.deleteItemAsync,
+    getSync: SecureStore.getItem,
 };
 
 function NDKCacheCheck({ children }: { children: React.ReactNode }) {
     const { ndk, cacheInitialized } = useNDK();
 
-    console.log('cacheInitialized', { cacheInitialized });
+    console.log('cacheInitialized', { ndk: !!ndk, cacheInitialized });
 
-    if (cacheInitialized === false && false) {
+    if (!ndk || cacheInitialized === false) {
         return (
             <View className="flex-1 flex-col items-center justify-center gap-4">
                 <Text>Initializing cache...</Text>
@@ -53,7 +51,6 @@ function NDKCacheCheck({ children }: { children: React.ReactNode }) {
             </View>
         );
     } else {
-        SplashScreen.hideAsync();
         return <>{children}</>;
     }
 }
@@ -63,7 +60,7 @@ export default function RootLayout() {
     const { colorScheme, isDarkColorScheme } = useColorScheme();
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
-        if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 250));
+        if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 400));
         // if (direction === 'recv') console.log('👈', url.hostname, msg);
     };
 
@@ -78,38 +75,45 @@ export default function RootLayout() {
     });
 
     if (relays.length === 0) {
-        relays.push('wss://relay.primal.net');
+        // relays.push('wss://relay.primal.net');
         relays.push('wss://relay.damus.io');
     }
 
-    relays.push('wss://promenade.fiatjaf.com/');
+    // relays.push('wss://promenade.fiatjaf.com/');
     // check if we have relay.olas.app, if not, add it
-    if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
-        relays.unshift('wss://relay.olas.app');
-    }
+    // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
+    //     relays.unshift('wss://relay.olas.app');
+    // }
+
+    const { init: initializeNDK } = useNDK();
+    const { init: initializeSession } = useNDKSession();
+
+    const onUserSet = useCallback((ndk: NDK,user: NDKUser) => {
+        console.log('onUserSet', { user, ndk });
+        initializeSession(ndk, user, {
+            follows: true,
+            wot: 3,
+        });
+    }, [initializeSession]);
+
+    useEffect(() => {
+        initializeNDK({
+            explicitRelayUrls: relays,
+            cacheAdapter: new NDKCacheAdapterSqlite('olas'),
+            enableOutboxModel: false,
+            initialValidationRatio: 0.0,
+            lowestValidationRatio: 0.0,
+            clientName: "olas",
+            clientNip89: "31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505",
+            settingsStore,
+            onUserSet,
+        });
+    }, []);
 
     return (
-        <ScrollProvider>
+        <>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
-            <NDKProvider
-                explicitRelayUrls={relays}
-                cacheAdapter={new NDKCacheAdapterSqlite('olas2')}
-                enableOutboxModel={false}
-                initialValidationRatio={0.0}
-                netDebug={netDebug}
-                lowestValidationRatio={0.0}
-                clientName="olas"
-                clientNip89="31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505"
-                settingsStore={settingsStore}
-            >
                 <NDKCacheCheck>
-                    <NDKSessionProvider
-                        muteList={true}
-                        follows={true}
-                        wallet={false}
-                        wot={true}
-                        kinds={sessionKinds}
-                    >
                         {/* <NutzapMonitor /> */}
                         <GestureHandlerRootView style={{ flex: 1 }}>
                             <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
@@ -134,7 +138,7 @@ export default function RootLayout() {
                                             }}
                                         />
 
-                                        <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
+                                        {/* <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
                                         <Stack.Screen name="notifications" options={{ headerShown: false }} />
 
                                         <Stack.Screen
@@ -176,20 +180,18 @@ export default function RootLayout() {
                                                 headerShown: false,
                                                 presentation: 'modal',
                                             }}
-                                        ></Stack.Screen>
+                                        ></Stack.Screen> */}
                                         </Stack>
                                 </NavThemeProvider>
                                 <Toasts />
                             </KeyboardProvider>
-                        </GestureHandlerRootView>
-                    </NDKSessionProvider>
-                </NDKCacheCheck>
-            </NDKProvider>
-        </ScrollProvider>
+                </GestureHandlerRootView>
+            </NDKCacheCheck>
+        </>
     );
 }
 
-function NutzapMonitor() {
+{/* function NutzapMonitor() {
     const { nutzapMonitor } = useNDKSession();
     const connected = useRef(false);
 
@@ -209,4 +211,4 @@ function NutzapMonitor() {
         const nutzap = NDKNutzap.from(event);
         toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);
     });
-}
+} */}

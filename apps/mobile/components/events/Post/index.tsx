@@ -1,5 +1,5 @@
-import { NDKEvent, NDKKind, useUserProfile, useSubscribe, useNDK, NDKSubscriptionOptions, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, StyleSheet } from 'react-native';
+import { NDKEvent, NDKKind, useUserProfile, useSubscribe, NDKSubscriptionOptions, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as User from '@/components/ui/user';
@@ -14,16 +14,17 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { memo, useRef, useMemo, useCallback } from 'react';
 import Image from '@/components/media/image';
 import { InlinedComments, Reactions } from './Reactions';
-import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
 import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
-import { MoreVertical, Repeat } from 'lucide-react-native';
+import { BellOff, MoreVertical, Repeat } from 'lucide-react-native';
 import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { useEvent } from 'expo';
 import { imetasFromEvent } from '@/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 
@@ -63,9 +64,6 @@ export function VideoContainer({ url }: { url: string }) {
             }
         });
     });
-    const { status, error } = useEvent(player, 'statusChange', { status: player.status });
-
-    console.log('video status', status);
     
     return (
         <VideoView
@@ -197,10 +195,22 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
 
 function PostOptions({ event }: { event: NDKEvent }) {
     const { currentUser } = useNDK();
+    const { mutePubkey } = useNDKSession();
     const options = [
         createDropdownItem({
+            actionKey: 'mute',
+            title: 'Mute',
+            icon: { name: 'person.slash', namingScheme: 'sfSymbol' },
+        }),
+        createDropdownItem({
+            actionKey: 'share',
+            title: 'Share',
+            icon: { name: 'square.and.arrow.up', namingScheme: 'sfSymbol' },
+        }),
+        createDropdownItem({
             actionKey: 'copy',
-            title: 'Copy ID',
+            title: 'Copy Post ID',
+            icon: { name: 'square.and.arrow.up', namingScheme: 'sfSymbol' },
         }),
     ];
 
@@ -211,14 +221,21 @@ function PostOptions({ event }: { event: NDKEvent }) {
         }));
     }
 
+    const muteUser = () => {
+        mutePubkey(event.pubkey);
+    }
+
     const deletePost = async (event: NDKEvent) => {
         event.delete();
     }
 
     const copyId = async (event: NDKEvent) => Clipboard.setStringAsync(event.encode());
 
-    const copyLink = async (event: NDKEvent) => {
-        Clipboard.setUrlAsync('https://njump.me/' + event.encode());
+    const sharePost = async (event: NDKEvent) => {
+        // open share menu
+        Share.share({
+            url: 'https://olas.app/e/' + event.encode(),
+        });
     }
     
     return (
@@ -229,6 +246,10 @@ function PostOptions({ event }: { event: NDKEvent }) {
                     deletePost(event);
                 } else if (item.actionKey === 'copy') {
                     copyId(event);
+                } else if (item.actionKey === 'share') {
+                    sharePost(event);
+                } else if (item.actionKey === 'mute') {
+                    muteUser(event);
                 }
             }}
         >
@@ -251,8 +272,9 @@ const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: 
     );
     const opts = useMemo<NDKSubscriptionOptions>(() => ({
         groupable: true,
-        groupableDelay: 1000,
-        groupableDelayType: 'at-least'
+        groupableDelay: 2000,
+        groupableDelayType: 'at-least',
+        skipVerification: true,
     }), []);
     const { events: relatedEvents } = useSubscribe({ filters, opts });
 

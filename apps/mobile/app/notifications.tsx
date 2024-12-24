@@ -1,6 +1,7 @@
-import { NDKEvent, NDKKind, useNDK, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Stack } from 'expo-router';
 import { memo, useMemo } from 'react';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';

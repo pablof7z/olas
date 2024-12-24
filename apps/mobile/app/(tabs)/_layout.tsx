@@ -2,19 +2,25 @@ import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Bookmark, Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
-import { useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
-import { useScroll } from '~/contexts/ScrollContext';
-import { BlurView } from 'expo-blur';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect } from 'react';
+import { homeScreenScrollRef } from '@/atoms/homeScreen';
+import { useAtomValue } from 'jotai';
 
-export default function HomeLayout() {
+export default function TabsLayout() {
     const { currentUser } = useNDK();
     const { colors } = useColorScheme();
-    const scrollRef = useScroll();
+    const scrollRef = useAtomValue(homeScreenScrollRef);
     const { userProfile } = useUserProfile(currentUser?.pubkey);
 
+    useEffect(() => {
+        console.log('currentUser', currentUser);
+    }, [currentUser]);
+
     // Hook to handle scroll to top
-    useScrollToTop(scrollRef);
+    // useScrollToTop(scrollRef);
 
     return (
         <Tabs

@@ -1,4 +1,3 @@
-import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -12,13 +11,12 @@ import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKWalletBalance } from '@nostr-dev-kit/ndk-wallet';
-import { formatMoney, nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
-
+import { formatMoney } from '@/utils/bitcoin';
+import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 export default function SettingsIosStyleScreen() {
     const { currentUser, logout } = useNDK();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const { activeWallet, balances } = useNDKSession();
+    const { activeWallet, balances } = useNDKWallet();
 
     console.log('balances', balances);
 

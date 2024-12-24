@@ -16,8 +16,9 @@ export default function FollowButton({
     variant?: ButtonProps["variant"];
     size?: ButtonProps["size"];
 } & Omit<ButtonProps, "variant" | "size">) {
+    return null;
     const { ndk, currentUser } = useNDK();
-    const { follows } = useNDKSession();
+    const follows = useNDKSession(s => s.follows);
     const [enabling, setEnabling] = useState(false);
     
     const follow = async () => {

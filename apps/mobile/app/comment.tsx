@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyb
 import { router, Stack } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
@@ -11,6 +10,7 @@ import { Button } from '@/components/nativewindui/Button';
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
 import { useStore } from 'zustand';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 export default function CommentScreen() {
     const { ndk, currentUser } = useNDK();
