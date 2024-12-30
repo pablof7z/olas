@@ -1,21 +1,21 @@
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
-import * as Exify from '@lodev09/react-native-exify'
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import * as Exify from '@lodev09/react-native-exify';
 import { List, ListItem } from '@/components/nativewindui/List';
-import { Text } from "@/components/nativewindui/Text";
-import { Button } from "@/components/nativewindui/Button";
+import { Text } from '@/components/nativewindui/Text';
+import { Button } from '@/components/nativewindui/Button';
 import { cn } from '@/lib/cn';
-import { useColorScheme } from "@/lib/useColorScheme";
-import { router } from "expo-router";
-import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from "./store";
-import { MapPin, Send, Timer, Type } from "lucide-react-native";
-import { SelectedMediaPreview } from "./AlbumsView";
-import { locationBottomSheetRefAtom } from "./LocationBottomSheet";
+import { useColorScheme } from '@/lib/useColorScheme';
+import { router } from 'expo-router';
+import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
+import { MapPin, Send, Timer, Type } from 'lucide-react-native';
+import { SelectedMediaPreview } from './AlbumsView';
+import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { NDKRelaySet, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { generateEvent } from "./event";
-import { postTypeSheetRefAtom } from "./PostTypeBottomSheet";
+import { generateEvent } from './event';
+import { postTypeSheetRefAtom } from './PostTypeBottomSheet';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
@@ -62,16 +62,15 @@ export function PostMetadataStep() {
         } else {
             realPublish();
         }
-        
     }, [selectedMedia, metadata, uploading]);
 
     const busy = useMemo(() => (uploading || publishing) && wantsToPublish, [uploading, publishing, wantsToPublish]);
 
-    useEffect(() => console.log({uploading, publishing, wantsToPublish, busy}), [uploading, publishing, wantsToPublish, busy]);
+    useEffect(() => console.log({ uploading, publishing, wantsToPublish, busy }), [uploading, publishing, wantsToPublish, busy]);
 
     return (
         <View className="flex-1 grow" style={{ paddingBottom: inset.bottom }}>
-            <View className="h-2/5 bg-muted-200 w-full">
+            <View className="h-2/5 w-full bg-muted-200">
                 <SelectedMediaPreview />
             </View>
 
@@ -82,13 +81,11 @@ export function PostMetadataStep() {
             <View className="flex-col justify-between px-4">
                 <Button variant="accent" onPress={publish} disabled={busy}>
                     {busy && <ActivityIndicator />}
-                    <Text className="text-lg font-bold py-2 text-white">
-                        Publish
-                    </Text>
+                    <Text className="py-2 text-lg font-bold text-white">Publish</Text>
                 </Button>
             </View>
         </View>
-    )
+    );
 }
 
 function PostOptions() {
@@ -106,10 +103,10 @@ function PostOptions() {
             alert('Post type couldnt be loaded -- this is a bug, please tell Pablo 😀');
             return;
         }
-        
+
         postTypeSheetRef?.current?.present();
         postTypeSheetRef?.current?.expand();
-    }
+    };
 
     const openLocation = () => {
         if (!locationBottomSheetRef?.current) {
@@ -118,7 +115,7 @@ function PostOptions() {
         }
         locationBottomSheetRef?.current?.present();
         locationBottomSheetRef?.current?.expand();
-    }
+    };
 
     const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
         const now = new Date().getTime() - 600 * 1000;
@@ -185,7 +182,7 @@ function PostOptions() {
             id: 'location',
             title: 'Location',
             onPress: openLocation,
-            subTitle: metadata.location ? "Photo coordinates" : 'None',
+            subTitle: metadata.location ? 'Photo coordinates' : 'None',
             leftView: (
                 <View style={{ paddingHorizontal: 10 }}>
                     <MapPin size={24} color={colors.muted} />
@@ -194,9 +191,11 @@ function PostOptions() {
             rightView: (
                 <View className="flex-1 justify-center">
                     <Text className="text-sm text-muted-foreground">
-                        {metadata.removeLocation === true ? 'Not published' : (
-                            metadata.location ? `${metadata.location.latitude}\n${metadata.location.longitude}` : 'None'
-                        )}
+                        {metadata.removeLocation === true
+                            ? 'Not published'
+                            : metadata.location
+                              ? `${metadata.location.latitude}\n${metadata.location.longitude}`
+                              : 'None'}
                     </Text>
                 </View>
             ),
@@ -219,7 +218,7 @@ function PostOptions() {
                 renderItem={({ item, index, target }) => {
                     if (item.id === 'publish') {
                         return (
-                            <Button size="lg" variant="accent" onPress={() => { }} disabled={isUploading || selectedMedia.length === 0}>
+                            <Button size="lg" variant="accent" onPress={() => {}} disabled={isUploading || selectedMedia.length === 0}>
                                 {isUploading ? <ActivityIndicator /> : <Text className="text-lg text-white">Publish</Text>}
                             </Button>
                         );

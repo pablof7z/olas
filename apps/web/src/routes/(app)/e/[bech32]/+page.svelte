@@ -12,7 +12,12 @@
             {#await ndk.fetchEvent(bech32)}
                 loading
             {:then event}
-                <Post.Card event={event} containerClass="w-full" maxComments={999999} />
+                <Post.Card
+                    event={event}
+                    class="w-full snap-x"
+                    containerClass="w-full flex flex-row overflow-x-auto snap-x snap-mandatory"
+                    maxComments={999999}
+                />
             {/await}
         </div>
     </div>

@@ -11,7 +11,7 @@ import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheIni
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';    
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View } from 'react-native';
@@ -39,10 +39,10 @@ const sessionKinds = new Map([
     [967],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
-const sessionFilters = (user: NDKUser) => ([
-    { kinds: [NDKKind.GenericReply], "#K": mainKinds.map(k => k.toString()), "#p": [user.pubkey] },
-    { kinds: [NDKKind.GenericRepost], "#k": mainKinds.map(k => k.toString()), "#p": [user.pubkey] },
-])
+const sessionFilters = (user: NDKUser) => [
+    { kinds: [NDKKind.GenericReply], '#K': mainKinds.map((k) => k.toString()), '#p': [user.pubkey] },
+    { kinds: [NDKKind.GenericRepost], '#k': mainKinds.map((k) => k.toString()), '#p': [user.pubkey] },
+];
 
 const settingsStore = {
     get: SecureStore.getItemAsync,
@@ -54,7 +54,7 @@ const settingsStore = {
 export default function RootLayout() {
     const [appReady, setAppReady] = useState(false);
     const [wotReady, setWotReady] = useState(false);
-    
+
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
@@ -86,25 +86,34 @@ export default function RootLayout() {
 
     const { init: initializeNDK } = useNDK();
     const { init: initializeSession } = useNDKSession();
-    const [ relayNotices, setRelayNotices ] = useAtom(relayNoticesAtom);
+    const [relayNotices, setRelayNotices] = useAtom(relayNoticesAtom);
 
-    const onUserSet = useCallback((ndk: NDK,user: NDKUser) => {
-        console.log('onUserSet getting called', user.pubkey);
-        initializeSession(ndk, user, settingsStore, {
-            follows: true,
-            muteList: true,
-            wot: false,
-            kinds: sessionKinds,
-            filters: sessionFilters,
-        }, {
-            onReady: () => setAppReady(true),
-            onWotReady: () => setWotReady(true),
-        });
-    }, [initializeSession]);
+    const onUserSet = useCallback(
+        (ndk: NDK, user: NDKUser) => {
+            console.log('onUserSet getting called', user.pubkey);
+            initializeSession(
+                ndk,
+                user,
+                settingsStore,
+                {
+                    follows: true,
+                    muteList: true,
+                    wot: false,
+                    kinds: sessionKinds,
+                    filters: sessionFilters,
+                },
+                {
+                    onReady: () => setAppReady(true),
+                    onWotReady: () => setWotReady(true),
+                }
+            );
+        },
+        [initializeSession]
+    );
 
     useEffect(() => {
         const currentUserInSettings = SecureStore.getItem('currentUser');
-        
+
         initializeNDK({
             explicitRelayUrls: relays,
             cacheAdapter: new NDKCacheAdapterSqlite('olas'),
@@ -112,8 +121,8 @@ export default function RootLayout() {
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
             // netDebug,
-            clientName: "olas",
-            clientNip89: "31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505",
+            clientName: 'olas',
+            clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,
             onUserSet,
         });
@@ -127,17 +136,17 @@ export default function RootLayout() {
     const { ndk } = useNDK();
     useEffect(() => {
         if (!ndk) return;
-        ndk.pool.on("notice", (relay, notice) => {
+        ndk.pool.on('notice', (relay, notice) => {
             console.log('⚠️ NOTICE', notice, relay?.url);
             setRelayNotices((prev) => ({
                 ...prev,
                 [relay?.url]: [...(prev[relay?.url] || []), notice],
             }));
         });
-    }, [ndk])
+    }, [ndk]);
 
     // initialize app settings
-    const initAppSettings = useAppSettingsStore(state => state.init);
+    const initAppSettings = useAppSettingsStore((state) => state.init);
     useEffect(() => {
         console.log('initAppSettings');
         initAppSettings();
@@ -148,7 +157,7 @@ export default function RootLayout() {
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
-                <LoaderScreen appReady={appReady} wotReady={wotReady}>
+                    <LoaderScreen appReady={appReady} wotReady={wotReady}>
                         {/* <NutzapMonitor /> */}
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -158,10 +167,7 @@ export default function RootLayout() {
 
                                     <Stack.Screen name="publish/index" options={{ headerShown: true, title: 'Publish' }} />
                                     <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
-                                    <Stack.Screen
-                                        name="publish/expiration"
-                                        options={{ headerShown: true, presentation: 'modal' }}
-                                    />
+                                    <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
                                     <Stack.Screen
                                         name="(tabs)"
                                         options={{
@@ -211,20 +217,20 @@ export default function RootLayout() {
                                         options={{
                                             headerShown: false,
                                             presentation: 'modal',
-                                        }}
-                                    ></Stack.Screen>
+                                        }}></Stack.Screen>
                                 </Stack>
                             </NavThemeProvider>
                             <Toasts />
                         </KeyboardProvider>
-                </LoaderScreen>
-            </BottomSheetModalProvider>
+                    </LoaderScreen>
+                </BottomSheetModalProvider>
             </GestureHandlerRootView>
         </>
     );
 }
 
-{/* function NutzapMonitor() {
+{
+    /* function NutzapMonitor() {
     const { nutzapMonitor } = useNDKSession();
     const connected = useRef(false);
 
@@ -244,4 +250,5 @@ export default function RootLayout() {
         const nutzap = NDKNutzap.from(event);
         toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);
     });
-} */}
+} */
+}

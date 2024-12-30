@@ -15,7 +15,6 @@ export const activeEventStore = create<ActiveEventStoreState>((set) => ({
     },
 }));
 
-
 type WalletStoreState = {
     activeWallet: NDKCashuWallet | null;
     setActiveWallet: (wallet?: NDKCashuWallet) => void;

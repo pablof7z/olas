@@ -1,4 +1,15 @@
-import { useSubscribe, NDKEventId, NDKRelaySet, Hexpubkey, useWOT, useMuteList, NDKSubscriptionCacheUsage, NDKSubscription, NDKVideo, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    useSubscribe,
+    NDKEventId,
+    NDKRelaySet,
+    Hexpubkey,
+    useWOT,
+    useMuteList,
+    NDKSubscriptionCacheUsage,
+    NDKSubscription,
+    NDKVideo,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
@@ -31,7 +42,7 @@ const titleAtom = atom(0);
 
 export default function HomeScreen() {
     const [feedType, setFeedType] = useState<'follows' | 'local' | string>('local');
-    const [ title, setTitle ] = useAtom(titleAtom);
+    const [title, setTitle] = useAtom(titleAtom);
 
     return (
         <>
@@ -49,9 +60,9 @@ export default function HomeScreen() {
                     //     </View>
                     // ),
                     headerLeft: () => <HomeTitle feedType={feedType} setFeedType={setFeedType} />,
-                    title: "",
+                    title: '',
                     // headerRight: () => <Pressable onPress={() => setTitle(0)}><Text>{title}</Text></Pressable>,
-                    headerRight: () => ( <NotificationsButton /> ),
+                    headerRight: () => <NotificationsButton />,
                 }}
             />
 
@@ -60,15 +71,11 @@ export default function HomeScreen() {
                     <Stories />
                 </View>
              */}
-                <DataList
-                    feedType={feedType} 
-                />
+            <DataList feedType={feedType} />
             {/* </View> */}
         </>
     );
 }
-
-
 
 // function StoryEntry({ pubkey, events }: { pubkey: string, events: NDKEvent[] }) {
 //     const { userProfile } = useUserProfile(pubkey);
@@ -104,11 +111,7 @@ export default function HomeScreen() {
 //     );
 // }
 
-function DataList({ 
-    feedType, 
-}: { 
-    feedType: string; 
-}) {
+function DataList({ feedType }: { feedType: string }) {
     const currentUser = useNDKCurrentUser();
     const { ndk } = useNDK();
     const follows = useFollows();
@@ -131,7 +134,7 @@ function DataList({
                 eventMapRef.current.delete(id);
             }
         }
-    }, [muteList])
+    }, [muteList]);
 
     useEffect(() => {
         if (feedType === 'follows') {
@@ -142,24 +145,24 @@ function DataList({
                 }
             }
         }
-    }, [feedType])
+    }, [feedType]);
 
     const [tagFilter, setTagFilter] = useState<string | null>(null);
     const filters = useMemo(() => {
         let relaySet: NDKRelaySet | undefined;
 
-        const followsFilter = feedType === 'follows' && follows?.length > 2 ? {authors: [...follows, currentUser?.pubkey]} : {};
-        
+        const followsFilter = feedType === 'follows' && follows?.length > 2 ? { authors: [...follows, currentUser?.pubkey] } : {};
+
         const filters: NDKFilter[] = [
             // { kinds: [NDKKind.Image, NDKKind.VerticalVideo, NDKKind.HorizontalVideo ], ...followsFilter },
-            { kinds: [NDKKind.Image ], ...followsFilter },
+            { kinds: [NDKKind.Image], ...followsFilter },
             { kinds: [NDKKind.Text], '#k': ['20'], ...followsFilter },
             { kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': [NDKKind.Image.toString()], limit: 1, ...followsFilter },
-            { kinds: [NDKKind.EventDeletion], "#k":['20'], ...followsFilter, limit: 50 }
+            { kinds: [NDKKind.EventDeletion], '#k': ['20'], ...followsFilter, limit: 50 },
         ];
-        
+
         if (currentUser) {
-            filters.push({ kinds: [NDKKind.EventDeletion], "#k":['20'], authors: [currentUser.pubkey] });
+            filters.push({ kinds: [NDKKind.EventDeletion], '#k': ['20'], authors: [currentUser.pubkey] });
         }
 
         if (includeTweets) {
@@ -178,7 +181,7 @@ function DataList({
 
     const { events } = useSubscribe({ filters, opts });
 
-    type EventWithReposts = { event: NDKEvent | undefined, reposts: NDKEvent[], timestamp: number };
+    type EventWithReposts = { event: NDKEvent | undefined; reposts: NDKEvent[]; timestamp: number };
 
     const eventIdsRef = useRef<Set<NDKEventId>>(new Set());
     const eventMapRef = useRef<Map<NDKEventId, EventWithReposts | 'deleted'>>(new Map());
@@ -188,7 +191,7 @@ function DataList({
 
         const addEvent = (event: NDKEvent) => {
             if (event.kind === NDKKind.GenericRepost) {
-                const eventId = event.tagValue("e");
+                const eventId = event.tagValue('e');
 
                 if (!eventId) return;
                 if (!eventMap.has(eventId)) {
@@ -212,19 +215,23 @@ function DataList({
                     eventMap.set(eventId, current);
                 }
             } else if (event.kind === NDKKind.EventDeletion) {
-                for (const eTag of event.getMatchingTags("e")) {
-                    eventMap.set(eTag[1], "deleted");
+                for (const eTag of event.getMatchingTags('e')) {
+                    eventMap.set(eTag[1], 'deleted');
                 }
             } else {
                 eventMap.set(event.id, { event, reposts: [], timestamp: event.created_at });
             }
-        }
+        };
 
         for (const event of events) {
             if (eventIdsRef.current.has(event.id)) continue;
             eventIdsRef.current.add(event.id);
-            
-            if ([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image, NDKKind.GenericRepost, NDKKind.EventDeletion].includes(event.kind)) {
+
+            if (
+                [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image, NDKKind.GenericRepost, NDKKind.EventDeletion].includes(
+                    event.kind
+                )
+            ) {
                 addEvent(event);
             }
 
@@ -247,30 +254,33 @@ function DataList({
 
     const [title, setTitle] = useAtom(titleAtom);
     const cacheWarmUpSub = useRef<NDKSubscription | null>(null);
-    
+
     useEffect(() => {
         if (cacheWarmUpSub.current) {
             cacheWarmUpSub.current.stop();
             cacheWarmUpSub.current = null;
         }
-        
+
         setTitle(selectedEvents.length);
         const eTags = [];
         const aTags = [];
         for (const { event } of selectedEvents) {
-            if (!event.isParamReplaceable())
-                eTags.push(event.tagId());
-            else
-                aTags.push(event.tagId());
+            if (!event.isParamReplaceable()) eTags.push(event.tagId());
+            else aTags.push(event.tagId());
         }
         const kindsReceived = new Set();
         const filters: NDKFilter[] = [];
-        if (eTags.length > 0) filters.push({ "#e": eTags });
-        if (aTags.length > 0) filters.push({ "#a": aTags });
+        if (eTags.length > 0) filters.push({ '#e': eTags });
+        if (aTags.length > 0) filters.push({ '#a': aTags });
 
         if (filters.length === 0) return;
 
-        cacheWarmUpSub.current = ndk.subscribe(filters, { skipVerification: true, closeOnEose: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false });
+        cacheWarmUpSub.current = ndk.subscribe(filters, {
+            skipVerification: true,
+            closeOnEose: false,
+            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+            groupable: false,
+        });
         cacheWarmUpSub.current.on('event', (event) => {
             kindsReceived.add(event.kind);
         });
@@ -278,7 +288,7 @@ function DataList({
         return () => {
             cacheWarmUpSub.current?.stop();
             cacheWarmUpSub.current = null;
-        }
+        };
     }, [selectedEvents.length]);
 
     const loadUserData = () => {
@@ -296,21 +306,19 @@ function DataList({
                 keyExtractor={(event) => event.event?.id ?? ''}
                 refreshControl={<RefreshControl refreshing={false} onRefresh={loadUserData} />}
                 scrollEventThrottle={100}
-                renderItem={({ item, index }) => (
-                    <Post event={item.event} reposts={item.reposts} timestamp={item.timestamp} />
-                )}
+                renderItem={({ item, index }) => <Post event={item.event} reposts={item.reposts} timestamp={item.timestamp} />}
                 disableIntervalMomentum={true}
             />
 
             <PostOptionsMenu />
         </View>
-    )
+    );
 }
 
 function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (feedType: string) => void }) {
     const { colors } = useColorScheme();
     const { ndk } = useNDK();
-    const [ relays, setRelays ] = useState<string[]>([]);
+    const [relays, setRelays] = useState<string[]>([]);
     const sheetRef = useSheetRef();
     const inset = useSafeAreaInsets();
 
@@ -320,31 +328,28 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
         const connectedRelaysNames = connectedRelays.map((r) => r.url);
 
         setRelays(connectedRelaysNames);
-        
+
         sheetRef.current?.present();
     }, [ndk]);
 
-
-    const [ includeTweets, setIncludeTweets ] = useAtom(includeTweetsAtom);
+    const [includeTweets, setIncludeTweets] = useAtom(includeTweetsAtom);
     return (
         <>
             <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
-                <Text className="font-semibold text-xl">
-                    {feedType === 'follows' ? 'Follows' : 'For You'}
-                </Text>
+                <Text className="text-xl font-semibold">{feedType === 'follows' ? 'Follows' : 'For You'}</Text>
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
             <Sheet ref={sheetRef}>
-                <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, height: Dimensions.get('window').height*0.7 }}>
-                    <Pressable className="flex-row items-center gap-4 my-4" onPress={() => setIncludeTweets(!includeTweets)}>
+                <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.7 }}>
+                    <Pressable className="my-4 flex-row items-center gap-4" onPress={() => setIncludeTweets(!includeTweets)}>
                         <Checkbox checked={includeTweets} />
-                        <Text className="text-lg font-semibold">Include Tweets</Text> 
+                        <Text className="text-lg font-semibold">Include Tweets</Text>
                     </Pressable>
-                    
+
                     <Text variant="title1">Feed Type</Text>
 
                     <List
-                        variant='full-width'
+                        variant="full-width"
                         data={[
                             { title: 'Follows', subTitle: 'Posts from people you follow', value: 'follows' },
                             { title: 'For You', subTitle: 'Posts within your network', value: 'local' },
@@ -353,8 +358,11 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
                         estimatedItemSize={50}
                         renderItem={({ item, target, index }) => (
                             <ListItem
-                                className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-                                titleClassName={cn("text-lg", item.value === feedType && '!font-extrabold')}
+                                className={cn(
+                                    'ios:pl-0 pl-2',
+                                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                                )}
+                                titleClassName={cn('text-lg', item.value === feedType && '!font-extrabold')}
                                 item={item}
                                 index={index}
                                 target={target}

@@ -5,18 +5,18 @@
 	import PostModal from "$lib/components/Post/Modal.svelte";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
+    import * as Post from "$lib/components/Post";
 
     let {term} = $page.params;
     let searchTerm = $state(term);
 
     let events = $state<NDKEvent[]>([]);
-    const imageUrlRegexp = /(?<!\!\[.*?\]\()https?:\/\/[^ ]+\.(jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/;
     let search = $state<NDKEvent[]>([]);
 
     const performSearch = () => {
         events = ndk.$subscribe([
             { kinds: [NDKKind.Image], "#t": [term]},
-            { kinds: [NDKKind.Text], "#t": [term], limit: 20 },
+            { kinds: [NDKKind.Text], "#t": [term] },
         ], { groupable: false, relaySet: NDKRelaySet.fromRelayUrls(["wss://relay.olas.app/"], ndk)});
 
         search = ndk.$subscribe([
@@ -31,13 +31,14 @@
         if (event.key === "Enter") {
             term = searchTerm;
             goto(`/search/${term}`, {});
-            performSearch();
+            // performSearch();
         }
     }
-    
-    onMount(() => {
-        performSearch();
-    })
+
+    $effect(() => {
+        console.log('term', term);
+        if (term) performSearch();
+    });
 </script>
 
 <div class="mx-auto max-w-4xl px-4">

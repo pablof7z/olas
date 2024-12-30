@@ -1,4 +1,4 @@
-import "react-native-get-random-values";
+import 'react-native-get-random-values';
 import React from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera'; // Update imports
@@ -7,7 +7,7 @@ import { ClipboardPasteButton } from 'expo-clipboard'; // Add this import
 import { Text } from '@/components/nativewindui/Text';
 import Drawer from 'expo-router/drawer';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { useNDKSession } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 
 export default function ReceiveEcash({ onReceived }: { onReceived: () => void }) {
     const [permission, requestPermission] = useCameraPermissions();
@@ -30,7 +30,8 @@ export default function ReceiveEcash({ onReceived }: { onReceived: () => void })
             return;
         }
 
-        (activeWallet as NDKCashuWallet).receiveToken(token)
+        (activeWallet as NDKCashuWallet)
+            .receiveToken(token)
             .then((result) => {
                 console.trace(result);
                 onReceived();
@@ -48,60 +49,60 @@ export default function ReceiveEcash({ onReceived }: { onReceived: () => void })
     return (
         <View style={styles.container}>
             <Drawer.Screen options={{ title: 'Receive' }} />
-            <CameraView 
-                 barcodeScannerSettings={{
-                    barcodeTypes: ["qr"],
+            <CameraView
+                barcodeScannerSettings={{
+                    barcodeTypes: ['qr'],
                 }}
-                style={styles.camera} 
+                style={styles.camera}
                 onBarcodeScanned={({ data }) => handleQRCodeScanned(data)} // Add QR code scan handler
             >
                 <View style={styles.buttonContainer} />
             </CameraView>
             {Clipboard.isPasteButtonAvailable && (
                 <View style={styles.buttonContainer}>
-                  <ClipboardPasteButton 
-                      style={[styles.buttonPaste, { width: '100%', height: 50 }]} 
-                      onPress={(a) => {
-                          if (a.text) receive(a.text)
-                      }}
-                      displayMode="iconAndLabel" 
-                  />
+                    <ClipboardPasteButton
+                        style={[styles.buttonPaste, { width: '100%', height: 50 }]}
+                        onPress={(a) => {
+                            if (a.text) receive(a.text);
+                        }}
+                        displayMode="iconAndLabel"
+                    />
                 </View>
             )}
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      justifyContent: 'center',
+        flex: 1,
+        justifyContent: 'center',
     },
     message: {
-      textAlign: 'center',
-      paddingBottom: 10,
+        textAlign: 'center',
+        paddingBottom: 10,
     },
     camera: {
-      flex: 1,
-      maxHeight: '50%',
+        flex: 1,
+        maxHeight: '50%',
     },
     buttonContainer: {
-      flexDirection: 'row',
-      backgroundColor: 'transparent',
-      margin: 20,
+        flexDirection: 'row',
+        backgroundColor: 'transparent',
+        margin: 20,
     },
     button: {
-      flex: 1,
-      alignSelf: 'flex-end',
-      alignItems: 'center',
+        flex: 1,
+        alignSelf: 'flex-end',
+        alignItems: 'center',
     },
     text: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
     },
     buttonPaste: {
         alignItems: 'center',
         margin: 10,
     },
-  });
+});

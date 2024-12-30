@@ -78,7 +78,7 @@ export class BlossomClient {
         //     reader.readAsArrayBuffer(fileUri);
         // });
 
-        const hash = await RNFS.hash(fileUri, "sha256")
+        const hash = await RNFS.hash(fileUri, 'sha256');
         console.log('hash from RNFS', hash);
 
         // console.log('read the file which is length', buffer.byteLength);
@@ -170,7 +170,7 @@ export class BlossomClient {
     /** Creates a one-off upload auth event for a file */
     static async getUploadAuth(fileUri: string, mime: string, signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
         const sha256 = await BlossomClient.getFileSha256(fileUri);
-        console.log('sha256', {sha256, fileUri});
+        console.log('sha256', { sha256, fileUri });
         return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
     }
     static async uploadBlob(server: ServerType, file: UploadType, auth?: SignedEvent) {

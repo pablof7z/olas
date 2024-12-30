@@ -2,11 +2,9 @@
 	import { CircleUser, Menu, ActivitySquare, Bookmark, Sun, Moon } from 'lucide-svelte';
 	import Logo from './icons/Logo.svelte';
 	import Home from './icons/Home.svelte';
+	import NewPost from './icons/NewPost.svelte';
 	import Search from './icons/Search.svelte';
 	import Reels from './icons/Reels.svelte';
-	import Messenger from './icons/Messenger.svelte';
-	import Notifications from './icons/Notifications.svelte';
-	import NewPost from './icons/NewPost.svelte';
 	import { cn } from '$lib/utils';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Form from '$lib/components/ui/form';
@@ -19,6 +17,7 @@
 	import { NDKNip07Signer } from '@nostr-dev-kit/ndk';
 	import { getCurrentUser, setCurrentUser } from '$lib/stores/currentUser.svelte';
 	import { onMount } from 'svelte';
+	import CurrentUserAvatar from './CurrentUserAvatar.svelte';
 
 	const currentUser = $derived(getCurrentUser());
 
@@ -65,30 +64,36 @@
 		// 	icon: Notifications,
 		// 	disabled: true
 		// },
-		// {
-		// 	text: 'create',
-		// 	icon: NewPost,
-		// 	disabled: true
-		// },
+		{
+			text: 'create',
+			icon: NewPost,
+			disabled: true
+		},
 		
 	];
+
+	const currentUserProfile = $derived.by(() => currentUser?.user ? ndk.cacheAdapter?.fetchProfileSync(currentUser?.user?.pubkey) : null);
 
 	const sidebarItems = $derived.by(() => {
 		const items = [...defaultSidebarItems];
 
-		const currentUserProfile = ndk.cacheAdapter?.fetchProfileSync(currentUser?.user?.pubkey);
-
 		if (currentUserProfile) {
 			items.push({
 				text: currentUserProfile.name,
-				icon: currentUserProfile.image,
-				href: `/p/${currentUser.user!.npub}`
+				icon: CurrentUserAvatar,
+				href: `/${currentUserProfile.nip05 ?? currentUser?.user?.npub }`
 			});
-		} else {
+		} else if (!currentUser) {
 			items.push({
 				text: 'login',
 				icon: CircleUser,
 				onclick: login
+			})
+		} else {
+			items.push({
+				text: 'Profile',
+				icon: CurrentUserAvatar,
+				href: `/${currentUser?.user?.npub}`
 			})
 		}
 
@@ -107,7 +112,7 @@
 		</div>
 	</div>
 	<div class="flex flex-1 flex-col gap-2">
-		{#each sidebarItems as { text, icon, href, disabled }}
+		{#each sidebarItems as { text, icon, href, disabled, onclick }}
 			<svelte:element
 				this={href ? 'a' : text === 'create' ? 'button' : 'div'}
 				{href}
@@ -118,6 +123,7 @@
 					if (text === 'create') {
 						openModal = true;
 					}
+					onclick?.();
 				}}
 			>
 				<svelte:component this={icon} />

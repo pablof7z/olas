@@ -1,21 +1,19 @@
 export function nicelyFormattedMilliSatNumber(amount: number) {
-    return nicelyFormattedSatNumber(
-        Math.floor(amount / 1000)
-    );
+    return nicelyFormattedSatNumber(Math.floor(amount / 1000));
 }
 
 export function nicelyFormattedSatNumber(amount: number) {
-	let format = (num: string): string => {
-		const str = num;
-		const parts = str.split(".");
-		
-		if (parts.length === 1) return str;
+    let format = (num: string): string => {
+        const str = num;
+        const parts = str.split('.');
 
-		// remove trailing zeros
-		const decimals = parts[1].replace(/0+$/, "");
-		if (decimals === "") return parts[0];
-		return `${parts[0]}.${decimals}`;
-	}
+        if (parts.length === 1) return str;
+
+        // remove trailing zeros
+        const decimals = parts[1].replace(/0+$/, '');
+        if (decimals === '') return parts[0];
+        return `${parts[0]}.${decimals}`;
+    };
 
     // if the number is less than 1000, just return it
     if (amount < 1000) return amount.toString();
@@ -31,10 +29,20 @@ export function nicelyFormattedSatNumber(amount: number) {
     return `${format((amount / 100_000_000).toFixed(2))} btc`;
 }
 
-export function formatMoney({ amount, unit, hideUnit, hideAmount }: { amount: number, unit: string, hideUnit?: boolean, hideAmount?: boolean }) {
+export function formatMoney({
+    amount,
+    unit,
+    hideUnit,
+    hideAmount,
+}: {
+    amount: number;
+    unit: string;
+    hideUnit?: boolean;
+    hideAmount?: boolean;
+}) {
     let number: string;
     let displayUnit: string;
-    
+
     switch (unit) {
         case 'msat':
         case 'msats':
@@ -58,6 +66,6 @@ export function formatMoney({ amount, unit, hideUnit, hideAmount }: { amount: nu
 
     if (hideAmount) return displayUnit;
     if (hideUnit) return number;
-    
+
     return `${number} ${displayUnit}`;
 }

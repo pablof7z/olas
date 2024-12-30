@@ -14,20 +14,20 @@ interface EventContentProps {
     onHashtagPress?: false | ((hashtag: string) => void);
 }
 
-function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string, onHashtagPress?: false | ((hashtag: string) => void) }) {
+function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtagPress?: false | ((hashtag: string) => void) }) {
     if (onHashtagPress !== false) {
-        onHashtagPress ??= () => router.push(`/search?q=${encodeURIComponent("#" + hashtag)}`);
+        onHashtagPress ??= () => router.push(`/search?q=${encodeURIComponent('#' + hashtag)}`);
     }
 
     if (onHashtagPress) {
         return (
             <Pressable onPress={() => onHashtagPress(hashtag)}>
-                <Text className="text-primary font-bold">#{hashtag}</Text>
+                <Text className="font-bold text-primary">#{hashtag}</Text>
             </Pressable>
         );
     }
-    
-    return <Text className="text-primary font-bold">#{hashtag}</Text>;
+
+    return <Text className="font-bold text-primary">#{hashtag}</Text>;
 }
 
 function RenderMention({ entity, onMentionPress }: { entity: string | null; onMentionPress?: (pubkey: string) => void }) {
@@ -52,7 +52,6 @@ function RenderMention({ entity, onMentionPress }: { entity: string | null; onMe
 //                 <Image
 //                     source={{ uri: part }}
 
-                    
 //                     style={{
 //                         width: '100%',
 //                         height: '100%',
@@ -94,8 +93,14 @@ function RenderMention({ entity, onMentionPress }: { entity: string | null; onMe
 //     return <Text {...props}>{entity.substring(0, 6)}...</Text>;
 // };
 
-
-function RenderPart({ part, onMentionPress, onHashtagPress, ...props }: { part: string, onMentionPress?: (pubkey: string) => void, onHashtagPress?: (hashtag: string) => void } & React.ComponentProps<typeof Text>) {
+function RenderPart({
+    part,
+    onMentionPress,
+    onHashtagPress,
+    ...props
+}: { part: string; onMentionPress?: (pubkey: string) => void; onHashtagPress?: (hashtag: string) => void } & React.ComponentProps<
+    typeof Text
+>) {
     if (part.startsWith('https://')) {
         return (
             <Pressable>
@@ -114,25 +119,20 @@ function RenderPart({ part, onMentionPress, onHashtagPress, ...props }: { part: 
 
     const mentionMatch = part.match(/nostr:([a-zA-Z0-9]+)/)?.[1];
     if (mentionMatch) {
-        return (
-            <RenderMention entity={mentionMatch} onMentionPress={onMentionPress} />
-        );
+        return <RenderMention entity={mentionMatch} onMentionPress={onMentionPress} />;
     }
 
     const hashtagMatch = part.match(/^#(\w+)/);
     if (hashtagMatch) {
-        return (
-            <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress} />
-        );
+        return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress} />;
     }
 
     return <Text {...props}>{part}</Text>;
-};
-
+}
 
 const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
     content ??= event.content;
-    
+
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+)/);
 
     return (

@@ -1,6 +1,6 @@
-import { NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { NDKList } from "@nostr-dev-kit/ndk-mobile";
-import { useNDKSessionEventKind } from "@nostr-dev-kit/ndk-mobile";
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKList } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 
 export const DEFAULT_BLOSSOM_SERVER = 'https://blossom.primal.net' as const;
 

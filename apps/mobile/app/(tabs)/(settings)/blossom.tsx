@@ -67,14 +67,16 @@ export default function BlossomScreen() {
         }
 
         console.log('blossomList', blossomList.tags);
-        blossomList.sign().then(() => {
-            console.log('event', blossomList.rawEvent());
-            blossomList.publishReplaceable();
-            router.back();
-        }).catch((e) => {
-            console.log('error', e);
-        });
-
+        blossomList
+            .sign()
+            .then(() => {
+                console.log('event', blossomList.rawEvent());
+                blossomList.publishReplaceable();
+                router.back();
+            })
+            .catch((e) => {
+                console.log('error', e);
+            });
     }
 
     return (

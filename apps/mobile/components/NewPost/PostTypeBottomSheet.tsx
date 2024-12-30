@@ -16,22 +16,20 @@ export type PostType = {
     id: string;
     type: 'photo' | 'video';
     uri: string;
-}
+};
 
 type PostTypeSheetRefAtomType = RefObject<BottomSheetModal> | null;
 
-export const postTypeSheetRefAtom = atom<PostTypeSheetRefAtomType, [PostTypeSheetRefAtomType], null>(
-    null,
-    (get, set, value) => set(postTypeSheetRefAtom, value)
+export const postTypeSheetRefAtom = atom<PostTypeSheetRefAtomType, [PostTypeSheetRefAtomType], null>(null, (get, set, value) =>
+    set(postTypeSheetRefAtom, value)
 );
-
 
 export function PostTypeBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(postTypeSheetRefAtom);
     const inset = useSafeAreaInsets();
     const [metadata, setMetadata] = useAtom(metadataAtom);
-    const setAppSettingsPostType = useAppSettingsStore(state => state.setPostType);
+    const setAppSettingsPostType = useAppSettingsStore((state) => state.setPostType);
 
     useEffect(() => {
         setBottomSheetRef(ref);
@@ -44,15 +42,11 @@ export function PostTypeBottomSheet() {
     };
 
     return (
-        <Sheet
-            ref={ref}
-            snapPoints={['50%']}
-            maxDynamicContentSize={Dimensions.get('window').height * 0.7}
-        >
+        <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
             <BottomSheetView style={{ paddingHorizontal: 20, paddingBottom: inset.bottom, minHeight: 500 }}>
                 <Text variant="title1">Post Type</Text>
 
-                <View className="w-full flex-1 flex-col gap-4 items-stretch">
+                <View className="w-full flex-1 flex-col items-stretch gap-4">
                     <Text className="text-sm text-muted-foreground">
                         Nostr posts are accessible in a wide variety of; some apps prioritize displaying certain types of posts.
                     </Text>
@@ -61,7 +55,9 @@ export function PostTypeBottomSheet() {
                         <View className="flex-row items-center gap-2">
                             <Image size={48} />
                             <View className="flex-col gap-0">
-                                <Text variant="caption1" className="text-lg font-bold">High Quality Post</Text>
+                                <Text variant="caption1" className="text-lg font-bold">
+                                    High Quality Post
+                                </Text>
                                 <Text variant="caption2" className="text-sm text-muted-foreground">
                                     For your evergreen content.
                                 </Text>
@@ -76,17 +72,20 @@ export function PostTypeBottomSheet() {
                         <View className="flex-row items-center gap-2">
                             <Type size={48} />
                             <View className="flex-col gap-0">
-                                <Text variant="caption1" className="text-lg font-bold">Generic Post</Text>
+                                <Text variant="caption1" className="text-lg font-bold">
+                                    Generic Post
+                                </Text>
                                 <Text variant="caption2" className="text-sm text-muted-foreground">
                                     Use this for your everyday posts.
                                 </Text>
                             </View>
                         </View>
                         <Text className="text-sm text-muted-foreground">
-                            Reach a wider audience that are not specifically looking for this type of content (i.e. will show up in Damus, Primal and other clients)
+                            Reach a wider audience that are not specifically looking for this type of content (i.e. will show up in Damus,
+                            Primal and other clients)
                         </Text>
                     </Button>
-                        
+
                     <View className="mb-8"></View>
                 </View>
             </BottomSheetView>

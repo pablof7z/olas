@@ -29,54 +29,53 @@
     });
 
     const comments = ndk.$subscribe([
-        { kinds: [1], "#e": [event.id] },
+        { kinds: [1, 1111], "#e": [event.id] },
     ]);
 
     // Dynamically calculated width
     let modalStyle = $state('');
     let imgStyle = $state('');
-    let commentSectionStyle = $state('');
-
+    let aspectRatio = $state(1);
     function handleImageLoad(event: Event) {
         const image = event.target as HTMLImageElement;
-        const aspectRatio = image.naturalWidth / image.naturalHeight;
+        aspectRatio = image.naturalWidth / image.naturalHeight;
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        const maxWidth = Math.min(image.naturalWidth + 400, viewportWidth * 0.9, image.naturalWidth * 2);
+        let imgWidth: number;
+        let imgHeight: number;
 
-        if (image.naturalWidth < 400) {
-            commentSectionStyle = `width: ${image.naturalWidth}px !important;`;
-        }
-        
-        const maxImageHeight = Math.min(image.naturalHeight, viewportHeight * 0.9);
-
-        modalStyle = `width: ${maxWidth}px !important; max-height: ${maxImageHeight}px !important;`;
-        imgStyle = `max-height: ${maxImageHeight}px !important;`;
-        
-        // Adjust the modal width based on the image's aspect ratio
         if (aspectRatio > 1) {
-            // Landscape
+            imgWidth = Math.min(image.naturalWidth, viewportWidth * 0.9 - 400, image.naturalWidth * 2);
+            imgHeight = Math.floor(imgWidth / aspectRatio);
         } else {
-            // Portrait
+            imgHeight = Math.min(image.naturalHeight, viewportHeight * 0.9, image.naturalHeight * 2);
+            imgWidth = Math.floor(imgHeight * aspectRatio);
         }
+
+        const maxWidth = imgWidth + 400;
+        const maxHeight = Math.min(imgHeight, viewportHeight * 0.9);
+        
+        modalStyle = `width: ${maxWidth}px !important; max-height: ${maxHeight}px !important;`;
+        imgStyle = `width: ${imgWidth}px !important; max-height: ${maxHeight}px !important;`;
     }
 </script>
 
 <Dialog.Root bind:open={opened}>
-    <Dialog.Content class="p-0 max-w-[80vw] max-h-[80vh] h-full flex" style={modalStyle}>
-        <div class="h-full flex flex-col lg:flex-row bg-white rounded-md">
+    <Dialog.Content class="p-0 max-w-[90vw] max-h-[90vh] h-full flex" style={modalStyle}>
+        <div class="h-full flex flex-col lg:flex-row bg-background rounded-md">
             <!-- Image Container -->
-            <div class="flex justify-center items-center flex-1 bg-gray-100 basis-0 h-full">
+            <div class="flex justify-center items-center flex-1 bg-secondary/10 basis-0 h-full snap-x">
                 <Image event={event} 
-                    on:load={handleImageLoad}
+                    onload={handleImageLoad}
                     style={imgStyle}
-                    class="object-cover"
+                    class="object-cover w-full snap-center h-full flex-none"
+                    containerClass="flex flex-row overflow-x-auto snap-x snap-mandatory w-full items-stretch justify-stretch snap-center"
                 />
             </div>
 
             <!-- Comment Section -->
-            <div class="overflow-y-auto p-4 text-sm bg-white lg:w-[400px]">
+            <div class="overflow-y-auto p-4 text-sm bg-background lg:w-[400px]">
                 <div class="flex flex-col gap-4">
                     <Comment event={event} />
 

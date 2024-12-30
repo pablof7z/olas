@@ -32,27 +32,30 @@ export default function ImageComponent({
 
     useEffect(() => {
         let isValid = true;
-        
+
         const loadImageFromUrl = async (imgUrl: string) => {
-            const res = await Image.loadAsync({
-                uri: imgUrl,
-                cacheKey: url,
-                blurhash: blurhash,
-            }, {
-                onError: (e) => {
-                    if (!isValid) return;
-                    console.error('Error loading image', imgUrl, e, {originalUrl: url});
-                    setError(e.message);
+            const res = await Image.loadAsync(
+                {
+                    uri: imgUrl,
+                    cacheKey: url,
+                    blurhash: blurhash,
                 },
-            }); // Load the image and get its dimensions
-            
+                {
+                    onError: (e) => {
+                        if (!isValid) return;
+                        console.error('Error loading image', imgUrl, e, { originalUrl: url });
+                        setError(e.message);
+                    },
+                }
+            ); // Load the image and get its dimensions
+
             if (!isValid) {
                 return;
             }
             setImage(res);
             setImageDimensions({ width: res.width, height: res.height });
-        }
-        
+        };
+
         const loadImage = async () => {
             try {
                 const cachePath = await Image.getCachePathAsync(url);
@@ -69,7 +72,7 @@ export default function ImageComponent({
                 await loadImageFromUrl(pUri);
                 setIsLoading(false);
             } catch (error) {
-                console.error('Error loading image', error, pUri, {originalUrl: url});
+                console.error('Error loading image', error, pUri, { originalUrl: url });
                 setError(error.message);
             }
         };
@@ -79,22 +82,45 @@ export default function ImageComponent({
         return () => {
             isValid = false;
         };
-    }, [url]); 
+    }, [url]);
 
     if (isLoading || !imageDimensions || error) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: maxHeight/2, position: 'relative', ...{style} }}>
-                <Image
-                    source={{ blurhash: blurhash }}
-                    style={{ width: maxWidth, height: maxHeight/2 }}
-                />
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: maxHeight / 2,
+                    position: 'relative',
+                    ...{ style },
+                }}>
+                <Image source={{ blurhash: blurhash }} style={{ width: maxWidth, height: maxHeight / 2 }} />
                 {error ? (
-                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
                         <Text>Whoops, something's wrong with this image</Text>
                         <Text className="p-10 text-xs text-muted-foreground">{error}</Text>
                     </View>
                 ) : (
-                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
                         <ActivityIndicator />
                     </View>
                 )}
@@ -109,7 +135,7 @@ export default function ImageComponent({
         <Pressable onPress={onPress} style={{ position: 'relative', flex: 1, ...style }} className={className} {...props}>
             <Image
                 source={image}
-                contentFit='cover'
+                contentFit="cover"
                 style={[
                     {
                         width: maxWidth,

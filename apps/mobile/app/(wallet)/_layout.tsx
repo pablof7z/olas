@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 
 export default function WalletLayout() {
     return (
@@ -6,5 +6,5 @@ export default function WalletLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="receive" />
         </Stack>
-    )
+    );
 }

@@ -1,14 +1,14 @@
-import { MediaLibraryItem } from "./MediaPreview";
+import { MediaLibraryItem } from './MediaPreview';
 import * as FileSystem from 'expo-file-system';
 import { Image as CompressedImage } from 'react-native-compressor';
 import NDK from '@nostr-dev-kit/ndk-mobile';
 import * as Exify from '@lodev09/react-native-exify';
 import { Image } from 'expo-image';
-import { determineMimeType } from "./AlbumsView";
+import { determineMimeType } from './AlbumsView';
 import * as RNFS from 'react-native-fs';
-import { Uploader } from "@/utils/uploader";
-import { DEFAULT_BLOSSOM_SERVER } from "@/hooks/blossom";
-import { BlobDescriptor } from "@/utils";
+import { Uploader } from '@/utils/uploader';
+import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
+import { BlobDescriptor } from '@/utils';
 
 export async function uploadMedia(
     media: MediaLibraryItem[],
@@ -25,20 +25,19 @@ export async function uploadMedia(
                 m.uploadedUri = data.url;
                 m.uploadedSha256 = data.sha256;
                 resolve();
-            }
+            };
             uploader.onError = (error) => {
                 reject(error);
-            }
+            };
             uploader.start();
-        })
-        
+        });
     }
 
     return mediaItems;
 }
 
 export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibraryItem[]> {
-    debugger
+    debugger;
     const res = [];
 
     for (const m of media) {
@@ -50,13 +49,11 @@ export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibr
     return res;
 }
 
-export async function prepareMediaItem(
-    media: MediaLibraryItem
-): Promise<MediaLibraryItem> {
+export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLibraryItem> {
     let { mimeType, blurhash } = media;
 
     if (!mimeType) mimeType = await determineMimeType(media.uri);
-    
+
     const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const newUri = FileSystem.cacheDirectory + randomId + '.jpg';
 
@@ -83,17 +80,16 @@ export async function prepareMediaItem(
     console.log('compressed file', compressedUri);
     console.log('time to compress real file', end - start);
 
-
     // zero-out the gps data
     await Exify.writeAsync(compressedUri, zeroedGpsData);
 
     // getting sha256
-    const sha256 = await RNFS.hash(compressedUri, "sha256")
+    const sha256 = await RNFS.hash(compressedUri, 'sha256');
     console.log('sha256', sha256);
 
     if (!blurhash) {
         try {
-            blurhash = await generateBlurhash(compressedUri)
+            blurhash = await generateBlurhash(compressedUri);
         } catch (error) {
             console.error('Error generating blurhash', error);
         }
@@ -106,9 +102,8 @@ export async function prepareMediaItem(
         blurhash,
         mimeType,
         location,
-    }
+    };
 }
-
 
 const zeroedGpsData = {
     GPSTrackRef: '0',
@@ -160,7 +155,7 @@ async function generateBlurhash(uri: string) {
     const end = performance.now();
     console.log('compressed file', compressedUri);
     console.log('time to compress', end - start);
-    
+
     const start2 = performance.now();
     const blurhash = await Image.generateBlurhashAsync(compressedUri, [7, 5]);
     const end2 = performance.now();

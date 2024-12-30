@@ -28,7 +28,7 @@ export default function WalletsScreen() {
         router.back();
         const w = await NDKCashuWallet.from(wallet);
         setActiveWallet(w);
-    }
+    };
 
     const data = useMemo(() => {
         if (!ndk) return [];
@@ -48,11 +48,11 @@ export default function WalletsScreen() {
                 ),
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
-        
+
         if (options.length > 0) {
             options.unshift('Existing Wallets');
         }
-        
+
         options.push('New Wallet');
 
         options.push({
@@ -74,7 +74,7 @@ export default function WalletsScreen() {
             leftView: <IconView name="link" className="bg-gray-500" />,
             subTitle: 'Connect to a Nostr Wallet',
             onPress: () => {
-                router.push('nwc')
+                router.push('nwc');
             },
         });
 
@@ -88,7 +88,11 @@ export default function WalletsScreen() {
 
     async function newWallet() {
         console.log('creating new wallet');
-        const wallet = NDKCashuWallet.create(ndk, ['https://mint.coinos.io'], Array.from(ndk!.pool.relays.values()).map((r) => r.url));
+        const wallet = NDKCashuWallet.create(
+            ndk,
+            ['https://mint.coinos.io'],
+            Array.from(ndk!.pool.relays.values()).map((r) => r.url)
+        );
         wallet.name = 'My Wallet';
         await wallet.getP2pk();
         await wallet.publish().then(() => {
@@ -100,7 +104,7 @@ export default function WalletsScreen() {
             mintList.publishReplaceable();
         });
     }
-    
+
     return (
         <>
             <LargeTitleHeader

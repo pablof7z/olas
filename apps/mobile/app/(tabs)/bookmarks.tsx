@@ -20,30 +20,36 @@ export default function Bookmarks() {
 
     useEffect(() => {
         if (ndk && showOthers) {
-            ndk.fetchEvents([
-                { kinds: [ NDKKind.ImageCurationSet ]}
-            ]).then((lists) => {
+            ndk.fetchEvents([{ kinds: [NDKKind.ImageCurationSet] }]).then((lists) => {
                 setBookmarkLists(Array.from(lists).map(NDKList.from));
-            })
+            });
         } else {
             setBookmarkLists([]);
         }
-    }, [showOthers])
-    
-    const otherBookmarkIds = useMemo(() => 
-        Array.from(new Set(bookmarkLists?.map(list => list.items).flat().map(item => item[1]) ?? [])),
+    }, [showOthers]);
+
+    const otherBookmarkIds = useMemo(
+        () =>
+            Array.from(
+                new Set(
+                    bookmarkLists
+                        ?.map((list) => list.items)
+                        .flat()
+                        .map((item) => item[1]) ?? []
+                )
+            ),
         [bookmarkLists]
     );
 
-    const filters = useMemo(() => ([
-        {
-            ids: [
-                ...imageCurationSet.items.map((i) => i[1]),
-                ...otherBookmarkIds
-            ].filter(id => !!id)
-        }
-    ]), [imageCurationSet.items.length, otherBookmarkIds]);
-    
+    const filters = useMemo(
+        () => [
+            {
+                ids: [...imageCurationSet.items.map((i) => i[1]), ...otherBookmarkIds].filter((id) => !!id),
+            },
+        ],
+        [imageCurationSet.items.length, otherBookmarkIds]
+    );
+
     const { events } = useSubscribe({ filters });
 
     const sortedEvents = useMemo(() => events.sort((a, b) => b.created_at! - a.created_at!), [events]);
@@ -55,7 +61,7 @@ export default function Bookmarks() {
                     headerShown: true,
                     title: 'Bookmarks',
                     headerRight: () => (
-                        <View style={{ flexDirection: 'row',  paddingRight:10 }}>
+                        <View style={{ flexDirection: 'row', paddingRight: 10 }}>
                             <Pressable onPress={() => setShowOthers(!showOthers)}>
                                 <Globe size={24} strokeWidth={showOthers ? 3 : 1} color="gray" />
                             </Pressable>
@@ -63,9 +69,11 @@ export default function Bookmarks() {
                     ),
                 }}
             />
-            <View className="flex-1 gap-2 bg-card flex-col">
+            <View className="flex-1 flex-col gap-2 bg-card">
                 {imageCurationSet.items.length === 0 && showOthers === false && (
-                    <View className="flex-1 items-center justify-center flex-col gap-4" style={{ paddingHorizontal: Dimensions.get('window').width * 0.2 }}>
+                    <View
+                        className="flex-1 flex-col items-center justify-center gap-4"
+                        style={{ paddingHorizontal: Dimensions.get('window').width * 0.2 }}>
                         <Album size={Dimensions.get('window').width / 2} strokeWidth={1} color="gray" style={{ opacity: 0.5 }} />
                         <Text>Your favorite posts will appear here once you bookmark them.</Text>
 
@@ -76,11 +84,9 @@ export default function Bookmarks() {
                 )}
                 <FlashList
                     data={sortedEvents}
-                    renderItem={({ item }) => (
-                        <Post event={item} reposts={[]} timestamp={item.created_at!} />
-                    )}
+                    renderItem={({ item }) => <Post event={item} reposts={[]} timestamp={item.created_at!} />}
                     keyExtractor={(item) => item.id}
-                    contentContainerStyle={{paddingBottom:30}}
+                    contentContainerStyle={{ paddingBottom: 30 }}
                 />
             </View>
         </>

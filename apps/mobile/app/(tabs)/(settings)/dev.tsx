@@ -1,10 +1,10 @@
-import { NDKCacheAdapterSqlite, useNDK } from "@nostr-dev-kit/ndk-mobile";
-import { Text } from "@/components/nativewindui/Text";
-import { List, ListItem } from "@/components/nativewindui/List";
-import { cn } from "@/lib/cn";
-import { SQLiteDatabase } from "expo-sqlite";
+import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { Text } from '@/components/nativewindui/Text';
+import { List, ListItem } from '@/components/nativewindui/List';
+import { cn } from '@/lib/cn';
+import { SQLiteDatabase } from 'expo-sqlite';
 
-type Row = { id: string, title: string, value: string };
+type Row = { id: string; title: string; value: string };
 
 function getSubscriptions(): Row[] {
     const { ndk } = useNDK();
@@ -16,12 +16,12 @@ function getSubscriptions(): Row[] {
             id: 'subscriptions',
             title: 'Subscriptions',
             value: subscriptions.size.toString(),
-        }
-    ]
+        },
+    ];
 }
 
 function getProfileCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM profiles') as { id: string, pubkey: string, name: string }[];
+    const data = db.getAllSync('SELECT * FROM profiles') as { id: string; pubkey: string; name: string }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -34,7 +34,7 @@ function getProfileCount(db: SQLiteDatabase): Row[] {
 }
 
 function getEventCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM events') as { id: string, kind: number, content: string }[];
+    const data = db.getAllSync('SELECT * FROM events') as { id: string; kind: number; content: string }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -82,7 +82,7 @@ export default function DevScreen() {
             estimatedItemSize={50}
             keyExtractor={(item) => item.id}
             variant="full-width"
-            renderItem={({ item, target, index }) =>
+            renderItem={({ item, target, index }) => (
                 <ListItem
                     item={item}
                     className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
@@ -91,7 +91,7 @@ export default function DevScreen() {
                     target={target}
                     rightView={<Text>{item.value}</Text>}
                 />
-            }
+            )}
         />
-    )
+    );
 }

@@ -1,26 +1,26 @@
-import { relayNoticesAtom } from "@/stores/relays";
-import { useLocalSearchParams } from "expo-router";
-import { useAtomValue } from "jotai";
-import { useMemo } from "react";
-import { FlatList, View } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import NDK, { NDKFilter, useNDK } from "@nostr-dev-kit/ndk-mobile";
-import { List, ListItem } from "@/components/nativewindui/List";
+import { relayNoticesAtom } from '@/stores/relays';
+import { useLocalSearchParams } from 'expo-router';
+import { useAtomValue } from 'jotai';
+import { useMemo } from 'react';
+import { FlatList, View } from 'react-native';
+import { Text } from '@/components/nativewindui/Text';
+import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { List, ListItem } from '@/components/nativewindui/List';
 
 type Row = {
     id: string;
     filters: NDKFilter[];
     count: number;
-}
+};
 
-function subscriptions({ relayUrl, ndk }: { relayUrl?: string, ndk: NDK }) {
+function subscriptions({ relayUrl, ndk }: { relayUrl?: string; ndk: NDK }) {
     const relay = ndk.pool.getRelay(relayUrl);
     const subManager = relay.subs;
 
     const rows: Row[] = [];
 
     if (!relayUrl) return rows;
-    
+
     for (const [id, subscriptions] of subManager.subscriptions) {
         const row = {
             id: id,
@@ -37,7 +37,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string, ndk: NDK }) {
                     f[key] = `${value.length} values`;
                 }
             }
-            
+
             return f;
         });
 
@@ -49,7 +49,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string, ndk: NDK }) {
 
 export default function RelayScreen() {
     const { ndk } = useNDK();
-    const {relayUrl} = useLocalSearchParams() as {relayUrl: string};
+    const { relayUrl } = useLocalSearchParams() as { relayUrl: string };
     const relayNotices = useAtomValue(relayNoticesAtom);
 
     const notices = useMemo(() => {
@@ -59,32 +59,39 @@ export default function RelayScreen() {
 
     const subsData = subscriptions({ relayUrl, ndk });
 
-    return <View className="flex-1">
-        <Text>{relayUrl} ({subsData.length})</Text>
+    return (
+        <View className="flex-1">
+            <Text>
+                {relayUrl} ({subsData.length})
+            </Text>
 
-        <List
-            data={subsData}
-            estimatedItemSize={40}
-            renderItem={({ item, index, target }) => 
-                <ListItem
-                    index={index}
-                    target={target}
-                    item={{
-                        id: item.id,
-                        title: item.id,
-                        badge: item.count,
-                    }}
-                >
-                    <View className="flex-col">
-                        {item.filters.map((filter, index) => <Text key={index} className="font-mono">{JSON.stringify(filter)}</Text>)}
-                    </View>
-                </ListItem>
-            }
-        />
-{/* 
+            <List
+                data={subsData}
+                estimatedItemSize={40}
+                renderItem={({ item, index, target }) => (
+                    <ListItem
+                        index={index}
+                        target={target}
+                        item={{
+                            id: item.id,
+                            title: item.id,
+                            badge: item.count,
+                        }}>
+                        <View className="flex-col">
+                            {item.filters.map((filter, index) => (
+                                <Text key={index} className="font-mono">
+                                    {JSON.stringify(filter)}
+                                </Text>
+                            ))}
+                        </View>
+                    </ListItem>
+                )}
+            />
+            {/* 
         <FlatList
             data={notices}
             renderItem={({item}) => <Text>{item.toString()}</Text>}
         /> */}
-    </View>
+        </View>
+    );
 }

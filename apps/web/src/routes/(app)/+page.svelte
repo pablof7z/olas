@@ -1,43 +1,48 @@
 <script lang="ts">
-	import PostModal from '$lib/components/Post/Modal.svelte';
 	import ndk from '$lib/stores/ndk.svelte';
-	import { NDKKind, type NDKEvent } from '@nostr-dev-kit/ndk';
+	import { NDKEvent, NDKKind, NDKRelaySet } from '@nostr-dev-kit/ndk';
 	import * as Post from '$lib/components/Post';
+	import { getCurrentUser } from '$lib/stores/currentUser.svelte';
+	import { myFollows } from '$lib/myfollows';
 
 	const events = ndk.$subscribe([
-		{ kinds: [NDKKind.Image], limit: 100 },
-		{ kinds: [1], "#k": ["20"], limit: 100 },
+		{ kinds: [NDKKind.Image] },
+		{ kinds: [1], "#k": ["20"] },
+		// { kinds: [1], authors: Array.from(myFollows), limit: 100 },
 	]);
 
-	let openModal = $state(false);
-	let selectedEvent = $state<NDKEvent | null>(null);
+	const relaySet = NDKRelaySet.fromRelayUrls(["wss://relay.olas.app/"], ndk);
+	let kind1Events = $state<NDKEvent[] | null>(null);
 
-	function openEvent(event: NDKEvent) {
-		selectedEvent = event;
-		openModal = true;
-	}
+	const filterEvent = (e: NDKEvent) => (
+		e.kind === 20 ||
+		(e.kind === 1 && e.tags.some(t => t[0] === 'k' && t[1] === '20')) ||
+		(e.kind === 1 && !e.hasTag("e") && e.hasTag("imeta"))
+	);
+	
+	// const filteredEvents = $derived(events.filter(filterEvent));
 </script>
 
 <div class="flex flex-col gap-5 lg:flex-row">
 	<div class="flex-1 lg:flex-shrink-0">
 		<div class="mx-auto w-full max-w-[630px]">
-			<div class="flex flex-row gap-10 text-lg font-semibold border-b border-gray-200 pb-2">
-				<a href="#" class="text-foreground">
+			<div class="flex flex-row text-base gap-0 font-bold">
+				<a href="#" class="text-foreground border-b-2 pb-2 px-5 border-foreground hover:border-foreground">
 					Following
 				</a>
 
-				<a href="#" class="text-muted-foreground/30 cursor-not-allowed" title="Not ready yet">
+				<a href="#" class="text-muted-foreground/30 cursor-not-allowed border-b-2 pb-2 px-5 border-border" title="Not ready yet">
 					Communities
 				</a>
 
-				<a href="#" class="text-muted-foreground/30 cursor-not-allowed" title="Not ready yet">
+				<a href="#" class="text-muted-foreground/30 cursor-not-allowed border-b-2 pb-2 px-5 border-border" title="Not ready yet">
 					Local
 				</a>
 
 			</div>
 			
 			<!-- <Stories /> -->
-			<Post.List {events} />
+			<Post.List events={events} />
 		</div>
 	</div>
 
@@ -84,6 +89,3 @@
 	</div>
 </div>
 
-{#if openModal}
-	<PostModal event={selectedEvent} bind:opened={openModal} />
-{/if}

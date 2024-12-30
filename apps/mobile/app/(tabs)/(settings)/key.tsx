@@ -16,7 +16,7 @@ export default function SettingsIosStyleScreen() {
     const { ndk, currentUser } = useNDKCurrentUser();
     const privateKey = (ndk?.signer as NDKPrivateKeySigner)?._privateKey;
 
-    console.log("private key", (ndk?.signer as NDKPrivateKeySigner)?.privateKey);
+    console.log('private key', (ndk?.signer as NDKPrivateKeySigner)?.privateKey);
 
     const data = useMemo(() => {
         const nsec = privateKey ? nip19.nsecEncode(privateKey) : null;

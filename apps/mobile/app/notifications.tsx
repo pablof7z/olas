@@ -21,7 +21,7 @@ type NotificationItem = {
 
 const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
     const { userProfile } = useUserProfile(event.pubkey);
-    
+
     const label = useMemo(() => {
         switch (event.kind) {
             case NDKKind.Reaction:
@@ -64,18 +64,24 @@ export default function Notifications() {
     const { events: notifications } = useSubscribe({ filters, opts });
 
     const mixedEvents = useThrottle([events, notifications], 1000);
-    const sortedEvents = useMemo(() => (
-        [...events, ...notifications]
-            .filter(event => event.kind !== 967 || event.pubkey !== currentUser?.pubkey )
-            .sort((a, b) => b.created_at - a.created_at)
-    ), [mixedEvents]);
+    const sortedEvents = useMemo(
+        () =>
+            [...events, ...notifications]
+                .filter((event) => event.kind !== 967 || event.pubkey !== currentUser?.pubkey)
+                .sort((a, b) => b.created_at - a.created_at),
+        [mixedEvents]
+    );
     // const mixedEvents = useDebounce(() => [...events, ...notifications].sort((a, b) => a.created_at - b.created_at), 1000);
 
     return (
         <>
             <Stack.Screen options={{ headerShown: true, title: 'Notifications' }} />
             <View style={styles.container} className="bg-card">
-                <FlashList data={sortedEvents} renderItem={({ item }) => <NotificationItem event={item} />} keyExtractor={(item) => item.id} />
+                <FlashList
+                    data={sortedEvents}
+                    renderItem={({ item }) => <NotificationItem event={item} />}
+                    keyExtractor={(item) => item.id}
+                />
             </View>
         </>
     );

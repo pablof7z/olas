@@ -18,7 +18,7 @@ export default function CommentScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     const postComment = async () => {
-        const event = activeEvent.reply()
+        const event = activeEvent.reply();
         event.content = comment;
         await event.sign();
         event.publish();

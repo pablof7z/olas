@@ -45,7 +45,7 @@ export default function NwcScreen() {
         console.log('nwc', nwc.balance());
 
         setActiveWallet(nwc);
-        
+
         SecureStore.setItemAsync('nwc', connectString);
         router.back();
     }
@@ -63,15 +63,13 @@ export default function NwcScreen() {
                 )}
             />
 
-            <Text className="text-center text-muted-foreground">
-                Enter your nostr wallet connect url.
-            </Text>
+            <Text className="text-center text-muted-foreground">Enter your nostr wallet connect url.</Text>
 
             <View className="px-4">
                 <TextField
                     autoFocus
                     keyboardType="default"
-                    className="w-full min-h-[100px] bg-card rounded-lg"
+                    className="min-h-[100px] w-full rounded-lg bg-card"
                     value={connectString}
                     multiline={true}
                     onChangeText={setConnectString}

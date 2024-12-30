@@ -1,4 +1,12 @@
-import { NDKEvent, NDKKind, useUserProfile, useSubscribe, NDKSubscriptionOptions, NDKVideo, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    NDKKind,
+    useUserProfile,
+    useSubscribe,
+    NDKSubscriptionOptions,
+    NDKVideo,
+    NDKSubscriptionCacheUsage,
+} from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
 import * as User from '@/components/ui/user';
@@ -46,24 +54,18 @@ const styles = StyleSheet.create({
     },
 });
 
-const MediaSection = function MediaSection({
-    event, 
-    setActiveEvent 
-}: { 
-    event: NDKEvent;
-    setActiveEvent: (event: NDKEvent) => void;
-}) {
+const MediaSection = function MediaSection({ event, setActiveEvent }: { event: NDKEvent; setActiveEvent: (event: NDKEvent) => void }) {
     const maxHeight = Dimensions.get('window').height * 0.7;
 
     const onPress = useCallback(() => {
         setActiveEvent(event);
         router.push('/view');
-    }, [ event.id ])
+    }, [event.id]);
 
-    return <EventMediaContainer event={event} maxHeight={maxHeight} onPress={onPress} />
-}
+    return <EventMediaContainer event={event} maxHeight={maxHeight} onPress={onPress} />;
+};
 
-export default function Post({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
+export default function Post({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     const { isDarkColorScheme } = useColorScheme();
     const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
     const { colors } = useColorScheme();
@@ -83,10 +85,10 @@ export default function Post({ event, reposts, timestamp }: { event: NDKEvent, r
 
             <PostBottom event={event} trimmedContent={content} />
         </View>
-    )
+    );
 }
 
-export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
+export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
     const { colors } = useColorScheme();
     let clientName = event.tagValue('client');
@@ -100,13 +102,13 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
         setOptionsMenuEvent(event);
         optionsSheetRef.current?.present();
     }, [event, optionsSheetRef]);
-    
+
     return (
         <View className="flex-col p-2">
             {reposts.length > 0 && (
                 <View style={{ flex: 1, flexDirection: 'column' }}>
                     <View className="w-full flex-row items-center justify-between gap-2 pb-0">
-                        <View style={{ flexDirection: 'row', gap: 4}}>
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
                             <Repeat size={16} color={'green'} />
 
                             <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
@@ -119,7 +121,7 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
                     </View>
                 </View>
             )}
-                
+
             <View className="w-full flex-row items-center justify-between gap-2">
                 <View style={styles.profileContainer}>
                     <TouchableOpacity
@@ -134,7 +136,7 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
                         <Text>
                             <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             {clientName && (
-                                <Text className="text-xs text-muted-foreground truncate" numberOfLines={1}>
+                                <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
                                     {` via ${clientName}`}
                                 </Text>
                             )}
@@ -151,56 +153,69 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
                 </View>
             </View>
         </View>
-    )
+    );
 }
 
-const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: NDKEvent, trimmedContent: string }) {
-    const currentUser = useNDKCurrentUser();
-    const follows = useFollows();
-    const filters = useMemo(
-        () => [
-            {
-                kinds: [NDKKind.Text, NDKKind.GenericReply, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap],
-                ...event.filter(),
-            },
-        ],
-        [event.id]
-    );
-    const opts = useMemo<NDKSubscriptionOptions>(() => ({
-        groupable: false,
-        skipVerification: true,
-        cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
-        closeOnEose: true,
-    }), []);
-    const { events: relatedEvents } = useSubscribe({ filters, opts });
+const PostBottom = memo(
+    function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
+        const currentUser = useNDKCurrentUser();
+        const follows = useFollows();
+        const filters = useMemo(
+            () => [
+                {
+                    kinds: [
+                        NDKKind.Text,
+                        NDKKind.GenericReply,
+                        NDKKind.Reaction,
+                        NDKKind.GenericRepost,
+                        NDKKind.Repost,
+                        NDKKind.BookmarkList,
+                        NDKKind.Zap,
+                        NDKKind.Nutzap,
+                    ],
+                    ...event.filter(),
+                },
+            ],
+            [event.id]
+        );
+        const opts = useMemo<NDKSubscriptionOptions>(
+            () => ({
+                groupable: false,
+                skipVerification: true,
+                cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
+                closeOnEose: true,
+            }),
+            []
+        );
+        const { events: relatedEvents } = useSubscribe({ filters, opts });
 
-    const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
+        const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
 
-    const commentsByFollows = useMemo(() => {
-        if (!follows) return [];
-        return relatedEvents
-            .filter(isComment)
-            .filter((c) => c.pubkey === currentUser?.pubkey || follows.includes(c.pubkey));
-    }, [relatedEvents, follows, currentUser?.pubkey]);
+        const commentsByFollows = useMemo(() => {
+            if (!follows) return [];
+            return relatedEvents.filter(isComment).filter((c) => c.pubkey === currentUser?.pubkey || follows.includes(c.pubkey));
+        }, [relatedEvents, follows, currentUser?.pubkey]);
 
-    return (
-        <View className="flex-1 flex-col gap-1 p-2">
-            <Reactions event={event} relatedEvents={relatedEvents} />
+        return (
+            <View className="flex-1 flex-col gap-1 p-2">
+                <Reactions event={event} relatedEvents={relatedEvents} />
 
-            {trimmedContent.length > 0 && (
-                <EventContent
-                    event={event}
-                    content={trimmedContent}
-                    className="text-sm text-foreground"
-                    onMentionPress={(pubkey) => {
-                        router.push(`/profile?pubkey=${pubkey}`);
-                    }}
-                />
-            )}
+                {trimmedContent.length > 0 && (
+                    <EventContent
+                        event={event}
+                        content={trimmedContent}
+                        className="text-sm text-foreground"
+                        onMentionPress={(pubkey) => {
+                            router.push(`/profile?pubkey=${pubkey}`);
+                        }}
+                    />
+                )}
 
-            <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} />
-        </View>
-    );
-}, (prevProps, nextProps) => {
-    return prevProps.event.id === nextProps.event.id;
-});
+                <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} />
+            </View>
+        );
+    },
+    (prevProps, nextProps) => {
+        return prevProps.event.id === nextProps.event.id;
+    }
+);

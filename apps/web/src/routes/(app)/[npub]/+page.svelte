@@ -29,7 +29,7 @@
 	let userProfile = $state<NDKUserProfile | null>(null);
 	const IMAGE_URL_REGEX = new RegExp(/https?:\/\/.*\.(jpg|jpeg|png|gif|bmp|svg|webp)/g);
 
-	let events = $state<NDKEvent[]>([]);
+	let events = $state<NDKEvent[] | null>(null);
 	let selectedEvents = $derived.by(() => {
 		const filteredEvents: NDKEvent[] = [];
 
@@ -44,13 +44,10 @@
 		return filteredEvents;
 	});
 
-	$inspect(userProfile);
-	
 	$effect(() => {
-		console.log('fetching user profile', user?.pubkey);
+		console.log('fetching user profile', user);
 		if (user && !userProfile) {
 			const sync = ndk.cacheAdapter?.fetchProfileSync?.(user.pubkey);
-			console.log('sync', sync);
 			if (sync) {
 				userProfile = sync;
 			} else {
@@ -58,6 +55,12 @@
 					console.log('fetched user profile', profile);
 					userProfile = profile}).catch(e => console.error(e));
 			}
+		}
+	});
+
+	$effect(() => {
+		console.log('fetching events', user);
+		if (user && !events) {
 			events = ndk.$subscribe([
 				{ kinds: [20], authors: [user.pubkey] },
 				{ kinds: [1], "#k": ["20"], authors: [user.pubkey] },
@@ -77,7 +80,7 @@
 	let selectedEvent = $state<NDKEvent | null>(null);
 </script>
 
-{#if user}
+{#if user && events}
 <div class="mx-auto max-w-4xl px-4">
 	<div class="mb-8 flex items-start gap-8 py-8">
 		<div class="shrink-0">

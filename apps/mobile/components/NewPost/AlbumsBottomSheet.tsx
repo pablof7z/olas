@@ -14,9 +14,8 @@ import { MasonryFlashList } from '@shopify/flash-list';
 import AlbumsGrid from '../albums/grid';
 
 type AlbumBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
-export const albumBottomSheetRefAtom = atom<AlbumBottomSheetRefAtomType, [AlbumBottomSheetRefAtomType], null>(
-    null,
-    (get, set, value) => set(albumBottomSheetRefAtom, value)
+export const albumBottomSheetRefAtom = atom<AlbumBottomSheetRefAtomType, [AlbumBottomSheetRefAtomType], null>(null, (get, set, value) =>
+    set(albumBottomSheetRefAtom, value)
 );
 
 export function AlbumsBottomSheet() {
@@ -32,25 +31,29 @@ export function AlbumsBottomSheet() {
     const setSelectedAlbum = useSetAtom(selectedAlbumAtom);
     const setSelectedMedia = useSetAtom(selectedMediaAtom);
     const albumBottomSheetRef = useAtomValue(albumBottomSheetRefAtom);
-    
-    const onAlbumPress = useCallback((album: MediaLibrary.Album) => {
-        setSelectedAlbum(album);
-        albumBottomSheetRef?.current?.dismiss();
-    }, [setSelectedAlbum, albumBottomSheetRef, setSelectedMedia]);
+
+    const onAlbumPress = useCallback(
+        (album: MediaLibrary.Album) => {
+            setSelectedAlbum(album);
+            albumBottomSheetRef?.current?.dismiss();
+        },
+        [setSelectedAlbum, albumBottomSheetRef, setSelectedMedia]
+    );
 
     return (
-        <Sheet
-            ref={ref}
-            snapPoints={['80%']}
-            maxDynamicContentSize={Dimensions.get('window').height * 0.7}
-        >
-            <BottomSheetView style={{ flexDirection: 'column', width: '100%', paddingBottom: inset.bottom, minHeight: Dimensions.get('window').height * 0.6 }}>
-                <Text variant="title1" className="text-grow">Albums</Text>
+        <Sheet ref={ref} snapPoints={['80%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
+            <BottomSheetView
+                style={{
+                    flexDirection: 'column',
+                    width: '100%',
+                    paddingBottom: inset.bottom,
+                    minHeight: Dimensions.get('window').height * 0.6,
+                }}>
+                <Text variant="title1" className="text-grow">
+                    Albums
+                </Text>
 
-                <AlbumsGrid
-                    albums={albums}
-                    onAlbumPress={onAlbumPress}
-                />
+                <AlbumsGrid albums={albums} onAlbumPress={onAlbumPress} />
             </BottomSheetView>
         </Sheet>
     );

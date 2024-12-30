@@ -29,8 +29,8 @@ const Comment = ({ item }: { item: NDKEvent }) => {
                 <EventContent event={item} className="text-sm text-foreground" />
             </View>
         </View>
-    )
-}
+    );
+};
 
 export default function CommentScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);

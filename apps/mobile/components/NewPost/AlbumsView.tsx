@@ -1,32 +1,32 @@
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { albumsAtom, multiImageModeAtom, selectedAlbumAtom } from "./store";
-import { MediaLibraryItem } from "./MediaPreview";
-import { Dimensions, Pressable, View } from "react-native";
-import * as MediaLibrary from "expo-media-library";
-import { selectedMediaAtom } from "./store";
-import { MediaPreview } from "./MediaPreview";
-import { MasonryFlashList } from "@shopify/flash-list";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Text } from "@/components/nativewindui/Text";
-import { Check, ChevronDown, Images } from "lucide-react-native";
-import { Button } from "../nativewindui/Button";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { albumBottomSheetRefAtom } from "./AlbumsBottomSheet";
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { albumsAtom, multiImageModeAtom, selectedAlbumAtom } from './store';
+import { MediaLibraryItem } from './MediaPreview';
+import { Dimensions, Pressable, View } from 'react-native';
+import * as MediaLibrary from 'expo-media-library';
+import { selectedMediaAtom } from './store';
+import { MediaPreview } from './MediaPreview';
+import { MasonryFlashList } from '@shopify/flash-list';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Text } from '@/components/nativewindui/Text';
+import { Check, ChevronDown, Images } from 'lucide-react-native';
+import { Button } from '../nativewindui/Button';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { albumBottomSheetRefAtom } from './AlbumsBottomSheet';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
 export default function AlbumsView() {
     return (
-        <View className="flex-1 flex-col grow">
-            <View className="h-1/2 bg-muted-200 w-full flex-col">
+        <View className="flex-1 grow flex-col">
+            <View className="h-1/2 w-full flex-col bg-muted-200">
                 <SelectedMediaPreview />
             </View>
-            
+
             <View className="h-1/2 flex-col justify-between">
                 <AlbumList />
                 <AlbumContent />
             </View>
         </View>
-    )
+    );
 }
 
 function AlbumList() {
@@ -52,21 +52,19 @@ function AlbumList() {
         }
         setMultiImageMode(!multiImageMode);
     }
-    
+
     return (
-        <View
-            className="flex-row items-center justify-between bg-card border-y border-border p-2"
-        >
+        <View className="flex-row items-center justify-between border-y border-border bg-card p-2">
             <Button variant="secondary" size="sm" onPress={openAlbumsBottomSheet}>
                 <Text>{selectedAlbum?.title}</Text>
                 <ChevronDown color={colors.muted} />
             </Button>
 
-            <Button variant={multiImageMode ? "secondary" : "plain"} size="sm" onPress={toggleMultiImageMode}>
+            <Button variant={multiImageMode ? 'secondary' : 'plain'} size="sm" onPress={toggleMultiImageMode}>
                 <Images size={24} color={colors.muted} />
             </Button>
         </View>
-    )
+    );
 }
 
 export async function determineMimeType(uri: string) {
@@ -86,7 +84,7 @@ export function mapAssetToMediaLibraryItem(asset: MediaLibrary.Asset): MediaLibr
     if (!mediaType) {
         mediaType = 'photo';
     }
-    
+
     return {
         id: asset.id ?? asset.uri,
         uri: asset.uri,
@@ -126,7 +124,7 @@ function AlbumContent() {
                 album: selectedAlbum,
                 first: 20,
                 mediaType: ['photo', 'video'],
-                after: endCursor.current[albumId] ? endCursor.current[albumId] : undefined
+                after: endCursor.current[albumId] ? endCursor.current[albumId] : undefined,
             });
 
             albumAssets.current[albumId] ??= [];
@@ -139,11 +137,17 @@ function AlbumContent() {
                 }
                 albumAssets.current[albumId].push(mapAssetToMediaLibraryItem(asset));
             }
-        
+
             setCurrentAlbumAssets([...albumAssets.current[albumId]]);
             console.log('setting current album assets', albumAssets.current[albumId].length);
-        
-            console.log('received', albumLoadedPage.assets.length, 'assets', 'making the current album loaded assets', albumAssets.current[albumId].length);
+
+            console.log(
+                'received',
+                albumLoadedPage.assets.length,
+                'assets',
+                'making the current album loaded assets',
+                albumAssets.current[albumId].length
+            );
 
             endCursor.current[albumId] = albumLoadedPage.hasNextPage ? albumLoadedPage.endCursor : false;
 
@@ -161,13 +165,16 @@ function AlbumContent() {
 
     const size = Dimensions.get('screen').width / 3;
 
-    const style = useCallback((index: number) => ({
-        marginHorizontal: index % 3 === 1 ? 1 : 0,
-        marginBottom: 1,
-        overflow: 'hidden',
-        width: size,
-        height: size,
-    }), [size]);
+    const style = useCallback(
+        (index: number) => ({
+            marginHorizontal: index % 3 === 1 ? 1 : 0,
+            marginBottom: 1,
+            overflow: 'hidden',
+            width: size,
+            height: size,
+        }),
+        [size]
+    );
 
     const setImage = (item: MediaLibraryItem, selectedMedia: MediaLibraryItem[], mode: boolean) => {
         if (mode) {
@@ -186,10 +193,10 @@ function AlbumContent() {
     }
 
     console.log('currentAlbumAssets length', currentAlbumAssets.length);
-    
+
     return (
         <View className="flex-1">
-            <Text className="fixed z-50 -top-1/2 left-0 bg-red-500 p-4">Assets: {currentAlbumAssets.length}</Text>
+            <Text className="fixed -top-1/2 left-0 z-50 bg-red-500 p-4">Assets: {currentAlbumAssets.length}</Text>
             <MasonryFlashList
                 data={currentAlbumAssets}
                 numColumns={3}
@@ -202,19 +209,19 @@ function AlbumContent() {
                 }}
             />
         </View>
-    )
+    );
 }
 
-function GridItem({ 
-    item, 
-    index, 
-    setImage, 
-    style 
-}: { 
-    item: MediaLibraryItem, 
-    index: number, 
-    setImage: (item: MediaLibraryItem, selectedMedia: MediaLibraryItem[], mode: boolean) => void, 
-    style: any 
+function GridItem({
+    item,
+    index,
+    setImage,
+    style,
+}: {
+    item: MediaLibraryItem;
+    index: number;
+    setImage: (item: MediaLibraryItem, selectedMedia: MediaLibraryItem[], mode: boolean) => void;
+    style: any;
 }) {
     const multiImageMode = useAtomValue(multiImageModeAtom);
     const selectedMedia = useAtomValue(selectedMediaAtom);
@@ -235,19 +242,15 @@ function GridItem({
     }));
 
     return (
-        <Pressable 
-            onPress={() => setImage(item, selectedMedia, multiImageMode)} 
-            className="relative"
-        >
+        <Pressable onPress={() => setImage(item, selectedMedia, multiImageMode)} className="relative">
             <Animated.View // Wrap in Animated.View
                 style={[style, animatedStyle]} // Combine style and animation
             >
                 {isSelected && (
                     <Button
-                        className="absolute top-2 right-2 z-10 w-8 h-8 !rounded-full bg-foreground/50 border border-border/50"
+                        className="bg-foreground/50 border-border/50 absolute right-2 top-2 z-10 h-8 w-8 !rounded-full border"
                         variant="secondary"
-                        onPress={() => setImage(item, selectedMedia, multiImageMode)}
-                    >
+                        onPress={() => setImage(item, selectedMedia, multiImageMode)}>
                         <Check size={24} color={colors.background} />
                     </Button>
                 )}
@@ -265,8 +268,8 @@ export function SelectedMediaPreview() {
     console.log('selectedMedia', selectedMedia.length);
 
     return (
-        <View className="flex-col items-center justify-between flex-1">
+        <View className="flex-1 flex-col items-center justify-between">
             <MediaPreview assets={selectedMedia} style={{ width: size, height: size }} />
         </View>
-    )
+    );
 }

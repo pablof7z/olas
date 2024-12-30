@@ -2,7 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 interface FieldProps {
-    userProfile: NDKUserProfile | null; 
+    userProfile: NDKUserProfile | null;
     label: string;
     fallback?: string;
 }

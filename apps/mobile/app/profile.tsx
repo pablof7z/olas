@@ -35,14 +35,13 @@ export default function Profile() {
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
-    const followCount = useMemo(() => new Set(
-        events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
-    ).size, [events]);
+    const followCount = useMemo(
+        () => new Set(events.find((e) => e.kind === NDKKind.Contacts)?.tags.find((t) => t[0] === 'p')?.[1]).size,
+        [events]
+    );
 
     const sortedContent = useMemo(() => {
-        return events
-            .filter(e => [NDKKind.Text, NDKKind.Image].includes(e.kind))
-            .sort((a, b) => b.created_at - a.created_at);
+        return events.filter((e) => [NDKKind.Text, NDKKind.Image].includes(e.kind)).sort((a, b) => b.created_at - a.created_at);
     }, [events]);
 
     if (!pubkey) {
@@ -71,106 +70,106 @@ export default function Profile() {
         setFiltersExpanded(true);
     }
 
-    const {setActiveEvent} = useStore(activeEventStore);
+    const { setActiveEvent } = useStore(activeEventStore);
 
     const insets = useSafeAreaInsets();
     return (
         <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
-                <Animated.View
-                    style={[
-                        styles.header,
-                        {
-                            opacity: headerOpacity,
-                            transform: [{ translateY: headerTranslateY }],
-                        },
-                    ]}>
-                    <User.Avatar userProfile={userProfile} style={styles.profileImage} alt="Profile image" />
-                    <View style={styles.statsContainer}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber} className="text-foreground">
-                                {sortedContent.length}
-                            </Text>
-                            <Text style={styles.statLabel} className="text-foreground">
-                                Posts
-                            </Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber} className="text-foreground">
-                                1.5K
-                            </Text>
-                            <Text style={styles.statLabel} className="text-foreground">
-                                Followers
-                            </Text>
-                        </View>
-                        {followCount ? (
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber} className="text-foreground">
-                                    {followCount}
-                                </Text>
-                                <Text style={styles.statLabel} className="text-foreground">
-                                    Following
-                                </Text>
-                            </View>
-                        ) : null}
+            <Animated.View
+                style={[
+                    styles.header,
+                    {
+                        opacity: headerOpacity,
+                        transform: [{ translateY: headerTranslateY }],
+                    },
+                ]}>
+                <User.Avatar userProfile={userProfile} style={styles.profileImage} alt="Profile image" />
+                <View style={styles.statsContainer}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber} className="text-foreground">
+                            {sortedContent.length}
+                        </Text>
+                        <Text style={styles.statLabel} className="text-foreground">
+                            Posts
+                        </Text>
                     </View>
-                </Animated.View>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber} className="text-foreground">
+                            1.5K
+                        </Text>
+                        <Text style={styles.statLabel} className="text-foreground">
+                            Followers
+                        </Text>
+                    </View>
+                    {followCount ? (
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber} className="text-foreground">
+                                {followCount}
+                            </Text>
+                            <Text style={styles.statLabel} className="text-foreground">
+                                Following
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
+            </Animated.View>
 
-                <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
-                    <User.Avatar userProfile={userProfile} style={styles.smallProfileImage} alt="Profile image" />
-                    <Text style={styles.username} className="grow text-lg font-bold text-foreground">
+            <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+                <User.Avatar userProfile={userProfile} style={styles.smallProfileImage} alt="Profile image" />
+                <Text style={styles.username} className="grow text-lg font-bold text-foreground">
+                    <User.Name userProfile={userProfile} pubkey={pubkey} />
+                </Text>
+                <FollowButton pubkey={pubkey} />
+            </Animated.View>
+
+            <Animated.ScrollView
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                    useNativeDriver: true,
+                })}
+                scrollEventThrottle={16}>
+                <View style={styles.bioSection}>
+                    <Text style={styles.username} className="text-foreground">
                         <User.Name userProfile={userProfile} pubkey={pubkey} />
                     </Text>
-                    <FollowButton pubkey={pubkey} />
-                </Animated.View>
+                    <Text style={styles.bio} className="text-muted-foreground">
+                        <User.Field userProfile={userProfile} label="about" />
+                    </Text>
+                </View>
 
-                <Animated.ScrollView
-                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                        useNativeDriver: true,
-                    })}
-                    scrollEventThrottle={16}>
-                    <View style={styles.bioSection}>
-                        <Text style={styles.username} className="text-foreground">
-                            <User.Name userProfile={userProfile} pubkey={pubkey} />
-                        </Text>
-                        <Text style={styles.bio} className="text-muted-foreground">
-                            <User.Field userProfile={userProfile} label="about" />
-                        </Text>
+                {!follows?.includes(pubkey) ? <FollowButton pubkey={pubkey} size="sm" className="mx-4" /> : null}
+                {events.length === 0 ? (
+                    <View style={styles.noEventsContainer}>
+                        <Text style={styles.noEventsText}>No posts yet</Text>
+
+                        {!filtersExpanded && (
+                            <TouchableOpacity style={styles.browseButton} onPress={expandFilters}>
+                                <Text style={styles.browseButtonText}>Browse tweet images</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-
-                    {!follows?.includes(pubkey) ? <FollowButton pubkey={pubkey} size="sm" className="mx-4" /> : null}
-                    {events.length === 0 ? (
-                        <View style={styles.noEventsContainer}>
-                            <Text style={styles.noEventsText}>No posts yet</Text>
-
-                            {!filtersExpanded && (
-                                <TouchableOpacity style={styles.browseButton} onPress={expandFilters}>
-                                    <Text style={styles.browseButtonText}>Browse tweet images</Text>
-                                </TouchableOpacity>
+                ) : (
+                    <View style={{ flex: 1 }}>
+                        <MasonryFlashList
+                            data={sortedContent}
+                            numColumns={3}
+                            estimatedItemSize={100}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={{ paddingBottom: 60 }}
+                            renderItem={({ item, index }) => (
+                                <EventMediaGridContainer
+                                    event={item}
+                                    index={index}
+                                    onPress={() => {
+                                        setActiveEvent(item);
+                                        router.push('/view');
+                                    }}
+                                />
                             )}
-                        </View>
-                    ) : (
-                        <View style={{ flex: 1 }}>
-                            <MasonryFlashList
-                                data={sortedContent}
-                                numColumns={3}
-                                estimatedItemSize={100}
-                                keyExtractor={(item) => item.id}
-                                contentContainerStyle={{paddingBottom:60}}
-                                renderItem={({ item, index }) => (
-                                    <EventMediaGridContainer
-                                        event={item}
-                                        index={index}
-                                        onPress={() => {
-                                            setActiveEvent(item);
-                                            router.push('/view');
-                                        }} />
-                                )}
-                            />
-                        </View>
-                    )}
-                </Animated.ScrollView>
-            </View>
-
+                        />
+                    </View>
+                )}
+            </Animated.ScrollView>
+        </View>
     );
 }
 

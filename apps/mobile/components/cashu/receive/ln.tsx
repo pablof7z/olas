@@ -1,14 +1,14 @@
-import { Picker } from "@react-native-picker/picker";
-import { Text } from "@/components/nativewindui/Text";
-import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
+import { Picker } from '@react-native-picker/picker';
+import { Text } from '@/components/nativewindui/Text';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import QRCode from 'react-native-qrcode-svg';
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { StyleSheet } from "react-native";
-import { TouchableOpacity, View } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
-import { useNDKSession, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
-import WalletBalance from "@/components/ui/wallet/WalletBalance";
+import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
+import { useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
 
 export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
     const { activeWallet, balances } = useNDKWallet();
@@ -22,15 +22,13 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
             setSelectedMint((activeWallet as NDKCashuWallet).mints[0]);
         }
     }, [activeWallet]);
-    
 
-    if (!(activeWallet as NDKCashuWallet)) return (
-        <View>
-            <Text>
-                No wallet found
-            </Text>
-        </View>
-    )
+    if (!(activeWallet as NDKCashuWallet))
+        return (
+            <View>
+                <Text>No wallet found</Text>
+            </View>
+        );
 
     const handleContinue = async () => {
         if (!selectedMint) {
@@ -40,32 +38,28 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
         const deposit = (activeWallet as NDKCashuWallet).deposit(amount, selectedMint);
         console.log('deposit', deposit);
 
-        deposit.on("success", (token) => {
+        deposit.on('success', (token) => {
             console.log('success', token);
             onReceived();
         });
-        
+
         const qr = await deposit.start();
         console.log('qr', qr);
         setQrCode(qr);
     };
-    
+
     return (
         <View style={{ flex: 1 }}>
             <TextInput
                 ref={inputRef}
-                keyboardType="numeric" 
+                keyboardType="numeric"
                 autoFocus
-                style={styles.input} 
+                style={styles.input}
                 value={amount.toString()}
                 onChangeText={(text) => setAmount(Number(text))}
             />
 
-            <WalletBalance
-                amount={amount}
-                unit={(activeWallet as NDKCashuWallet).unit}
-                onPress={() => inputRef.current?.focus()}
-            />
+            <WalletBalance amount={amount} unit={(activeWallet as NDKCashuWallet).unit} onPress={() => inputRef.current?.focus()} />
 
             {qrCode ? ( // Conditionally render QR code
                 <View>
@@ -76,18 +70,11 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                 </View>
             ) : (
                 <>
-                    <TouchableOpacity 
-                        onPress={handleContinue} 
-                        style={styles.continueButton}
-                    >
+                    <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                         <Text style={styles.continueButtonText}>Continue</Text>
                     </TouchableOpacity>
 
-                    <Picker
-                        selectedValue={selectedMint}
-                        onValueChange={(itemValue) => setSelectedMint(itemValue)}
-                        style={styles.picker}
-                    >
+                    <Picker selectedValue={selectedMint} onValueChange={(itemValue) => setSelectedMint(itemValue)} style={styles.picker}>
                         {(activeWallet as NDKCashuWallet).mints.map((mint, index) => (
                             <Picker.Item key={index} label={mint} value={mint} />
                         ))}
@@ -95,9 +82,8 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                 </>
             )}
         </View>
-    )
+    );
 }
-
 
 const styles = StyleSheet.create({
     input: {

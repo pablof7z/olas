@@ -93,8 +93,8 @@ export default function RelaysScreen() {
         router.back();
     }
 
-    const [ relayNotices ] = useAtom(relayNoticesAtom);
-    
+    const [relayNotices] = useAtom(relayNoticesAtom);
+
     const noticesAsData = useMemo(() => {
         return Object.entries(relayNotices).map(([relayUrl, notices]) => ({
             id: relayUrl,
@@ -160,7 +160,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     } else if (typeof info.item === 'string') {
         return <ListSectionHeader {...info} />;
     }
-    
+
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}

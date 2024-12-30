@@ -19,7 +19,7 @@ export default function NewPostScreen() {
     const activeBlossomServer = useActiveBlossomServer();
     const { ndk } = useNDK();
 
-    const [ metadata, setMetadata ] = useAtom(metadataAtom);
+    const [metadata, setMetadata] = useAtom(metadataAtom);
 
     const step = 1;
 
@@ -27,15 +27,12 @@ export default function NewPostScreen() {
         if (step === 0 && selectedMedia.length === 0) return;
         if (step === 0) {
             const preparedMedia = await prepareMedia(selectedMedia);
-            setSelectedMedia(
-                await uploadMedia(preparedMedia, ndk, activeBlossomServer)
-            )
+            setSelectedMedia(await uploadMedia(preparedMedia, ndk, activeBlossomServer));
         }
-        
-        setStep(step + 1);
-    }
 
-    
+        setStep(step + 1);
+    };
+
     const setStep = useSetAtom(stepAtom);
 
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
@@ -52,7 +49,7 @@ export default function NewPostScreen() {
             <Stack.Screen
                 options={{
                     headerShown: true,
-                    title: "New Post",
+                    title: 'New Post',
                     headerLeft: () => {
                         if (step === 0) {
                             return null;
@@ -60,22 +57,22 @@ export default function NewPostScreen() {
 
                         return (
                             <TouchableOpacity onPress={abort}>
-                                <X size={24}  />
+                                <X size={24} />
                             </TouchableOpacity>
-                        )
+                        );
                     },
                     headerRight: () => {
                         if (step === 1) return null;
                         return (
                             <Button variant="plain" onPress={next} disabled={selectedMedia.length === 0}>
-                                <Text className="text-accent text-lg">Next</Text>
+                                <Text className="text-lg text-accent">Next</Text>
                             </Button>
-                        )
+                        );
                     },
                 }}
             />
             <View style={styles.container} className="flex-1 flex-row bg-card !p-0">
-                {step === 0 && <ChooseContentStep />}   
+                {step === 0 && <ChooseContentStep />}
                 {step === 1 && <PostMetadataStep />}
 
                 <PostTypeBottomSheet />

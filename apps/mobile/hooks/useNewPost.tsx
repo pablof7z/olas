@@ -1,29 +1,29 @@
-import { useCallback } from "react";
-import { useNDK } from "@nostr-dev-kit/ndk-mobile";
-import { useActiveBlossomServer } from "./blossom";
-import { useAtom, useSetAtom } from "jotai";
-import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from "@/components/NewPost/store";
-import { prepareMedia, uploadMedia } from "@/components/NewPost/upload";
-import { MediaLibraryItem } from "@/components/NewPost/MediaPreview";
+import { useCallback } from 'react';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useActiveBlossomServer } from './blossom';
+import { useAtom, useSetAtom } from 'jotai';
+import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from '@/components/NewPost/store';
+import { prepareMedia, uploadMedia } from '@/components/NewPost/upload';
+import { MediaLibraryItem } from '@/components/NewPost/MediaPreview';
 import * as ImagePicker from 'expo-image-picker';
-import { toast } from "@backpackapp-io/react-native-toast";
-import { mapAssetToMediaLibraryItem } from "@/components/NewPost/AlbumsView";
-import { router } from "expo-router";
-import { useAppSettingsStore } from "@/stores/app";
+import { toast } from '@backpackapp-io/react-native-toast';
+import { mapAssetToMediaLibraryItem } from '@/components/NewPost/AlbumsView';
+import { router } from 'expo-router';
+import { useAppSettingsStore } from '@/stores/app';
 
 export function useNewPost() {
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
     const setUploading = useSetAtom(uploadingAtom);
-    const [ step, setStep ] = useAtom(stepAtom);
+    const [step, setStep] = useAtom(stepAtom);
     const setSelectedMedia = useSetAtom(selectedMediaAtom);
     const { postType, removeLocation } = useAppSettingsStore();
-    const [ metadata, setMetadata ] = useAtom(metadataAtom);
+    const [metadata, setMetadata] = useAtom(metadataAtom);
 
     const launchImagePicker = useCallback(() => {
         // reset metadata
-        console.log('reset metadata', {postType, removeLocation});
-        setMetadata({ ...metadata, type: postType, removeLocation, });
+        console.log('reset metadata', { postType, removeLocation });
+        setMetadata({ ...metadata, type: postType, removeLocation });
 
         ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,

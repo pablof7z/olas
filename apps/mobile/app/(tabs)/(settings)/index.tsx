@@ -60,7 +60,11 @@ export default function SettingsIosStyleScreen() {
                 id: 'muted',
                 title: 'Muted Users',
                 leftView: <IconView name="person-outline" className="bg-red-500" />,
-                rightText: <Text variant="body" className="text-muted-foreground">{muteList?.size.toString() ?? '0'}</Text>,
+                rightText: (
+                    <Text variant="body" className="text-muted-foreground">
+                        {muteList?.size.toString() ?? '0'}
+                    </Text>
+                ),
                 onPress: () => router.push('/(tabs)/(settings)/muted'),
             });
             opts.unshift({
@@ -98,7 +102,7 @@ export default function SettingsIosStyleScreen() {
                 rightText: balances?.length > 0 ? formatMoney(balances[0]) : activeWallet?.walletId,
                 onPress: () => router.push(activeWallet ? '/(wallet)' : '/(settings)/wallets'),
             });
-            
+
             opts.push('gap 5');
             opts.push({
                 id: 'blossom',

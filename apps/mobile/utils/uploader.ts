@@ -46,7 +46,7 @@ export class Uploader {
             let _sign = signWith(this.signer ?? this.ndk.signer);
             const uploadAuth = await BlossomClient.getUploadAuth(this.fileUri, this.mime, _sign as any, 'Upload file');
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
-            
+
             this.xhr.open('PUT', this.url.toString(), true);
             this.xhr.setRequestHeader('Authorization', encodedAuthHeader);
             this.xhr.upload.addEventListener('progress', (e) => this.xhrOnProgress(e));

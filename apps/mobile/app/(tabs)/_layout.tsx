@@ -77,7 +77,7 @@ export default function TabsLayout() {
                 name="publish2"
                 listeners={{
                     tabPress: (e) => {
-                        e.preventDefault()
+                        e.preventDefault();
                         if (!currentUser) {
                             router.push('/login');
                         } else {
@@ -115,11 +115,7 @@ export default function TabsLayout() {
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) =>
                         currentUser ? (
-                            <User.Avatar
-                                userProfile={userProfile}
-                                size={16}
-                                className="h-6 w-6 rounded-full"
-                            />
+                            <User.Avatar userProfile={userProfile} size={16} className="h-6 w-6 rounded-full" />
                         ) : (
                             <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
                         ),

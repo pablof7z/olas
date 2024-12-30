@@ -1,10 +1,10 @@
-import React, { useState, useRef, useMemo } from "react";
-import { Animated, PanResponder, View, Text, TouchableOpacity } from "react-native";
-import { Zap } from "lucide-react-native";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { nicelyFormattedMilliSatNumber } from "@/utils/bitcoin";
-import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
-import { router } from "expo-router";
+import React, { useState, useRef, useMemo } from 'react';
+import { Animated, PanResponder, View, Text, TouchableOpacity } from 'react-native';
+import { Zap } from 'lucide-react-native';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
+import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
 
 export default function Zaps({ event, zaps, style }) {
     const currentUser = useNDKCurrentUser();
@@ -14,10 +14,10 @@ export default function Zaps({ event, zaps, style }) {
     const [canceled, setCanceled] = useState(false);
     const amountRef = useRef(0);
     const touchTimer = useRef(null);
-    const directionRef = useRef<"up" | "down" | null>(null);
+    const directionRef = useRef<'up' | 'down' | null>(null);
     const growthFactorRef = useRef(1);
 
-    const {totalZapped, zappedByUser} = useMemo(() => {
+    const { totalZapped, zappedByUser } = useMemo(() => {
         let zappedByUser = false;
 
         const totalZapped = zaps.reduce((acc, zap) => {
@@ -28,7 +28,7 @@ export default function Zaps({ event, zaps, style }) {
                 }
                 let amountInMilliSats = nutzap.amount;
 
-                if (nutzap.unit.startsWith("sat")) {
+                if (nutzap.unit.startsWith('sat')) {
                     amountInMilliSats = nutzap.amount * 1000;
                 }
 
@@ -42,7 +42,7 @@ export default function Zaps({ event, zaps, style }) {
             }
         }, 0);
 
-        return { totalZapped, zappedByUser }
+        return { totalZapped, zappedByUser };
     }, [zaps]);
 
     const updateAmount = (dy) => {
@@ -52,29 +52,27 @@ export default function Zaps({ event, zaps, style }) {
 
         // determine the direction
         if (directionRef.current === null) {
-            directionRef.current = dy < 0 ? "up" : "down";
+            directionRef.current = dy < 0 ? 'up' : 'down';
         } else {
-            if (factor > growthFactorRef.current && directionRef.current === "down") {
-                directionRef.current = "up";
-            } else if (factor < growthFactorRef.current && directionRef.current === "up") {
-                directionRef.current = "down";
+            if (factor > growthFactorRef.current && directionRef.current === 'down') {
+                directionRef.current = 'up';
+            } else if (factor < growthFactorRef.current && directionRef.current === 'up') {
+                directionRef.current = 'down';
             }
         }
 
-        if (directionRef.current === "up") {
+        if (directionRef.current === 'up') {
             amountRef.current = (amountRef.current + 1) * (factor * 0.1 + 1);
-            console.log("up", amountRef.current, factor);
+            console.log('up', amountRef.current, factor);
         } else {
-            amountRef.current = (amountRef.current + 1) * (- factor * 0.1 + 1);
-            console.log("down", amountRef.current, factor);
+            amountRef.current = (amountRef.current + 1) * (-factor * 0.1 + 1);
+            console.log('down', amountRef.current, factor);
         }
 
         growthFactorRef.current = factor;
 
         // startCounting();
 
-        
-        
         // if (dy < 0) {
         //     // Swiping up: Exponential growth
         //     const growthFactor = Math.min(- dy / 2000, 100); // Cap growth to avoid extreme numbers
@@ -104,14 +102,14 @@ export default function Zaps({ event, zaps, style }) {
         }
 
         touchTimer.current = setInterval(() => {
-            console.log("counting", growthFactorRef.current);
+            console.log('counting', growthFactorRef.current);
             amountRef.current = Math.min(10000000, amountRef.current * (growthFactorRef.current + 1));
             setAmount(Math.floor(amountRef.current));
         }, 100);
     };
 
     const stopCounting = () => {
-        console.log("stop counting");
+        console.log('stop counting');
         clearInterval(touchTimer.current);
     };
 
@@ -140,39 +138,39 @@ export default function Zaps({ event, zaps, style }) {
     const sendZap = async (sats) => {
         if (!activeWallet) {
             alert("You don't have a wallet connected yet.");
-            router.push("/wallets");
+            router.push('/wallets');
             return;
         }
-        
+
         try {
-            const zapper = new NDKZapper(event, Math.round(sats) * 1000, "msat", {
+            const zapper = new NDKZapper(event, Math.round(sats) * 1000, 'msat', {
                 comment: "🥜 Nutzap from OLAS' nutsack",
             });
             zapper.zap();
             setAmount(0);
         } catch (error) {
-            console.error("Error while zapping:", error);
+            console.error('Error while zapping:', error);
         }
     };
 
     return (
-        <View style={{ flexDirection: "row", alignItems: "center" }} {...panResponder.panHandlers}>
-        {/* <View style={{ flexDirection: "row", alignItems: "center" }}> */}
-            <TouchableOpacity onPress={() => sendZap(1)} style={[style, { flexDirection: "row", alignItems: "center", position: "absolute" }]}>
-                <Zap size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? "orange" : colors.muted} />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }} {...panResponder.panHandlers}>
+            {/* <View style={{ flexDirection: "row", alignItems: "center" }}> */}
+            <TouchableOpacity
+                onPress={() => sendZap(1)}
+                style={[style, { flexDirection: 'row', alignItems: 'center', position: 'absolute' }]}>
+                <Zap size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? 'orange' : colors.muted} />
                 {amount > 0 ? (
                     <Animated.Text
                         style={{
                             fontSize: Math.min(16 + amount * 0.1, 72),
                             color: colors.foreground,
                             marginLeft: 10,
-                        }}
-                    >
-                        {nicelyFormattedMilliSatNumber((amount) * 1000)}
+                        }}>
+                        {nicelyFormattedMilliSatNumber(amount * 1000)}
                     </Animated.Text>
                 ) : (
-                        <Text className="text-sm text-muted-foreground">
-                            {nicelyFormattedMilliSatNumber((totalZapped))}</Text>
+                    <Text className="text-sm text-muted-foreground">{nicelyFormattedMilliSatNumber(totalZapped)}</Text>
                 )}
             </TouchableOpacity>
         </View>

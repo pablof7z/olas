@@ -2,7 +2,6 @@
 	import { Bookmark, CircleUser, Ellipsis, Heart, MessageCircle, Send } from 'lucide-svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import { NDKKind, type NDKCacheEntry, type NDKEvent, type NDKUserProfile } from '@nostr-dev-kit/ndk';
-	import { writable } from 'svelte/store';
     import Image from './Image.svelte';
 	import ndk from '$lib/stores/ndk.svelte';
 	import NewComment from './NewComment.svelte';
@@ -10,12 +9,12 @@
 	import { getCurrentUser } from '$lib/stores/currentUser.svelte';
 	import React from '$lib/components/buttons/React.svelte';
 
-	const { event, class: className, containerClass, maxComments = 3 } = $props();
+	const { event, class: className, containerClass, maxComments = 3 } = $props() as { event: NDKEvent, class: string, containerClass: string, maxComments: number };
 
 	const clientName = event.tagValue('client');
 
-	const userProfile = writable<NDKUserProfile | null>(null);
-	event.author.fetchProfile().then(profile => userProfile.set(profile));
+	let userProfile = $state<NDKUserProfile | null>(null);
+	event.author.fetchProfile().then(profile => userProfile = profile);
 
 	const relatedEvents = ndk.$subscribe([
 		{ kinds: [NDKKind.GenericReply], "#E": [event.id] },
@@ -44,21 +43,21 @@
 
 <div class="">
 	<div class="flex items-center gap-3">
-		<a href="/{$userProfile?.nip05 ?? event.author.npub}" class="mb-3 flex items-center gap-3" onclick={(e) => e.stopPropagation()}>
-			{#if !$userProfile}
+		<a href="/{userProfile?.nip05 || event.author.npub}" class="mb-3 flex items-center gap-3" onclick={(e) => e.stopPropagation()}>
+			{#if !userProfile}
 				<CircleUser />
 			{:else}
-				<img src={$userProfile?.image} class="w-10 h-10 rounded-full" />
+				<img src={userProfile?.image} class="w-10 h-10 rounded-full" />
 			{/if}
 			<div class="flex flex-col">
 				<span class="text-sm font-medium">
-					{$userProfile?.name ?? event.author.npub.substring(0, 10)}
+					{userProfile?.name ?? event.author.npub.substring(0, 10)}
 				</span>
 				<span class="text-xs text-muted-foreground">
-					{$userProfile?.display_name}
+					{userProfile?.display_name}
 				</span>
 				<span class="text-xs text-muted-foreground">
-					{$userProfile?.nip05}
+					{userProfile?.nip05}
 					{#if clientName}
 						via {clientName}
 					{/if}

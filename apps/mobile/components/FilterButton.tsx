@@ -33,6 +33,6 @@ const FilterButton = ({ includeTweets, setIncludeTweets }: { includeTweets: bool
             </Pressable>
         </DropdownMenu>
     );
-}
+};
 
 export default FilterButton;

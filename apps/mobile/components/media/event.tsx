@@ -1,8 +1,8 @@
-import { imetasFromEvent } from "@/utils/imeta";
-import { NDKEvent, NDKKind, NDKVideo } from "@nostr-dev-kit/ndk-mobile";
-import { Dimensions, ScrollView, StyleProp, useWindowDimensions, View, ViewStyle } from "react-native";
-import { useColorScheme } from "@/lib/useColorScheme";
-import MediaComponent from "./media";
+import { imetasFromEvent } from '@/utils/imeta';
+import { NDKEvent, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions, ScrollView, StyleProp, useWindowDimensions, View, ViewStyle } from 'react-native';
+import { useColorScheme } from '@/lib/useColorScheme';
+import MediaComponent from './media';
 
 export type EventMediaProps = {
     event: NDKEvent;
@@ -13,11 +13,17 @@ export type EventMediaProps = {
     maxWidth?: number;
     maxHeight?: number;
     onPress?: () => void;
-}
+};
 
-export function EventMediaGridContainer({ event, index, onPress, size, ...props }: { event: NDKEvent; index: number; onPress: () => void; size?: number } & Partial<View>) {
+export function EventMediaGridContainer({
+    event,
+    index,
+    onPress,
+    size,
+    ...props
+}: { event: NDKEvent; index: number; onPress: () => void; size?: number } & Partial<View>) {
     size ??= Dimensions.get('window').width / 3;
-    
+
     return (
         <EventMediaContainer
             event={event}
@@ -60,16 +66,16 @@ export default function EventMediaContainer({
     if (singleMode || urls.length === 1) {
         return (
             <MediaComponent
-                url={urls[0].url} 
-                blurhash={urls[0].blurhash} 
-                maxWidth={maxWidth} 
-                maxHeight={maxHeight} 
-                onPress={onPress} 
+                url={urls[0].url}
+                blurhash={urls[0].blurhash}
+                maxWidth={maxWidth}
+                maxHeight={maxHeight}
+                onPress={onPress}
                 className={className}
                 style={style}
                 {...props}
             />
-        )
+        );
     }
 
     return (
@@ -84,12 +90,12 @@ export default function EventMediaContainer({
                 style={{ flex: 1, width: '100%' }}>
                 {urls.map((url, index) => (
                     <MediaComponent
-                        key={index} 
-                        url={url.url} 
-                        blurhash={url.blurhash} 
-                        maxWidth={maxWidth} 
-                        maxHeight={maxHeight} 
-                        onPress={onPress} 
+                        key={index}
+                        url={url.url}
+                        blurhash={url.blurhash}
+                        maxWidth={maxWidth}
+                        maxHeight={maxHeight}
+                        onPress={onPress}
                         className={className}
                         style={style}
                     />
@@ -110,11 +116,10 @@ export default function EventMediaContainer({
                 ))}
             </View>
         </View>
-    )
-
+    );
 
     // if (isVideo) {
-    //     return <Video 
+    //     return <Video
     // } else {
     //     return <Image
     // }
@@ -147,7 +152,7 @@ export const getUrls = (event: NDKEvent): { url?: string; blurhash?: string }[] 
         }
 
         // didn't find anything, try a last-ditch url tag
-        const urls = event.getMatchingTags('url').map(t => ({ url: t[1] }));
+        const urls = event.getMatchingTags('url').map((t) => ({ url: t[1] }));
         if (urls.length > 0) return urls;
 
         const imetas = imetasFromEvent(event);
