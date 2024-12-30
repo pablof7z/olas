@@ -1,31 +1,25 @@
 import { TextInput } from 'react-native-gesture-handler';
-import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { router, Stack } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { router } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
-import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { activeEventStore } from './stores';
 import { useStore } from 'zustand';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 
 export default function CommentScreen() {
-    const { ndk, currentUser } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const [comment, setComment] = useState('');
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
 
     const postComment = async () => {
-        const event = new NDKEvent(ndk, {
-            kind: NDKKind.Text,
-            content: comment,
-        } as NostrEvent);
-        event.tag(activeEvent, 'root');
-        event.tags.push(['K', activeEvent.kind.toString()]);
-
+        const event = activeEvent.reply()
+        event.content = comment;
         await event.sign();
         event.publish();
 

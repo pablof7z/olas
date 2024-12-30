@@ -1,26 +1,28 @@
 import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Bookmark, Home, PlaySquare, PlusSquare, UserCircle2 } from 'lucide-react-native';
+import { Bookmark, Home, PlaySquare, PlusSquare, Search, UserCircle2 } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect } from 'react';
-import { homeScreenScrollRef } from '@/atoms/homeScreen';
+import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { useAtomValue } from 'jotai';
+import { useNewPost } from '@/hooks/useNewPost';
 
 export default function TabsLayout() {
-    const { currentUser } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const scrollRef = useAtomValue(homeScreenScrollRef);
+    const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const newPost = useNewPost();
 
     useEffect(() => {
         console.log('currentUser', currentUser);
     }, [currentUser]);
 
     // Hook to handle scroll to top
-    // useScrollToTop(scrollRef);
+    useScrollToTop(scrollRef);
 
     return (
         <Tabs
@@ -63,6 +65,15 @@ export default function TabsLayout() {
             />
 
             <Tabs.Screen
+                name="search"
+                options={{
+                    headerShown: false,
+                    title: 'Search',
+                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                }}
+            />
+
+            <Tabs.Screen
                 name="publish2"
                 listeners={{
                     tabPress: (e) => {
@@ -70,7 +81,7 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            router.push('/publish');
+                            newPost();
                         }
                     },
                 }}

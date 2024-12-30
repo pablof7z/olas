@@ -2,14 +2,18 @@ import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Button, View } from 'react-native';
 import { Button as ButtonComponent } from '@/components/nativewindui/Button';
-import { publishStore } from '../stores/publish';
-import { useStore } from 'zustand';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Text } from '@/components/nativewindui/Text';
+import { useAtom } from 'jotai';
+import { metadataAtom } from '@/components/NewPost/store';
 
 export default function Caption() {
-    const { expiration, setExpiration } = useStore(publishStore);
-    const [date, setDate] = useState(new Date(expiration ?? new Date().getTime() + 1000 * 60 * 60 * 24));
+    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const [date, setDate] = useState(new Date(metadata?.expiration ?? new Date().getTime() + 1000 * 60 * 60 * 24));
+
+    const setExpiration = (expiration?: number) => {
+        setMetadata({ ...metadata, expiration });
+    };
 
     const onChange = (event, selectedDate) => {
         // if it's in the past, set it to now
@@ -29,7 +33,7 @@ export default function Caption() {
                         <Button
                             title="OK"
                             onPress={() => {
-                                setExpiration(date.getTime());
+                                setExpiration(date.getTime() / 1000);
                                 router.back();
                             }}
                         />

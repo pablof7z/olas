@@ -9,6 +9,8 @@ import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
+import { useAtom } from 'jotai';
+import { relayNoticesAtom } from '@/stores/relays';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 
@@ -79,6 +81,9 @@ export default function RelaysScreen() {
                         <RelayConnectivityIndicator relay={relay} />
                     </View>
                 ),
+                onPress: () => {
+                    router.push(`/(tabs)/(settings)/relay?relayUrl=${relay.url}`);
+                },
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
     }, [ndk?.pool.relays, searchText, relays]);
@@ -87,6 +92,20 @@ export default function RelaysScreen() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
         router.back();
     }
+
+    const [ relayNotices ] = useAtom(relayNoticesAtom);
+    
+    const noticesAsData = useMemo(() => {
+        return Object.entries(relayNotices).map(([relayUrl, notices]) => ({
+            id: relayUrl,
+            title: relayUrl,
+            badge: notices.length,
+            rightView: <Text>{notices.length}</Text>,
+            onPress: () => {
+                router.push(`/(tabs)/(settings)/relay?relayUrl=${relayUrl}`);
+            },
+        }));
+    }, [relayNotices]);
 
     return (
         <>
@@ -106,7 +125,7 @@ export default function RelaysScreen() {
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={[...data, { id: 'add', fn: addFn, set: setUrl }]}
+                data={[...data, { id: 'add', fn: addFn, set: setUrl }, 'gap-notices', 'Notices', ...noticesAsData]}
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
@@ -141,6 +160,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     } else if (typeof info.item === 'string') {
         return <ListSectionHeader {...info} />;
     }
+    
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
@@ -166,7 +186,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={() => console.log('onPress')}
+            onPress={info.item.onPress}
         />
     );
 }

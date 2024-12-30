@@ -1,12 +1,12 @@
-import { NDKEvent, NDKKind, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Stack } from 'expo-router';
 import { memo, useMemo } from 'react';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
 import { FlashList } from '@shopify/flash-list';
 import { useDebounce, useThrottle } from '@uidotdev/usehooks';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 
 type NotificationItem = {
     id: string;
@@ -50,22 +50,25 @@ const NotificationItem = memo(({ event }: { event: NDKEvent }) => {
 });
 
 export default function Notifications() {
-    const { currentUser } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const events = useNDKSessionEvents([967 as NDKKind, NDKKind.Reaction]);
     const filters = useMemo(
         () => [
             { kinds: [NDKKind.Text], '#k': ['20'], '#p': [currentUser?.pubkey] },
-            { kinds: [22], '#K': ['20'], '#p': [currentUser?.pubkey] },
+            { kinds: [NDKKind.GenericReply], '#K': [NDKKind.Image.toString()], '#p': [currentUser?.pubkey] },
             { kinds: [NDKKind.Reaction], '#k': ['20'], '#p': [currentUser?.pubkey] },
-            { kinds: [NDKKind.Reaction], '#K': ['20'], '#p': [currentUser?.pubkey] },
         ],
         [currentUser?.pubkey]
     );
-    const opts = useMemo(() => ({ closeOnEose: false, groupable: false }), [filters]);
+    const opts = useMemo(() => ({ cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true }), [filters]);
     const { events: notifications } = useSubscribe({ filters, opts });
 
     const mixedEvents = useThrottle([events, notifications], 1000);
-    const sortedEvents = useMemo(() => [...events, ...notifications].sort((a, b) => b.created_at - a.created_at), [mixedEvents]);
+    const sortedEvents = useMemo(() => (
+        [...events, ...notifications]
+            .filter(event => event.kind !== 967 || event.pubkey !== currentUser?.pubkey )
+            .sort((a, b) => b.created_at - a.created_at)
+    ), [mixedEvents]);
     // const mixedEvents = useDebounce(() => [...events, ...notifications].sort((a, b) => a.created_at - b.created_at), 1000);
 
     return (

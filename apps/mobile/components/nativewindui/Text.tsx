@@ -11,7 +11,7 @@ const textVariants = cva('text-foreground', {
     variants: {
         variant: {
             largeTitle: 'text-4xl',
-            title1: 'text-2xl',
+            title1: 'text-2xl font-bold',
             title2: 'text-[22px] leading-7',
             title3: 'text-xl',
             heading: 'text-[17px] leading-6 font-semibold',

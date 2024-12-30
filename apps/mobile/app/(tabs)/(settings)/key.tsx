@@ -10,10 +10,10 @@ import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 
 export default function SettingsIosStyleScreen() {
-    const { ndk, currentUser } = useNDK();
+    const { ndk, currentUser } = useNDKCurrentUser();
     const privateKey = (ndk?.signer as NDKPrivateKeySigner)?._privateKey;
 
     console.log("private key", (ndk?.signer as NDKPrivateKeySigner)?.privateKey);

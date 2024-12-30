@@ -3,13 +3,12 @@ import { Animated, PanResponder, View, Text, TouchableOpacity } from "react-nati
 import { Zap } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { nicelyFormattedMilliSatNumber } from "@/utils/bitcoin";
-import { NDKKind, NDKNutzap, NDKZapper, useNDK, zapInvoiceFromEvent, useWalletStore } from "@nostr-dev-kit/ndk-mobile";
+import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 
 export default function Zaps({ event, zaps, style }) {
-    return null;
-    const { currentUser } = useNDK();
-    const { activeWallet } = useWalletStore();
+    const currentUser = useNDKCurrentUser();
+    const { activeWallet } = useNDKWallet();
     const { colors } = useColorScheme();
     const [amount, setAmount] = useState(0);
     const [canceled, setCanceled] = useState(false);

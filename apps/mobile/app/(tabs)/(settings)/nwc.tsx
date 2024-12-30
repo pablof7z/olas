@@ -71,8 +71,9 @@ export default function NwcScreen() {
                 <TextField
                     autoFocus
                     keyboardType="default"
-                    className="w-full h-96 bg-card rounded-lg"
+                    className="w-full min-h-[100px] bg-card rounded-lg"
                     value={connectString}
+                    multiline={true}
                     onChangeText={setConnectString}
                 />
             </View>

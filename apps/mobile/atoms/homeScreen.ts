@@ -1,6 +1,11 @@
-import { NDKEventWithFrom } from '@nostr-dev-kit/ndk-mobile/src/hooks/subscribe';
 import { FlashList } from '@shopify/flash-list';
 import { atom } from 'jotai';
 import { RefObject } from 'react';
 
-export const homeScreenScrollRef = atom<RefObject<FlashList<any>> | null>(null);
+// Mutable atom initialized to `null`
+export const homeScreenScrollRefAtom = atom<RefObject<FlashList<any>> | null, [RefObject<FlashList<any>> | null], void>(
+    null,
+    (get, set, value) => {
+        set(homeScreenScrollRefAtom, value);
+    }
+);

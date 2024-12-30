@@ -1,14 +1,13 @@
 import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
 import { generateMediaEventFromBlobDescriptor, sign, signWith } from './blossom';
 import { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
-import NDK, { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import NDK from '@nostr-dev-kit/ndk-mobile';
 
 export class Uploader {
-    private blob: Blob;
-    private server: string;
+    private fileUri: string;
     private _onProgress?: (progress: number) => void;
     private _onError?: (error: Error) => void;
-    private _onUploaded?: (url: string) => void;
+    private _onUploaded?: (blob: BlobDescriptor) => void;
     public mime;
     private url: URL;
     private xhr: XMLHttpRequest;
@@ -16,13 +15,12 @@ export class Uploader {
     public signer?: NDKSigner;
     private ndk: NDK;
 
-    constructor(ndk: NDK, blob: Blob, server: string) {
+    constructor(ndk: NDK, fileUri: string, mime: string, server: string) {
         this.ndk = ndk;
-        this.blob = blob;
-        this.server = server;
-        this.mime = blob.type;
+        this.fileUri = fileUri;
+        this.mime = mime;
         this.url = new URL(server);
-        this.url.pathname = '/upload';
+        this.url.pathname = '/media';
 
         this.xhr = new XMLHttpRequest();
     }
@@ -35,7 +33,7 @@ export class Uploader {
         this._onError = cb;
     }
 
-    set onUploaded(cb: (url: string) => void) {
+    set onUploaded(cb: (blob: BlobDescriptor) => void) {
         this._onUploaded = cb;
     }
 
@@ -46,9 +44,9 @@ export class Uploader {
     async start() {
         try {
             let _sign = signWith(this.signer ?? this.ndk.signer);
-            const uploadAuth = await BlossomClient.getUploadAuth(this.blob as Blob, _sign as any, 'Upload file');
+            const uploadAuth = await BlossomClient.getUploadAuth(this.fileUri, this.mime, _sign as any, 'Upload file');
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
-
+            
             this.xhr.open('PUT', this.url.toString(), true);
             this.xhr.setRequestHeader('Authorization', encodedAuthHeader);
             this.xhr.upload.addEventListener('progress', (e) => this.xhrOnProgress(e));
@@ -57,7 +55,9 @@ export class Uploader {
 
             if (this.mime) this.xhr.setRequestHeader('Content-Type', this.mime);
 
-            this.xhr.send(this.blob);
+            // read file and send
+            const file = await fetch(this.fileUri).then((r) => r.blob());
+            this.xhr.send(file);
 
             return this.xhr;
         } catch (e) {
@@ -67,6 +67,7 @@ export class Uploader {
     }
 
     private xhrOnProgress(e: ProgressEvent) {
+        console.log('xhrOnProgress', { loaded: e.loaded, total: e.total });
         if (e.lengthComputable && this._onProgress) {
             this._onProgress((e.loaded / e.total) * 100);
         }
@@ -77,9 +78,11 @@ export class Uploader {
 
         if (status < 200 || status >= 300) {
             if (this._onError) {
-                this._onError(new Error(`Failed to upload file: ${status}`));
+                console.log('upload error', this.xhr.responseText);
+                this._onError(new Error(this.xhr.responseText ?? `Error ${status}`));
                 return;
             } else {
+                console.log('upload error', this.xhr);
                 throw new Error(`Failed to upload file: ${status}`);
             }
         }
@@ -91,13 +94,16 @@ export class Uploader {
         }
 
         if (this._onUploaded && this.response) {
-            this._onUploaded(this.response.url);
+            this._onUploaded(this.response);
         }
     }
 
     private xhrOnError(e: ProgressEvent) {
         if (this._onError) {
-            this._onError(new Error('Failed to upload file'));
+            console.log('upload error', JSON.stringify(Object.keys(this.xhr)));
+            console.log('upload error', this.xhr.responseText);
+            console.log('upload error', this.xhr.status);
+            this._onError(new Error(this.xhr.responseText ?? 'Failed to upload file'));
         }
     }
 

@@ -1,32 +1,27 @@
-import { NDKEvent, NDKKind, useUserProfile, useSubscribe, NDKSubscriptionOptions, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Share, StyleSheet } from 'react-native';
+import { NDKEvent, NDKKind, useUserProfile, useSubscribe, NDKSubscriptionOptions, NDKVideo, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
-import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import { useStore } from 'zustand';
 import { activeEventStore } from '@/app/stores';
+import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useRef, useMemo, useCallback } from 'react';
-import Image from '@/components/media/image';
+import { memo, useMemo, useCallback } from 'react';
 import { InlinedComments, Reactions } from './Reactions';
 import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
-import { DropdownMenu } from '@/components/nativewindui/DropdownMenu';
-import { BellOff, MoreVertical, Repeat } from 'lucide-react-native';
-import { createDropdownItem } from '@/components/nativewindui/DropdownMenu/utils';
+import { MoreHorizontal, Repeat } from 'lucide-react-native';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import { useEvent } from 'expo';
-import { imetasFromEvent } from '@/utils';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKSession, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import EventMediaContainer from '@/components/media/event';
+import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
+import { useAtomValue, useSetAtom } from 'jotai';
+
 const WINDOW_WIDTH = Dimensions.get('window').width;
-const WINDOW_HEIGHT = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
     image: {
@@ -51,32 +46,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export function VideoContainer({ url }: { url: string }) {
-    const videoSource = { uri: url };
-    const inset = useSafeAreaInsets();
-    
-    const player = useVideoPlayer(videoSource, player => {
-        player.loop = true;
-        player.muted = true;
-        player.addListener('statusChange', (status) => {
-            if (player.status === 'readyToPlay') {
-                player.play();
-            }
-        });
-    });
-    
-    return (
-        <VideoView
-            style={{...styles.video, height: (WINDOW_HEIGHT * 0.8) - inset.top - inset.bottom}}
-            contentFit='cover'
-            player={player}
-            allowsFullscreen
-            allowsPictureInPicture
-        />
-    )
-}
-
-const MediaSection = function MediaSection({ 
+const MediaSection = function MediaSection({
     event, 
     setActiveEvent 
 }: { 
@@ -90,29 +60,8 @@ const MediaSection = function MediaSection({
         router.push('/view');
     }, [ event.id ])
 
-    const isVideo = [NDKKind.HorizontalVideo, NDKKind.VerticalVideo].includes(event.kind);
-
-    if (isVideo) {
-        const video = NDKVideo.from(event);
-        let url = video.url;
-        if (!url) {
-            const imeta = imetasFromEvent(event)[0];
-            url = imeta?.url;
-        }
-
-        return <VideoContainer url={url} />;
-    }
-    
-    return (
-        <View style={{ flex: 1 }}>
-            <Image key={event.id} maxHeight={maxHeight} event={event} onPress={onPress} />
-        </View>
-    );
+    return <EventMediaContainer event={event} maxHeight={maxHeight} onPress={onPress} />
 }
-
-// const MemoizedReactions = memo(function MemoizedReactions({ event }: { event: NDKEvent }) {
-//     return <Reactions event={event} />;
-// }, (prevProps, nextProps) => prevProps.event.id === nextProps.event.id);
 
 export default function Post({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
     const { isDarkColorScheme } = useColorScheme();
@@ -127,7 +76,7 @@ export default function Post({ event, reposts, timestamp }: { event: NDKEvent, r
     }
 
     return (
-        <View className="overflow-hidden border-b bg-card" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
+        <View className="overflow-hidden border-b bg-card py-2" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
             <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
             <MediaSection event={event} setActiveEvent={setActiveEvent} />
@@ -139,9 +88,18 @@ export default function Post({ event, reposts, timestamp }: { event: NDKEvent, r
 
 export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, reposts: NDKEvent[], timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
+    const { colors } = useColorScheme();
     let clientName = event.tagValue('client');
 
     if (clientName?.startsWith('31990')) clientName = undefined;
+
+    const setOptionsMenuEvent = useSetAtom(optionsMenuEventAtom);
+    const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
+
+    const openOptionsMenu = useCallback(() => {
+        setOptionsMenuEvent(event);
+        optionsSheetRef.current?.present();
+    }, [event, optionsSheetRef]);
     
     return (
         <View className="flex-col p-2">
@@ -186,81 +144,19 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent, rep
 
                 <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                     <FollowButton pubkey={event.pubkey} />
-                    <PostOptions event={event} />
+
+                    <Pressable onPress={openOptionsMenu}>
+                        <MoreHorizontal size={20} color={colors.foreground} />
+                    </Pressable>
                 </View>
             </View>
         </View>
     )
 }
 
-function PostOptions({ event }: { event: NDKEvent }) {
-    const { currentUser } = useNDK();
-    const { mutePubkey } = useNDKSession();
-    const options = [
-        createDropdownItem({
-            actionKey: 'mute',
-            title: 'Mute',
-            icon: { name: 'person.slash', namingScheme: 'sfSymbol' },
-        }),
-        createDropdownItem({
-            actionKey: 'share',
-            title: 'Share',
-            icon: { name: 'square.and.arrow.up', namingScheme: 'sfSymbol' },
-        }),
-        createDropdownItem({
-            actionKey: 'copy',
-            title: 'Copy Post ID',
-            icon: { name: 'square.and.arrow.up', namingScheme: 'sfSymbol' },
-        }),
-    ];
-
-    if (currentUser?.pubkey === event.pubkey) {
-        options.push(createDropdownItem({
-            actionKey: 'delete',
-            title: 'Delete',
-        }));
-    }
-
-    const muteUser = () => {
-        mutePubkey(event.pubkey);
-    }
-
-    const deletePost = async (event: NDKEvent) => {
-        event.delete();
-    }
-
-    const copyId = async (event: NDKEvent) => Clipboard.setStringAsync(event.encode());
-
-    const sharePost = async (event: NDKEvent) => {
-        // open share menu
-        Share.share({
-            url: 'https://olas.app/e/' + event.encode(),
-        });
-    }
-    
-    return (
-        <DropdownMenu
-            items={options}
-            onItemPress={(item) => {
-                if (item.actionKey === 'delete') {
-                    deletePost(event);
-                } else if (item.actionKey === 'copy') {
-                    copyId(event);
-                } else if (item.actionKey === 'share') {
-                    sharePost(event);
-                } else if (item.actionKey === 'mute') {
-                    muteUser(event);
-                }
-            }}
-        >
-            <MoreVertical size={20} />
-        </DropdownMenu>
-    )
-}
-
 const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: NDKEvent, trimmedContent: string }) {
-    const { currentUser } = useNDK();
-    const { follows } = useNDKSession();
+    const currentUser = useNDKCurrentUser();
+    const follows = useFollows();
     const filters = useMemo(
         () => [
             {
@@ -271,10 +167,10 @@ const PostBottom = memo(function PostBottom({ event, trimmedContent }: { event: 
         [event.id]
     );
     const opts = useMemo<NDKSubscriptionOptions>(() => ({
-        groupable: true,
-        groupableDelay: 2000,
-        groupableDelayType: 'at-least',
+        groupable: false,
         skipVerification: true,
+        cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
+        closeOnEose: true,
     }), []);
     const { events: relatedEvents } = useSubscribe({ filters, opts });
 

@@ -7,10 +7,11 @@ import * as SecureStore from 'expo-secure-store';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheInitialized } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';    
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View } from 'react-native';
@@ -18,17 +19,30 @@ import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
-import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { NDKUser } from '../../../packages/ndk/ndk/dist';
+import { Button } from '@/components/nativewindui/Button';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import LoaderScreen from '@/components/LoaderScreen';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { relayNoticesAtom } from '@/stores/relays';
+import { useAppSettingsStore } from '@/stores/app';
+
+const mainKinds = [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo];
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
     [NDKKind.ImageCurationSet, { wrapper: NDKList }],
+    [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
     [967],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
+
+const sessionFilters = (user: NDKUser) => ([
+    { kinds: [NDKKind.GenericReply], "#K": mainKinds.map(k => k.toString()), "#p": [user.pubkey] },
+    { kinds: [NDKKind.GenericRepost], "#k": mainKinds.map(k => k.toString()), "#p": [user.pubkey] },
+])
 
 const settingsStore = {
     get: SecureStore.getItemAsync,
@@ -37,31 +51,16 @@ const settingsStore = {
     getSync: SecureStore.getItem,
 };
 
-function NDKCacheCheck({ children }: { children: React.ReactNode }) {
-    const { ndk, cacheInitialized } = useNDK();
-
-    console.log('cacheInitialized', { ndk: !!ndk, cacheInitialized });
-
-    if (!ndk || cacheInitialized === false) {
-        return (
-            <View className="flex-1 flex-col items-center justify-center gap-4">
-                <Text>Initializing cache...</Text>
-
-                <ActivityIndicator />
-            </View>
-        );
-    } else {
-        return <>{children}</>;
-    }
-}
-
 export default function RootLayout() {
+    const [appReady, setAppReady] = useState(false);
+    const [wotReady, setWotReady] = useState(false);
+    
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
     const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
         const url = new URL(relay.url);
         if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 400));
-        // if (direction === 'recv') console.log('👈', url.hostname, msg);
+        // if (direction === 'recv') console.log('👈', url.hostname, msg.slice(0, 400));
     };
 
     let relays = (SecureStore.getItem('relays') || '').split(',');
@@ -75,118 +74,152 @@ export default function RootLayout() {
     });
 
     if (relays.length === 0) {
-        // relays.push('wss://relay.primal.net');
+        relays.push('wss://relay.primal.net');
         relays.push('wss://relay.damus.io');
     }
 
     // relays.push('wss://promenade.fiatjaf.com/');
     // check if we have relay.olas.app, if not, add it
-    // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
-    //     relays.unshift('wss://relay.olas.app');
-    // }
+    if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
+        relays.unshift('wss://relay.olas.app');
+    }
 
     const { init: initializeNDK } = useNDK();
     const { init: initializeSession } = useNDKSession();
+    const [ relayNotices, setRelayNotices ] = useAtom(relayNoticesAtom);
 
     const onUserSet = useCallback((ndk: NDK,user: NDKUser) => {
-        console.log('onUserSet', { user, ndk });
-        initializeSession(ndk, user, {
+        console.log('onUserSet getting called', user.pubkey);
+        initializeSession(ndk, user, settingsStore, {
             follows: true,
-            wot: 3,
+            muteList: true,
+            wot: false,
+            kinds: sessionKinds,
+            filters: sessionFilters,
+        }, {
+            onReady: () => setAppReady(true),
+            onWotReady: () => setWotReady(true),
         });
     }, [initializeSession]);
 
     useEffect(() => {
+        const currentUserInSettings = SecureStore.getItem('currentUser');
+        
         initializeNDK({
             explicitRelayUrls: relays,
             cacheAdapter: new NDKCacheAdapterSqlite('olas'),
-            enableOutboxModel: false,
+            enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
+            // netDebug,
             clientName: "olas",
             clientNip89: "31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505",
             settingsStore,
             onUserSet,
         });
+
+        if (!currentUserInSettings) {
+            setAppReady(true);
+            setWotReady(true);
+        }
+    }, []);
+
+    const { ndk } = useNDK();
+    useEffect(() => {
+        if (!ndk) return;
+        ndk.pool.on("notice", (relay, notice) => {
+            console.log('⚠️ NOTICE', notice, relay?.url);
+            setRelayNotices((prev) => ({
+                ...prev,
+                [relay?.url]: [...(prev[relay?.url] || []), notice],
+            }));
+        });
+    }, [ndk])
+
+    // initialize app settings
+    const initAppSettings = useAppSettingsStore(state => state.init);
+    useEffect(() => {
+        console.log('initAppSettings');
+        initAppSettings();
     }, []);
 
     return (
         <>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
-                <NDKCacheCheck>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <BottomSheetModalProvider>
+                <LoaderScreen appReady={appReady} wotReady={wotReady}>
                         {/* <NutzapMonitor /> */}
-                        <GestureHandlerRootView style={{ flex: 1 }}>
-                            <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                                <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                    <PortalHost />
-                                    <Stack screenOptions={{}}>
-                                        <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
+                        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                <PortalHost />
+                                <Stack screenOptions={{}}>
+                                    <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="publish/index" options={{ headerShown: true, title: 'Publish' }} />
-                                        <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
-                                        <Stack.Screen
-                                            name="publish/expiration"
-                                            options={{ headerShown: true, presentation: 'modal' }}
-                                        />
-                                        <Stack.Screen name="publish/type" options={{ headerShown: true, presentation: 'modal' }} />
+                                    <Stack.Screen name="publish/index" options={{ headerShown: true, title: 'Publish' }} />
+                                    <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="publish/expiration"
+                                        options={{ headerShown: true, presentation: 'modal' }}
+                                    />
+                                    <Stack.Screen
+                                        name="(tabs)"
+                                        options={{
+                                            headerShown: false,
+                                            title: 'Home',
+                                        }}
+                                    />
 
-                                        <Stack.Screen
-                                            name="(tabs)"
-                                            options={{
-                                                headerShown: false,
-                                                title: 'Home',
-                                            }}
-                                        />
+                                    <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="notifications" options={{ headerShown: false }} />
 
-                                        {/* <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
-                                        <Stack.Screen name="notifications" options={{ headerShown: false }} />
+                                    <Stack.Screen
+                                        name="comment"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                            title: 'Comment',
+                                        }}
+                                    />
 
-                                        <Stack.Screen
-                                            name="comment"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                                title: 'Comment',
-                                            }}
-                                        />
+                                    <Stack.Screen
+                                        name="comments"
+                                        options={{
+                                            headerShown: true,
+                                            presentation: 'modal',
+                                            title: '',
+                                            headerRight: () => (
+                                                <View className="flex-row items-center gap-2">
+                                                    <Button variant="plain" onPress={() => router.push('/comment')}>
+                                                        <Text className="text-primary">New Comment</Text>
+                                                    </Button>
+                                                </View>
+                                            ),
+                                        }}
+                                    />
 
-                                        <Stack.Screen
-                                            name="comments"
-                                            options={{
-                                                headerShown: true,
-                                                presentation: 'modal',
-                                                title: '',
-                                                headerRight: () => (
-                                                    <View className="flex-row items-center gap-2">
-                                                        <Button variant="plain" onPress={() => router.push('/comment')}>
-                                                            <Text className="text-primary">New Comment</Text>
-                                                        </Button>
-                                                    </View>
-                                                ),
-                                            }}
-                                        />
+                                    <Stack.Screen
+                                        name="view"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
 
-                                        <Stack.Screen
-                                            name="view"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        />
-
-                                        <Stack.Screen
-                                            name="(wallet)"
-                                            options={{
-                                                headerShown: false,
-                                                presentation: 'modal',
-                                            }}
-                                        ></Stack.Screen> */}
-                                        </Stack>
-                                </NavThemeProvider>
-                                <Toasts />
-                            </KeyboardProvider>
-                </GestureHandlerRootView>
-            </NDKCacheCheck>
+                                    <Stack.Screen
+                                        name="(wallet)"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                        }}
+                                    ></Stack.Screen>
+                                </Stack>
+                            </NavThemeProvider>
+                            <Toasts />
+                        </KeyboardProvider>
+                </LoaderScreen>
+            </BottomSheetModalProvider>
+            </GestureHandlerRootView>
         </>
     );
 }

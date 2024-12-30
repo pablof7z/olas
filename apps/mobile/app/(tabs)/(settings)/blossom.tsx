@@ -1,5 +1,5 @@
-import { useNDK, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo, useState } from 'react';
+import { useNDK, useNDKSession, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
@@ -8,26 +8,22 @@ import { cn } from '~/lib/cn';
 import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
+import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
 
 export default function BlossomScreen() {
     const { ndk } = useNDK();
-    const { events } = useNDKSession();
-    const blossomList = useMemo(() => {
-        let list = events?.get(NDKKind.BlossomList)?.[0] as NDKList;
-        if (!list) {
-            list = new NDKList(ndk, {
-                kind: NDKKind.BlossomList,
-            } as NostrEvent);
-        }
-        return list;
-    }, [events]);
+    const blossomList = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.BlossomList, { create: true });
     const [searchText, setSearchText] = useState<string | null>(null);
     const [blossoms, setBlossoms] = useState<string[]>(blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1]));
     const [url, setUrl] = useState('');
 
-    if (blossoms.length === 0) {
-        setBlossoms(['https://nostr.download']);
-    }
+    useEffect(() => {
+        if (blossoms.length === 0) {
+            setBlossoms([DEFAULT_BLOSSOM_SERVER]);
+        }
+    }, []);
+
+    console.log('blossoms', blossoms);
 
     const addFn = () => {
         console.log({ url });
@@ -57,17 +53,28 @@ export default function BlossomScreen() {
                 },
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
-    }, [ndk?.pool.relays, searchText, blossoms]);
+    }, [searchText, blossoms]);
 
     function save() {
+        console.log('save', blossomList.kind);
+        blossomList.ndk = ndk;
+        blossomList.kind = NDKKind.BlossomList;
         blossomList.tags = blossomList.tags.filter((tag) => tag[0] !== 'server');
 
         for (const url of blossoms) {
             blossomList.addItem(['server', url]);
+            console.log('adding item', url);
         }
 
-        blossomList.publishReplaceable();
-        router.back();
+        console.log('blossomList', blossomList.tags);
+        blossomList.sign().then(() => {
+            console.log('event', blossomList.rawEvent());
+            blossomList.publishReplaceable();
+            router.back();
+        }).catch((e) => {
+            console.log('error', e);
+        });
+
     }
 
     return (

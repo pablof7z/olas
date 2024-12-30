@@ -8,6 +8,7 @@ import { Dimensions, View, ScrollView } from 'react-native';
 import Image from '@/components/media/image';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/components/ui/event/content';
+import EventMediaContainer from '@/components/media/event';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -56,7 +57,7 @@ export default function ViewScreen() {
 
                 {/* Image */}
                 <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
-                    <Image
+                    <EventMediaContainer
                         event={activeEvent}
                         maxWidth={Dimensions.get('window').width}
                         maxHeight={Dimensions.get('window').height}

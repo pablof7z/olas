@@ -13,9 +13,10 @@ export default function SettingsLayout() {
                 headerTintColor: Platform.OS === 'ios' ? undefined : colors.foreground,
             }}>
             <Stack.Screen name="index" />
+            <Stack.Screen name="muted" />
             <Stack.Screen name="wallets" options={{ headerShown: false }} />
-            <Stack.Screen name="wallet" options={{ headerShown: true, presentation: 'modal'     }} />
             <Stack.Screen name="nwc" options={{ headerShown: false, }} />
+            <Stack.Screen name="dev" />
         </Stack>
     );
 }

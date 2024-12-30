@@ -1,4 +1,4 @@
-import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -14,10 +14,11 @@ import { router } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { IconView } from '.';
+import { useWalletStore } from '@nostr-dev-kit/ndk-mobile/src/stores/wallet';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
-    const { activeWallet, setActiveWallet } = useNDKSession();
+    const { activeWallet, setActiveWallet } = useNDKWallet();
     const allWallets = useNDKSessionEvents([NDKKind.CashuWallet]);
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));

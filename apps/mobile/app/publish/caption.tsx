@@ -2,12 +2,12 @@ import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Button } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import { publishStore } from '../stores/publish';
-import { useStore } from 'zustand';
+import { useAtom } from 'jotai';
+import { metadataAtom } from '@/components/NewPost/store';
 
 export default function Caption() {
-    const { caption, setCaption } = useStore(publishStore);
-    const [description, setDescription] = useState(caption ?? '');
+    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const [description, setDescription] = useState(metadata?.caption ?? '');
 
     return (
         <>
@@ -19,7 +19,7 @@ export default function Caption() {
                         <Button
                             title="OK"
                             onPress={() => {
-                                setCaption(description);
+                                setMetadata({ ...metadata, caption: description });
                                 router.back();
                             }}
                         />

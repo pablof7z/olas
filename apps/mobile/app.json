@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "scheme": "olas",
     "web": {
       "bundler": "metro",
@@ -10,12 +10,21 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "react-native-compressor",
       "expo-router",
       [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends.",
           "cameraPermission": "The app accesses your camera to let you share photos with your friends."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
         }
       ],
       [
@@ -47,19 +56,25 @@
             "image": "./assets/splash.png",
             "backgroundColor": "#000000"
           },
-          "imageWidth": 200
+          "imageWidth": 200,
+          "ios": {
+            "image": "./assets/splash.png",
+            "enableFullScreenImage_legacy": true,
+            "resizeMode": "contain"
+          }
         }
       ],
       "expo-build-properties",
       "expo-video",
-      "expo-sqlite",
       [
         "expo-asset",
         {
-          "assets": ["./assets/reel.svg"]
+          "assets": [
+            "./assets/splash.png"
+          ]
         }
-      ]
-
+      ],
+      "react-native-compressor"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -77,6 +92,7 @@
       "**/*"
     ],
     "ios": {
+      "appleTeamId": "456SHKPP26",
       "supportsTablet": false,
       "bundleIdentifier": "com.pablof7z.snapstr",
       "config": {
@@ -91,7 +107,8 @@
       "package": "com.pablof7z.snapstr",
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "owner": "sanityisland",

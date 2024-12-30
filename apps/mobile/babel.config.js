@@ -8,6 +8,10 @@ module.exports = function (api) {
       'nativewind/babel'
     ],
 
-    plugins: ['babel-plugin-transform-vite-meta-env', '@babel/plugin-syntax-import-attributes'],
+    plugins: [
+      'react-native-worklets-core/plugin',
+      'babel-plugin-transform-vite-meta-env',
+      '@babel/plugin-syntax-import-attributes'
+    ],
   };
 };

@@ -110,7 +110,7 @@ function ListComponent<T>(
 }
 
 function getItemType<T>(item: T) {
-    return typeof item === 'string' ? 'sectioHeader' : 'row';
+    return typeof item === 'string' ? 'sectionHeader' : 'row';
 }
 
 function renderItemWithVariant<T extends ListDataItem>(

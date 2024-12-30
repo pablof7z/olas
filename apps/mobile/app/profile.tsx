@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
-import Image from '@/components/media/image';
 import * as User from '@/components/ui/user';
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
@@ -12,9 +11,10 @@ import { MasonryFlashList } from '@shopify/flash-list';
 import { activeEventStore } from './stores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
+import { EventMediaGridContainer } from '@/components/media/event';
 
 export default function Profile() {
-    const { follows } = useNDKSession();
+    const follows = useFollows();
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const { userProfile } = useUserProfile(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -33,8 +33,7 @@ export default function Profile() {
         return filters;
     }, [filtersExpanded]);
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
-    const { ndk } = useNDK();
-    const { events } = useSubscribe({ ndk, filters, opts });
+    const { events } = useSubscribe({ filters, opts });
 
     const followCount = useMemo(() => new Set(
         events.find(e => e.kind === NDKKind.Contacts)?.tags.find(t => t[0] === 'p')?.[1]
@@ -157,13 +156,14 @@ export default function Profile() {
                                 estimatedItemSize={100}
                                 keyExtractor={(item) => item.id}
                                 contentContainerStyle={{paddingBottom:60}}
-                                renderItem={({ item }) => (
-                                    <ImageGridItem
+                                renderItem={({ item, index }) => (
+                                    <EventMediaGridContainer
                                         event={item}
+                                        index={index}
                                         onPress={() => {
                                             setActiveEvent(item);
                                             router.push('/view');
-                                    }} />
+                                        }} />
                                 )}
                             />
                         </View>
@@ -171,22 +171,6 @@ export default function Profile() {
                 </Animated.ScrollView>
             </View>
 
-    );
-}
-
-function ImageGridItem({ event, onPress }: { event: NDKEvent; onPress: () => void }) {
-    const size = Dimensions.get('window').width / 3;
-    
-    return (
-        <View style={styles.gridItem}>
-            <Image
-                event={event}
-                onPress={onPress}
-                singleImageMode
-                maxWidth={size}
-                maxHeight={size}
-            />
-        </View>
     );
 }
 

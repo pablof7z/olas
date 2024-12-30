@@ -7,11 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import { TouchableOpacity, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
-import { useNDKSession } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKSession, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 
 export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
-    const { activeWallet, balances } = useNDKSession();
+    const { activeWallet, balances } = useNDKWallet();
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [selectedMint, setSelectedMint] = useState<string | null>(null);
     const inputRef = useRef<TextInput | null>(null);

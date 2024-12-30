@@ -1,20 +1,107 @@
 import 'react-native-get-random-values';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions } from 'react-native';
 import { CameraView } from 'expo-camera';
-import { useRouter } from 'expo-router';
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
+import { Image } from 'react-native';
+import { router, useRouter } from 'expo-router';
+import { NDKEvent, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
-import { QrCode } from 'lucide-react-native';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { ArrowRight, Plus, QrCode } from 'lucide-react-native';
+import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+
+const avatarAtom = atom<string | undefined>(undefined);
+const usernameAtom = atom<string | undefined>("@");
+const modeAtom = atom<'login' | 'signup'>('login');
+
+function AvatarChooser() {
+    const username = useAtomValue(usernameAtom);
+
+    return (
+        <View className="flex-row gap-4 relative w-28 h-24">
+            <View className="w-24 h-24 bg-muted rounded-full border-2 border-accent overflow-hidden">
+                <Image source={{uri: "https://kawaii-avatar.now.sh/api/avatar?username="+username}} className="w-full h-full object-cover rounded-full" />
+            </View>
+
+            {/* <Button
+                size="icon"
+                variant="accent"
+                className="absolute bottom-0 right-0 !rounded-full" onPress={() => {
+            }}>
+                <Plus size={24} color="white" />
+            </Button> */}
+        </View>
+    )
+}
+
+function SignUp() {
+    const [username, setUsername] = useAtom(usernameAtom);
+    const { ndk, login } = useNDK();
+    const setMode = useSetAtom(modeAtom);
+
+    const createAccount = useCallback(async () => {
+        const signer = NDKPrivateKeySigner.generate();
+        const nsec = nip19.nsecEncode(signer._privateKey!);
+        await login(nsec);
+
+        const event = new NDKEvent(ndk, {
+            kind: 0,
+            content: JSON.stringify({
+                name: username.replace(/^@/, ''),
+                image: "https://kawaii-avatar.now.sh/api/avatar?username="+username,
+            }),
+            tags: []
+        } as NostrEvent);
+        await event.publish();
+
+        router.replace('/');
+    }, [username]);
+    
+    return <View className='flex-col w-full gap-4 items-center'>
+        <Text variant="caption1" className="text-2xl font-bold">
+            Sign Up
+        </Text>
+
+        <AvatarChooser />
+
+        <TextInput
+            className="text-foreground border border-border rounded-md p-2 w-full text-xl"
+            autoFocus={true}
+            autoCapitalize="none"
+            autoComplete={undefined}
+            placeholder="Enter your username"
+            autoCorrect={false}
+            value={username}
+            onChangeText={(t) => {
+                if (!t.startsWith('@')) t = '@' + t;
+                setUsername(t.trim())
+            }}
+        />
+
+        <Button variant="accent" size="lg" className="w-full" onPress={createAccount}>
+            <Text className="text-white text-lg font-bold py-2">Sign Up</Text>
+            <ArrowRight size={24} color="white" />
+        </Button>
+
+        <Button variant="plain" onPress={() => {
+                setMode('login');
+            }}>
+                <Text>Already in Nostr?</Text>
+            </Button>
+    </View>
+}
 
 export default function LoginScreen() {
     const [payload, setPayload] = useState<string | undefined>(undefined);
-    const { ndk, login, currentUser } = useNDK();
+    const { ndk, login } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const router = useRouter();
-
+    const mode = useAtomValue(modeAtom);
+    const setMode = useSetAtom(modeAtom);
+    const logo = require('../assets/logo.png');
+    
     const handleLogin = async () => {
         if (!ndk) return;
         try {
@@ -29,14 +116,6 @@ export default function LoginScreen() {
             router.replace('/');
         }
     }, [currentUser]);
-
-    const createAccount = async () => {
-        const signer = NDKPrivateKeySigner.generate();
-        const nsec = nip19.nsecEncode(signer._privateKey!);
-        await login(nsec);
-
-        router.replace('/');
-    };
 
     const [scanQR, setScanQR] = useState(false);
 
@@ -53,9 +132,12 @@ export default function LoginScreen() {
     return (
         <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-                <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
-                    <Text variant="heading" className="text-2xl font-bold">
-                        Login
+                <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
+                
+                {mode === 'login' ? (
+                    <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
+                        <Text variant="heading" className="text-2xl font-bold">
+                            Login
                     </Text>
 
                     {scanQR && (
@@ -73,7 +155,7 @@ export default function LoginScreen() {
                     <TextInput
                         style={styles.input}
                         className="text-foreground"
-                        multiline
+                        multiline={true}
                         autoCapitalize="none"
                         autoComplete={undefined}
                         placeholder="Enter your nsec or bunker:// connection"
@@ -82,11 +164,14 @@ export default function LoginScreen() {
                         onChangeText={setPayload}
                     />
 
-                    <Button size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
-                        <Text>Login2</Text>
+                    <Button variant="accent" size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
+                        <Text className="text-white text-lg font-bold py-2">Login</Text>
+                        <ArrowRight size={24} color="white" />
                     </Button>
 
-                    <Button variant="tonal" onPress={createAccount}>
+                    <Button variant="plain" onPress={() => {
+                        setMode('signup');
+                    }}>
                         <Text>New to nostr?</Text>
                     </Button>
 
@@ -101,7 +186,10 @@ export default function LoginScreen() {
                             </Button>
                         </View>
                     )}
-                </View>
+                    </View>
+                ) : (
+                    <SignUp />
+                )}
             </KeyboardAvoidingView>
         </View>
     );
@@ -112,6 +200,9 @@ const styles = StyleSheet.create({
         padding: 20,
         flex: 1,
         width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 20,
     },
     title: {
         fontSize: 24,

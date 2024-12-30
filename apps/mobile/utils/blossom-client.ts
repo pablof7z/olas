@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import * as RNFS from 'react-native-fs';
 
 const now = () => Math.floor(new Date().valueOf() / 1000);
 const oneHour = () => now() + 60 * 60;
@@ -66,26 +67,31 @@ export class BlossomClient {
         this.signer = signer;
     }
 
-    static async getFileSha256(file: UploadType) {
+    static async getFileSha256(fileUri: string, mime: string) {
+        console.log('file', fileUri);
         let buffer: ArrayBuffer;
-        if (file instanceof File || file instanceof Blob) {
-            // Use FileReader for React Native compatibility
-            buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as ArrayBuffer);
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        } else {
-            // nodejs Buffer
-            buffer = file;
-        }
+        // Use FileReader for React Native compatibility
+        // buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        //     const reader = new FileReader();
+        //     reader.onload = () => resolve(reader.result as ArrayBuffer);
+        //     reader.onerror = reject;
+        //     reader.readAsArrayBuffer(fileUri);
+        // });
+
+        const hash = await RNFS.hash(fileUri, "sha256")
+        console.log('hash from RNFS', hash);
+
+        // console.log('read the file which is length', buffer.byteLength);
 
         // Convert ArrayBuffer to string
-        const uint8Array = new Uint8Array(buffer);
-        const stringData = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '');
+        // const uint8Array = new Uint8Array(buffer);
+        // let stringData = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '');
 
-        const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, stringData);
+        // const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, stringData);
+        // console.log('SHA256', {
+        //     hash,
+        //     bufferLength: buffer.byteLength,
+        // });
 
         return hash;
     }
@@ -158,14 +164,13 @@ export class BlossomClient {
             for (const hash of sha256) draft.tags.push(['x', hash]);
         } else draft.tags.push(['x', sha256]);
 
-        console.log('about to sign', draft);
-
         return await signer(draft);
     }
 
     /** Creates a one-off upload auth event for a file */
-    static async getUploadAuth(file: UploadType, signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
-        const sha256 = await BlossomClient.getFileSha256(file);
+    static async getUploadAuth(fileUri: string, mime: string, signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
+        const sha256 = await BlossomClient.getFileSha256(fileUri);
+        console.log('sha256', {sha256, fileUri});
         return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
     }
     static async uploadBlob(server: ServerType, file: UploadType, auth?: SignedEvent) {

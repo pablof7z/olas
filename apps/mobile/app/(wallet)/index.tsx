@@ -1,5 +1,5 @@
 import { View, Text, SafeAreaView, TouchableOpacity } from "react-native";
-import { useNDKSession } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKSession, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import * as SecureStore from 'expo-secure-store';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletBalance } from "@nostr-dev-kit/ndk-wallet";
 import { useMemo, useState } from "react";
@@ -8,7 +8,6 @@ import { formatMoney, nicelyFormattedMilliSatNumber, nicelyFormattedSatNumber } 
 import { List, ListItem } from "@/components/nativewindui/List";
 import { cn } from "@/lib/cn";
 import { BlurView } from "expo-blur";
-import { TabBarIcon } from "@/components/TabBarIcon";
 import { Button } from "@/components/nativewindui/Button";
 
 function WalletBalance({ wallet, balances }: { wallet: NDKWallet, balances: NDKWalletBalance[] }) {
@@ -51,8 +50,7 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
 function WalletNip60({ wallet }: { wallet: NDKCashuWallet }) {
     const mintBalances = wallet.mintBalances;
 
-    console.log('mintBalances', mintBalances);
-    console.log('wallet tokens', wallet.tokens.length);
+    wallet.start();
     
     return <View className="flex-1 flex-col h-full min-h-[100px]">
         <List
@@ -80,9 +78,7 @@ function WalletNip60({ wallet }: { wallet: NDKCashuWallet }) {
 }
 
 export default function WalletScreen() {
-    const { activeWallet, balances, setActiveWallet } = useNDKSession();
-
-    
+    const { activeWallet, balances, setActiveWallet } = useNDKWallet();
 
     function unlink() {
         SecureStore.deleteItemAsync('nwc');

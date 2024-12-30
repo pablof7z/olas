@@ -1,5 +1,5 @@
 import { Hexpubkey, NDKKind, useNDKSession } from "@nostr-dev-kit/ndk-mobile";
-import { NDKEvent, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, useNDK, useNDKCurrentUser, useFollows } from "@nostr-dev-kit/ndk-mobile";
 import { Button } from "../nativewindui/Button";
 import { ButtonProps } from "../nativewindui/Button";
 import { Text } from "../nativewindui/Text";
@@ -16,9 +16,9 @@ export default function FollowButton({
     variant?: ButtonProps["variant"];
     size?: ButtonProps["size"];
 } & Omit<ButtonProps, "variant" | "size">) {
-    return null;
-    const { ndk, currentUser } = useNDK();
-    const follows = useNDKSession(s => s.follows);
+    const { ndk } = useNDK();
+    const currentUser = useNDKCurrentUser();
+    const follows = useFollows();
     const [enabling, setEnabling] = useState(false);
     
     const follow = async () => {
@@ -43,7 +43,7 @@ export default function FollowButton({
         // console.log('followed user', { pubkey: pubkey.slice(0, 6) });
     };
 
-    if (follows?.includes(pubkey) || pubkey === currentUser?.pubkey) {
+    if (follows && (follows?.includes(pubkey) || pubkey === currentUser?.pubkey)) {
         return null;
     }
 
@@ -51,6 +51,7 @@ export default function FollowButton({
         variant={variant}
         size={size}
         onPress={follow}
+        className="rounded-md"
     >
         {enabling ? (
             <Check size={18} strokeWidth={2} />

@@ -8,7 +8,7 @@ import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import Zaps from './Reactions/Zaps';
 
 const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
@@ -16,13 +16,13 @@ const zapKinds = [NDKKind.Zap, NDKKind.Nutzap] as const;
 
 export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEvents: NDKEvent[] }) {
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
-    const { currentUser } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const { setActiveEvent } = useStore(activeEventStore, (state) => state);
+    const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
 
     const react = async () => {
-        const r = await event.react('+1', false);
-        r.tags.push(['K', event.kind.toString()]);
+        const r = await event.react('+', false);
+        r.tags.push(['k', event.kind.toString()]);
         await r.sign();
         await r.publish();
     };
@@ -79,8 +79,8 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent, relatedEv
                         <TouchableOpacity onPress={react}>
                             <Heart
                                 size={24}
-                                fill={reactedByUser ? colors.foreground : 'transparent'}
-                                color={reactedByUser ? colors.foreground : colors.muted}
+                                fill={reactedByUser ? colors.primary : 'transparent'}
+                                color={reactedByUser ? colors.primary : colors.muted}
                             />
                         </TouchableOpacity>
                         {reactions.length > 0 && (

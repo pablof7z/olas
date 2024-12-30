@@ -38,7 +38,7 @@ export default function CommentScreen() {
     const filters = useMemo(
         () => [
             { kinds: [NDKKind.Text], ...activeEvent.filter() },
-            { kinds: [1111], '#e': [activeEvent.id] },
+            { kinds: [NDKKind.GenericReply], '#e': [activeEvent.id] },
         ],
         [activeEvent]
     );

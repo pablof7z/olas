@@ -10,14 +10,19 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useMuteList, useNDKSession, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
 import { formatMoney } from '@/utils/bitcoin';
-import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useActiveBlossomServer } from '@/hooks/blossom';
+
 export default function SettingsIosStyleScreen() {
-    const { currentUser, logout } = useNDK();
+    const { logout } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet, balances } = useNDKWallet();
-
+    const defaultBlossomServer = useActiveBlossomServer();
+    const muteList = useMuteList();
+    const wot = useWOT();
     console.log('balances', balances);
 
     useEffect(() => {
@@ -34,7 +39,7 @@ export default function SettingsIosStyleScreen() {
     }, []);
 
     const data = useMemo(() => {
-        const opts = [
+        const opts: ListDataItem[] = [
             {
                 id: '2',
                 title: 'Relays',
@@ -45,6 +50,19 @@ export default function SettingsIosStyleScreen() {
 
         if (currentUser) {
             opts.unshift('gap 0');
+            // opts.unshift({
+            //     id: 'wot',
+            //     title: 'Web-of-trust',
+            //     leftView: <IconView name="person-outline" className="bg-red-500" />,
+            //     rightText: <Text variant="body" className="text-muted-foreground">{wot?.size.toString() ?? '0'}</Text>,
+            // });
+            opts.unshift({
+                id: 'muted',
+                title: 'Muted Users',
+                leftView: <IconView name="person-outline" className="bg-red-500" />,
+                rightText: <Text variant="body" className="text-muted-foreground">{muteList?.size.toString() ?? '0'}</Text>,
+                onPress: () => router.push('/(tabs)/(settings)/muted'),
+            });
             opts.unshift({
                 id: '0',
                 onPress: () => {
@@ -70,7 +88,7 @@ export default function SettingsIosStyleScreen() {
                 id: '11',
                 title: 'Key',
                 leftView: <IconView name="key-outline" className="bg-gray-500" />,
-                onPress: () => router.push('/(settings)/key'),
+                onPress: () => router.push('/(tabs)/(settings)/key'),
             });
             opts.push('gap 3');
             opts.push({
@@ -90,7 +108,8 @@ export default function SettingsIosStyleScreen() {
                         <Text>🌸</Text>
                     </IconView>
                 ),
-                onPress: () => router.push('/(settings)/blossom'),
+                rightText: defaultBlossomServer,
+                onPress: () => router.push('/(tabs)/(settings)/blossom'),
             });
             opts.push('gap 4');
             opts.push({
@@ -106,12 +125,21 @@ export default function SettingsIosStyleScreen() {
 
         opts.push('gap 9');
         opts.push({
+            id: 'dev',
+            title: `Development`,
+            leftView: <IconView name="code-braces" className="bg-green-500" />,
+            onPress: () => {
+                router.push('/(tabs)/(settings)/dev');
+            },
+        });
+
+        opts.push({
             id: 'version',
             title: `Version ${appVersion} (${buildVersion})`,
         });
 
         return opts;
-    }, [currentUser, activeWallet, balances]);
+    }, [currentUser, activeWallet, balances, muteList, wot, defaultBlossomServer]);
 
     return (
         <>

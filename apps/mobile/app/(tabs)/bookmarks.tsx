@@ -77,7 +77,7 @@ export default function Bookmarks() {
                 <FlashList
                     data={sortedEvents}
                     renderItem={({ item }) => (
-                        <Post event={item} />
+                        <Post event={item} reposts={[]} timestamp={item.created_at!} />
                     )}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={{paddingBottom:30}}
