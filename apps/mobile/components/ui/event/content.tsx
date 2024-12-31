@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '../user';
 import { Image } from 'expo-image';
 import { nip19 } from 'nostr-tools';
@@ -21,9 +21,7 @@ function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtag
 
     if (onHashtagPress) {
         return (
-            <Pressable onPress={() => onHashtagPress(hashtag)}>
-                <Text className="font-bold text-primary">#{hashtag}</Text>
-            </Pressable>
+            <Text onPress={() => onHashtagPress(hashtag)} className="font-bold text-primary">#{hashtag}</Text>
         );
     }
 
@@ -31,16 +29,24 @@ function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtag
 }
 
 function RenderMention({ entity, onMentionPress }: { entity: string | null; onMentionPress?: (pubkey: string) => void }) {
-    const pubkey = nip19.decode(entity).data as string;
-    const { userProfile } = useUserProfile(pubkey);
+    try {
+        const { type, data } = nip19.decode(entity);
+        let pubkey: string;
 
-    return (
-        <Pressable onPress={() => onMentionPress?.(pubkey)}>
-            <Text style={style.mention}>
+        if (type === 'npub') pubkey = data;
+        else if (type === 'nprofile') pubkey = data.pubkey;
+        else return <Text>{entity.substring(0, 6)}...</Text>;
+
+        const { userProfile } = useUserProfile(pubkey);
+
+        return (
+            <Text style={style.mention} onPress={() => onMentionPress?.(pubkey)}>
                 @<User.Name userProfile={userProfile} pubkey={pubkey} style={style.mention} />
             </Text>
-        </Pressable>
-    );
+        );
+    } catch (e) {
+        return <Text>{entity.substring(0, 6)}...</Text>;
+    }
 }
 
 // const RenderPart: React.FC<{ part: string } & React.ComponentProps<typeof Text>> = ({ part, ...props }) => {
@@ -134,6 +140,14 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Vie
     content ??= event.content;
 
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+)/);
+
+    if (event.kind === NDKKind.Reaction) {
+        switch (event.content) {
+            case '+': case '+1': return <Text {...props}>❤️</Text>;
+            case '-': case '-1': return <Text {...props}>👎</Text>;
+            default: return <Text {...props}>{event.content}</Text>;
+        }
+    }
 
     return (
         <Text {...props}>

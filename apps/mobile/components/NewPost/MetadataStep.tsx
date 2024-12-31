@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router } from 'expo-router';
 import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
-import { MapPin, Send, Timer, Type } from 'lucide-react-native';
+import { Fullscreen, MapPin, Send, Timer, Type } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { NDKRelaySet, useNDK } from '@nostr-dev-kit/ndk-mobile';
@@ -68,15 +68,26 @@ export function PostMetadataStep() {
 
     useEffect(() => console.log({ uploading, publishing, wantsToPublish, busy }), [uploading, publishing, wantsToPublish, busy]);
 
+    const [fullPreview, setFullPreview] = useState(false);
+    const { colors } = useColorScheme();
     return (
-        <View className="flex-1 grow" style={{ paddingBottom: inset.bottom }}>
-            <View className="h-2/5 w-full bg-muted-200">
+        <View className="flex-1 grow relative" style={{ marginBottom: inset.bottom }}>
+            <View
+                className={cn('w-full bg-muted-200', !fullPreview ? 'h-2/5' : 'grow')}
+            >
                 <SelectedMediaPreview />
             </View>
 
-            <View className="grow flex-col justify-between px-4">
-                <PostOptions />
-            </View>
+            <Button className="absolute z-50 top-0 left-0" variant="secondary" size="icon" onPress={() => setFullPreview(!fullPreview)}>
+                <Fullscreen size={24} color={colors.foreground} />
+            </Button>
+
+
+            {!fullPreview && (
+                <View className="grow flex-col justify-between px-4">
+                    <PostOptions />
+                </View>
+            )}
 
             <View className="flex-col justify-between px-4">
                 <Button variant="accent" onPress={publish} disabled={busy}>
@@ -99,20 +110,11 @@ function PostOptions() {
     const openCaption = () => router.push('/publish/caption');
     const openExpiration = () => router.push('/publish/expiration');
     const openType = () => {
-        if (!postTypeSheetRef?.current) {
-            alert('Post type couldnt be loaded -- this is a bug, please tell Pablo 😀');
-            return;
-        }
-
         postTypeSheetRef?.current?.present();
         postTypeSheetRef?.current?.expand();
     };
 
     const openLocation = () => {
-        if (!locationBottomSheetRef?.current) {
-            alert('Location options couldnt be loaded -- this is a bug, please tell Pablo 😀');
-            return;
-        }
         locationBottomSheetRef?.current?.present();
         locationBottomSheetRef?.current?.expand();
     };
@@ -182,7 +184,7 @@ function PostOptions() {
             id: 'location',
             title: 'Location',
             onPress: openLocation,
-            subTitle: metadata.location ? 'Photo coordinates' : 'None',
+            subTitle: metadata.location ? 'Photo coordinates' : 'Location not available',
             leftView: (
                 <View style={{ paddingHorizontal: 10 }}>
                     <MapPin size={24} color={colors.muted} />

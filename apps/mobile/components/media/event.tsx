@@ -59,7 +59,6 @@ export default function EventMediaContainer({
     maxWidth ??= Dimensions.get('window').width;
 
     if (urls.length === 0) {
-        console.log('no urls');
         return null;
     }
 

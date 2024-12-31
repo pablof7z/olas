@@ -6,7 +6,7 @@ import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Search } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NDKKind, NDKRelaySet, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
@@ -25,9 +25,13 @@ export default function SearchScreen() {
     const [input, setInput] = useAtom(inputAtom);
 
     const hashtagFromQuery = useLocalSearchParams().q;
-    if (hashtagFromQuery) {
-        setInput(hashtagFromQuery as string);
-    }
+
+    useEffect(() => {
+        console.log('hashtagFromQuery', hashtagFromQuery);
+        if (hashtagFromQuery && input !== hashtagFromQuery) {
+            setInput(hashtagFromQuery as string);
+        }
+    }, [hashtagFromQuery, setInput]);
 
     const filters = useMemo(
         () => [
@@ -37,7 +41,7 @@ export default function SearchScreen() {
         [input]
     );
 
-    const { events } = useSubscribe({ filters, opts, relays });
+    const { events } = useSubscribe({ filters, opts });
 
     const onSearch = useCallback((value) => {
         setInput(value.replace('#', '').trim());
@@ -49,9 +53,10 @@ export default function SearchScreen() {
         <KeyboardAvoidingView style={{ paddingTop: inset.top }} className="flex-1 bg-card">
             <View className="border-b border-border">
                 <Input onSearch={onSearch} />
+                <Text>{events.length}</Text>
             </View>
 
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, borderColor: 'red', borderWidth: 1 }}>
                 <MasonryFlashList
                     data={events}
                     numColumns={3}
@@ -75,26 +80,34 @@ export default function SearchScreen() {
 }
 
 function Input({ onSearch }: { onSearch: (input: string) => void }) {
-    const input = useAtomValue(inputAtom);
-    const [value, setValue] = useState<string>(input);
+    const input = useAtomValue(inputAtom); // Get the atom value
+    const [value, setValue] = useState<string>(input); // Local state for input value
     const { colors } = useColorScheme();
+
+    // Sync with atom value when it changes
+    useEffect(() => {
+        setValue(input);
+    }, [input]);
+
+    // Trigger search action
+    const handleSearch = useCallback(() => {
+        onSearch(value);
+    }, [value, onSearch]);
 
     return (
         <View className="flex-row items-center justify-center rounded-lg bg-card p-6">
             <TextInput
                 value={value}
                 onChangeText={(text) => {
-                    if (text.trim().length === 0) text = '#';
-                    setValue(text.trim());
+                    setValue(text.trim() || '#');
                 }}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
                 style={{ flex: 1 }}
                 className="text-xl font-bold"
             />
 
-            <Pressable
-                onPress={() => {
-                    onSearch(value);
-                }}>
+            <Pressable onPress={handleSearch}>
                 <Search size={24} color={colors.foreground} />
             </Pressable>
         </View>

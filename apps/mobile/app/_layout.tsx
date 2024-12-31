@@ -9,26 +9,25 @@ import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheInitialized } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { View } from 'react-native';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { NDKUser } from '../../../packages/ndk/ndk/dist';
-import { Button } from '@/components/nativewindui/Button';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
 import { useAppSettingsStore } from '@/stores/app';
+import { AlbumsBottomSheet } from '@/components/NewPost/AlbumsBottomSheet';
+import { PostTypeBottomSheet } from '@/components/NewPost/PostTypeBottomSheet';
+import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
 
 const mainKinds = [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo];
 
@@ -90,7 +89,6 @@ export default function RootLayout() {
 
     const onUserSet = useCallback(
         (ndk: NDK, user: NDKUser) => {
-            console.log('onUserSet getting called', user.pubkey);
             initializeSession(
                 ndk,
                 user,
@@ -180,27 +178,10 @@ export default function RootLayout() {
                                     <Stack.Screen name="notifications" options={{ headerShown: false }} />
 
                                     <Stack.Screen
-                                        name="comment"
+                                        name="comments"
                                         options={{
                                             headerShown: false,
                                             presentation: 'modal',
-                                            title: 'Comment',
-                                        }}
-                                    />
-
-                                    <Stack.Screen
-                                        name="comments"
-                                        options={{
-                                            headerShown: true,
-                                            presentation: 'modal',
-                                            title: '',
-                                            headerRight: () => (
-                                                <View className="flex-row items-center gap-2">
-                                                    <Button variant="plain" onPress={() => router.push('/comment')}>
-                                                        <Text className="text-primary">New Comment</Text>
-                                                    </Button>
-                                                </View>
-                                            ),
                                         }}
                                     />
 
@@ -219,6 +200,10 @@ export default function RootLayout() {
                                             presentation: 'modal',
                                         }}></Stack.Screen>
                                 </Stack>
+
+                                <PostTypeBottomSheet />
+                                <LocationBottomSheet />
+                                <AlbumsBottomSheet />
                             </NavThemeProvider>
                             <Toasts />
                         </KeyboardProvider>

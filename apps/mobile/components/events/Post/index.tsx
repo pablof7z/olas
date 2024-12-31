@@ -24,7 +24,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { MoreHorizontal, Repeat } from 'lucide-react-native';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKSession, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { useFollows } from '@nostr-dev-kit/ndk-mobile';
 import EventMediaContainer from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';

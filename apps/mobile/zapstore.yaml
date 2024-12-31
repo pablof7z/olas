@@ -1,6 +1,6 @@
 olas:
-  android:
-    name: Olas
-    description: Beauty is in the eye of the hodler
-    repository: https://github.com/pablof7z/olas
-    license: MIT
+    android:
+        name: Olas
+        description: See nostr from a different lens
+        repository: https://github.com/pablof7z/olas
+        license: MIT

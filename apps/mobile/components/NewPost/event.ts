@@ -18,11 +18,15 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
         else if (media[0].contentMode === 'portrait') kind = NDKKind.VerticalVideo;
         else kind = NDKKind.HorizontalVideo;
 
+        event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
         event.tags = [['k', kind.toString()]];
     }
 
-    event.tags = media.flatMap(generateImeta);
-    event.alt = `This is a ${media[0].mediaType} published via Olas.\n` + media.map((m) => m.uploadedUri).join('\n');
+    event.tags.push(...media.flatMap(generateImeta));
+
+    if (event.kind !== NDKKind.Text) {
+        event.alt = `This is a ${media[0].mediaType} published via Olas.\n` + media.map((m) => m.uploadedUri).join('\n');
+    }
 
     if (metadata.expiration) event.tags.push(['expiration', Math.floor(metadata.expiration / 1000).toString()]);
 
@@ -56,8 +60,13 @@ function generateImeta(media: MediaLibraryItem): NDKTag[] {
     const imetaTag: NDKTag = ['imeta'];
 
     imetaTag.push(['url', media.uploadedUri].join(' '));
-    imetaTag.push(['ox', media.sha256].join(' '));
-    if (media.uploadedSha256) imetaTag.push(['x', media.uploadedSha256].join(' '));
+    if (media.sha256 && media.uploadedSha256 !== media.sha256) {
+        imetaTag.push(['ox', media.sha256].join(' '));
+        imetaTag.push(['x', media.uploadedSha256].join(' '));
+    } else if (media.sha256 || media.uploadedSha256) {
+        const sha256 = media.sha256 || media.uploadedSha256;
+        imetaTag.push(['x', sha256].join(' '));
+    }
     if (media.width && media.height) imetaTag.push(['dim', `${media.width}x${media.height}`].join(' '));
     if (media.mimeType) imetaTag.push(['m', media.mimeType].join(' '));
     if (media.blurhash) imetaTag.push(['blurhash', media.blurhash].join(' '));

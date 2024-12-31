@@ -1,6 +1,6 @@
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { ComponentProps } from 'react';
-import { Dimensions, ScrollView, View, ViewStyle } from 'react-native';
+import { ComponentProps, useState } from 'react';
+import { Dimensions, ScrollView, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Image } from 'react-native';
 import { Location } from './store';
 import { Text } from '../nativewindui/Text';

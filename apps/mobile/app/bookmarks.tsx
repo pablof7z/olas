@@ -5,7 +5,6 @@ import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
-import * as User from '@/components/ui/user';
 import Post from '@/components/events/Post';
 import { Text } from '@/components/nativewindui/Text';
 import { Album, Globe } from 'lucide-react-native';

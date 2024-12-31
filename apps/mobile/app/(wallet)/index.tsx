@@ -124,10 +124,10 @@ export default function WalletScreen() {
 
                 <View className="flex-row justify-stretch gap-14 p-4">
                     <Button variant="primary" className="grow items-center" onPress={receive}>
-                        <Text className="py-2 font-medium text-white">Receive</Text>
+                        <Text className="py-2 font-bold text-xl text-white">Receive</Text>
                     </Button>
                     <Button variant="primary" className="grow items-center">
-                        <Text className="py-2 font-medium text-white">Send</Text>
+                        <Text className="py-2 font-bold text-xl text-white">Send</Text>
                     </Button>
                 </View>
             </View>

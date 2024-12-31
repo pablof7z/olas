@@ -74,10 +74,6 @@ export default function NewPostScreen() {
             <View style={styles.container} className="flex-1 flex-row bg-card !p-0">
                 {step === 0 && <ChooseContentStep />}
                 {step === 1 && <PostMetadataStep />}
-
-                <PostTypeBottomSheet />
-                <LocationBottomSheet />
-                <AlbumsBottomSheet />
             </View>
         </>
     );

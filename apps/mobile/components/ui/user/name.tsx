@@ -19,7 +19,7 @@ const Name: React.FC<NameProps> = ({ userProfile, pubkey, ...props }) => {
                 props.style,
             ]}
             {...props}>
-            {userProfile?.displayName || userProfile?.name || pubkey?.substring(0, 6) || 'Unknown'}
+            {userProfile?.displayName || userProfile?.name || pubkey?.substring?.(0, 6) || 'Unknown'}
         </Text>
     );
 };

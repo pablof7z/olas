@@ -1,6 +1,6 @@
 import { router, Tabs } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Bookmark, Home, PlaySquare, PlusSquare, Search, UserCircle2 } from 'lucide-react-native';
+import { Home, Search, UserCircle2 } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
@@ -9,6 +9,8 @@ import { useEffect } from 'react';
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { useAtomValue } from 'jotai';
 import { useNewPost } from '@/hooks/useNewPost';
+import NewIcon from '@/components/icons/new';
+import ReelIcon from '@/components/icons/reel';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -57,19 +59,11 @@ export default function TabsLayout() {
             />
 
             <Tabs.Screen
-                name="bookmarks"
-                options={{
-                    title: 'Bookmarks',
-                    tabBarIcon: ({ color, focused }) => <Bookmark size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
-                }}
-            />
-
-            <Tabs.Screen
                 name="search"
                 options={{
                     headerShown: false,
                     title: 'Search',
-                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={focused ? 2.5 : 2} />,
                 }}
             />
 
@@ -87,7 +81,9 @@ export default function TabsLayout() {
                 }}
                 options={{
                     title: 'Publish',
-                    tabBarIcon: ({ color, focused }) => <PlusSquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <NewIcon width={24} height={24} strokeWidth={2.5} style={{ color: color }} />
+                    ),
                 }}
             />
 
@@ -96,7 +92,9 @@ export default function TabsLayout() {
                 options={{
                     title: 'Reels',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <PlaySquare size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} style={{ color: color }} />
+                    ),
                 }}
             />
 

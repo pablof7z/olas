@@ -20,7 +20,7 @@ export class Uploader {
         this.fileUri = fileUri;
         this.mime = mime;
         this.url = new URL(server);
-        this.url.pathname = '/media';
+        this.url.pathname = '/upload';
 
         this.xhr = new XMLHttpRequest();
     }

@@ -2,25 +2,21 @@ import {
     useSubscribe,
     NDKEventId,
     NDKRelaySet,
-    Hexpubkey,
-    useWOT,
     useMuteList,
     NDKSubscriptionCacheUsage,
     NDKSubscription,
-    NDKVideo,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import Post from '@/components/events/Post';
-import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
+import { RefreshControl, } from 'react-native-gesture-handler';
 import { myFollows } from '@/utils/myfollows';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { ChevronDown } from 'lucide-react-native';
+import { Bookmark, ChevronDown } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
@@ -39,9 +35,10 @@ const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
 const includeTweetsAtom = atom(false);
 
 const titleAtom = atom(0);
+const feedTypeAtom = atom<'follows' | 'local' | string>('local');
 
 export default function HomeScreen() {
-    const [feedType, setFeedType] = useState<'follows' | 'local' | string>('local');
+    const [feedType, setFeedType] = useAtom(feedTypeAtom);
     const [title, setTitle] = useAtom(titleAtom);
 
     return (
@@ -59,10 +56,15 @@ export default function HomeScreen() {
                     //         </View>
                     //     </View>
                     // ),
-                    headerLeft: () => <HomeTitle feedType={feedType} setFeedType={setFeedType} />,
+                    headerLeft: () => <HomeTitle />,
                     title: '',
                     // headerRight: () => <Pressable onPress={() => setTitle(0)}><Text>{title}</Text></Pressable>,
-                    headerRight: () => <NotificationsButton />,
+                    headerRight: () => <View className="flex-row items-center gap-2">
+                        <Pressable onPress={() => router.push('/bookmarks')}>
+                            <Bookmark size={24} />
+                        </Pressable>
+                        <NotificationsButton />
+                    </View>,
                 }}
             />
 
@@ -315,7 +317,8 @@ function DataList({ feedType }: { feedType: string }) {
     );
 }
 
-function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (feedType: string) => void }) {
+function HomeTitle() {
+    const [feedType, setFeedType] = useAtom(feedTypeAtom);
     const { colors } = useColorScheme();
     const { ndk } = useNDK();
     const [relays, setRelays] = useState<string[]>([]);
@@ -332,11 +335,17 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
         sheetRef.current?.present();
     }, [ndk]);
 
+    const feedTypeTitle = useMemo(() => {
+        if (feedType === 'follows') return 'Follows';
+        if (feedType === 'local') return 'For You';
+        return feedType;
+    }, [feedType]);
+
     const [includeTweets, setIncludeTweets] = useAtom(includeTweetsAtom);
     return (
         <>
             <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
-                <Text className="text-xl font-semibold">{feedType === 'follows' ? 'Follows' : 'For You'}</Text>
+                <Text className="text-xl font-semibold">{feedTypeTitle}</Text>
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
             <Sheet ref={sheetRef}>
@@ -353,6 +362,7 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
                         data={[
                             { title: 'Follows', subTitle: 'Posts from people you follow', value: 'follows' },
                             { title: 'For You', subTitle: 'Posts within your network', value: 'local' },
+                            { title: 'Bookmarks', subTitle: 'Posts you have bookmarked', onPress: () => router.push('/bookmarks') },
                             ...relays.map((relay) => ({ title: relay, subTitle: relay, value: relay })),
                         ]}
                         estimatedItemSize={50}
@@ -367,7 +377,8 @@ function HomeTitle({ feedType, setFeedType }: { feedType: string; setFeedType: (
                                 index={index}
                                 target={target}
                                 onPress={() => {
-                                    setFeedType(item.value);
+                                    if (item.onPress) item.onPress();
+                                    else setFeedType(item.value);
                                     sheetRef.current?.dismiss();
                                 }}
                             />

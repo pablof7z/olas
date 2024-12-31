@@ -73,8 +73,8 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEv
                         <TouchableOpacity onPress={react}>
                             <Heart
                                 size={24}
-                                fill={reactedByUser ? colors.primary : 'transparent'}
-                                color={reactedByUser ? colors.primary : colors.muted}
+                                fill={reactedByUser ? 'red' : 'transparent'}
+                                color={reactedByUser ? 'red' : colors.muted}
                             />
                         </TouchableOpacity>
                         {reactions.length > 0 && (

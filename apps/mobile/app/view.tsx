@@ -5,7 +5,6 @@ import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { Dimensions, View, ScrollView } from 'react-native';
-import Image from '@/components/media/image';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import EventMediaContainer from '@/components/media/event';

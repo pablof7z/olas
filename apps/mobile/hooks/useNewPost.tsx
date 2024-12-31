@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKPrivateKeySigner, NDKRelaySet, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from './blossom';
 import { useAtom, useSetAtom } from 'jotai';
 import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from '@/components/NewPost/store';
@@ -22,8 +22,7 @@ export function useNewPost() {
 
     const launchImagePicker = useCallback(() => {
         // reset metadata
-        console.log('reset metadata', { postType, removeLocation });
-        setMetadata({ ...metadata, type: postType, removeLocation });
+        setMetadata({ ...metadata, caption: '', type: postType, removeLocation });
 
         ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
