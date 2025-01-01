@@ -8,6 +8,7 @@ import { Dimensions, View, ScrollView } from 'react-native';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import EventMediaContainer from '@/components/media/event';
+import { Reactions } from '@/components/events/Post/Reactions';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -67,6 +68,8 @@ export default function ViewScreen() {
                 <View className="p-4">
                     <EventContent event={activeEvent} content={content} className="text-sm text-white" />
                 </View>
+
+                <Reactions event={activeEvent} relatedEvents={[]} foregroundColor='white' mutedColor='white' />
             </View>
         </ScrollView>
     );

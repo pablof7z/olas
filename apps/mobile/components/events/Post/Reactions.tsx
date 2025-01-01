@@ -14,11 +14,23 @@ import Zaps from './Reactions/Zaps';
 const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
 const zapKinds = [NDKKind.Zap, NDKKind.Nutzap] as const;
 
-export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEvents: NDKEvent[] }) {
+export function Reactions({
+    event,
+    relatedEvents,
+    foregroundColor,
+    mutedColor,
+}: {
+    event: NDKEvent;
+    relatedEvents: NDKEvent[];
+    foregroundColor?: string;
+    mutedColor?: string;
+}) {
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
+    mutedColor ??= colors.muted;
+    foregroundColor ??= colors.foreground;
 
     const react = async () => {
         const r = await event.react('+', false);
@@ -34,9 +46,6 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEv
 
     const repost = async () => {
         const repostEvent = await event.repost(false);
-        if (repostEvent.kind === NDKKind.Repost) {
-            repostEvent.tags.push(['k', '20']);
-        }
         await repostEvent.sign();
         console.log('reposting', repostEvent.rawEvent());
         repostEvent.publish();
@@ -74,11 +83,11 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEv
                             <Heart
                                 size={24}
                                 fill={reactedByUser ? 'red' : 'transparent'}
-                                color={reactedByUser ? 'red' : colors.muted}
+                                color={reactedByUser ? 'red' : mutedColor}
                             />
                         </TouchableOpacity>
                         {reactions.length > 0 && (
-                            <Text className="text-sm font-medium" style={{ color: colors.muted }}>
+                            <Text className="text-sm font-medium" style={{ color: mutedColor }}>
                                 {reactions.length}
                             </Text>
                         )}
@@ -86,10 +95,10 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEv
 
                     <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity style={styles.reactionButton} onPress={comment}>
-                            <MessageCircle size={24} color={commentedByUser ? colors.foreground : colors.muted} />
+                            <MessageCircle size={24} color={commentedByUser ? foregroundColor : mutedColor} />
                         </TouchableOpacity>
                         {comments.length > 0 && (
-                            <Text className="text-sm font-medium" style={{ color: colors.muted }}>
+                            <Text className="text-sm font-medium" style={{ color: mutedColor }}>
                                 {comments.length}
                             </Text>
                         )}
@@ -97,23 +106,23 @@ export function Reactions({ event, relatedEvents }: { event: NDKEvent; relatedEv
 
                     <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity style={styles.reactionButton} onPress={repost}>
-                            <Repeat size={24} color={repostedByUser ? colors.foreground : colors.muted} />
+                            <Repeat size={24} color={repostedByUser ? foregroundColor : mutedColor} />
                         </TouchableOpacity>
                         {reposts.length > 0 && (
-                            <Text className="text-sm font-medium" style={{ color: colors.muted }}>
+                            <Text className="text-sm font-medium" style={{ color: mutedColor }}>
                                 {reposts.length}
                             </Text>
                         )}
                     </View>
 
-                    <Zaps event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} zaps={zaps} />
+                    <Zaps event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} zaps={zaps} foregroundColor={foregroundColor} mutedColor={mutedColor} />
                 </View>
 
                 <TouchableOpacity style={styles.reactionButton} onPress={bookmark}>
                     <BookmarkIcon
                         size={24}
                         fill={isBookmarkedByUser ? 'red' : 'transparent'}
-                        color={isBookmarkedByUser ? 'red' : colors.muted}
+                        color={isBookmarkedByUser ? 'red' : mutedColor}
                     />
                 </TouchableOpacity>
             </View>

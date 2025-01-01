@@ -47,18 +47,8 @@ export default function HomeScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: false,
-                    // header: () => (
-                    //     <View style={{ flexDirection: 'column' }}>
-                    //         <View style={{ height: inset.top, backgroundColor: 'red' }} />
-                    //         <View className='flex-1 flex-row justify-between items-center px-2'>
-                    //             <HomeTitle feedType={feedType} setFeedType={setFeedType} />
-                    //             <NotificationsButton />
-                    //         </View>
-                    //     </View>
-                    // ),
                     headerLeft: () => <HomeTitle />,
                     title: '',
-                    // headerRight: () => <Pressable onPress={() => setTitle(0)}><Text>{title}</Text></Pressable>,
                     headerRight: () => <View className="flex-row items-center gap-2">
                         <Pressable onPress={() => router.push('/bookmarks')}>
                             <Bookmark size={24} />
@@ -293,10 +283,12 @@ function DataList({ feedType }: { feedType: string }) {
         };
     }, [selectedEvents.length]);
 
+    const setIncludeTweets = useSetAtom(includeTweetsAtom);
     const loadUserData = () => {
         // Pick a random tag when refreshing
         const randomTag = randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
         setTagFilter(randomTag);
+        setIncludeTweets(true);
     };
 
     return (

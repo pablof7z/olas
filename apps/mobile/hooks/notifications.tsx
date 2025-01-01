@@ -1,8 +1,9 @@
 import { useAppSettingsStore } from "@/stores/app";
-import { NDKSubscriptionCacheUsage, useNDK, useNDKCurrentUser, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKRelaySet, NDKSubscriptionCacheUsage, NostrEvent, useNDK, useNDKCurrentUser, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
 import { NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { useMemo } from "react";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
+import * as Notifications from 'expo-notifications';
+import { registerForPushNotificationsAsync } from "@/lib/notifications";
 const opts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true };
 
 export function useNotifications(onlyNew = false) {
@@ -29,4 +30,43 @@ export function useNotifications(onlyNew = false) {
     }, [events, onlyNew, seenNotificationsAt]);
 
     return filteredNotifications;
+}
+
+
+export function useNotificationPermission() {
+    const [ permissionStatus, setPermissionStatus ] = useState<Notifications.PermissionStatus | null>(null);
+
+    useEffect(() => {
+        const checkPermissions = async () => {
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            setPermissionStatus(existingStatus);
+        }
+        checkPermissions();
+    }, []);
+
+    return permissionStatus;
+}
+
+export function useEnableNotifications() {
+    const { ndk } = useNDK();
+    
+    return useCallback(async () => {
+        const token = await registerForPushNotificationsAsync();
+        if (!token) return false;
+        console.log('Push Notification Token:', token);
+
+        const olasRelay = NDKRelaySet.fromRelayUrls(['wss://relay.olas.app'], ndk);
+        const olas = ndk.getUser({ npub: 'npub10lasj0tuxuweddwhmucwnm6l458flnu6mqwk38meaxs5matjg4ssac0ywa' })
+        const event = new NDKEvent(ndk, {
+            kind: 10901,
+            content: token,
+            tags: [
+                ['p', olas.pubkey],
+            ]
+        } as NostrEvent)
+        await event.encrypt(olas)
+
+        event.publish(olasRelay);
+        console.log('Registered push notification token:', JSON.stringify(event.rawEvent(), null, 4));
+    }, [ndk]);
 }

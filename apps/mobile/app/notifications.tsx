@@ -1,7 +1,8 @@
 import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage, useNDK, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button } from '@/components/nativewindui/Button';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
 import { FlashList } from '@shopify/flash-list';
@@ -9,7 +10,7 @@ import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import { atom, useAtom, useStore } from 'jotai';
 import EventContent from '@/components/ui/event/content';
-import { useNotifications } from '@/hooks/notifications';
+import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventStore } from './stores';
 
@@ -85,6 +86,7 @@ export default function Notifications() {
     const currentUser = useNDKCurrentUser();
     const [settingsTab, setSettingsTab] = useAtom(settingsTabAtom);
     const notifications = useNotifications();
+    const permissionStatus = useNotificationPermission();
     const selectedIndex = useMemo(() => {
         switch (settingsTab) {
             case 'all': return 0;
@@ -122,6 +124,7 @@ export default function Notifications() {
         <>
             <Stack.Screen options={{ headerShown: true, title: 'Notifications'}} />
             <View style={styles.container} className="bg-card">
+                <NotificationPrompt />
                 <SegmentedControl
                     values={['All', 'Replies', 'Reactions']}
                     selectedIndex={selectedIndex}
@@ -137,6 +140,27 @@ export default function Notifications() {
             </View>
         </>
     );
+}
+
+function NotificationPrompt() {
+    const permissionStatus = useNotificationPermission();
+    const enableNotifications = useEnableNotifications();
+    const [acted, setActed] = useState(false);
+
+    if (permissionStatus === 'granted' || acted) return null;
+
+    async function enable() {
+        if (await enableNotifications()) {
+            setActed(true);
+        }
+    }
+
+    return (<TouchableOpacity className='bg-muted-200 p-4' onPress={enable}>
+        <Text className='text-muted-foreground'>Want to know when people follow you in Olas or comments on your posts?</Text>
+        <Button variant="plain">
+            <Text className="text-primary">Enable</Text>
+        </Button>
+    </TouchableOpacity>)
 }
 
 const styles = StyleSheet.create({

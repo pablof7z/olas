@@ -1,5 +1,5 @@
 import { Icon, MaterialIconName } from '@roninoss/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
@@ -14,6 +14,7 @@ import { useMuteList, useNDKSession, useUserProfile, useWOT } from '@nostr-dev-k
 import { formatMoney } from '@/utils/bitcoin';
 import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
+import { useAppSettingsStore } from '@/stores/app';
 
 export default function SettingsIosStyleScreen() {
     const { logout } = useNDK();
@@ -23,10 +24,18 @@ export default function SettingsIosStyleScreen() {
     const defaultBlossomServer = useActiveBlossomServer();
     const muteList = useMuteList();
     const wot = useWOT();
-    console.log('balances', balances);
+    const resetAppSettings = useAppSettingsStore(s => s.reset);
 
+    console.log('SettingsIosStyleScreen balances', balances);
+
+    const appLogout = useCallback(() => {
+        router.back();
+        resetAppSettings();
+        logout();
+    }, [logout, resetAppSettings]);
+    
     useEffect(() => {
-        console.log('use effect balances', balances);
+        console.log('SettingsIosStyleScreen use effect balances', balances);
     }, [balances]);
 
     const appVersion = useMemo(() => {
@@ -120,10 +129,7 @@ export default function SettingsIosStyleScreen() {
                 id: '4',
                 title: 'Logout',
                 leftView: <IconView name="send-outline" className="bg-destructive" />,
-                onPress: () => {
-                    router.back();
-                    logout();
-                },
+                onPress: appLogout,
             });
         }
 

@@ -81,22 +81,27 @@ export default function CommentScreen() {
     const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
     const flashListRef = useRef<FlashList<NDKEvent>>(null);
 
-    const filters = useMemo(
-        () => [
-            { kinds: [NDKKind.GenericReply], '#E': [activeEvent.id] },
-            { kinds: [NDKKind.Text, NDKKind.GenericReply], '#e': [activeEvent.id] },
-        ],
-        [activeEvent]
-    );
+    const filters = useMemo(() => {
+        let filter = {};
+        const eventFilter = activeEvent.filter();
+        Object.entries(eventFilter).forEach(([key, value]) => {
+            filter[key.toUpperCase()] = value;
+        });
+        return [
+            { kinds: [NDKKind.GenericReply], ...filter },
+            { kinds: [NDKKind.Text, NDKKind.GenericReply], ...eventFilter },
+        ];
+    }, [activeEvent]);
     const opts = useMemo(() => ({ groupable: false, closeOnEose: false }), []);
     const { events } = useSubscribe({ filters, opts });
 
     const [comment, setComment] = useState('');
 
     const filteredComments = useMemo(() => {
+        const [tagKey, tagValue] = activeEvent.tagReference();
         return [
             activeEvent,
-            ...events.filter(event => event.tagValue("e") === activeEvent.id)
+            ...events.filter(event => event.tagValue(tagKey) === tagValue)
         ]
     }, [events]);
     const insets = useSafeAreaInsets();
@@ -135,7 +140,7 @@ export default function CommentScreen() {
                         }}
                         estimatedItemSize={50}
                         keyExtractor={(item) => item.id}
-                        style={{ flex: 1, width: '100%', borderColor: 'red', borderWidth: 1 }}
+                        style={{ flex: 1, width: '100%'  }}
                     />
                     </View>
                     <View

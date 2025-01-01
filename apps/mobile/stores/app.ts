@@ -7,6 +7,8 @@ export type AppSettingsStoreState = {
     postType?: PostType;
 
     seenNotificationsAt: number;
+
+    promptedForNotifications: boolean;
 };
 
 export type AppSettingsStoreActions = {
@@ -14,13 +16,18 @@ export type AppSettingsStoreActions = {
     setRemoveLocation: (removeLocation: boolean) => void;
     setPostType: (postType: PostType) => void;
     notificationsSeen: () => void;
+
+    notificationsPrompted: () => void;
+
+    reset: () => void;
 };
 
 export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set) => ({
     seenNotificationsAt: 0,
-    
+    promptedForNotifications: false,
+
     init: async () => {
-        const state: AppSettingsStoreState = { seenNotificationsAt: 0 };
+        const state: AppSettingsStoreState = { seenNotificationsAt: 0, promptedForNotifications: false };
 
         const removeLocation = await SecureStore.getItemAsync('removeLocation');
         console.log('removeLocation', JSON.stringify(removeLocation));
@@ -31,6 +38,9 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const seenNotificationsAt = await SecureStore.getItemAsync('seenNotificationsAt');
         if (seenNotificationsAt) state.seenNotificationsAt = parseInt(seenNotificationsAt);
+
+        const promptedForNotifications = await SecureStore.getItemAsync('promptedForNotifications');
+        if (promptedForNotifications) state.promptedForNotifications = promptedForNotifications === 'true';
 
         set(state);
     },
@@ -48,5 +58,18 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     notificationsSeen: (time = Date.now() / 1000) => {
         SecureStore.setItemAsync('seenNotificationsAt', time.toString());
         set({ seenNotificationsAt: time });
+    },
+
+    notificationsPrompted: () => {
+        SecureStore.setItemAsync('promptedForNotifications', 'true');
+        set({ promptedForNotifications: true });
+    },
+
+    reset: () => {
+        SecureStore.deleteItemAsync('removeLocation');
+        SecureStore.deleteItemAsync('postType');
+        SecureStore.deleteItemAsync('seenNotificationsAt');
+        SecureStore.deleteItemAsync('promptedForNotifications');
+        set({ seenNotificationsAt: 0, promptedForNotifications: false });
     }
 }));

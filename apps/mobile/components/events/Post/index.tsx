@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const MediaSection = function MediaSection({ event, setActiveEvent }: { event: NDKEvent; setActiveEvent: (event: NDKEvent) => void }) {
+export const MediaSection = function MediaSection({ event, setActiveEvent }: { event: NDKEvent; setActiveEvent: (event: NDKEvent) => void }) {
     const maxHeight = Dimensions.get('window').height * 0.7;
 
     const onPress = useCallback(() => {

@@ -38,7 +38,7 @@ export default function SearchScreen() {
             { kinds: [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo], '#t': [input] },
             { kinds: [NDKKind.Text], '#t': [input] },
         ],
-        [input]
+        [input, hashtagFromQuery]
     );
 
     const { events } = useSubscribe({ filters, opts });
@@ -53,10 +53,9 @@ export default function SearchScreen() {
         <KeyboardAvoidingView style={{ paddingTop: inset.top }} className="flex-1 bg-card">
             <View className="border-b border-border">
                 <Input onSearch={onSearch} />
-                <Text>{events.length}</Text>
             </View>
 
-            <View style={{ flex: 1, borderColor: 'red', borderWidth: 1 }}>
+            <View style={{ flex: 1 }}>
                 <MasonryFlashList
                     data={events}
                     numColumns={3}

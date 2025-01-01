@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "scheme": "olas",
     "web": {
       "bundler": "metro",
@@ -74,7 +74,14 @@
           ]
         }
       ],
-      "react-native-compressor"
+      "react-native-compressor",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

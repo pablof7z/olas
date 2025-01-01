@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
 import { memo } from 'react';
+import { Reactions } from '@/components/events/Post/Reactions';
 
 const Reel = memo(
     ({ event, isVisible }: { event: NDKEvent; isVisible: boolean }) => {
@@ -65,7 +66,9 @@ const Reel = memo(
                         if (status.isLoaded) setIsLoading(false);
                     }}
                 />
-                <SafeAreaView className="absolute bottom-4 left-4 flex-col items-start gap-2">
+                <SafeAreaView className="absolute bottom-0 pb-10 left-4 flex-col items-start gap-2">
+                    <Reactions event={event} relatedEvents={[]} foregroundColor="white" mutedColor="white" />
+                    
                     <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
                         <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
                         <Text className="text-base font-semibold text-white">

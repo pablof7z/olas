@@ -6,7 +6,7 @@ import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
 import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 
-export default function Zaps({ event, zaps, style }) {
+export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }) {
     const currentUser = useNDKCurrentUser();
     const { activeWallet } = useNDKWallet();
     const { colors } = useColorScheme();
@@ -159,7 +159,7 @@ export default function Zaps({ event, zaps, style }) {
             <TouchableOpacity
                 onPress={() => sendZap(1)}
                 style={[style, { flexDirection: 'row', alignItems: 'center', position: 'absolute' }]}>
-                <Zap size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? 'orange' : colors.muted} />
+                <Zap size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? 'orange' : mutedColor} />
                 {amount > 0 ? (
                     <Animated.Text
                         style={{

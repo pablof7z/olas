@@ -15,12 +15,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, NDKRelay, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import * as Notifications from 'expo-notifications';
+import { configurePushNotifications, registerForPushNotificationsAsync } from '~/lib/notifications';
+import { useNDK, NDKRelaySet, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
-import { NDKUser } from '../../../packages/ndk/ndk/dist';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
@@ -28,6 +29,7 @@ import { useAppSettingsStore } from '@/stores/app';
 import { AlbumsBottomSheet } from '@/components/NewPost/AlbumsBottomSheet';
 import { PostTypeBottomSheet } from '@/components/NewPost/PostTypeBottomSheet';
 import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
+import { PromptForNotifications } from './notification-prompt';
 
 const mainKinds = [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo];
 
@@ -148,7 +150,28 @@ export default function RootLayout() {
     useEffect(() => {
         console.log('initAppSettings');
         initAppSettings();
+        
+        // Configure push notifications
+        configurePushNotifications();
+        
+        // Notification received while app is running
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+            console.log('Notification received:', notification);
+        });
+
+        // Notification tapped by user
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification response:', response);
+            // Here you can handle notification taps
+        });
+
+        return () => {
+            Notifications.removeNotificationSubscription(notificationListener);
+            Notifications.removeNotificationSubscription(responseListener);
+        };
     }, []);
+
+    const promptedForNotifications = useAppSettingsStore(state => state.promptedForNotifications);
 
     return (
         <>
@@ -162,6 +185,8 @@ export default function RootLayout() {
                                 <PortalHost />
                                 <Stack screenOptions={{}}>
                                     <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
+
+                                    <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
 
                                     <Stack.Screen name="publish/index" options={{ headerShown: true, title: 'Publish' }} />
                                     <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
@@ -204,6 +229,8 @@ export default function RootLayout() {
                                 <PostTypeBottomSheet />
                                 <LocationBottomSheet />
                                 <AlbumsBottomSheet />
+                                
+                                {appReady &&!promptedForNotifications && <PromptForNotifications />}
                             </NavThemeProvider>
                             <Toasts />
                         </KeyboardProvider>
