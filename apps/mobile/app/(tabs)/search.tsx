@@ -102,7 +102,10 @@ function Input({ onSearch }: { onSearch: (input: string) => void }) {
                 }}
                 onSubmitEditing={handleSearch}
                 returnKeyType="search"
-                style={{ flex: 1 }}
+                style={{
+                  flex: 1,
+                  color: colors.foreground,
+                }}
                 className="text-xl font-bold"
             />
 
