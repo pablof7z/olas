@@ -5,8 +5,9 @@
 # Installation
 
 ```bash
-git clone https://github.com/pablof7z/snapstr
-cd snapstr
+git clone https://github.com/pablof7z/olas
+cd olas
+git submodule update --init --recursive
 pnpm install
 
 cd apps/mobile
