@@ -33,6 +33,15 @@ function getProfileCount(db: SQLiteDatabase): Row[] {
     return mappedData;
 }
 
+function getUnpublishedEvents(db: SQLiteDatabase): Row[] {
+    const data = db.getAllSync('SELECT * FROM unpublished_events') as { id: string; kind: number; content: string }[];
+    return [{
+        id: 'unpublished-events',
+        title: 'Unpublished events',
+        value: data.length.toString()
+    }]
+}
+
 function getEventCount(db: SQLiteDatabase): Row[] {
     const data = db.getAllSync('SELECT * FROM events') as { id: string; kind: number; content: string }[];
     const mappedData: Row[] = [];
@@ -73,6 +82,7 @@ export default function DevScreen() {
     data.push({ id: 'filter-matching-time', title: 'Filter matching time', value: ndk.subManager.filterMatchingTime.toString() });
     data.push({ id: 'filter-matching-count', title: 'Filter matching count', value: ndk.subManager.filterMatchingCount.toString() });
     data.push(...getSubscriptions());
+    data.push(...getUnpublishedEvents(db));
     data.push(...getProfileCount(db));
     data.push(...getEventCount(db));
 

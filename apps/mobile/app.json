@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "scheme": "olas",
     "web": {
       "bundler": "metro",
@@ -42,9 +42,13 @@
         }
       ],
       [
-        "expo-av",
+        "react-native-vision-camera",
         {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
+  
+          // optionally, if you want to record audio:
+          "enableMicrophonePermission": true,
+          "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone."
         }
       ],
       [
@@ -81,7 +85,9 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ]
+      ],
+      "expo-sqlite",
+      "react-native-vision-camera"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -107,12 +113,26 @@
       }
     },
     "android": {
+      "intentFilters": [
+        {
+          "action": "android.intent.action.VIEW",
+          "category": [
+            "android.intent.category.DEFAULT",
+            "android.intent.category.BROWSABLE"
+          ],
+          "data": {
+            "scheme": "nostrsigner"
+          }
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.pablof7z.snapstr",
       "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.QUERY_ALL_PACKAGES",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"

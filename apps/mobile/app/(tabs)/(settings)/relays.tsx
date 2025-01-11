@@ -65,6 +65,23 @@ export default function RelaysScreen() {
 
     const data = useMemo(() => {
         if (!ndk) return [];
+        const data: ListDataItem[] = [];
+
+        for (const pool of ndk.pools) {
+            data.push(pool.name);
+
+            for (const relay of pool.relays.values()) {
+                data.push({
+                    id: `${pool.name}-${relay.url}`,
+                    title: relay.url,
+                    rightView: (
+                        <View className="flex-1 items-center px-4 py-2">
+                            <RelayConnectivityIndicator relay={relay} />
+                        </View>
+                    ),
+                });
+            }
+        }
 
         const allRelays = new Map<string, NDKRelay>();
         ndk.pool.relays.forEach((r) => allRelays.set(r.url, r));
@@ -125,11 +142,10 @@ export default function RelaysScreen() {
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={[...data, { id: 'add', fn: addFn, set: setUrl }, 'gap-notices', 'Notices', ...noticesAsData]}
+                data={[...data, { id: 'add', fn: addFn, set: setUrl }, 'Notices', ...noticesAsData]}
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                sectionHeaderAsGap
             />
         </>
     );

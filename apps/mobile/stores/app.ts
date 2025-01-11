@@ -9,6 +9,11 @@ export type AppSettingsStoreState = {
     seenNotificationsAt: number;
 
     promptedForNotifications: boolean;
+
+    /**
+     * Whether to show advanced settings.
+     */
+    advancedMode: boolean;
 };
 
 export type AppSettingsStoreActions = {
@@ -18,19 +23,24 @@ export type AppSettingsStoreActions = {
     notificationsSeen: () => void;
 
     notificationsPrompted: () => void;
+    toggleAdvancedMode: () => void;
 
     reset: () => void;
 };
 
-export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set) => ({
+export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set, get) => ({
     seenNotificationsAt: 0,
     promptedForNotifications: false,
+    advancedMode: false,
 
     init: async () => {
-        const state: AppSettingsStoreState = { seenNotificationsAt: 0, promptedForNotifications: false };
+        const state: AppSettingsStoreState = {
+            seenNotificationsAt: 0,
+            promptedForNotifications: false,
+            advancedMode: false
+        };
 
         const removeLocation = await SecureStore.getItemAsync('removeLocation');
-        console.log('removeLocation', JSON.stringify(removeLocation));
         if (removeLocation) state.removeLocation = removeLocation === 'true';
 
         const postType = await SecureStore.getItemAsync('postType');
@@ -41,6 +51,9 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const promptedForNotifications = await SecureStore.getItemAsync('promptedForNotifications');
         if (promptedForNotifications) state.promptedForNotifications = promptedForNotifications === 'true';
+
+        const advancedMode = await SecureStore.getItemAsync('advancedMode');
+        if (advancedMode) state.advancedMode = advancedMode === 'true';
 
         set(state);
     },
@@ -65,11 +78,19 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         set({ promptedForNotifications: true });
     },
 
+    toggleAdvancedMode: () => {
+        set(state => {
+            const value = !state.advancedMode;
+            SecureStore.setItemAsync('advancedMode', (!!value).toString());
+            return { advancedMode: value };
+        })
+    },
+
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
         SecureStore.deleteItemAsync('postType');
         SecureStore.deleteItemAsync('seenNotificationsAt');
-        SecureStore.deleteItemAsync('promptedForNotifications');
+        SecureStore.deleteItemAsync('advancedMode');
         set({ seenNotificationsAt: 0, promptedForNotifications: false });
     }
 }));

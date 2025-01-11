@@ -1,8 +1,7 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import * as Exify from '@lodev09/react-native-exify';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
@@ -10,12 +9,13 @@ import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router } from 'expo-router';
 import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
-import { Fullscreen, MapPin, Send, Timer, Type } from 'lucide-react-native';
+import { Fullscreen, MapPin, Timer, Type } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
-import { NDKRelaySet, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { generateEvent } from './event';
 import { postTypeSheetRefAtom } from './PostTypeBottomSheet';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
@@ -45,6 +45,9 @@ export function PostMetadataStep() {
             setStep(0);
             publishing.current = false;
             setWantsToPublish(false);
+        }).catch((e) => {
+            console.error('error publishing event', e);
+            toast.error('Error publishing event: ' + e.message);
         });
     }
 
@@ -73,7 +76,7 @@ export function PostMetadataStep() {
     return (
         <View className="flex-1 grow relative" style={{ marginBottom: inset.bottom }}>
             <View
-                className={cn('w-full bg-muted-200', !fullPreview ? 'h-2/5' : 'grow')}
+                className={cn('w-full bg-foreground/5', !fullPreview ? 'h-2/5' : 'grow')}
             >
                 <SelectedMediaPreview />
             </View>
@@ -135,7 +138,7 @@ function PostOptions() {
     }, [selectedMedia]);
 
     useEffect(() => {
-        if (metadata.type === undefined) openType();
+        if (metadata.type === undefined) metadata.type = 'high-quality';
         else if (metadata.location && metadata.removeLocation === undefined) openLocation();
     }, [metadata.type, metadata.location]);
 

@@ -8,10 +8,11 @@ import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage, useNDKSession 
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
-import { activeEventStore } from './stores';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
 import { EventMediaGridContainer } from '@/components/media/event';
+import { useSetAtom } from 'jotai';
+import { activeEventAtom } from '@/stores/event';
 
 export default function Profile() {
     const follows = useFollows();
@@ -31,14 +32,17 @@ export default function Profile() {
         }
 
         return filters;
-    }, [filtersExpanded]);
+    }, [filtersExpanded, pubkey]);
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
     const { events } = useSubscribe({ filters, opts });
 
-    const followCount = useMemo(
-        () => new Set(events.find((e) => e.kind === NDKKind.Contacts)?.tags.find((t) => t[0] === 'p')?.[1]).size,
-        [events]
-    );
+    const followCount = useMemo(() => {
+        const contacts = events.find((e) => e.kind === NDKKind.Contacts);
+        if (!contacts) return 0;
+        const followTags = contacts.tags.filter((t) => t[0] === 'p');
+        if (!followTags) return 0;
+        return new Set(followTags.map((t) => t[1])).size;
+    }, [events]);
 
     const sortedContent = useMemo(() => {
         return events.filter((e) => [NDKKind.Text, NDKKind.Image].includes(e.kind)).sort((a, b) => b.created_at - a.created_at);
@@ -70,7 +74,7 @@ export default function Profile() {
         setFiltersExpanded(true);
     }
 
-    const { setActiveEvent } = useStore(activeEventStore);
+    const setActiveEvent = useSetAtom(activeEventAtom);
 
     const insets = useSafeAreaInsets();
     return (
@@ -93,14 +97,14 @@ export default function Profile() {
                             Posts
                         </Text>
                     </View>
-                    <View style={styles.statItem}>
+                    {/* <View style={styles.statItem}>
                         <Text style={styles.statNumber} className="text-foreground">
-                            1.5K
+                            N/A
                         </Text>
                         <Text style={styles.statLabel} className="text-foreground">
                             Followers
                         </Text>
-                    </View>
+                    </View> */}
                     {followCount ? (
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber} className="text-foreground">
@@ -136,7 +140,11 @@ export default function Profile() {
                     </Text>
                 </View>
 
-                {!follows?.includes(pubkey) ? <FollowButton pubkey={pubkey} size="sm" className="mx-4" /> : null}
+                {!follows?.includes(pubkey) && (
+                    <View style={{ padding: 20 }}>
+                        <FollowButton variant="primary" pubkey={pubkey} size="sm" className="mx-4" />
+                    </View>
+                )}
                 {events.length === 0 ? (
                     <View style={styles.noEventsContainer}>
                         <Text style={styles.noEventsText}>No posts yet</Text>
@@ -190,7 +198,8 @@ const styles = StyleSheet.create({
     statsContainer: {
         flex: 1,
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        gap: 40,
+        paddingHorizontal: 40,
     },
     statItem: {
         alignItems: 'center',

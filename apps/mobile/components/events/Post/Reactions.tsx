@@ -1,15 +1,16 @@
-import { activeEventStore } from '@/app/stores';
-import { NDKEvent, NDKKind, NDKList, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, NostrEvent, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { Heart, MessageCircle, BookmarkIcon, Repeat, Zap } from 'lucide-react-native';
-import { useMemo, useRef } from 'react';
+import React from '../React';
+import { useEffect, useMemo, useRef } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import Zaps from './Reactions/Zaps';
+import { useSetAtom } from 'jotai';
+import { activeEventAtom } from '@/stores/event';
 
 const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
 const zapKinds = [NDKKind.Zap, NDKKind.Nutzap] as const;
@@ -28,16 +29,9 @@ export function Reactions({
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
+    const setActiveEvent = useSetAtom(activeEventAtom);
     mutedColor ??= colors.muted;
     foregroundColor ??= colors.foreground;
-
-    const react = async () => {
-        const r = await event.react('+', false);
-        r.tags.push(['k', event.kind.toString()]);
-        await r.sign();
-        await r.publish();
-    };
 
     const comment = () => {
         setActiveEvent(event);
@@ -47,7 +41,6 @@ export function Reactions({
     const repost = async () => {
         const repostEvent = await event.repost(false);
         await repostEvent.sign();
-        console.log('reposting', repostEvent.rawEvent());
         repostEvent.publish();
     };
 
@@ -57,13 +50,19 @@ export function Reactions({
         } else {
             await imageCurationSet.addItem(event);
         }
-        await imageCurationSet.publishReplaceable();
+        imageCurationSet.publishReplaceable();
+
+        const bookmarkEvent = new NDKEvent(event.ndk, {
+            kind: 3006,
+            tags: [['k', event.kind.toString()]],
+        } as NostrEvent);
+        bookmarkEvent.tag(event);
+        bookmarkEvent.publish();
     };
 
-    const { reactions, reactedByUser, comments, commentedByUser, reposts, repostedByUser, zaps, isBookmarkedByUser } = useMemo(
+    const { reactions, comments, commentedByUser, reposts, repostedByUser, zaps, isBookmarkedByUser } = useMemo(
         () => ({
             reactions: relatedEvents.filter((r) => r.kind === NDKKind.Reaction),
-            reactedByUser: relatedEvents.find((r) => r.kind === NDKKind.Reaction && r.pubkey === currentUser?.pubkey),
             comments: relatedEvents.filter((r) => [NDKKind.Text, 1111].includes(r.kind)),
             commentedByUser: relatedEvents.find((r) => [NDKKind.Text, 1111].includes(r.kind) && r.pubkey === currentUser?.pubkey),
             reposts: relatedEvents.filter((r) => repostKinds.includes(r.kind)),
@@ -71,27 +70,19 @@ export function Reactions({
             zaps: relatedEvents.filter((r) => zapKinds.includes(r.kind)),
             isBookmarkedByUser: imageCurationSet.has(event.id),
         }),
-        [relatedEvents, currentUser?.pubkey, imageCurationSet, event.id]
+        [relatedEvents, currentUser?.pubkey, imageCurationSet?.id, event.id]
     );
 
     return (
         <View className="flex-1 flex-col gap-1">
             <View className="w-full flex-1 flex-row justify-between gap-4">
                 <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity onPress={react}>
-                            <Heart
-                                size={24}
-                                fill={reactedByUser ? 'red' : 'transparent'}
-                                color={reactedByUser ? 'red' : mutedColor}
-                            />
-                        </TouchableOpacity>
-                        {reactions.length > 0 && (
-                            <Text className="text-sm font-medium" style={{ color: mutedColor }}>
-                                {reactions.length}
-                            </Text>
-                        )}
-                    </View>
+                    <React
+                        event={event}
+                        mutedColor={mutedColor}
+                        allReactions={reactions}
+                        currentUser={currentUser}
+                    />
 
                     <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity style={styles.reactionButton} onPress={comment}>

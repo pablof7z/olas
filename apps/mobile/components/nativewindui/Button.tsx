@@ -1,7 +1,8 @@
 import * as Slot from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { AlertTriangle, Check } from 'lucide-react-native';
 import * as React from 'react';
-import { Platform, Pressable, PressableProps, View, ViewStyle } from 'react-native';
+import { Platform, Pressable, PressableProps, View, ViewStyle, ActivityIndicator } from 'react-native';
 
 import { TextClassContext } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
@@ -23,6 +24,7 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2', {
             sm: 'py-1 px-2.5 rounded-full',
             md: 'ios:rounded-lg py-2 ios:py-1.5 ios:px-3.5 px-5 rounded-full',
             lg: 'py-2.5 px-5 ios:py-2 rounded-xl gap-2',
+            huge: 'py-2.5 px-5 ios:py-2 rounded-lg gap-2',
             icon: 'ios:rounded-lg h-10 w-10 rounded-full',
             accent: 'ios:rounded-lg h-10 w-10 rounded-full',
         },
@@ -148,13 +150,30 @@ type AndroidOnlyButtonProps = {
     androidRootClassName?: string;
 };
 
-type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps;
+type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps & {
+    state?: ButtonState;
+};
+
+export type ButtonState = 'idle' | 'loading' | 'success' | 'error';
 
 const Root = Platform.OS === 'android' ? View : Slot.Pressable;
 
 const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-    ({ className, variant = 'primary', size, style = BORDER_CURVE, androidRootClassName, ...props }, ref) => {
+    ({ className, variant = 'primary', size, style = BORDER_CURVE, androidRootClassName, state = 'idle', children, ...props }, ref) => {
         const { colorScheme } = useColorScheme();
+
+        const renderContent = () => {
+            switch (state) {
+                case 'loading':
+                    return <ActivityIndicator />;
+                case 'success':
+                    return <Check />;
+                case 'error':
+                    return <AlertTriangle />;
+                default:
+                    return children;
+            }
+        };
 
         return (
             <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
@@ -172,7 +191,9 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
                         style={style}
                         android_ripple={ANDROID_RIPPLE[colorScheme][variant]}
                         {...props}
-                    />
+                    >
+                        {renderContent()}
+                    </Pressable>
                 </Root>
             </TextClassContext.Provider>
         );

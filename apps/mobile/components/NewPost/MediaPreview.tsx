@@ -3,8 +3,6 @@ import { ComponentProps, useState } from 'react';
 import { Dimensions, ScrollView, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Image } from 'react-native';
 import { Location } from './store';
-import { Text } from '../nativewindui/Text';
-import { AlignCenter } from 'lucide-react-native';
 import { ImageStyle } from 'expo-image';
 
 export type MediaLibraryItem = {

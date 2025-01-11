@@ -5,26 +5,24 @@ import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useEffect } from 'react';
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { useAtomValue } from 'jotai';
-import { useNewPost } from '@/hooks/useNewPost';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
+import { usePostTypeSelectorBottomSheet } from '@/components/NewPost/TypeSelectorBottomSheet/hook';
+import { useNewPost } from '@/hooks/useNewPost';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const newPost = useNewPost();
-
-    useEffect(() => {
-        console.log('currentUser', currentUser);
-    }, [currentUser]);
 
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
+
+    const openNewPostTypeSelector = usePostTypeSelectorBottomSheet();
+    const newPost = useNewPost();
 
     return (
         <Tabs
@@ -33,12 +31,6 @@ export default function TabsLayout() {
                 tabBarShowLabel: false,
                 tabBarActiveTintColor: colors.foreground,
                 tabBarInactiveTintColor: colors.muted,
-                tabBarStyle: {
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                },
             }}>
             <Tabs.Screen
                 name="(home)"
@@ -47,14 +39,14 @@ export default function TabsLayout() {
                     headerTransparent: false,
                     title: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />,
+                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={2.5} />,
                 }}
                 listeners={{
-                    tabPress: (e) => {
-                        if (scrollRef.current) {
-                            scrollRef.current.scrollToOffset({ offset: 0, animated: true });
-                        }
-                    },
+                    // tabPress: (e) => {
+                    //     if (scrollRef.current) {
+                    //         scrollRef.current.scrollToOffset({ offset: 0, animated: true });
+                    //     }
+                    // },
                 }}
             />
 
@@ -63,7 +55,7 @@ export default function TabsLayout() {
                 options={{
                     headerShown: false,
                     title: 'Search',
-                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={focused ? 2.5 : 2} />,
+                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={2.5} />,
                 }}
             />
 
@@ -75,7 +67,8 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            newPost();
+                            newPost({ types: ['images', 'videos'] });
+                            // openNewPostTypeSelector();
                         }
                     },
                 }}

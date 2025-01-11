@@ -43,7 +43,11 @@ export class Uploader {
 
     async start() {
         try {
-            let _sign = signWith(this.signer ?? this.ndk.signer);
+            this.signer ??= this.ndk.signer;
+            if (!this.signer) {
+                throw new Error('No signer found');
+            }
+            let _sign = signWith(this.signer);
             const uploadAuth = await BlossomClient.getUploadAuth(this.fileUri, this.mime, _sign as any, 'Upload file');
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
 

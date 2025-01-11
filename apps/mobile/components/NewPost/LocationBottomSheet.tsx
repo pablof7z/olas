@@ -47,17 +47,13 @@ export function LocationBottomSheet() {
         <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
             <BottomSheetView
                 style={{ flexDirection: 'column', width: '100%', paddingHorizontal: 20, paddingBottom: inset.bottom, minHeight: 370 }}>
-                <Text variant="title1" className="text-grow">
+                <Text variant="title1" className="text-grow text-foreground">
                     Location Sharing
                 </Text>
 
-                <View className="w-full flex-1 flex-col items-stretch gap-4">
-                    <Text variant="callout" className="">
-                        Decide whether you’d like to share this post with location details.
-                    </Text>
-
+                <View className="w-full flex-1 flex-col items-stretch gap-4 mt-4">
                     <View className="w-full flex-1 flex-col items-stretch gap-4 pb-8">
-                        <Button variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(false)}>
+                        <Button size="huge" variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(false)}>
                             <View className="flex-row items-center gap-2">
                                 <MapPin size={48} color={colors.muted} />
                                 <View className="w-full flex-col gap-0">
@@ -69,7 +65,7 @@ export function LocationBottomSheet() {
                             </View>
                         </Button>
 
-                        <Button variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(true)}>
+                        <Button size="huge" variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(true)}>
                             <View className="flex-row items-center gap-2">
                                 <MapPinMinus size={48} color={colors.muted} />
                                 <View className="flex-col gap-0">

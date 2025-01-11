@@ -2,10 +2,6 @@ import {
     NDKEvent,
     NDKKind,
     useUserProfile,
-    useSubscribe,
-    NDKSubscriptionOptions,
-    NDKVideo,
-    NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
@@ -14,20 +10,18 @@ import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import { activeEventStore } from '@/app/stores';
-import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, useEffect } from 'react';
 import { InlinedComments, Reactions } from './Reactions';
 import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
 import { MoreHorizontal, Repeat } from 'lucide-react-native';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useFollows } from '@nostr-dev-kit/ndk-mobile';
-import EventMediaContainer from '@/components/media/event';
+import EventMediaContainer, { getImetas } from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useObserver } from '@/hooks/observer';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
@@ -54,22 +48,20 @@ const styles = StyleSheet.create({
     },
 });
 
-export const MediaSection = function MediaSection({ event, setActiveEvent }: { event: NDKEvent; setActiveEvent: (event: NDKEvent) => void }) {
-    const maxHeight = Dimensions.get('window').height * 0.7;
+export const MediaSection = function MediaSection({ event, priority, onPress }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void }) {
+    // const insets = useSafeAreaInsets();
+    // const maxHeight = Math.floor(Dimensions.get('window').height * 0.7 - insets.top - insets.bottom);
+    const maxHeight = Math.floor(Dimensions.get('window').width);
 
-    const onPress = useCallback(() => {
-        setActiveEvent(event);
-        router.push('/view');
-    }, [event.id]);
-
-    return <EventMediaContainer event={event} maxHeight={maxHeight} onPress={onPress} />;
+    return <EventMediaContainer
+        event={event}
+        onPress={onPress}
+        maxHeight={maxHeight}
+        priority={priority}
+    />;
 };
 
-export default function Post({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
-    const { isDarkColorScheme } = useColorScheme();
-    const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
-    const { colors } = useColorScheme();
-
+export default function Post({ event, reposts, timestamp, onPress, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number; onPress?: () => void }) {
     let content = event.content.trim();
 
     if (event.kind === NDKKind.Text) {
@@ -77,11 +69,17 @@ export default function Post({ event, reposts, timestamp }: { event: NDKEvent; r
         content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/g, '');
     }
 
+    const priority = useMemo<('high' | 'normal' | 'low')>(() => {
+        if (index === 0) return 'high';
+        if (index <= 2) return 'normal';
+        return 'low';
+    }, [index])
+
     return (
-        <View className="overflow-hidden border-b bg-card py-2" style={{ borderColor: !isDarkColorScheme ? colors.grey5 : colors.grey2 }}>
+        <View className="overflow-hidden border-b border-border py-2">
             <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
-            <MediaSection event={event} setActiveEvent={setActiveEvent} />
+            <MediaSection event={event} onPress={onPress} priority={priority} />
 
             <PostBottom event={event} trimmedContent={content} />
         </View>
@@ -92,6 +90,7 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
     const { userProfile } = useUserProfile(event.pubkey);
     const { colors } = useColorScheme();
     let clientName = event.tagValue('client');
+    if (!clientName && event.alt?.match(/Olas/)) clientName = 'Olas';
 
     if (clientName?.startsWith('31990')) clientName = undefined;
 
@@ -156,66 +155,43 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
     );
 }
 
-const PostBottom = memo(
-    function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
-        const currentUser = useNDKCurrentUser();
-        const follows = useFollows();
-        const filters = useMemo(
-            () => [
-                {
-                    kinds: [
-                        NDKKind.Text,
-                        NDKKind.GenericReply,
-                        NDKKind.Reaction,
-                        NDKKind.GenericRepost,
-                        NDKKind.Repost,
-                        NDKKind.BookmarkList,
-                        NDKKind.Zap,
-                        NDKKind.Nutzap,
-                    ],
-                    ...event.filter(),
-                },
-            ],
-            [event.id]
-        );
-        const opts = useMemo<NDKSubscriptionOptions>(
-            () => ({
-                groupable: false,
-                skipVerification: true,
-                cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
-                closeOnEose: true,
-            }),
-            []
-        );
-        const { events: relatedEvents } = useSubscribe({ filters, opts });
+const onMentionPress = (pubkey: string) => {
+    router.push(`/profile?pubkey=${pubkey}`);
+};
 
-        const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
+const reactionKinds = [ NDKKind.Text, NDKKind.GenericReply, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap ];
 
-        const commentsByFollows = useMemo(() => {
-            if (!follows) return [];
-            return relatedEvents.filter(isComment).filter((c) => c.pubkey === currentUser?.pubkey || follows.includes(c.pubkey));
-        }, [relatedEvents, follows, currentUser?.pubkey]);
+function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
+    // const currentUser = useNDKCurrentUser();
+    // const follows = useFollows();
+    const filters = useMemo(() => ([
+        { kinds: reactionKinds, ...event.filter() },
+        { kinds: [NDKKind.GenericReply], ...event.nip22Filter() }
+    ]), [ event.id ]);
 
-        return (
-            <View className="flex-1 flex-col gap-1 p-2">
-                <Reactions event={event} relatedEvents={relatedEvents} />
+    const relatedEvents = useObserver(filters, event.id);
 
-                {trimmedContent.length > 0 && (
-                    <EventContent
-                        event={event}
-                        content={trimmedContent}
-                        className="text-sm text-foreground"
-                        onMentionPress={(pubkey) => {
-                            router.push(`/profile?pubkey=${pubkey}`);
-                        }}
-                    />
-                )}
+    // const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
 
-                <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} />
-            </View>
-        );
-    },
-    (prevProps, nextProps) => {
-        return prevProps.event.id === nextProps.event.id;
-    }
-);
+    // const commentsByFollows = useMemo(() => {
+    //     if (!follows) return [];
+    //     return relatedEvents.filter(isComment).filter((c) => c.pubkey === currentUser?.pubkey || follows.includes(c.pubkey));
+    // }, [relatedEvents, follows, currentUser?.pubkey]);
+
+    return (
+        <View className="flex-1 flex-col gap-1 p-2">
+            <Reactions event={event} relatedEvents={relatedEvents} />
+
+            {trimmedContent.length > 0 && (
+                <EventContent
+                    event={event}
+                    content={trimmedContent}
+                    className="text-sm text-foreground"
+                    onMentionPress={onMentionPress}
+                />
+            )}
+
+            {/* <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} /> */}
+        </View>
+    );
+}

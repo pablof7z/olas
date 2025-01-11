@@ -9,19 +9,16 @@ import {
 } from '@nostr-dev-kit/ndk-mobile';
 import { BottomSheetView, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import * as Clipboard from 'expo-clipboard';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useCallback, useEffect, useMemo } from 'react';
 import { Share } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Dimensions, View } from 'react-native';
-import { List, ListItem } from '~/components/nativewindui/List';
-import { cn } from '@/lib/cn';
-import * as User from '~/components/ui/user';
+import { View } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { Bookmark, Copy, Share as ShareIcon, Trash, UserX } from 'lucide-react-native';
+import { Bookmark, Code, Copy, Share as ShareIcon, Trash, UserX } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { toast } from '@backpackapp-io/react-native-toast';
 
@@ -35,6 +32,11 @@ const deletePost = (event: NDKEvent) => {
 const copyId = async (event: NDKEvent) => {
     Clipboard.setStringAsync(event.encode());
     toast.success('Copied to clipboard');
+};
+
+const copyRaw = async (event: NDKEvent) => {
+    Clipboard.setStringAsync(JSON.stringify(event.rawEvent(), null, 4));
+    toast.success('Copied raw event');
 };
 
 const sharePost = async (event: NDKEvent) => {
@@ -73,24 +75,33 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
     return (
         <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom + 20, flexDirection: 'column', gap: 20 }}>
-            <View className="h-20 flex-row items-stretch justify-between">
-                <Button size="lg" variant="secondary" className="w-1/4 flex-col items-center gap-2" onPress={() => close(bookmark)}>
+            <View className="h-20 flex-row items-stretch justify-stretch gap-4">
+                <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(bookmark)}>
                     <Bookmark size={30} color={colors.foreground} />
                     <Text className="text-xs text-muted-foreground">Save</Text>
                 </Button>
 
-                <Button size="lg" variant="secondary" className="w-1/4 flex-col items-center gap-2" onPress={() => close(copyId)}>
+                <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(copyId)}>
                     <Copy size={30} color={colors.foreground} />
-                    <Text className="text-xs text-muted-foreground">Copy</Text>
+                    <Text className="text-xs text-muted-foreground">Copy ID</Text>
                 </Button>
 
-                <Button size="lg" variant="secondary" className="w-1/4 flex-col items-center gap-2" onPress={() => close(sharePost)}>
+                <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(sharePost)}>
                     <ShareIcon size={30} color={colors.foreground} />
                     <Text className="text-xs text-muted-foreground">Share</Text>
                 </Button>
             </View>
 
-            <View className="flex-col items-start justify-start">
+            <View className="flex-col items-start justify-start gap-2">
+                <Button
+                    size="lg"
+                    variant="secondary"
+                    className="w-full flex-row gap-2 py-4"
+                    onPress={() => close(copyRaw)}>
+                    <Code size={24} color={colors.muted} />
+                    <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
+                </Button>
+                
                 {currentUser?.pubkey === event.pubkey ? (
                     <Button
                         size="lg"

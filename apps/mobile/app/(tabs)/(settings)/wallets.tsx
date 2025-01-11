@@ -1,4 +1,4 @@
-import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSession, useNDKSessionEvents, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -14,15 +14,18 @@ import { router } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { IconView } from '.';
-import { useWalletStore } from '@nostr-dev-kit/ndk-mobile/src/stores/wallet';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
     const { activeWallet, setActiveWallet } = useNDKWallet();
-    const allWallets = useNDKSessionEvents([NDKKind.CashuWallet]);
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
-    const [url, setUrl] = useState('');
+    const currentUser = useNDKCurrentUser();
+
+    const filters = useMemo(() => ([
+        { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey]}
+    ]), [currentUser?.pubkey])
+    const { events: wallets } = useSubscribe({ filters })
 
     const activateWallet = async (wallet: NDKEvent) => {
         router.back();
@@ -33,7 +36,7 @@ export default function WalletsScreen() {
     const data = useMemo(() => {
         if (!ndk) return [];
 
-        const options = Array.from(allWallets.values())
+        const options = Array.from(wallets.values())
             .map((walletEvent: NDKEvent) => ({
                 id: walletEvent.id,
                 title: walletEvent.dTag,
@@ -79,7 +82,7 @@ export default function WalletsScreen() {
         });
 
         return options;
-    }, [ndk?.pool.relays, searchText, allWallets]);
+    }, [searchText, wallets.length]);
 
     function save() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
@@ -87,10 +90,9 @@ export default function WalletsScreen() {
     }
 
     async function newWallet() {
-        console.log('creating new wallet');
         const wallet = NDKCashuWallet.create(
             ndk,
-            ['https://mint.coinos.io'],
+            ['https://nofees.testnut.cashu.space'],
             Array.from(ndk!.pool.relays.values()).map((r) => r.url)
         );
         wallet.name = 'My Wallet';

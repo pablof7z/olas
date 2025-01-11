@@ -2,35 +2,32 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable } from 'react-native';
 import { NDKEvent, NDKSubscriptionCacheUsage, useNDKCurrentUser, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
-import { GiftedChat } from 'react-native-gifted-chat'
-
+import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { activeEventStore } from './stores';
+
 import { useStore } from 'zustand';
 import { FlashList } from '@shopify/flash-list';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from './components/relative-time';
 import { Text } from '@/components/nativewindui/Text';
-import { MessageCircle, Send } from 'lucide-react-native';
+import { Heart, MessageCircle, Send } from 'lucide-react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { cn } from '@/lib/cn';
+import { router } from 'expo-router';
+import { useObserver } from '@/hooks/observer';
+import { activeEventAtom } from '@/stores/event';
 
 const replyEventAtom = atom<NDKEvent | null, [NDKEvent | null], null>(null, (get, set, value) => set(replyEventAtom, value));
 
-const commentSubOpts = { groupable: false, cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true };
-
 const Thread = ({ event }: { event: NDKEvent }) => {
-    const filters = useMemo(
-        () => [
-            { kinds: [NDKKind.Text, NDKKind.GenericReply], '#e': [event.id] },
-        ],
-        [event?.id]
-    );
-    const { events } = useSubscribe({ filters, opts: commentSubOpts });
+    const filters = [
+        { kinds: [NDKKind.Text, NDKKind.GenericReply], '#e': [event.id] },
+    ]
+    const events = useObserver(filters, event.id);
+    console.log('asking for replies to event "'+event.content+'" received'+events.length);
     
     return <View className="flex-1 flex-col">
         <Comment item={event} />
@@ -45,6 +42,13 @@ const Thread = ({ event }: { event: NDKEvent }) => {
 const Comment = ({ item }: { item: NDKEvent }) => {
     const { userProfile } = useUserProfile(item.pubkey);
     const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
+    const { colors } = useColorScheme();
+    const currentUser = useNDKCurrentUser();
+
+    const reactions = useObserver(
+        [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
+        item.id
+    );
 
     const onReplyPress = useCallback(() => {
         setReplyEvent(item);
@@ -56,12 +60,14 @@ const Comment = ({ item }: { item: NDKEvent }) => {
 
     return (
         <View className={cn(
-            "flex-1 flex-row gap-2 py-2 px-4 transition-all duration-300",
+            "flex-1 flex-row gap-4 py-2 px-4 transition-all duration-300 w-full items-start",
             isReplying && "bg-accent/10"
         )}>
-            <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+            <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}>
+                <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+            </Pressable>
 
-            <View className="flex-col grow">
+            <View className="flex-col flex-1">
                 <View className="flex-row items-center gap-1">
                     <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold text-foreground" />
                     <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
@@ -73,12 +79,21 @@ const Comment = ({ item }: { item: NDKEvent }) => {
                     <Text className="text-xs text-muted-foreground">Reply</Text>
                 </Pressable>
             </View>
+
+            <React
+                event={item}
+                mutedColor={colors.muted}
+                iconSize={18}
+                allReactions={reactions}
+                showReactionCount={false}
+                currentUser={currentUser}
+            />
         </View>
     );
 };
 
 export default function CommentScreen() {
-    const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
+    const activeEvent = useAtomValue(activeEventAtom);
     const flashListRef = useRef<FlashList<NDKEvent>>(null);
 
     const filters = useMemo(() => {
@@ -91,8 +106,8 @@ export default function CommentScreen() {
             { kinds: [NDKKind.GenericReply], ...filter },
             { kinds: [NDKKind.Text, NDKKind.GenericReply], ...eventFilter },
         ];
-    }, [activeEvent]);
-    const opts = useMemo(() => ({ groupable: false, closeOnEose: false }), []);
+    }, [activeEvent.id]);
+    const opts = useMemo(() => ({ groupable: false, closeOnEose: false, subId: 'comments' }), []);
     const { events } = useSubscribe({ filters, opts });
 
     const [comment, setComment] = useState('');
@@ -101,7 +116,7 @@ export default function CommentScreen() {
         const [tagKey, tagValue] = activeEvent.tagReference();
         return [
             activeEvent,
-            ...events.filter(event => event.tagValue(tagKey) === tagValue)
+            ...events.filter(e => e.tagValue(tagKey) === tagValue)
         ]
     }, [events]);
     const insets = useSafeAreaInsets();
@@ -120,11 +135,24 @@ export default function CommentScreen() {
         setReplyTo(null);
         console.log('comment sent', JSON.stringify(commentEvent.rawEvent(), null, 2));
     }, [activeEvent, comment]);
+
+    const style = useMemo(() => {
+        const isAndroid = Platform.OS === 'android';
+        if (isAndroid) {
+            return {
+                paddingTop: insets.top,
+            }
+        } else {
+            return {
+                paddingVertical: 20,
+            }
+        }
+    }, [Platform.OS, 1])
     
     return (
         <KeyboardAvoidingView
-            style={styles.container}
-            className="bg-card border border-border py-4"
+            style={{...styles.container, ...style}}
+            className="bg-card border border-border"
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
@@ -150,6 +178,7 @@ export default function CommentScreen() {
                         <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
                         <TextInput
                             style={styles.input}
+                            className="text-foreground"
                             value={comment}
                             onChangeText={setComment}
                             placeholder="Type a message..."

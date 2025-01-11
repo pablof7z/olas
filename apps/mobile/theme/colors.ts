@@ -31,8 +31,8 @@ const IOS_SYSTEM_COLORS = {
         root: 'rgb(0, 0, 0)',
         card: 'rgb(28, 28, 30)',
         destructive: 'rgb(254, 67, 54)',
-        primary: 'rgb(225, 48, 108)',
-        accent: 'rgb(225, 48, 108)',
+        primary: 'rgb(255, 255, 255)',
+        accent: 'rgb(17, 47, 237)',
         muted: 'rgba(255, 255, 255, 0.6)',
     },
 } as const;

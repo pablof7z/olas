@@ -41,6 +41,8 @@ export function PostTypeBottomSheet() {
         ref.current?.dismiss();
     };
 
+    const { colors } = useColorScheme();
+
     return (
         <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
             <BottomSheetView style={{ paddingHorizontal: 20, paddingBottom: inset.bottom, minHeight: 500 }}>
@@ -51,9 +53,9 @@ export function PostTypeBottomSheet() {
                         Nostr posts are accessible in a wide variety of; some apps prioritize displaying certain types of posts.
                     </Text>
 
-                    <Button variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeType('high-quality')}>
+                    <Button variant="secondary" size="huge" className="flex-col items-start gap-2 p-4" onPress={() => changeType('high-quality')}>
                         <View className="flex-row items-center gap-2">
-                            <Image size={48} />
+                            <Image size={48} color={colors.muted} />
                             <View className="flex-col gap-0">
                                 <Text variant="caption1" className="text-lg font-bold">
                                     High Quality Post
@@ -68,9 +70,9 @@ export function PostTypeBottomSheet() {
                         </Text>
                     </Button>
 
-                    <Button variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeType('generic')}>
+                    <Button variant="secondary" size="huge" className="flex-col items-start gap-2 p-4" onPress={() => changeType('generic')}>
                         <View className="flex-row items-center gap-2">
-                            <Type size={48} />
+                            <Type size={48} color={colors.muted} />
                             <View className="flex-col gap-0">
                                 <Text variant="caption1" className="text-lg font-bold">
                                     Generic Post

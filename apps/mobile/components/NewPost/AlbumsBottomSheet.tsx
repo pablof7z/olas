@@ -3,7 +3,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { albumsAtom, metadataAtom, selectedAlbumAtom, selectedMediaAtom } from '@/components/NewPost/store';
+import { selectedMediaAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, Pressable, View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
@@ -12,6 +12,7 @@ import { MediaLibraryItem, MediaPreview } from './MediaPreview';
 import { ArrowRight } from 'lucide-react-native';
 import { MasonryFlashList } from '@shopify/flash-list';
 import AlbumsGrid from '../albums/grid';
+import { albumsAtom, selectedAlbumAtom } from '../albums/store';
 
 type AlbumBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 export const albumBottomSheetRefAtom = atom<AlbumBottomSheetRefAtomType, [AlbumBottomSheetRefAtomType], null>(null, (get, set, value) =>

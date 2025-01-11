@@ -1,10 +1,10 @@
-import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDK, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, Pressable, View, ViewToken } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
-import { ResizeMode, Video } from 'expo-av';
+import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
@@ -13,16 +13,43 @@ import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Reactions } from '@/components/events/Post/Reactions';
+import { getImetas } from '@/components/media/event';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+
+const visibleItemAtom = atom<string>("");
 
 const Reel = memo(
-    ({ event, isVisible }: { event: NDKEvent; isVisible: boolean }) => {
+    ({ event }: { event: NDKEvent }) => {
+        const visibleItem = useAtomValue(visibleItemAtom);
+        const isVisible = visibleItem === event.id;
         const [isLoading, setIsLoading] = useState(true);
+        const videoRef = useRef<VideoView>(null);
         const { userProfile } = useUserProfile(event.pubkey);
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
-        const videoRef = useRef<Video>(null);
 
-        console.log('reel url', event.tagValue('url'));
+        const url = getImetas(event)[0]?.url;
+
+        const videoSource = { uri: url };
+
+        const player = useVideoPlayer(videoSource, (player) => {
+            player.loop = true;
+            player.muted = false;
+            player.addListener('statusChange', (status) => {
+                if (player.status === 'readyToPlay') {
+                    // player.play();
+                    setIsLoading(false);
+                }
+            });
+        });
+
+        useEffect(() => {
+            if (isVisible) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }, [player, isVisible]);
 
         return (
             <View
@@ -31,41 +58,39 @@ const Reel = memo(
                     width: '100%',
                     height: Dimensions.get('window').height - safeAreaInsets.bottom,
                     backgroundColor: 'black',
+                    borderWidth: 1,
                 }}>
-                {isLoading && (
-                    <View
-                        style={{
-                            flex: 1,
-                            width: '100%',
-                            height: Dimensions.get('window').height - safeAreaInsets.bottom,
-                        }}>
-                        <Image source={{ uri: thumb }} style={{ flex: 1, width: '100%', height: '100%' }} />
-                        <ActivityIndicator
-                            size="large"
-                            color="#000"
+                    {isLoading && (
+                        <View
                             style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                            }}
-                        />
-                    </View>
-                )}
-                <Video
-                    style={{ flex: 1, width: '100%' }}
-                    source={{ uri: event.tagValue('url') }}
-                    resizeMode={ResizeMode.COVER}
-                    useNativeControls={true}
-                    shouldPlay={true}
-                    isMuted={true}
-                    isLooping={true}
+                                flex: 1,
+                                width: '100%',
+                                height: Dimensions.get('window').height - safeAreaInsets.bottom,
+                            }}>
+                            <Image source={{ uri: thumb }} style={{ flex: 1, width: '100%', height: '100%' }} />
+                            <ActivityIndicator
+                                size="large"
+                                color="gray"
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                }}
+                            />
+                        </View>
+                    )}
+
+                <VideoView
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flex: 1, width: '100%', height: Dimensions.get('window').height - safeAreaInsets.bottom }}
+                    contentFit="cover"
+                    player={player}
+                    allowsFullscreen
+                    allowsPictureInPicture
                     ref={videoRef}
-                    onPlaybackStatusUpdate={(status) => {
-                        if (status.isLoaded) setIsLoading(false);
-                    }}
                 />
+
                 <SafeAreaView className="absolute bottom-0 pb-10 left-4 flex-col items-start gap-2">
                     <Reactions event={event} relatedEvents={[]} foregroundColor="white" mutedColor="white" />
                     
@@ -85,21 +110,18 @@ const Reel = memo(
     }
 );
 
+const opts = { groupable: false, closeOnEose: false, wrap: true };
+
 export default function ReelsScreen() {
     const filters = useMemo(() => [{ kinds: [NDKKind.VerticalVideo] }], []);
-    const opts = useMemo(() => ({ groupable: false, closeOnEose: true }), []);
     const { events } = useSubscribe({ filters, opts });
     const safeAreaInsets = useSafeAreaInsets();
 
-    const [visibleItem, setVisibleItem] = useState<string | null>(null);
+    const setVisibleItem = useSetAtom(visibleItemAtom);
 
     const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-        if (viewableItems.length > 0) {
-            // Track the first visible item's ID
-            setVisibleItem(viewableItems[0].item.id);
-        } else {
-            setVisibleItem(null);
-        }
+        const newVisibleItem = viewableItems.length > 0 ? viewableItems[0].item.id : null;
+        setVisibleItem((prev) => (prev !== newVisibleItem ? newVisibleItem : prev));
     }).current;
 
     const sortedEvents = useMemo(() => {
@@ -112,6 +134,10 @@ export default function ReelsScreen() {
                 .filter((event, index, self) => {
                     return self.findIndex((e) => e.pubkey === event.pubkey) === index;
                 })
+                .filter((event) => {
+                    const url = getImetas(event)[0]?.url;
+                    return !!url;
+                })
         );
     }, [events]);
 
@@ -120,7 +146,7 @@ export default function ReelsScreen() {
             <FlashList
                 data={sortedEvents}
                 keyExtractor={(i) => i.id}
-                renderItem={({ item }) => <Reel event={item} isVisible={visibleItem === item.id} />}
+                renderItem={({ item }) => <Reel event={item} />}
                 estimatedItemSize={Dimensions.get('window').height - safeAreaInsets.bottom}
                 snapToAlignment="start"
                 snapToInterval={Dimensions.get('window').height - safeAreaInsets.bottom}

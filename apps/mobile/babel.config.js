@@ -9,7 +9,6 @@ module.exports = function (api) {
     ],
 
     plugins: [
-      'react-native-worklets-core/plugin',
       'babel-plugin-transform-vite-meta-env',
       '@babel/plugin-syntax-import-attributes'
     ],

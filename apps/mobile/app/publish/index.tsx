@@ -5,19 +5,18 @@ import { ChevronLeft, ImageIcon, VideoIcon, X } from 'lucide-react-native';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Text } from '@/components/nativewindui/Text';
-import { PostTypeBottomSheet } from '@/components/NewPost/PostTypeBottomSheet';
-import { albumsAtom, metadataAtom, selectedMediaAtom, stepAtom } from '@/components/NewPost/store';
+import { metadataAtom, selectedMediaAtom, stepAtom } from '@/components/NewPost/store';
 import ChooseContentStep from '@/components/NewPost/ChooseContentStep';
 import { PostMetadataStep } from '@/components/NewPost/MetadataStep';
-import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
 import { prepareMedia, uploadMedia } from '@/components/NewPost/upload';
-import { AlbumsBottomSheet } from '@/components/NewPost/AlbumsBottomSheet';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function NewPostScreen() {
     const activeBlossomServer = useActiveBlossomServer();
     const { ndk } = useNDK();
+    const { colors } = useColorScheme();
 
     const [metadata, setMetadata] = useAtom(metadataAtom);
 
@@ -57,7 +56,7 @@ export default function NewPostScreen() {
 
                         return (
                             <TouchableOpacity onPress={abort}>
-                                <X size={24} />
+                                <X size={24} color={colors.foreground} />
                             </TouchableOpacity>
                         );
                     },

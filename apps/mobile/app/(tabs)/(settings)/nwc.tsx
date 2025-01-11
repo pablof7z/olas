@@ -1,71 +1,67 @@
-import { NDKEvent, NDKKind, useNDK, useNDKSession, useNDKSessionEvents } from '@nostr-dev-kit/ndk-mobile';
-import { Icon } from '@roninoss/icons';
+import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKSession, useNDKSessionEvents, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
-import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { Text } from '~/components/nativewindui/Text';
-import { cn } from '~/lib/cn';
-import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import * as SecureStore from 'expo-secure-store';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import { router, Stack } from 'expo-router';
 import { TextField } from '@/components/nativewindui/TextField';
 import { View } from 'react-native';
 import { NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 
 export default function NwcScreen() {
     const { ndk } = useNDK();
-    const { activeWallet, setActiveWallet } = useNDKSession();
-    const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
-    const [url, setUrl] = useState('');
-
-    console.log('activeWallet', !!activeWallet);
-
-    const addFn = () => {
-        console.log({ url });
-        try {
-            const uri = new URL(url);
-            if (!['wss:', 'ws:'].includes(uri.protocol)) {
-                alert('Invalid protocol');
-                return;
-            }
-            const relay = ndk?.addExplicitRelay(url);
-            if (relay) setRelays([...relays, relay]);
-            setUrl('');
-        } catch (e) {
-            alert('Invalid URL');
-        }
-    };
+    const { activeWallet, setActiveWallet } = useNDKWallet();
+    const [status, setStatus] = useState<string | null>(null);
 
     async function save() {
+        setStatus("Connecting");
         const nwc = new NDKNWCWallet(ndk);
-        await nwc.initWithPairingCode(connectString);
+        console.log('NWC init', connectString)
 
-        await nwc.updateBalance();
-        console.log('nwc', nwc.balance());
+        nwc.pool.on('relay:connect', (r: NDKRelay) => console.log('connected to', r.url))
 
-        setActiveWallet(nwc);
-
-        SecureStore.setItemAsync('nwc', connectString);
-        router.back();
+        nwc.once('ready', async () => {
+            setStatus("Getting balance")
+            try {
+                await nwc.updateBalance();
+                setActiveWallet(nwc);
+                router.back();  
+            } catch (e) {
+                setStatus(e.message);
+                setTimeout(() => setStatus(null), 4000);
+            }
+        });
+        
+        try {
+            await nwc.initWithPairingCode(connectString);
+            console.log('done')
+        } catch (e) {console.error(e)}
     }
 
     const [connectString, setConnectString] = useState('');
 
     return (
-        <View className="flex-1 flex-col">
-            <LargeTitleHeader
-                title={`Nostr Wallet Connect`}
-                rightView={() => (
+        <>
+        <Stack.Screen options={{
+            headerShown: true,
+            title: `Nostr Wallet Connect`,
+            headerRight: () => (
+                !status ? (
                     <TouchableOpacity onPress={save}>
                         <Text className="text-primary">Save</Text>
                     </TouchableOpacity>
-                )}
-            />
-
+                ) : (
+                    <ActivityIndicator />
+                )
+            )
+        }} />
+        <View className="flex-1 flex-col justify-center">
             <Text className="text-center text-muted-foreground">Enter your nostr wallet connect url.</Text>
 
             <View className="px-4">
+                {status && (
+                    <Text>{status}</Text>
+                )}
                 <TextField
                     autoFocus
                     keyboardType="default"
@@ -76,5 +72,6 @@ export default function NwcScreen() {
                 />
             </View>
         </View>
+        </>
     );
 }

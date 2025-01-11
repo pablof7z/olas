@@ -10,7 +10,7 @@ function ReceiveView() {
 
     const onReceived = () => {
         router.back();
-    };
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -21,8 +21,12 @@ function ReceiveView() {
                     setView(index === 0 ? 'ln' : 'ecash');
                 }}
             />
-
-            {view === 'ln' ? <ReceiveLn onReceived={onReceived} /> : <ReceiveEcash onReceived={onReceived} />}
+            
+            {view === 'ln' ? (
+                <ReceiveLn onReceived={onReceived} />
+             ) : (
+                <ReceiveEcash onReceived={onReceived} />
+             )}
         </View>
     );
 }

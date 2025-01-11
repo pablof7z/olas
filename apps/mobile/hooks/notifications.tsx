@@ -14,9 +14,11 @@ export function useNotifications(onlyNew = false) {
         if (!currentUser) return;
 
         return [
-            { kinds: [NDKKind.Text], '#p': [currentUser?.pubkey] },
-            { kinds: [NDKKind.GenericReply], '#K': [NDKKind.Image.toString()], '#p': [currentUser?.pubkey] },
-            { kinds: [NDKKind.Reaction], '#k': ['20'], '#p': [currentUser?.pubkey] },
+            { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
+            { kinds: [NDKKind.GenericReply  ], '#K': [NDKKind.Image.toString()], '#p': [currentUser.pubkey] },
+            { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
+            { kinds: [3006, 967], '#p': [currentUser.pubkey] },
+            { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] },
         ];
     }, [currentUser]);
 

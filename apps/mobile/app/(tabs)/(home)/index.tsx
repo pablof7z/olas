@@ -1,45 +1,68 @@
 import {
-    useSubscribe,
+    NDKDVMRequest,
     NDKEventId,
-    NDKRelaySet,
-    useMuteList,
-    NDKSubscriptionCacheUsage,
     NDKSubscription,
+    NDKSubscriptionCacheUsage,
+    useNDKWallet,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import * as SettingsStore from 'expo-secure-store';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import Post from '@/components/events/Post';
-import { RefreshControl, } from 'react-native-gesture-handler';
 import { myFollows } from '@/utils/myfollows';
 import { router, Stack } from 'expo-router';
 import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { Bookmark, ChevronDown } from 'lucide-react-native';
+import { Bitcoin, Bolt, Bookmark, Calendar, ChevronDown, CircleDashed, LucideCloudLightning, Trash, Wallet } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 import NotificationsButton from '@/components/NotificationsButton';
-import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import { Checkbox } from '@/components/nativewindui/Checkbox';
-
-const randomPhotoTags = ['photo', 'photography', 'artstr', 'art'];
+import Feed from '@/components/Feed';
+import { useObserver } from '@/hooks/observer';
+import Follows from '@/components/icons/follows';
+import ForYou from '@/components/icons/for-you';
+import Bookmarks from '@/components/icons/bookmarks';
+import { formatMoney } from '@/utils/bitcoin';
+import { Image } from 'expo-image';
+import { Button } from '@/components/nativewindui/Button';
+import { IconView } from '@/app/(wallet)/(walletSettings)';
+import Lightning from '@/components/icons/lightning';
 
 const includeTweetsAtom = atom(false);
 
-const titleAtom = atom(0);
-const feedTypeAtom = atom<'follows' | 'local' | string>('local');
+export const feedTypeAtom = atom<'follows' | 'for-you' | 'bookmark-feed' | string>('for-you');
+
+// const currentScrollIndexAtom = atom(0);
+
+// function median(values: number[]) {
+//     const sorted = values.sort((a, b) => a - b);
+//     const mid = Math.floor(sorted.length / 2);
+//     return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+// }
+
+// function average(values: number[]) {
+//     return values.reduce((sum, value) => sum + value, 0) / values.length;
+// }
+
+const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
-    const [feedType, setFeedType] = useAtom(feedTypeAtom);
-    const [title, setTitle] = useAtom(titleAtom);
+    const feedType = useAtomValue(feedTypeAtom);
+    const { colors } = useColorScheme();
+    const { activeWallet } = useNDKWallet();
+
+    const onWalletPress = useCallback(() => {
+        if (activeWallet) router.push('/(wallet)')
+        else router.push('/enable-wallet');
+    }, [ activeWallet ])
 
     return (
         <>
@@ -50,261 +73,243 @@ export default function HomeScreen() {
                     headerLeft: () => <HomeTitle />,
                     title: '',
                     headerRight: () => <View className="flex-row items-center gap-2">
-                        <Pressable onPress={() => router.push('/bookmarks')}>
-                            <Bookmark size={24} />
+                        <Pressable
+                            className="flex-row items-center"
+                            onPress={onWalletPress}
+                        >
+                            <Lightning size={24} color={colors.foreground} fill={colors.foreground} />
                         </Pressable>
+                        
+                        <CalendarButton />
                         <NotificationsButton />
                     </View>,
                 }}
             />
 
-            {/* <View style={{ flex: 1, flexDirection: 'column' }}>
-                <View style={{ flex: 1, height: 100 }} className="flex-none">
-                    <Stories />
-                </View>
-             */}
             <DataList feedType={feedType} />
-            {/* </View> */}
         </>
     );
 }
 
-// function StoryEntry({ pubkey, events }: { pubkey: string, events: NDKEvent[] }) {
-//     const { userProfile } = useUserProfile(pubkey);
+function CalendarButton() {
+    const { colors } = useColorScheme();
+    const currentUser = useNDKCurrentUser();
+    const observer = useObserver([
+        { kinds: [NDKKind.Image], authors: [ currentUser?.pubkey ], "#t": ["olas365"] }
+    ], currentUser?.pubkey || false)
+
+    const press = useCallback(() => {
+        router.push('/365')
+    }, [])
+
+    const hasEvents = useMemo(() => observer.length > 0, [observer.length])
+
+    if (!hasEvents) return null;
+    
+    return <Pressable onPress={press}>
+        <Calendar size={24} color={colors.foreground} />
+    </Pressable>
+}
+
+// function StoryEntry({ events }: { events: NDKEvent[] }) {
+//     const pTag = events[0].tagValue('p') ?? events[0].pubkey;
+//     const { userProfile } = useUserProfile(pTag);
+//     const insets = useSafeAreaInsets(); 
+
+//     const [showStory, setShowStory] = useState(false);
+
+//     if (showStory) {
+//         return (
+//             <Modal
+//                 animationType="slide"
+//                 transparent={false}
+//                 visible={true}
+//                 onRequestClose={() => setShowStory(false)}
+//             >
+//                 <View className="bg-black flex-1 h-screen w-screen flex-col">
+//                     <EventMediaContainer
+//                         event={event}
+//                         muted={false}
+//                         loop={false}
+//                         onFinished={() => setShowStory(false)}
+//                         onPress={(player: VideoPlayer) => {
+//                             player.pause();
+//                             setShowStory(false);
+//                         }}
+//                     />
+
+//                     <View className="absolute bottom-0 left-0 right-0 m-4" style={{ paddingBottom: insets.bottom }}>
+//                         <EventContent event={events[0]} content={events[0].content} className="text-sm text-white" />
+//                     </View>
+//                 </View>
+//             </Modal>
+//         );
+//     }
 
 //     return (
-//         <UserAvatar userProfile={userProfile} size={40} className="w-16 h-16 border-2 border-accent rounded-full" />
+//         <Pressable className="flex-row items-center gap-2" onPress={() => {
+//             setShowStory(true);
+//         }}>
+//             <UserAvatar userProfile={userProfile} size={40} className="w-16 h-16 rounded-full" />
+//         </Pressable>
 //     );
 // }
 
-// const storiesFilters: NDKFilter[] = [
-//     { kinds: [NDKKind.HorizontalVideo], limit: 10 },
-// ];
-// const storiesOpts = { closeOnEose: true, klass: NDKVideo, groupable: false };
+
+const storiesOpts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true, skipVerification: true, groupable: false, wrap: true };
 
 // function Stories() {
+//     const storiesFilters: NDKFilter[] = useMemo(() => ([{ kinds: [NDKKind.VerticalVideo ], limit: 5 }]), []);
 //     const { events } = useSubscribe({ filters: storiesFilters, opts: storiesOpts });
-//     const eventsMap = useMemo(() => {
-//         const map = new Map<string, NDKEvent[]>();
+//     const filteredEvents = useMemo(() => {
+//         const eventMaps = new Map<Hexpubkey, NDKEvent[]>();
 //         for (const event of events) {
-//             map.set(event.pubkey, [...(map.get(event.pubkey) ?? []), event]);
+//             const pubkey = event.pubkey;
+//             if (!eventMaps.has(pubkey)) {
+//                 eventMaps.set(pubkey, []);
+//             }
+//             eventMaps.get(pubkey)!.push(event);
 //         }
-//         return map;
+//         return eventMaps;
 //     }, [events]);
 
 //     return (
-//         <ScrollView horizontal style={{ height: 40 }} className="flex-none">
+//         <ScrollView horizontal className="flex-none flex border-b border-border">
 //             <View className="flex-1 flex-row gap-2 p-2">
-//                 {Array.from(eventsMap.entries()).map(([pubkey, events]) => (
-//                     <StoryEntry key={pubkey} pubkey={pubkey} events={events} />
+//                 <Text className="text-foreground">Stories {events.length} {filteredEvents.size}</Text>
+//                 {Array.from(filteredEvents.entries()).map(([pubkey, events]) => (
+//                     <StoryEntry key={pubkey} events={events} />
 //                 ))}
 //             </View>
 //         </ScrollView>
 //     );
 // }
 
+const bookmarksFilters = [{ kinds: [3006], "#k": ["20"] }];
+const bookmarksOpts = { skipVerification: true, groupable: false, wrap: true };
+function BookmarksMode() {
+    const { events: bookmarks } = useSubscribe({ filters: bookmarksFilters, opts: bookmarksOpts });
+
+    return (
+        <View className="flex-1 gap-2 bg-card">
+            <Feed
+                filters={bookmarksFilters}
+                filterKey={key}
+            />
+        </View>
+    );
+}
+
+function useBookmarkIds() {
+    const { ndk } = useNDK();
+    const sub = useRef<NDKSubscription | null>(null);
+    const ids = new Set<string>();
+    const eosed = useRef(false);
+    const feedType = useAtomValue(feedTypeAtom);
+    const [ret, setRet] = useState<NDKEventId[]>([]);
+
+    useEffect(() => {
+        if (!ndk) return;
+        if (feedType !== 'bookmark-feed') {
+            sub.current?.stop();
+            sub.current = null;
+            eosed.current = false;
+            return;
+        }
+
+        if (sub.current) return;
+        
+        sub.current = ndk.subscribe(bookmarksFilters, bookmarksOpts, undefined, false);
+        
+        sub.current.on("event", (event) => {
+            if (event.kind !== 3006) return;
+            for (const tag of event.getMatchingTags("e")) {
+                ids.add(tag[1]);
+            }
+
+            if (eosed.current) {
+                setRet(Array.from(ids));
+            }
+        });
+    
+        sub.current.on("eose", () => {
+            eosed.current = true;
+            setRet(Array.from(ids));
+        });
+
+        sub.current.start();
+
+        return () => {
+            sub.current?.stop();
+            sub.current = null;
+            eosed.current = false;
+        }
+    }, [ndk, feedType]);
+
+    console.log('bookmark ids', ret.length);
+
+    return ret;
+}
+
 function DataList({ feedType }: { feedType: string }) {
     const currentUser = useNDKCurrentUser();
-    const { ndk } = useNDK();
     const follows = useFollows();
-    const muteList = useMuteList();
     const includeTweets = useAtomValue(includeTweetsAtom);
+    const [explicitFeed, setExplicitFeed] = useAtom(explicitFeedAtom);
+    const bookmarkIds = useBookmarkIds();
 
-    const scrollRef = useRef(null);
-    const setHomeScreenScrollRef = useSetAtom(homeScreenScrollRefAtom);
+    const withTweets = useMemo(() => includeTweets || feedType.startsWith('#'), [includeTweets, feedType])
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            setHomeScreenScrollRef(scrollRef.current);
+    const {filters, key} = useMemo(() => {
+        if (feedType === 'bookmark-feed') {
+            console.log('bookmark feed with ids', bookmarkIds.length);
+            if (bookmarkIds.length === 0) return { filters: [], key: 'empty' };
+            return {
+                filters: [
+                    { ids: bookmarkIds },
+                    { "#e": bookmarkIds, kinds: [3006] },
+                ], key: 'bookmark-feed'
+            };
         }
-    }, [scrollRef.current]);
-
-    useEffect(() => {
-        // go through the mute list and remove the events from the event map
-        for (const [id, event] of eventMapRef.current.entries()) {
-            if (muteList.has(event.event?.pubkey)) {
-                eventMapRef.current.delete(id);
-            }
-        }
-    }, [muteList]);
-
-    useEffect(() => {
-        if (feedType === 'follows') {
-            const followSet = new Set(follows);
-            for (const [id, event] of eventMapRef.current.entries()) {
-                if (!followSet.has(event.event?.pubkey)) {
-                    eventMapRef.current.delete(id);
-                }
-            }
-        }
-    }, [feedType]);
-
-    const [tagFilter, setTagFilter] = useState<string | null>(null);
-    const filters = useMemo(() => {
-        let relaySet: NDKRelaySet | undefined;
+        
+        const keyParts = [feedType, currentUser?.pubkey ?? "", !!includeTweets];
+        
+        if (feedType === 'follows' && follows && follows?.length > 2) keyParts.push(follows.length.toString())
 
         const followsFilter = feedType === 'follows' && follows?.length > 2 ? { authors: [...follows, currentUser?.pubkey] } : {};
+        const hashtagFilter = feedType.startsWith('#') ? { "#t": [feedType.slice(1, 99)] } : {};
 
         const filters: NDKFilter[] = [
-            // { kinds: [NDKKind.Image, NDKKind.VerticalVideo, NDKKind.HorizontalVideo ], ...followsFilter },
-            { kinds: [NDKKind.Image], ...followsFilter },
-            { kinds: [NDKKind.Text], '#k': ['20'], ...followsFilter },
-            { kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': [NDKKind.Image.toString()], limit: 1, ...followsFilter },
+            { kinds: [NDKKind.Image], ...followsFilter, ...hashtagFilter },
+            { kinds: [NDKKind.Text], '#k': ['20'], ...followsFilter, ...hashtagFilter },
+            { kinds: [NDKKind.Text], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter, ...hashtagFilter },
             { kinds: [NDKKind.EventDeletion], '#k': ['20'], ...followsFilter, limit: 50 },
         ];
+
+        if (!feedType.startsWith('#')) {
+            filters.push({
+                kinds: [NDKKind.Repost, NDKKind.GenericRepost, 3006], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter
+            });
+        }
 
         if (currentUser) {
             filters.push({ kinds: [NDKKind.EventDeletion], '#k': ['20'], authors: [currentUser.pubkey] });
         }
 
-        if (includeTweets) {
-            if (follows) filters.push({ kinds: [1], authors: follows, limit: 50 });
-            else filters.push({ kinds: [1], authors: myFollows, limit: 50 });
-
-            relaySet = NDKRelaySet.fromRelayUrls(['wss://relay.olas.app'], ndk);
+        if (withTweets) {
+            if (follows) filters.push({ kinds: [1], authors: follows, limit: 50, ...hashtagFilter });
+            else filters.push({ kinds: [1], authors: myFollows, limit: 50, ...hashtagFilter });
         }
 
-        if (tagFilter) filters.push({ kinds: [1], '#t': [tagFilter] });
-
-        return filters;
-    }, [follows?.length, includeTweets, tagFilter, feedType, currentUser]);
-
-    const opts = useMemo(() => ({ skipVerification: true, groupable: false, wot: false, subId: 'home-feed' }), []);
-
-    const { events } = useSubscribe({ filters, opts });
-
-    type EventWithReposts = { event: NDKEvent | undefined; reposts: NDKEvent[]; timestamp: number };
-
-    const eventIdsRef = useRef<Set<NDKEventId>>(new Set());
-    const eventMapRef = useRef<Map<NDKEventId, EventWithReposts | 'deleted'>>(new Map());
-
-    const selectedEvents = useMemo(() => {
-        const eventMap = new Map<NDKEventId, EventWithReposts | 'deleted'>(eventMapRef.current);
-
-        const addEvent = (event: NDKEvent) => {
-            if (event.kind === NDKKind.GenericRepost) {
-                const eventId = event.tagValue('e');
-
-                if (!eventId) return;
-                if (!eventMap.has(eventId)) {
-                    // add the event to the map
-                    try {
-                        const payload = JSON.parse(event.content);
-                        const originalEvent = new NDKEvent(event.ndk, payload);
-                        eventMap.set(eventId, { event: originalEvent, reposts: [event], timestamp: event.created_at });
-                    } catch (e) {
-                        eventMap.set(eventId, { event: undefined, reposts: [], timestamp: event.created_at });
-                    }
-                } else {
-                    // update the reposts and timestamp
-                    const current = eventMap.get(eventId)!;
-                    if (current === 'deleted') return;
-                    current.reposts.push(event);
-                    if (current.timestamp < event.created_at) {
-                        // TODO: don't update the timestamp if the event has already been seen (we need a ref to keep track of seen posts)
-                        current.timestamp = event.created_at;
-                    }
-                    eventMap.set(eventId, current);
-                }
-            } else if (event.kind === NDKKind.EventDeletion) {
-                for (const eTag of event.getMatchingTags('e')) {
-                    eventMap.set(eTag[1], 'deleted');
-                }
-            } else {
-                eventMap.set(event.id, { event, reposts: [], timestamp: event.created_at });
-            }
-        };
-
-        for (const event of events) {
-            if (eventIdsRef.current.has(event.id)) continue;
-            eventIdsRef.current.add(event.id);
-
-            if (
-                [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image, NDKKind.GenericRepost, NDKKind.EventDeletion].includes(
-                    event.kind
-                )
-            ) {
-                addEvent(event);
-            }
-
-            if (event.kind === NDKKind.Text) {
-                const content = event.content;
-                const urlMatch = content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/i);
-                if (urlMatch) {
-                    addEvent(event);
-                }
-            }
-        }
-
-        eventMapRef.current = eventMap;
-
-        return Array.from(eventMap.values())
-            .filter((event) => event !== 'deleted')
-            .filter((event) => event.event !== undefined)
-            .sort((a, b) => b.timestamp - a.timestamp);
-    }, [events, muteList]);
-
-    const [title, setTitle] = useAtom(titleAtom);
-    const cacheWarmUpSub = useRef<NDKSubscription | null>(null);
-
-    useEffect(() => {
-        if (cacheWarmUpSub.current) {
-            cacheWarmUpSub.current.stop();
-            cacheWarmUpSub.current = null;
-        }
-
-        setTitle(selectedEvents.length);
-        const eTags = [];
-        const aTags = [];
-        for (const { event } of selectedEvents) {
-            if (!event.isParamReplaceable()) eTags.push(event.tagId());
-            else aTags.push(event.tagId());
-        }
-        const kindsReceived = new Set();
-        const filters: NDKFilter[] = [];
-        if (eTags.length > 0) filters.push({ '#e': eTags });
-        if (aTags.length > 0) filters.push({ '#a': aTags });
-
-        if (filters.length === 0) return;
-
-        cacheWarmUpSub.current = ndk.subscribe(filters, {
-            skipVerification: true,
-            closeOnEose: false,
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-            groupable: false,
-        });
-        cacheWarmUpSub.current.on('event', (event) => {
-            kindsReceived.add(event.kind);
-        });
-
-        return () => {
-            cacheWarmUpSub.current?.stop();
-            cacheWarmUpSub.current = null;
-        };
-    }, [selectedEvents.length]);
-
-    const setIncludeTweets = useSetAtom(includeTweetsAtom);
-    const loadUserData = () => {
-        // Pick a random tag when refreshing
-        const randomTag = randomPhotoTags[Math.floor(Math.random() * randomPhotoTags.length)];
-        setTagFilter(randomTag);
-        setIncludeTweets(true);
-    };
+        return {filters, key: keyParts.join()};
+    }, [follows?.length, withTweets, feedType, currentUser?.pubkey]);
 
     return (
         <View className="flex-1 gap-2 bg-card">
-            <FlashList
-                ref={scrollRef}
-                data={selectedEvents}
-                estimatedItemSize={500}
-                keyExtractor={(event) => event.event?.id ?? ''}
-                refreshControl={<RefreshControl refreshing={false} onRefresh={loadUserData} />}
-                scrollEventThrottle={100}
-                renderItem={({ item, index }) => <Post event={item.event} reposts={item.reposts} timestamp={item.timestamp} />}
-                disableIntervalMomentum={true}
+            <Feed
+                filters={filters}
+                filterKey={key}
             />
-
-            <PostOptionsMenu />
         </View>
     );
 }
@@ -329,11 +334,89 @@ function HomeTitle() {
 
     const feedTypeTitle = useMemo(() => {
         if (feedType === 'follows') return 'Follows';
-        if (feedType === 'local') return 'For You';
+        if (feedType === 'for-you') return 'For You';
+        if (feedType === 'bookmark-feed') return 'Bookmarks';
         return feedType;
     }, [feedType]);
 
     const [includeTweets, setIncludeTweets] = useAtom(includeTweetsAtom);
+    // const [dvms, setDvms] = useState([]);
+    // const setExplicitFeed = useSetAtom(explicitFeedAtom);
+
+    // useEffect(() => {
+    //     ndk.fetchEvents([
+    //         { kinds: [NDKKind.AppHandler], "#k": ["5300"] }
+    //     ]).then((events) => {
+    //         const v = [];
+    //         events.forEach((event) => {
+    //             try {
+    //                 const payload = JSON.parse(event.content) as { name: string, about: string, picture: string };
+    //                 v.push({
+    //                     title: payload.name,
+    //                     subTitle: payload.about,
+    //                     icon: payload.picture,
+    //                     value: payload.name,
+    //                     onPress: async () => {
+    //                         const e = new NDKDVMRequest(ndk);
+    //                         e.dvm = event.author;
+    //                         e.kind = 5300;
+    //                         e.tags.push(["relays", "wss://relay.primal.net"])
+    //                         await e.sign();
+    //                         e.publish();
+    //                         setFeedType(payload.name);
+
+    //                         const sub = ndk.subscribe([
+    //                             { ...e.filter(), authors: [event.pubkey] }
+    //                         ]);
+    //                         sub.on("event", (response) => {
+    //                             if (response.kind !== 6300) return;
+    //                             console.log(response);
+    //                             sub.stop();
+    //                             sheetRef.current?.dismiss();
+
+    //                             try {
+    //                                 const res = JSON.parse(response.content)
+    //                                 const ids = [];
+    //                                 res.forEach((tag) => ids.push(tag[1]));
+    //                                 setExplicitFeed([{ ids }]);
+    //                             } catch (e) {
+    //                                 console.error(e);
+    //                             }
+    //                         });
+    //                     }
+    //                 });
+    //             } catch (e) {
+    //                 console.error(e);
+    //             }
+    //         });
+
+    //         setDvms(v);
+    //     });
+    // }, []);
+
+    const follows = useFollows();
+    const listOptions = useMemo(() => {
+        const v = [
+            {
+                title: 'Bookmarks', subTitle: 'Posts you have bookmarked', onPress: () => router.push('/bookmarks'),
+                leftView: <IconView name="bookmark" className="bg-orange-500" size={35} />
+            },
+            { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365' },
+            { title: '#photography', subTitle: 'Photography posts', value: '#photography' },
+            { title: '#introductions', subTitle: 'Photography posts', value: '#introductions' },
+        ];
+
+        // v.push(...dvms);
+
+        return v;
+    }, [follows?.length]);
+    
+    const setOption = useCallback((value) => {
+        setFeedType(value);
+        SettingsStore.setItemAsync('feed', value);
+        sheetRef.current?.dismiss();
+    }, [sheetRef.current, setFeedType])
+    
     return (
         <>
             <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
@@ -349,14 +432,39 @@ function HomeTitle() {
 
                     <Text variant="title1">Feed Type</Text>
 
+                    <View className="flex-row items-stretch gap-4 justify-equal my-4">
+                        <Button
+                            variant={feedType === 'follows' ? 'tonal' : 'secondary'}
+                            className="flex-1 flex-col !py-4"
+                            style={{ paddingVertical: 40 }}
+                            onPress={() => setOption('follows')}
+                        >
+                            <Follows stroke={colors.foreground} size={38} />
+                            <Text className="text-base text-muted-foreground font-semibold">Follows</Text>
+                        </Button>
+                        
+                        <Button
+                            variant={feedType === 'for-you' ? 'tonal' : 'secondary'}
+                            className="flex-1 flex-col"
+                            onPress={() => setOption('for-you')}
+                        >
+                            <ForYou stroke={colors.foreground} size={38} />
+                            <Text className="text-base text-muted-foreground font-semibold">For You</Text>
+                        </Button>
+
+                        <Button
+                            variant={feedType === 'bookmark-feed' ? 'tonal' : 'secondary'}
+                            className="flex-1 flex-col gap-1"
+                            onPress={() => setOption('bookmark-feed')}
+                        >
+                            <Bookmarks stroke={colors.foreground} size={38} />
+                            <Text className="text-base text-muted-foreground font-semibold">Bookmarks</Text>
+                        </Button>
+                    </View>
+
                     <List
                         variant="full-width"
-                        data={[
-                            { title: 'Follows', subTitle: 'Posts from people you follow', value: 'follows' },
-                            { title: 'For You', subTitle: 'Posts within your network', value: 'local' },
-                            { title: 'Bookmarks', subTitle: 'Posts you have bookmarked', onPress: () => router.push('/bookmarks') },
-                            ...relays.map((relay) => ({ title: relay, subTitle: relay, value: relay })),
-                        ]}
+                        data={listOptions}
                         estimatedItemSize={50}
                         renderItem={({ item, target, index }) => (
                             <ListItem
@@ -368,10 +476,14 @@ function HomeTitle() {
                                 item={item}
                                 index={index}
                                 target={target}
+                                leftView={
+                                    item.icon ? (
+                                        <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
+                                    ) : item.leftView ? item.leftView : null
+                                }
                                 onPress={() => {
                                     if (item.onPress) item.onPress();
-                                    else setFeedType(item.value);
-                                    sheetRef.current?.dismiss();
+                                    else setOption(item.value)
                                 }}
                             />
                         )}

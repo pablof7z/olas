@@ -10,6 +10,8 @@ import { Text } from '@/components/nativewindui/Text';
 import { Album, Globe } from 'lucide-react-native';
 import { Button } from '@/components/nativewindui/Button';
 import { Stack } from 'expo-router';
+import { useSetAtom } from 'jotai';
+import { activeEventAtom } from '@/stores/event';
 
 export default function Bookmarks() {
     const { ndk } = useNDK();
@@ -52,6 +54,7 @@ export default function Bookmarks() {
     const { events } = useSubscribe({ filters });
 
     const sortedEvents = useMemo(() => events.sort((a, b) => b.created_at! - a.created_at!), [events]);
+    const setActiveEvent = useSetAtom(activeEventAtom);
 
     return (
         <>
@@ -83,7 +86,7 @@ export default function Bookmarks() {
                 )}
                 <FlashList
                     data={sortedEvents}
-                    renderItem={({ item }) => <Post event={item} reposts={[]} timestamp={item.created_at!} />}
+                    renderItem={({ item }) => <Post event={item} reposts={[]} timestamp={item.created_at!} setActiveEvent={setActiveEvent} />}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={{ paddingBottom: 30 }}
                 />

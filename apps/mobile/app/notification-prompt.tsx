@@ -29,7 +29,6 @@ export function PromptForNotifications() {
     const { events } = useSubscribe({ filters, opts });
 
     useEffect(() => {
-        console.log('👉 PromptForNotifications', {currentUser, promptedForNotifications, permissionStatus});
         if (!currentUser || promptedForNotifications || permissionStatus === 'granted') return;
 
         if (events.length > 0) {

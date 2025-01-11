@@ -3,7 +3,7 @@ import { NDKEvent, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/
 import { Button } from '../nativewindui/Button';
 import { ButtonProps } from '../nativewindui/Button';
 import { Text } from '../nativewindui/Text';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Check } from 'lucide-react-native';
 
 export default function FollowButton({
@@ -21,7 +21,9 @@ export default function FollowButton({
     const follows = useFollows();
     const [enabling, setEnabling] = useState(false);
 
-    const follow = async () => {
+    const follow = useCallback(async () => {
+        if (!ndk) return;
+
         const followEvent = new NDKEvent(ndk);
         followEvent.kind = 967;
         followEvent.tags = [
@@ -30,25 +32,28 @@ export default function FollowButton({
             ['k', NDKKind.VerticalVideo.toString()],
         ];
         await followEvent.sign();
-        await followEvent.publish();
+        followEvent.publish();
 
-        // // setEnabling(true);
-        // // setTimeout(async () => {
-        // //     setEnabling(false);
-        // // }, 2500);
-
-        const user = ndk.getUser({ pubkey });
-        // console.log('following user', { pubkey: pubkey.slice(0, 6) });
-        if (currentUser) currentUser.follow(user);
-        // console.log('followed user', { pubkey: pubkey.slice(0, 6) });
-    };
+        setEnabling(true);
+        setTimeout(async () => {
+            setEnabling(false);
+        }, 10000);
+    }, [ndk, setEnabling, pubkey]);
 
     if (follows && (follows?.includes(pubkey) || pubkey === currentUser?.pubkey)) {
         return null;
     }
 
     return (
-        <Button variant={variant} size={size} onPress={follow} className="rounded-md">
+        <Button
+            variant={variant}
+            size={size}
+            onPress={follow}
+            onLongPress={() => {
+                console.log('long press');
+            }}
+            className="rounded-md"
+        >
             {enabling ? <Check size={18} strokeWidth={2} /> : <Text>Follow</Text>}
         </Button>
     );

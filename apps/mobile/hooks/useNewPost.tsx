@@ -11,6 +11,15 @@ import { mapAssetToMediaLibraryItem } from '@/components/NewPost/AlbumsView';
 import { router } from 'expo-router';
 import { useAppSettingsStore } from '@/stores/app';
 
+type NewPostProps = {
+    types: ('images' | 'videos')[];
+    
+    /**
+     * Whether to force a 1:1 aspect ratio
+     */
+    square?: boolean;
+}
+
 export function useNewPost() {
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
@@ -20,19 +29,20 @@ export function useNewPost() {
     const { postType, removeLocation } = useAppSettingsStore();
     const [metadata, setMetadata] = useAtom(metadataAtom);
 
-    const launchImagePicker = useCallback(() => {
+    const launchImagePicker = useCallback(({types, square} : NewPostProps) => {
         // reset metadata
-        setMetadata({ ...metadata, caption: '', type: postType, removeLocation });
+        setMetadata({ ...metadata, caption: '', type: 'high-quality', removeLocation });
 
         ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: types,
             allowsMultipleSelection: true,
-            selectionLimit: 10,
+            selectionLimit: 6,
+            allowsEditing: square,
+            aspect: square ? [ 1, 1 ]: undefined
         }).then((result) => {
             if (result.assets) {
                 const sel = result.assets.map(mapAssetToMediaLibraryItem);
                 setSelectedMedia(sel);
-                console.log('setSelectedMedia', sel.length);
                 setStep(step + 1);
                 setUploading(true);
                 router.push('/publish');
@@ -40,13 +50,11 @@ export function useNewPost() {
                     try {
                         const preparedMedia = await prepareMedia(sel);
                         const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
-                        console.log('uploadedMedia', uploadedMedia);
                         setSelectedMedia(uploadedMedia);
                         setUploading(false);
-                        console.log('setUploading(false)');
                     } catch (error) {
                         console.error('Error uploading media', error);
-                        toast.error('Error uploading media');
+                        toast.error('Error uploading media: ' + error.message);
                     } finally {
                         resolve();
                     }

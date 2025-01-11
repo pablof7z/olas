@@ -22,7 +22,6 @@ export default function ChooseContentStep() {
     const [step, setStep] = useAtom(stepAtom);
 
     async function getAlbums() {
-        console.log('getAlbums', permissionResponse);
         if (permissionResponse?.status !== 'granted') {
             await requestPermission();
         } else {
@@ -64,7 +63,7 @@ export default function ChooseContentStep() {
                         console.log('setUploading(false)');
                     } catch (error) {
                         console.error('Error uploading media', error);
-                        toast.error('Error uploading media');
+                        toast.error('Error uploading media: ' + error);
                     } finally {
                         resolve();
                     }

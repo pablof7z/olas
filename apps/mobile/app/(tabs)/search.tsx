@@ -1,6 +1,4 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useStore } from 'zustand';
-import { Text } from '@/components/nativewindui/Text';
 import { Dimensions, View } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -12,7 +10,8 @@ import { NDKKind, NDKRelaySet, NDKSubscriptionCacheUsage, NDKSubscriptionOptions
 import { MasonryFlashList } from '@shopify/flash-list';
 import { EventMediaGridContainer } from '@/components/media/event';
 import { router, useLocalSearchParams } from 'expo-router';
-import { activeEventStore } from '../stores';
+import { usePostBottomSheet } from '@/hooks/post-bottom-sheet';
+import { activeEventAtom } from '@/stores/event';
 
 const inputAtom = atom('#photography');
 
@@ -47,7 +46,8 @@ export default function SearchScreen() {
         setInput(value.replace('#', '').trim());
     }, []);
 
-    const setActiveEvent = useStore(activeEventStore, (state) => state.setActiveEvent);
+    const setActiveEvent = useSetAtom(activeEventAtom);
+    const openPostBottomSheet = usePostBottomSheet();
 
     return (
         <KeyboardAvoidingView style={{ paddingTop: inset.top }} className="flex-1 bg-card">
@@ -70,6 +70,7 @@ export default function SearchScreen() {
                                 setActiveEvent(item);
                                 router.push('/view');
                             }}
+                            onLongPress={() => openPostBottomSheet(item)}
                         />
                     )}
                 />

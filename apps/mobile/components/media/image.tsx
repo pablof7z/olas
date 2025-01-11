@@ -1,147 +1,102 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
-import { Image, ImageSource } from 'expo-image';
-import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { Image, ImageSource, useImage } from 'expo-image';
+import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle, StyleSheet, Dimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { type MediaDimensions } from "./types";
 import { Text } from '../nativewindui/Text';
+
+/**
+ * This keeps a record of the known image heights for a given url.
+ */
+const knownImageDimensions: Record<string, MediaDimensions> = {};
+
+export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Partial<MediaDimensions>) {
+    let { width, height } = dimensions;
+    const { width: maxWidth } = maxDimensions;
+
+
+    if (maxWidth && width > maxWidth) {
+        width = maxWidth;
+        height = Math.floor(height / (width / maxWidth));
+    }
+
+
+    return { width, height };
+}
 
 export default function ImageComponent({
     url,
     blurhash,
-    maxWidth,
-    maxHeight,
+    dimensions,
+    maxDimensions,
+    priority,
     onPress,
+    onLongPress,
     className,
     style,
     ...props
 }: {
     url: string;
     blurhash?: string;
-    maxWidth: number;
-    maxHeight?: number;
+    dimensions?: MediaDimensions;
+    priority?: 'low' | 'normal' | 'high',
+    maxDimensions?: Partial<MediaDimensions>;
     onPress: () => void;
+    onLongPress: () => void;
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
-    const [image, setImage] = useState<ImageSource | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [imageDimensions, setImageDimensions] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const pUri = getProxiedImageUrl(url);
-
-    style ??= {};
-
-    useEffect(() => {
-        let isValid = true;
-
-        const loadImageFromUrl = async (imgUrl: string) => {
-            const res = await Image.loadAsync(
-                {
-                    uri: imgUrl,
-                    cacheKey: url,
-                    blurhash: blurhash,
-                },
-                {
-                    onError: (e) => {
-                        if (!isValid) return;
-                        console.error('Error loading image', imgUrl, e, { originalUrl: url });
-                        setError(e.message);
-                    },
-                }
-            ); // Load the image and get its dimensions
-
-            if (!isValid) {
-                return;
-            }
-            setImage(res);
-            setImageDimensions({ width: res.width, height: res.height });
-        };
-
-        const loadImage = async () => {
-            try {
-                const cachePath = await Image.getCachePathAsync(url);
-                if (cachePath) {
-                    await loadImageFromUrl(cachePath);
-                    setIsLoading(false);
-                    return;
-                }
-            } catch (error) {
-                console.error('Error getting cache path', error);
-            }
-
-            try {
-                await loadImageFromUrl(pUri);
-                setIsLoading(false);
-            } catch (error) {
-                console.error('Error loading image', error, pUri, { originalUrl: url });
-                setError(error.message);
-            }
-        };
-
-        loadImage();
-
-        return () => {
-            isValid = false;
-        };
-    }, [url]);
-
-    if (isLoading || !imageDimensions || error) {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: maxHeight / 2,
-                    position: 'relative',
-                    ...{ style },
-                }}>
-                <Image source={{ blurhash: blurhash }} style={{ width: maxWidth, height: maxHeight / 2 }} />
-                {error ? (
-                    <View
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}>
-                        <Text>Whoops, something's wrong with this image</Text>
-                        <Text className="p-10 text-xs text-muted-foreground">{error}</Text>
-                    </View>
-                ) : (
-                    <View
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}>
-                        <ActivityIndicator />
-                    </View>
-                )}
-            </View>
-        );
+    const useImgProxy = !dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000);
+    if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
+    
+    const pUri = useImgProxy ? getProxiedImageUrl(url, maxDimensions?.width) : url;
+    let renderDimensions = knownImageDimensions[url];
+    
+    // if we know the image dimensions but not the render, calculate
+    if (dimensions && !renderDimensions) {
+        dimensions = calcDimensions(dimensions, maxDimensions);
     }
-    if (error) return <View style={{ flex: 1 }} />;
 
-    const width = imageDimensions.width;
-    const height = imageDimensions.height;
+    const _style = useMemo(() => {
+        let width = renderDimensions?.width ?? maxDimensions?.width;
+        let height = renderDimensions?.height ?? maxDimensions?.height;
+        return { width, height };
+    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
+
+    const cacheKey = useMemo(
+        () => [url, maxDimensions?.width??"", maxDimensions?.height??""].join('-'),
+        [url, maxDimensions?.width, maxDimensions?.height]
+    );
+    const imageSource = useImage({
+        blurhash,
+        uri: pUri,
+        width: dimensions?.width,
+        height: dimensions?.height,
+        cacheKey
+    })
+
     return (
-        <Pressable onPress={onPress} style={{ position: 'relative', flex: 1, ...style }} className={className} {...props}>
+        <Pressable
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            className={className}
+            {...props}
+        >
             <Image
-                source={image}
+                placeholder={{blurhash}}
+                placeholderContentFit="cover"
+                priority={priority}
+                source={imageSource}
                 contentFit="cover"
-                style={[
-                    {
-                        width: maxWidth,
-                        height: maxHeight || height ? Math.min(height / (width / maxWidth), maxHeight) : undefined,
-                    },
-                ]}
+                recyclingKey={url}
+                onLoadEnd={() => {
+                    if (!imageSource) return;
+                    const { width, height} = imageSource;
+                    knownImageDimensions[url] = { width, height }
+                }}
+                style={{ width: _style.width, height: _style.height }}
             />
         </Pressable>
     );

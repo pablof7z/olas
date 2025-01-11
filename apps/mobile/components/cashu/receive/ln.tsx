@@ -2,16 +2,17 @@ import { Picker } from '@react-native-picker/picker';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import QRCode from 'react-native-qrcode-svg';
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Keyboard, StyleSheet } from 'react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import { useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import WalletBalance from '@/components/ui/wallet/WalletBalance';
+import { toast } from '@backpackapp-io/react-native-toast';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
-    const { activeWallet, balances } = useNDKWallet();
+    const { activeWallet, balance } = useNDKWallet();
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [selectedMint, setSelectedMint] = useState<string | null>(null);
     const inputRef = useRef<TextInput | null>(null);
@@ -35,21 +36,28 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
             console.error('No mint selected');
             return;
         }
+
+        // hide keyboard
+        Keyboard.dismiss();
+        
         const deposit = (activeWallet as NDKCashuWallet).deposit(amount, selectedMint);
-        console.log('deposit', deposit);
 
         deposit.on('success', (token) => {
             console.log('success', token);
             onReceived();
         });
 
-        const qr = await deposit.start();
-        console.log('qr', qr);
-        setQrCode(qr);
+        try {
+            const qr = await deposit.start();
+            console.log('qr', qr);
+            setQrCode(qr);
+        } catch (e) {
+            toast.error(e.message);
+        }
     };
 
     return (
-        <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView style={{ flex: 1 }}>
             <TextInput
                 ref={inputRef}
                 keyboardType="numeric"
@@ -81,7 +89,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                     </Picker>
                 </>
             )}
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 

@@ -1,14 +1,16 @@
-import { useStore } from 'zustand';
-import { activeEventStore } from './stores';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
-import { Dimensions, View, ScrollView } from 'react-native';
+import { Dimensions, View, ScrollView, Platform } from 'react-native';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import EventMediaContainer from '@/components/media/event';
 import { Reactions } from '@/components/events/Post/Reactions';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
+import { activeEventAtom } from '@/stores/event';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -26,7 +28,7 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 export default function ViewScreen() {
-    const activeEvent = useStore(activeEventStore, (state) => state.activeEvent);
+    const activeEvent = useAtomValue(activeEventAtom);
     const { userProfile } = useUserProfile(activeEvent.pubkey);
 
     if (!activeEvent) {
@@ -41,11 +43,21 @@ export default function ViewScreen() {
         content = content.replace(url, '');
     }
 
+    const insets = useSafeAreaInsets(); 
+    const style = useMemo(() => {
+        const isAndroid = Platform.OS === 'android';
+        if (isAndroid) {
+            return {
+                marginTop: insets.top,
+            }
+        }
+    }, [Platform.OS])
+
     return (
-        <ScrollView className="flex-1 bg-black">
+        <ScrollView className="flex-1 bg-black" style={style}>
             <View className="flex-1">
                 {/* Header with user info */}
-                <View className="flex-row items-center border-b border-gray-800 p-4">
+                <View className="flex-row items-center border-b border-border p-4">
                     <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} userProfile={userProfile} />
                     <View className="ml-3">
                         <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} className="font-bold text-white" />
@@ -55,12 +67,11 @@ export default function ViewScreen() {
                     </View>
                 </View>
 
-                {/* Image */}
                 <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
                     <EventMediaContainer
                         event={activeEvent}
                         maxWidth={Dimensions.get('window').width}
-                        maxHeight={Dimensions.get('window').height}
+                        maxHeight={Dimensions.get('window').height * 0.7}
                     />
                 </ScrollView>
 

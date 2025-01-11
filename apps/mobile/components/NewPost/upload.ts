@@ -1,5 +1,7 @@
+import { Blurhash } from 'react-native-blurhash';
 import { MediaLibraryItem } from './MediaPreview';
 import * as FileSystem from 'expo-file-system';
+import { Location } from './store';
 import { Image as CompressedImage } from 'react-native-compressor';
 import NDK from '@nostr-dev-kit/ndk-mobile';
 import * as Exify from '@lodev09/react-native-exify';
@@ -18,10 +20,10 @@ export async function uploadMedia(
     const mediaItems = [...media];
 
     for (const m of mediaItems) {
-        console.log('uploading', m.uri);
         await new Promise<void>((resolve, reject) => {
             const uploader = new Uploader(ndk, m.uri, m.mimeType, blossomServer);
             uploader.onUploaded = (data: BlobDescriptor) => {
+                console.log('uploader.onUploaded', data);
                 m.uploadedUri = data.url;
                 m.uploadedSha256 = data.sha256;
                 resolve();
@@ -37,11 +39,9 @@ export async function uploadMedia(
 }
 
 export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibraryItem[]> {
-    debugger;
     const res = [];
 
     for (const m of media) {
-        const input = m;
         const output = await prepareMediaItem(m);
         res.push(output);
     }
@@ -50,46 +50,56 @@ export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibr
 }
 
 export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLibraryItem> {
-    let { mimeType, blurhash } = media;
+    let { mimeType, blurhash, width, height } = media;
 
     if (!mimeType) mimeType = await determineMimeType(media.uri);
 
-    const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    const newUri = FileSystem.cacheDirectory + randomId + '.jpg';
+    let location: Location | undefined;
+    let newUri: string;
 
-    await FileSystem.copyAsync({ from: media.uri, to: newUri });
+    if (media.mediaType === 'photo') {
+        const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        newUri = FileSystem.cacheDirectory + randomId + '.jpg';
 
-    const exif = await Exify.readAsync(newUri);
-    console.log('exif', exif);
-    const hasLocation = exif.GPSLatitude !== undefined && exif.GPSLongitude !== undefined;
-    const location = hasLocation ? { latitude: exif.GPSLatitude, longitude: exif.GPSLongitude } : undefined;
+        await FileSystem.copyAsync({ from: media.uri, to: newUri });
 
-    const start = performance.now();
-    // const compressedUri = await CompressedImage.compress(newUri, {
-    //     compressionMethod: 'auto',
-    //     maxWidth: 2048,
-    //     maxHeight: 1024,
-    //     quality: 1.0,
-    //     progressDivider: 10,
-    //     downloadProgress: (progress) => {
-    //         console.log('downloadProgress: ', progress);
-    //     },
-    // });
-    const compressedUri = newUri;
-    const end = performance.now();
-    console.log('compressed file', compressedUri);
-    console.log('time to compress real file', end - start);
+        const exif = await Exify.readAsync(newUri);
+        const hasLocation = exif.GPSLatitude !== undefined && exif.GPSLongitude !== undefined;
+        location = hasLocation ? { latitude: exif.GPSLatitude, longitude: exif.GPSLongitude } : undefined;
 
-    // zero-out the gps data
-    await Exify.writeAsync(compressedUri, zeroedGpsData);
+        const compressedUri = await CompressedImage.compress(newUri, {
+            compressionMethod: 'auto',
+            maxWidth: 2048,
+            maxHeight: 1024,
+            quality: 1.0,
+            progressDivider: 10,
+            downloadProgress: (progress) => {
+                console.log('downloadProgress: ', progress);
+            },
+        });
+
+        newUri = compressedUri;
+
+        // read the image to find width and height
+        const imageData = await Image.loadAsync(compressedUri);
+        if (imageData?.height && imageData?.width) {
+            height = imageData.height;
+            width = imageData.width;
+            console.log('setting image dimensions', height, width);
+        }
+        
+        // zero-out the gps data
+        await Exify.writeAsync(compressedUri, zeroedGpsData);
+    } else {
+        newUri = media.uri;
+    }
 
     // getting sha256
-    const sha256 = await RNFS.hash(compressedUri, 'sha256');
-    console.log('sha256', sha256);
+    const sha256 = await RNFS.hash(newUri, 'sha256');
 
-    if (!blurhash) {
+    if (!blurhash && media.mediaType === 'photo') {
         try {
-            blurhash = await generateBlurhash(compressedUri);
+            blurhash = await generateBlurhash(newUri);
         } catch (error) {
             console.error('Error generating blurhash', error);
         }
@@ -97,9 +107,11 @@ export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLi
 
     return {
         ...media,
-        uri: compressedUri,
+        uri: newUri,
         sha256,
         blurhash,
+        width,
+        height,
         mimeType,
         location,
     };
@@ -141,7 +153,6 @@ const zeroedGpsData = {
 } as const;
 
 async function generateBlurhash(uri: string) {
-    const start = performance.now();
     const compressedUri = await CompressedImage.compress(uri, {
         compressionMethod: 'manual',
         maxWidth: 50,
@@ -153,12 +164,12 @@ async function generateBlurhash(uri: string) {
         },
     });
     const end = performance.now();
-    console.log('compressed file', compressedUri);
-    console.log('time to compress', end - start);
 
-    const start2 = performance.now();
-    const blurhash = await Image.generateBlurhashAsync(compressedUri, [7, 5]);
-    const end2 = performance.now();
-    console.log('time to generate blurhash', end2 - start2);
-    return blurhash;
+    
+    try {
+        return await Blurhash.encode(compressedUri, 7, 5);
+    } catch (error) {
+        console.error('Error generating blurhash', error);
+        return null;
+    }
 }
