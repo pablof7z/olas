@@ -78,7 +78,10 @@ export default function ThreeSixtyFivePage() {
     cellWidth = Math.max(minimumCellWidth, viewableScreenWidth / COLUMNS);
     cellHeight = cellWidth;
 
-    const days = Array.from({ length: totalDays }, (_, index) => index + 1);
+    const dayOfTodayInTheYear = getDayOfYear(new Date().getTime());
+    
+    const days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => index + 1);
+
 
     const eventsPerDayOfYear = useMemo(() => {
         const eventsPerDay: Record<number, NDKEvent[]> = {};

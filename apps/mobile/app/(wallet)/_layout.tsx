@@ -1,3 +1,4 @@
+import Lightning from "@/components/icons/lightning";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { useNDKCurrentUser, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import { Redirect, Tabs } from "expo-router";
@@ -27,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 options={{
                     title: 'Wallet',
                     headerShown: false,
-                    tabBarIcon: ({ focused }) => <Bolt size={24} color={focused ? colors.foreground : colors.muted} />
+                    tabBarIcon: ({ focused }) => <Lightning size={24} stroke={focused ? colors.foreground : colors.muted} fill={focused && colors.foreground} />
                 }}
             />
 

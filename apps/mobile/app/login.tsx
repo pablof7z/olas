@@ -11,6 +11,8 @@ import { Button } from '@/components/nativewindui/Button';
 import { ArrowRight, Plus, QrCode } from 'lucide-react-native';
 import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { NDKNip55Signer } from '@nostr-dev-kit/ndk-mobile';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 const avatarAtom = atom<string | undefined>(undefined);
 const usernameAtom = atom<string | undefined>('@');
@@ -136,6 +138,17 @@ export default function LoginScreen() {
         }
     }
 
+    const loginWithAmber = useCallback(async () => {
+        try {
+            const signer = new NDKNip55Signer();
+            const user = await signer.blockUntilReady();
+            if (user) login(signer);
+        } catch (e) {
+            console.error(e);
+            toast.error(e.message);
+        }
+    }, [ login ])
+
     return (
         <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -180,6 +193,12 @@ export default function LoginScreen() {
                             <Text className="py-2 text-lg font-bold text-white">Login</Text>
                             <ArrowRight size={24} color="white" />
                         </Button>
+
+                        {Platform.OS === 'android' && (
+                            <Button variant="accent" onPress={loginWithAmber}>
+                                <Text>Login with Amber</Text>
+                            </Button>
+                        )}
 
                         <Button
                             variant="plain"

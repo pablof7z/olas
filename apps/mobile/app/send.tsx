@@ -32,7 +32,7 @@ export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {
 
 function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => void }) {
     const { ndk } = useNDK();
-    const { activeWallet, balances } = useNDKWallet();
+    const { activeWallet } = useNDKWallet();
     const inputRef = useRef<TextInput | null>(null);
     const [amount, setAmount] = useState(21);
     const user = useMemo(() => ndk.getUser({ pubkey }), [pubkey]);
@@ -63,7 +63,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
 
     const inset = useSafeAreaInsets();
 
-    const [note, setNote] = useState('🥜 Honeypot nutzap');
+    const [note, setNote] = useState('');
     
     return (
         <KeyboardAwareScrollView>
@@ -222,7 +222,7 @@ export default function SendView() {
                 </View>
 
                 <List
-                    data={usersWithMintlist}
+                    data={follows}
                     keyExtractor={(item) => item}
                     estimatedItemSize={56}
                     variant="insets"

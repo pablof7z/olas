@@ -8,7 +8,7 @@ import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 import { Text } from "@/components/nativewindui/Text";
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheInitialized, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheInitialized, useNDKCurrentUser, useNDKNutzapMonitor, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -19,7 +19,7 @@ import { NAV_THEME } from '~/theme';
 import { NDKEvent, NDKKind, NDKList, NDKRelay, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
-import { configurePushNotifications, registerForPushNotificationsAsync } from '~/lib/notifications';
+import { configurePushNotifications } from '~/lib/notifications';
 import { useNDK, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom, useSetAtom } from 'jotai';
@@ -36,6 +36,7 @@ import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import { Pressable } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
 import { feedTypeAtom } from './(tabs)/(home)';
+import { CommunityBottomSheet } from '@/components/NewPost/CommunityBottomSheet';
 
 const mainKinds = [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo];
 
@@ -43,6 +44,7 @@ const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
     [NDKKind.ImageCurationSet, { wrapper: NDKList }],
     [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
+    [NDKKind.SimpleGroupList, { wrapper: NDKList }],
     [967],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
@@ -88,6 +90,10 @@ export default function RootLayout() {
     // check if we have relay.olas.app, if not, add it
     if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
         relays.unshift('wss://relay.olas.app/');
+    }
+
+    if (!relays.find((r) => r.match(/^purplepag\.es/))) {
+        relays.unshift('wss://purplepag.es/');
     }
     
     // relays = [ 'ws://localhost:2929' ];
@@ -141,7 +147,7 @@ export default function RootLayout() {
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            netDebug,
+            // netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,
@@ -167,7 +173,6 @@ export default function RootLayout() {
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
     useEffect(() => {
-        console.log('initAppSettings');
         initAppSettings();
         
         // Configure push notifications
@@ -204,7 +209,7 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
                     <LoaderScreen appReady={appReady} wotReady={wotReady}>
-                        {/* <NutzapMonitor /> */}
+                        <NutzapMonitor />
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                 <PortalHost />
@@ -226,6 +231,8 @@ export default function RootLayout() {
 
                                     <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
                                     <Stack.Screen name="notifications" options={{ headerShown: false }} />
+                                    <Stack.Screen name="communities" options={{ headerShown: false }} />
+                                    <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
 
                                     <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
                                     <Stack.Screen name="comments" options={{ headerShown: false, presentation: 'modal' }} />
@@ -259,6 +266,7 @@ export default function RootLayout() {
                                 <PostOptionsMenu />
                                 <PostTypeBottomSheet />
                                 <LocationBottomSheet />
+                                <CommunityBottomSheet />
                                 <AlbumsBottomSheet />
                                 <PostTypeSelectorBottomSheet />
                                 
@@ -273,9 +281,8 @@ export default function RootLayout() {
     );
 }
 
-{
-    /* function NutzapMonitor() {
-    const { nutzapMonitor } = useNDKSession();
+function NutzapMonitor() {
+    const { nutzapMonitor } = useNDKNutzapMonitor();
     const connected = useRef(false);
 
     if (!nutzapMonitor) return null;
@@ -294,5 +301,4 @@ export default function RootLayout() {
         const nutzap = NDKNutzap.from(event);
         toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);
     });
-} */
 }

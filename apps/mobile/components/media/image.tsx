@@ -15,7 +15,6 @@ export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Parti
     let { width, height } = dimensions;
     const { width: maxWidth } = maxDimensions;
 
-
     if (maxWidth && width > maxWidth) {
         width = maxWidth;
         height = Math.floor(height / (width / maxWidth));
@@ -49,9 +48,9 @@ export default function ImageComponent({
 }) {
     const useImgProxy = !dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000);
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
-    
+
     const pUri = useImgProxy ? getProxiedImageUrl(url, maxDimensions?.width) : url;
-    let renderDimensions = knownImageDimensions[url];
+    const renderDimensions = knownImageDimensions[url];
     
     // if we know the image dimensions but not the render, calculate
     if (dimensions && !renderDimensions) {
@@ -61,6 +60,15 @@ export default function ImageComponent({
     const _style = useMemo(() => {
         let width = renderDimensions?.width ?? maxDimensions?.width;
         let height = renderDimensions?.height ?? maxDimensions?.height;
+
+        if (maxDimensions?.width && width > maxDimensions?.width) {
+            height = Math.floor(height / (width / maxDimensions?.width));
+            width = maxDimensions?.width;
+        } else if (maxDimensions?.height && height > maxDimensions?.height) {
+            width = Math.floor(width / (height / maxDimensions?.height));
+            height = maxDimensions?.height;
+        }
+        
         return { width, height };
     }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
 
@@ -92,9 +100,13 @@ export default function ImageComponent({
                 contentFit="cover"
                 recyclingKey={url}
                 onLoadEnd={() => {
-                    if (!imageSource) return;
-                    const { width, height} = imageSource;
-                    knownImageDimensions[url] = { width, height }
+                    try {
+                        if (!imageSource) return;
+                        const { width, height} = imageSource;
+                        knownImageDimensions[url] = { width, height }
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }}
                 style={{ width: _style.width, height: _style.height }}
             />

@@ -13,14 +13,14 @@ import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();
-    const { activeWallet, balances, setActiveWallet } = useNDKWallet();
+    const { activeWallet, balance, setActiveWallet } = useNDKWallet();
     const [syncing, setSyncing] = useState(false);
     const { colors } = useColorScheme();
-    console.log('balances', balances);
+    console.log('balance', balance);
 
     useEffect(() => {
-        console.log('use effect balances', balances);
-    }, [balances]);
+        console.log('use effect balance', balance);
+    }, [balance]);
 
     const forceSync = async () => {
         setSyncing(true);
@@ -34,25 +34,31 @@ export default function WalletSettings() {
             {
                 id: '2',
                 title: 'Relays',
+                subTitle: 'Relays where this wallet is stored',
                 leftView: <IconView name="wifi" className="bg-blue-500" />,
                 onPress: () => router.push('/(wallet)/(walletSettings)/relays')
             },
             {
                 id: '3',
                 title: 'Mints',
+                subTitle: "Mints that serve as your wallet's bank",
                 leftView: <IconView name="home-outline" className="bg-green-500" />,
                 onPress: () => router.push('/(wallet)/(walletSettings)/mints'),
             },
 
-            'gap 0',
+            'Tools',
 
             {
                 id: '4',
                 title: 'Force-Sync',
                 onPress: forceSync,
                 rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
-            }
+            },
         ];
+
+        if (activeWallet instanceof NDKCashuWallet) {
+            opts.push(`P2PK: ${activeWallet.p2pk ? activeWallet.p2pk : 'Not set'}`);
+        }
 
         if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {
             opts.push('Warnings')
@@ -78,7 +84,7 @@ export default function WalletSettings() {
         }
 
         return opts;
-    }, [currentUser, activeWallet, balances]);
+    }, [currentUser, activeWallet, balance]);
 
     return (
         <>
@@ -90,7 +96,6 @@ export default function WalletSettings() {
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                sectionHeaderAsGap
             />
         </>
     );

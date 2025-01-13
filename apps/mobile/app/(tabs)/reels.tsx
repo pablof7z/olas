@@ -1,4 +1,4 @@
-import { useSubscribe, useNDK, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -88,6 +88,7 @@ const Reel = memo(
                     player={player}
                     allowsFullscreen
                     allowsPictureInPicture
+                    nativeControls={false}
                     ref={videoRef}
                 />
 
@@ -134,12 +135,15 @@ export default function ReelsScreen() {
                 .filter((event, index, self) => {
                     return self.findIndex((e) => e.pubkey === event.pubkey) === index;
                 })
-                .filter((event) => {
-                    const url = getImetas(event)[0]?.url;
+                .filter((event: NDKVideo) => {
+                    const url = event.imetas?.[0]?.url || event.tagValue('url')
+                    if (!url) console.log('imetas', event.imetas, 'tags', event.tags)
                     return !!url;
                 })
         );
     }, [events]);
+
+    console.log('reel count', events.length, sortedEvents.length)
 
     return (
         <View className="flex-1 bg-card">

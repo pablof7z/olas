@@ -42,16 +42,6 @@
         }
       ],
       [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
-  
-          // optionally, if you want to record audio:
-          "enableMicrophonePermission": true,
-          "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone."
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "backgroundColor": "#232323",
@@ -86,8 +76,7 @@
           "color": "#ffffff"
         }
       ],
-      "expo-sqlite",
-      "react-native-vision-camera"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

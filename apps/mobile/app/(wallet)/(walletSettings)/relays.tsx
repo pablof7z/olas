@@ -1,7 +1,7 @@
-import { useNDK, useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, useNDK, useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
-import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -12,33 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-
-const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
-    [NDKRelayStatus.RECONNECTING]: '#f1c40f',
-    [NDKRelayStatus.CONNECTING]: '#f1c40f',
-    [NDKRelayStatus.DISCONNECTED]: '#aa4240',
-    [NDKRelayStatus.DISCONNECTING]: '#aa4240',
-    [NDKRelayStatus.CONNECTED]: '#66cc66',
-    [NDKRelayStatus.FLAPPING]: '#2ecc71',
-    [NDKRelayStatus.AUTHENTICATING]: '#3498db',
-    [NDKRelayStatus.AUTHENTICATED]: '#e74c3c',
-    [NDKRelayStatus.AUTH_REQUESTED]: '#e74c3c',
-} as const;
-
-function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
-    const color = CONNECTIVITY_STATUS_COLORS[relay.status];
-
-    return (
-        <View
-            style={{
-                borderRadius: 10,
-                width: 8,
-                height: 8,
-                backgroundColor: color,
-            }}
-        />
-    );
-}
+import { Button } from '@/components/nativewindui/Button';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();
@@ -46,6 +20,7 @@ export default function WalletRelayScreen() {
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from((activeWallet as NDKCashuWallet).relaySet.relays.values()));
     const [url, setUrl] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     const addFn = () => {
         console.log({ url });
@@ -63,6 +38,10 @@ export default function WalletRelayScreen() {
         }
     };
 
+    const removeRelay = useCallback((url: string) => {
+        setRelays(relays.filter((r) => r.url !== url));
+    }, [relays]);
+
     const data = useMemo(() => {
         let r: NDKRelay[] = relays;
 
@@ -75,18 +54,32 @@ export default function WalletRelayScreen() {
                 id: relay.url,
                 title: relay.url,
                 rightView: (
-                    <View className="flex-1 items-center px-4 py-2">
-                        <RelayConnectivityIndicator relay={relay} />
+                    <View className="flex-1 items-center px-4">
+                        <Button variant="secondary" size="sm" onPress={() => removeRelay(relay.url)}>
+                            <Text>Remove</Text>
+                        </Button>
                     </View>
                 ),
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
     }, [searchText, relays]);
 
-    function save() {
-        SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
-        router.back();
-    }
+    const save = useCallback(async () => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
+        setIsSaving(true);
+        activeWallet.relays = relays.map((r) => r.url);
+        await activeWallet.getP2pk();
+        activeWallet.publish().then(() => {
+            router.back()
+            const mintList = new NDKCashuMintList(ndk);
+            mintList.mints = activeWallet.mints;
+            mintList.relays = activeWallet.relays;
+            mintList.p2pk = activeWallet.p2pk;
+            mintList.publish();
+        }).finally(() => {
+            setIsSaving(false);
+        });
+    }, [relays, activeWallet]);
 
     return (
         <>
@@ -97,9 +90,13 @@ export default function WalletRelayScreen() {
                     onChangeText: setSearchText,
                 }}
                 rightView={() => (
-                    <TouchableOpacity onPress={save}>
-                        <Text className="text-primary">Save</Text>
-                    </TouchableOpacity>
+                    !isSaving ? (
+                        <TouchableOpacity onPress={save}>
+                            <Text className="text-primary">Save</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <ActivityIndicator />
+                    )
                 )}
             />
             <List

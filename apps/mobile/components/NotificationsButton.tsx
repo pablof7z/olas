@@ -10,9 +10,9 @@ export default function NotificationsButton() {
 
     return (
         <Pressable
-            className="relative flex-row items-center"
+            className="relative flex-row items-center px-2"
             onPress={() => router.push('/notifications')}>
-            <Bell size={24} color={colors.foreground} />
+            <Bell size={24} strokeWidth={2} stroke={colors.foreground} />
             {notifications.length > 0 && <Indicator />}
         </Pressable>
     );

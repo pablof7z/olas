@@ -7,7 +7,6 @@ import { metadataAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Camera as CameraIcon } from 'lucide-react-native';
-import { Camera } from 'react-native-vision-camera';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Button } from '@/components/nativewindui/Button';
 import { useAppSettingsStore } from '@/stores/app';
@@ -20,7 +19,6 @@ import Photo from '@/components/icons/photo';
 import { useAlbums } from '@/components/albums/hook';
 import { AlbumContent } from '../AlbumsView';
 import AlbumSelectorHandler from '@/components/albums/AlbumSelectorHandler';
-import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 export type PostType = {
     id: string;

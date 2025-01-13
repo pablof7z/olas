@@ -1,4 +1,4 @@
-import NDK, { NDKEvent, NDKKind, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKEvent, NDKKind, NDKRelay, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { PostMetadata, PostType } from './store';
 import { MediaLibraryItem } from './MediaPreview';
 import { encodeBase32, decodeBase32 } from 'geohashing';
@@ -22,6 +22,13 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
         event.tags = [['k', kind.toString()]];
     }
 
+    let relaySet: NDKRelaySet | undefined;
+    
+    if (metadata.group) {
+        event.tags.push(['h', metadata.group.groupId, ...metadata.group.relays])
+        relaySet = NDKRelaySet.fromRelayUrls(metadata.group.relays, ndk);
+    }
+
     event.tags.push(...media.flatMap(generateImeta));
 
     if (event.kind !== NDKKind.Text) {
@@ -43,7 +50,10 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
     await event.sign();
     console.log('event', JSON.stringify(event.rawEvent(), null, 4));
 
-    return event;
+    return {
+        event,
+        relaySet
+    };
 }
 
 function getKind(type: PostType, media: MediaLibraryItem) {

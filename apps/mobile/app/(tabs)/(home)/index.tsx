@@ -14,7 +14,7 @@ import { myFollows } from '@/utils/myfollows';
 import { router, Stack } from 'expo-router';
 import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { Bitcoin, Bolt, Bookmark, Calendar, ChevronDown, CircleDashed, LucideCloudLightning, Trash, Wallet } from 'lucide-react-native';
+import { Bitcoin, Bolt, Bookmark, Calendar, ChevronDown, CircleDashed, House, LucideCloudLightning, Trash, Wallet } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
@@ -55,7 +55,6 @@ export const feedTypeAtom = atom<'follows' | 'for-you' | 'bookmark-feed' | strin
 const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
-    const feedType = useAtomValue(feedTypeAtom);
     const { colors } = useColorScheme();
     const { activeWallet } = useNDKWallet();
 
@@ -73,11 +72,17 @@ export default function HomeScreen() {
                     headerLeft: () => <HomeTitle />,
                     title: '',
                     headerRight: () => <View className="flex-row items-center gap-2">
+                        {/* <Pressable
+                            className="flex-row items-center w-10"
+                            onPress={() => router.push('/communities')}
+                        >
+                            <House />
+                        </Pressable> */}
                         <Pressable
-                            className="flex-row items-center"
+                            className="flex-row items-center px-2"
                             onPress={onWalletPress}
                         >
-                            <Lightning size={24} color={colors.foreground} fill={colors.foreground} />
+                            <Lightning size={24} strokeWidth={2} stroke={colors.foreground} />
                         </Pressable>
                         
                         <CalendarButton />
@@ -86,7 +91,7 @@ export default function HomeScreen() {
                 }}
             />
 
-            <DataList feedType={feedType} />
+            <DataList />
         </>
     );
 }
@@ -106,7 +111,7 @@ function CalendarButton() {
 
     if (!hasEvents) return null;
     
-    return <Pressable onPress={press}>
+    return <Pressable onPress={press} className="px-2">
         <Calendar size={24} color={colors.foreground} />
     </Pressable>
 }
@@ -246,16 +251,14 @@ function useBookmarkIds() {
         }
     }, [ndk, feedType]);
 
-    console.log('bookmark ids', ret.length);
-
     return ret;
 }
 
-function DataList({ feedType }: { feedType: string }) {
+function DataList() {
+    const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
     const includeTweets = useAtomValue(includeTweetsAtom);
-    const [explicitFeed, setExplicitFeed] = useAtom(explicitFeedAtom);
     const bookmarkIds = useBookmarkIds();
 
     const withTweets = useMemo(() => includeTweets || feedType.startsWith('#'), [includeTweets, feedType])
@@ -263,7 +266,7 @@ function DataList({ feedType }: { feedType: string }) {
     const {filters, key} = useMemo(() => {
         if (feedType === 'bookmark-feed') {
             console.log('bookmark feed with ids', bookmarkIds.length);
-            if (bookmarkIds.length === 0) return { filters: [], key: 'empty' };
+            if (bookmarkIds.length === 0) return { filters: undefined, key: 'empty' };
             return {
                 filters: [
                     { ids: bookmarkIds },
@@ -412,9 +415,9 @@ function HomeTitle() {
     }, [follows?.length]);
     
     const setOption = useCallback((value) => {
+        sheetRef.current?.dismiss();
         setFeedType(value);
         SettingsStore.setItemAsync('feed', value);
-        sheetRef.current?.dismiss();
     }, [sheetRef.current, setFeedType])
     
     return (

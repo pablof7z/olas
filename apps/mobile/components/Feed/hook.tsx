@@ -36,7 +36,7 @@ export type FeedEntry = {
  * @returns 
  */
 export function useFeedEvents(
-    filters: NDKFilter[],
+    filters: NDKFilter[] | undefined,
     key: string,
     subId = 'feed'
 ) {
@@ -226,6 +226,7 @@ export function useFeedEvents(
     
     useEffect(() => {
         if (!ndk) return;
+        if (!filters) return;
 
         if (subscription.current) {
             subscription.current.stop();
@@ -243,13 +244,13 @@ export function useFeedEvents(
 
         sub.on("event", handleEvent);
         sub.on('cacheEose', handleEose);
-        sub.on('eose', handleEose);
+        sub.once('eose', handleEose);
 
         sub.start();
         subscription.current = sub;
 
         return () => {
-            console.log('unsubscribing', JSON.stringify(filters).substring(0, 400));
+            // console.log('unsubscribing', JSON.stringify(filters).substring(0, 400));
             sub.stop();
         }
     }, [ndk, key])
@@ -319,7 +320,7 @@ export function useFeedMonitor(
 
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
-            console.log('removing slice that starts in', slice.start);
+            // console.log('removing slice that starts in', slice.start);
             slice.sub.stop();
             activeSlices.current = activeSlices.current.filter(s => s.start !== slice.start);
         }, 500)

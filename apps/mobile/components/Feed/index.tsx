@@ -28,6 +28,8 @@ export default function Feed({ onPress, filters, filterKey }: FeedProps) {
     const { entries, newEntries, updateEntries } = useFeedEvents(filters, filterKey);
     const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event))
 
+    console.log('rendering feed', entries?.length, newEntries?.length)
+
     const onViewableItemsChanged = useCallback(({ viewableItems }) => {
         visibleIndex.current = viewableItems[0]?.index ?? null;
         if (visibleIndex.current === 0 && showNewEntriesPrompt) setShowNewEntriesPrompt(false)

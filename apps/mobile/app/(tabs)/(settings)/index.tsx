@@ -11,12 +11,10 @@ import { router } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
 import { useMuteList, useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
-import { formatMoney } from '@/utils/bitcoin';
 import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { Wallet } from 'lucide-react-native';
 import { Button } from '@/components/nativewindui/Button';
 
 const relaysItem = {
@@ -111,7 +109,7 @@ export default function SettingsIosStyleScreen() {
             });
             
             if (advancedMode) {
-                opts.push('')
+                opts.push(' ')
                 opts.push(relaysItem)
                 if (unpubliedEvents.size) {
                     opts.push({
@@ -119,7 +117,7 @@ export default function SettingsIosStyleScreen() {
                         title: 'Unpublished Events',
                         leftView: (<IconView name="warning" className="bg-green-500" />),
                         rightText: unpubliedEvents.size,
-                        onPress: () => router.push('/(tabs)/(settings)/blossom'),
+                        onPress: () => router.push('/unpublished')
                     }); 
                 }
             }
@@ -136,10 +134,12 @@ export default function SettingsIosStyleScreen() {
                     title: name,
                     subTitle: activeWallet.type,
                     leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
-                    rightView: <Button variant="secondary" className="items-center justify-center flex-col"
-                        onPress={() => setActiveWallet(null)}>
-                        <Text className="text-sm font-medium text-red-500">Unlink</Text>
-                    </Button>,
+                    rightView: <View className="items-center justify-center flex-col m-2">
+                        <Button variant="secondary" className="flex-col"
+                            onPress={() => setActiveWallet(null)}>
+                            <Text className="text-sm font-medium text-red-500">Unlink</Text>
+                        </Button>
+                    </View>,
                     onPress: () => {
                         if (!activeWallet) return;
                         console.log('activeWallet', activeWallet instanceof NDKCashuWallet, activeWallet)
@@ -162,7 +162,7 @@ export default function SettingsIosStyleScreen() {
                 onPress: () => router.push('/(tabs)/(settings)/blossom'),
             });
 
-            opts.push('    ');
+            opts.push('  ');
             opts.push({
                 id: '4',
                 title: 'Logout',
@@ -171,7 +171,7 @@ export default function SettingsIosStyleScreen() {
             });
         }
 
-        opts.push(' ');
+        opts.push('   ');
 
         opts.push({
             id: 'advanced',

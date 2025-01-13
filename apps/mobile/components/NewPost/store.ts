@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { MediaLibraryItem } from './MediaPreview';
+import { GroupEntry } from '@/app/communities';
 
 export type PostType = 'generic' | 'high-quality';
 
@@ -23,6 +24,10 @@ export type PostMetadata = {
     type?: PostType;
     removeLocation?: boolean;
     location?: Location;
+    group?: {
+        groupId: string;
+        relays: string[];
+    }
 };
 export const metadataAtom = atom<PostMetadata, [PostMetadata], void>({ caption: '' }, (get, set, metadata: PostMetadata) =>
     set(metadataAtom, metadata)

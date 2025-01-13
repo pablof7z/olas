@@ -1,7 +1,7 @@
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -30,7 +30,17 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
     const color = CONNECTIVITY_STATUS_COLORS[relay.status];
 
     return (
-        <View
+        <Pressable
+            onPress={() => {
+                console.log('connect to', relay.url);
+                relay.connect()
+                    .then(() => {
+                        console.log('connected');
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                    });
+            }}
             style={{
                 borderRadius: 10,
                 width: 8,

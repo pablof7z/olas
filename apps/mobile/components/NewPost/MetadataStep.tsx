@@ -12,10 +12,12 @@ import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './stor
 import { Fullscreen, MapPin, Timer, Type } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
+import { communityBottomSheetRefAtom } from './CommunityBottomSheet';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { generateEvent } from './event';
 import { postTypeSheetRefAtom } from './PostTypeBottomSheet';
 import { toast } from '@backpackapp-io/react-native-toast';
+import Community from '@/components/icons/community';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
@@ -36,10 +38,10 @@ export function PostMetadataStep() {
     }, [postTypeSheetRef]);
 
     async function realPublish() {
-        const event = await generateEvent(ndk, metadata, selectedMedia);
+        const {event, relaySet} = await generateEvent(ndk, metadata, selectedMedia);
         await event.sign();
         router.push('/');
-        event.publish().then(() => {
+        event.publish(relaySet).then(() => {
             setSelectedMedia([]);
             setMetadata({ caption: '', expiration: 0, type: 'high-quality' });
             setStep(0);
@@ -105,6 +107,7 @@ export function PostMetadataStep() {
 function PostOptions() {
     const [metadata, setMetadata] = useAtom(metadataAtom);
     const locationBottomSheetRef = useAtomValue(locationBottomSheetRefAtom);
+    const communityBottomSheetRef = useAtomValue(communityBottomSheetRefAtom);
     const { colors } = useColorScheme();
     const isUploading = useAtomValue(uploadingAtom);
     const selectedMedia = useAtomValue(selectedMediaAtom);
@@ -120,6 +123,11 @@ function PostOptions() {
     const openLocation = () => {
         locationBottomSheetRef?.current?.present();
         locationBottomSheetRef?.current?.expand();
+    };
+
+    const openCommunity = () => {
+        communityBottomSheetRef?.current?.present();
+        communityBottomSheetRef?.current?.expand();
     };
 
     const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
@@ -205,6 +213,24 @@ function PostOptions() {
                 </View>
             ),
         });
+
+        // data.push({
+        //     id: 'community',
+        //     title: 'Community',
+        //     onPress: openCommunity,
+        //     leftView: (
+        //         <View style={{ paddingHorizontal: 10 }}>
+        //             <Community size={24} color={colors.muted} />
+        //         </View>
+        //     ),
+        //     rightView: (
+        //         <View className="flex-1 justify-center">
+        //             <Text className="text-sm text-muted-foreground">
+        //                 {metadata.group?.relays}
+        //             </Text>
+        //         </View>
+        //     )
+        // });
 
         return data;
     }, [metadata]);
