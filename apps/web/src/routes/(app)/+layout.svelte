@@ -13,7 +13,7 @@
 
 <div class="">
 	<Sidebar />
-	<main class="ml-[73px] py-8 md:ml-[244px]">
+	<main class="py-8 md:ml-[244px]">
 		{@render children()}
 	</main>
 </div>

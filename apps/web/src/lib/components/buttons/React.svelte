@@ -4,7 +4,8 @@
     const { event, likedByCurrentUser } = $props();
     
     function like() {
-		const like = event.react("+1");
+		const like = event.react("+");
+		like.tags.push(['k', event.kind.toString()])
 		like.publish();
 	}
 </script>

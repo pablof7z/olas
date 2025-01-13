@@ -18,7 +18,7 @@
 <div class="grid grid-cols-3 gap-1">
     {#each events as event (event.id)}
         {#if imetasFromEvent(event).length > 0}
-            <button onclick={() => openEvent(event)} class="bg-secondary overflow-clip">
+            <button onclick={() => openEvent(event)} class="bg-secondary overflow-clip aspect-square">
                 <Item {event} {width} class="w-full h-full object-cover" containerClass="aspect-square" />
             </button>
         {/if}

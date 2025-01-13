@@ -41,7 +41,7 @@
     });
 </script>
 
-<div class="mx-auto max-w-4xl px-4">
+<div class="mx-auto max-w-4xl px-2 md:px-4">
     <input
         class="text-xl font-bold focus:outline-none"
         bind:value={searchTerm}

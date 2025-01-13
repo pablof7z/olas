@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CircleUser, Menu, ActivitySquare, Bookmark, Sun, Moon } from 'lucide-svelte';
+	import { CircleUser, Menu, ActivitySquare, Bookmark, Sun, Moon, DoorClosed, AppleIcon, Apple, Phone, PhoneIcon, Smartphone, Command } from 'lucide-svelte';
 	import Logo from './icons/Logo.svelte';
 	import Home from './icons/Home.svelte';
 	import NewPost from './icons/NewPost.svelte';
@@ -46,24 +46,11 @@
 			icon: Search,
 			href: '/search/nostr'
 		},
-		// {
-		// 	text: 'explore',
-		// 	icon: Explore
-		// },
 		{
 			text: 'reels',
 			icon: Reels,
 			disabled: true
 		},
-		// {
-		// 	text: 'messages',
-		// 	icon: Messenger
-		// },
-		// {
-		// 	text: 'notifications',
-		// 	icon: Notifications,
-		// 	disabled: true
-		// },
 		{
 			text: 'create',
 			icon: NewPost,
@@ -104,20 +91,20 @@
 </script>
 
 <aside
-	class="bg-background fixed flex h-full min-h-screen w-fit flex-col border-r p-3 md:w-[244px]"
+	class="bg-background fixed bottom-0 left-0 right-0 flex flex-row md:flex-col md:fixed md:top-0 md:left-0 md:right-auto md:h-full md:w-[244px] border-t md:border-r p-1 md:p-3 w-full z-50"
 >
-	<div class="my-8 pl-3">
-		<div class="hidden w-fit md:inline-block">
+	<div class="my-4 pl-3 md:my-8 md:pl-3 hidden md:block">
+		<div class="hidden md:inline-block">
 			<Logo />
 		</div>
 	</div>
-	<div class="flex flex-1 flex-col gap-2">
+	<div class="flex flex-1 flex-row md:flex-col md:gap-2">
 		{#each sidebarItems as { text, icon, href, disabled, onclick }}
 			<svelte:element
 				this={href ? 'a' : text === 'create' ? 'button' : 'div'}
 				{href}
 				role="none"
-				class="hover:bg-muted flex cursor-pointer items-center gap-1 rounded-md p-3 text-sm capitalize {disabled && 'opacity-50 pointer-events-none cursor-not-allowed'}"
+				class="hover:bg-muted flex flex-1 md:flex-none justify-center md:justify-start items-center gap-1 rounded-md p-2 md:p-3 text-sm capitalize {disabled && 'opacity-50 pointer-events-none cursor-not-allowed'}"
 				disabled={disabled}
 				onclick={() => {
 					if (text === 'create') {
@@ -128,7 +115,7 @@
 			>
 				<svelte:component this={icon} />
 				<div
-					class={cn('ml-4 hidden md:inline-flex', {
+					class={cn('ml-0 md:ml-4 hidden md:inline-flex', {
 						'font-bold': text === 'home'
 					})}
 				>
@@ -139,19 +126,19 @@
 	</div>
 
 	{#if !currentUser}
-		<Button variant="default" class="w-full" onclick={login}>
+		<Button variant="default" class="w-full md:hidden" onclick={login}>
 			Login
 		</Button>
 	{/if}
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="hover:bg-muted flex cursor-pointer items-center gap-1 rounded-md p-3 text-sm capitalize"
+			class="hover:bg-muted flex justify-center md:justify-start cursor-pointer items-center gap-1 rounded-md p-2 md:p-3 text-sm capitalize"
 		>
 			<Menu />
-			<div class="ml-4 hidden md:inline-block">More</div>
+			<div class="ml-0 md:ml-4 hidden md:inline-block">More</div>
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="w-[300px] rounded-xl p-3 shadow-lg">
+		<DropdownMenu.Content class="w-full md:w-[300px] rounded-xl p-3 shadow-lg">
 			<DropdownMenu.Group>
 				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
 					<Settings />
@@ -175,8 +162,20 @@
 					{/if}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
+					<DoorClosed />
 					Logout
 				</DropdownMenu.Item>
+
+				<DropdownMenu.Item href="https://testflight.apple.com/join/2FMVX2yM" class="flex cursor-pointer items-center gap-2 p-3">
+					<Command />
+					Download on Apple Store
+				</DropdownMenu.Item>
+
+				<DropdownMenu.Item href="https://github.com/pablof7z/olas/releases" class="flex cursor-pointer items-center gap-2 p-3">
+					<Smartphone />
+					Download Android APK
+				</DropdownMenu.Item>
+				
 			</DropdownMenu.Group>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
