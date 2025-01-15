@@ -1,8 +1,7 @@
 import { Icon, MaterialIconName } from '@roninoss/icons';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
-import * as User from '@/components/ui/user';
-
+import * as Clipboard from 'expo-clipboard';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -11,16 +10,25 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function SettingsIosStyleScreen() {
     const { ndk, currentUser } = useNDKCurrentUser();
     const privateKey = (ndk?.signer as NDKPrivateKeySigner)?._privateKey;
 
-    console.log('private key', (ndk?.signer as NDKPrivateKeySigner)?.privateKey);
+    const nsec = useMemo(() => {
+        return privateKey ? nip19.nsecEncode(privateKey) : null;
+    }, [privateKey]);
+
+    const copyNsec = useCallback(() => {
+        Clipboard.setStringAsync(nsec);
+
+        if (nsec) {
+            toast.success('nsec copied to clipboard');
+        }
+    }, [nsec]);
 
     const data = useMemo(() => {
-        const nsec = privateKey ? nip19.nsecEncode(privateKey) : null;
-
         return [
             {
                 id: '11',
@@ -32,6 +40,7 @@ export default function SettingsIosStyleScreen() {
                     </View>
                 ),
                 rightView: <IconView name="clipboard-outline" className="bg-gray-500" />,
+                onPress: copyNsec,
             },
         ];
     }, [currentUser, privateKey]);
@@ -49,7 +58,6 @@ export default function SettingsIosStyleScreen() {
                 keyExtractor={keyExtractor}
                 sectionHeaderAsGap
             />
-            <Text>{(ndk?.signer as NDKPrivateKeySigner)?.privateKey}</Text>
         </>
     );
 }
@@ -83,7 +91,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={() => console.log('onPress')}
+            onPress={info.item.onPress}
         />
     );
 }
