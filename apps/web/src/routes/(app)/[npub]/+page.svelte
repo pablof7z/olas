@@ -64,7 +64,6 @@
 			events = ndk.$subscribe([
 				{ kinds: [20], authors: [user.pubkey] },
 				{ kinds: [1], "#k": ["20"], authors: [user.pubkey] },
-				{ kinds: [1], authors: [user.pubkey], limit: 500 },
 			]);
 		} else {
 			console.log('not going to fetch')
@@ -81,7 +80,7 @@
 </script>
 
 {#if user && events}
-<div class="mx-auto max-w-4xl px-4">
+<div class="mx-auto max-w-4xl md:px-4 px-1">
 	<div class="mb-8 flex items-start gap-8 py-8">
 		<div class="shrink-0">
 			{#if userProfile?.image}

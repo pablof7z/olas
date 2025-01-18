@@ -15,7 +15,7 @@
     }
 </script>
 
-<div class="grid grid-cols-3 gap-1">
+<div class="grid grid-cols-2 md:grid-cols-3 gap-1">
     {#each events as event (event.id)}
         {#if imetasFromEvent(event).length > 0}
             <button onclick={() => openEvent(event)} class="bg-secondary overflow-clip aspect-square">

@@ -62,7 +62,7 @@
 </script>
 
 <Dialog.Root bind:open={opened}>
-    <Dialog.Content class="p-0 max-w-[90vw] max-h-[90vh] h-full flex" style={modalStyle}>
+    <Dialog.Content class="p-0 max-w-[90vw] max-h-[90vh] md:h-full flex" style={modalStyle}>
         <div class="h-full flex flex-col lg:flex-row bg-background rounded-md">
             <!-- Image Container -->
             <div class="flex justify-center items-center flex-1 bg-secondary/10 basis-0 h-full snap-x">
