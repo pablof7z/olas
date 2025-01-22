@@ -34,7 +34,7 @@ export default function Profile() {
         return filters;
     }, [filtersExpanded, pubkey]);
     const opts = useMemo(() => ({ groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }), []);
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe(filters, opts, [pubkey, filters.length]);
 
     const followCount = useMemo(() => {
         const contacts = events.find((e) => e.kind === NDKKind.Contacts);
@@ -45,7 +45,7 @@ export default function Profile() {
     }, [events]);
 
     const sortedContent = useMemo(() => {
-        return events.filter((e) => [NDKKind.Text, NDKKind.Image].includes(e.kind)).sort((a, b) => b.created_at - a.created_at);
+        return events.filter((e) => [NDKKind.Text, NDKKind.Image, NDKKind.VerticalVideo].includes(e.kind)).sort((a, b) => b.created_at - a.created_at);
     }, [events]);
 
     if (!pubkey) {
@@ -156,7 +156,7 @@ export default function Profile() {
                         )}
                     </View>
                 ) : (
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, marginTop: 10 }}>
                         <MasonryFlashList
                             data={sortedContent}
                             numColumns={3}

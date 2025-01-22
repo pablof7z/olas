@@ -1,12 +1,12 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Dimensions, View } from 'react-native';
+import { View } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Search } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKKind, NDKRelaySet, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { EventMediaGridContainer } from '@/components/media/event';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,8 +16,6 @@ import { activeEventAtom } from '@/stores/event';
 const inputAtom = atom('#photography');
 
 const relays = ['wss://relay.olas.app'] as const;
-
-const opts: NDKSubscriptionOptions = { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL, closeOnEose: true } as const;
 
 export default function SearchScreen() {
     const inset = useSafeAreaInsets();
@@ -32,15 +30,10 @@ export default function SearchScreen() {
         }
     }, [hashtagFromQuery, setInput]);
 
-    const filters = useMemo(
-        () => [
-            { kinds: [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo], '#t': [input] },
-            { kinds: [NDKKind.Text], '#t': [input] },
-        ],
-        [input, hashtagFromQuery]
-    );
-
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe([
+        { kinds: [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo], '#t': [input] },
+        { kinds: [NDKKind.Text], '#t': [input] }
+    ], { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL, closeOnEose: true, relays: [...relays] }, [ input ]);
 
     const onSearch = useCallback((value) => {
         setInput(value.replace('#', '').trim());

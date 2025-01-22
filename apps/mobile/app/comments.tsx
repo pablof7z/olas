@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { NDKEvent, NDKSubscriptionCacheUsage, useNDKCurrentUser, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-
-import { useStore } from 'zustand';
+import * as Clipboard from 'expo-clipboard';
 import { FlashList } from '@shopify/flash-list';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from './components/relative-time';
@@ -19,35 +18,34 @@ import { cn } from '@/lib/cn';
 import { router } from 'expo-router';
 import { useObserver } from '@/hooks/observer';
 import { activeEventAtom } from '@/stores/event';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 const replyEventAtom = atom<NDKEvent | null, [NDKEvent | null], null>(null, (get, set, value) => set(replyEventAtom, value));
 
-const Thread = ({ event }: { event: NDKEvent }) => {
-    const filters = [
-        { kinds: [NDKKind.Text, NDKKind.GenericReply], '#e': [event.id] },
-    ]
-    const events = useObserver(filters, event.id);
-    console.log('asking for replies to event "'+event.content+'" received'+events.length);
+const Thread = ({ event, indentLevel = 0 }: { event: NDKEvent, indentLevel: number }) => {
+    const events = useObserver([
+        { kinds: [NDKKind.Text, NDKKind.GenericReply], ...event.filter() },
+    ], [event.id]);
     
     return <View className="flex-1 flex-col">
-        <Comment item={event} />
+        <Comment item={event} style={{ paddingLeft: (indentLevel + 1) * 20 }} />
         {events.length > 0 && (
-            <View className="flex-1 flex-col gap-2 pl-6">
-                {events.map(event => <Thread key={event.id} event={event} />)}
+            <View className="flex-1 flex-col gap-2">
+                {events.map(event => <Thread key={event.id} event={event} indentLevel={indentLevel + 1} />)}
             </View>
         )}
     </View>
 }
 
-const Comment = ({ item }: { item: NDKEvent }) => {
+const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle> }) => {
     const { userProfile } = useUserProfile(item.pubkey);
-    const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
+    const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
 
     const reactions = useObserver(
         [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
-        item.id
+        [item.id]
     );
 
     const onReplyPress = useCallback(() => {
@@ -58,11 +56,16 @@ const Comment = ({ item }: { item: NDKEvent }) => {
         return item.id === replyEvent?.id;
     }, [item, replyEvent?.id]);
 
+    const copyEventId = useCallback(() => {
+        Clipboard.setStringAsync(item.encode());
+        toast.success('Event ID copied to clipboard');
+    }, [item.id]);
+
     return (
         <View className={cn(
             "flex-1 flex-row gap-4 py-2 px-4 transition-all duration-300 w-full items-start",
             isReplying && "bg-accent/10"
-        )}>
+        )} style={style}>
             <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}>
                 <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
             </Pressable>
@@ -73,9 +76,8 @@ const Comment = ({ item }: { item: NDKEvent }) => {
                     <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
                 </View>
 
-                <EventContent event={item} className="text-sm text-foreground" />
-
-                <Pressable onPress={onReplyPress}>
+                <Pressable onPress={onReplyPress} onLongPress={copyEventId}>
+                    <EventContent event={item} className="text-sm text-foreground" />
                     <Text className="text-xs text-muted-foreground">Reply</Text>
                 </Pressable>
             </View>
@@ -93,22 +95,13 @@ const Comment = ({ item }: { item: NDKEvent }) => {
 };
 
 export default function CommentScreen() {
-    const activeEvent = useAtomValue(activeEventAtom);
+    const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
     const flashListRef = useRef<FlashList<NDKEvent>>(null);
 
-    const filters = useMemo(() => {
-        let filter = {};
-        const eventFilter = activeEvent.filter();
-        Object.entries(eventFilter).forEach(([key, value]) => {
-            filter[key.toUpperCase()] = value;
-        });
-        return [
-            { kinds: [NDKKind.GenericReply], ...filter },
-            { kinds: [NDKKind.Text, NDKKind.GenericReply], ...eventFilter },
-        ];
-    }, [activeEvent.id]);
-    const opts = useMemo(() => ({ groupable: false, closeOnEose: false, subId: 'comments' }), []);
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe([
+        { kinds: [NDKKind.Text, NDKKind.GenericReply], ...activeEvent.filter() },
+        { kinds: [NDKKind.GenericReply], ...activeEvent.nip22Filter() },
+    ], { groupable: false, closeOnEose: false, subId: 'comments' }, [ activeEvent.id]);
 
     const [comment, setComment] = useState('');
 
@@ -124,7 +117,7 @@ export default function CommentScreen() {
 
     const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const [replyTo, setReplyTo] = useAtom(replyEventAtom);
+    const [replyTo, setReplyTo] = useAtom<NDKEvent>(replyEventAtom);
 
     const handleSend = useCallback(async () => {
         const commentEvent = (replyTo || activeEvent).reply();
@@ -140,7 +133,7 @@ export default function CommentScreen() {
         const isAndroid = Platform.OS === 'android';
         if (isAndroid) {
             return {
-                paddingTop: insets.top,
+                paddingTop: 10,
             }
         } else {
             return {
@@ -151,10 +144,10 @@ export default function CommentScreen() {
     
     return (
         <KeyboardAvoidingView
-            style={{...styles.container, ...style}}
-            className="bg-card border border-border"
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            style={{...styles.container, ...style, paddingBottom: insets.bottom}}
+            className="bg-card"
+            behavior={'padding'}
+            keyboardVerticalOffset={90}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View className="w-full" style={styles.innerContainer}>
@@ -164,7 +157,7 @@ export default function CommentScreen() {
                         data={filteredComments}
                         renderItem={({ item }) => {
                             if (item.id === activeEvent.id) return <Comment item={item} />
-                            return <Thread event={item} />
+                            return <Thread event={item} indentLevel={0} />
                         }}
                         estimatedItemSize={50}
                         keyExtractor={(item) => item.id}

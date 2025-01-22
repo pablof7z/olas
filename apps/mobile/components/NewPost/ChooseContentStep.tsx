@@ -57,10 +57,8 @@ export default function ChooseContentStep() {
                     try {
                         const preparedMedia = await prepareMedia(sel);
                         const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
-                        console.log('uploadedMedia', uploadedMedia);
                         setSelectedMedia(uploadedMedia);
                         setUploading(false);
-                        console.log('setUploading(false)');
                     } catch (error) {
                         console.error('Error uploading media', error);
                         toast.error('Error uploading media: ' + error);

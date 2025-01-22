@@ -12,14 +12,15 @@ import { Text } from "@/components/nativewindui/Text";
 import { ArrowUp, ArrowDown, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
+import RelativeTime from "@/app/components/relative-time";
 
-const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey: string }) => {
+const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
     const { colors } = useColorScheme();
 
     const color = colors.primary;
 
-    if (userProfile) {
+    if (pubkey && userProfile) {
         return (
             <View className="flex-row items-center gap-2 relative" style={{ marginRight: 10}}>
                 {userProfile && <User.Avatar userProfile={userProfile} size={24} className="w-10 h-10" />}
@@ -44,12 +45,13 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey: stri
     )
 }
 
-const Zapper = ({ pubkey }: { pubkey: string }) => {
+const Zapper = ({ pubkey, timestamp }: { pubkey: string, timestamp: number }) => {
     const { userProfile } = useUserProfile(pubkey);
     return (
         <View className="flex-col gap-0">
-            <Text className="text-lg text-foreground">{userProfile?.name}</Text>
-            <Text className="text-sm text-muted-foreground">Nutzap</Text>
+            <Text className="text-lg font-medium text-foreground">{userProfile?.name}</Text>
+            <RelativeTime className="text-xs text-muted-foreground" timestamp={timestamp} />
+            {/* <Text className="text-xs text-muted-foreground">Nutzap</Text> */}
         </View>
     )
 }
@@ -101,14 +103,13 @@ function HistoryItemPendingZap({ item, index, target }: { item: ZapperWithId, in
         }
     });
 
+    const targetPubkey = useMemo(() => item.zapper.target?.pubkey, [item.internalId]);
+
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
-            item={{
-                id: item.id,
-            }}
-            leftView={<LeftView direction="out" pubkey={item.zapper.target?.pubkey} />}
+            leftView={<LeftView direction="out" pubkey={targetPubkey} />}
             rightView={(
                 <View className="flex-col items-end gap-0">
                     <Text className="text-lg font-bold text-foreground">{formatMoney({ amount, unit: item.zapper.unit })}</Text>
@@ -118,7 +119,7 @@ function HistoryItemPendingZap({ item, index, target }: { item: ZapperWithId, in
             index={index}
             onPress={onPress}
         >
-            <Zapper pubkey={item.zapper.target?.pubkey} />
+            <Zapper pubkey={item.zapper.target?.pubkey} timestamp={item.zapper.created_at} />
             {/* <Text className="text-xs text-muted-foreground">{item.id}</Text> */}
             {error && <Text className="text-xs text-red-500">{error.message}</Text>}
         </ListItem>  
@@ -153,17 +154,30 @@ function HistoryItemCashuQuote({ item, index, target, onPress }: { item: NDKCash
     )
 }
 
+const historyItemCache = new Map<string, NDKWalletChange>();
+const nutzapItemCache = new Map<string, NDKNutzap>();
+
 function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: NDKWallet, item: NDKEvent, index: number, target: any, onPress: () => void }) {
     const { ndk } = useNDK();
-    const [ nutzap, setNutzap ] = useState<NDKNutzap | null>(null);
-    const [ walletChange, setWalletChange ] = useState<NDKWalletChange | null>(null);
-    useEffect(() => {
-        NDKWalletChange.from(item).then((walletChange) => {
-            setWalletChange(walletChange);
-        });
-    }, [item.id]);
+    const [ nutzap, setNutzap ] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id));
+    const id = item.tagId();
+    const [ walletChange, setWalletChange ] = useState<NDKWalletChange | null>(historyItemCache.get(id));
 
-    const eTag = useMemo(() => walletChange?.getMatchingTags('e', 'redeemed')[0], [walletChange]);
+    useEffect(() => {
+        if (!walletChange && item.content.length > 0) {
+            NDKWalletChange.from(item).then((walletChange) => {
+                if (item.id === walletChange.id) {
+                    setWalletChange(walletChange);
+                }
+                historyItemCache.set(walletChange.tagId(), walletChange);
+            }).catch((e) => {
+                console.error('error converting item id', item.id, 'to walletChange id', e);
+                console.log(item.rawEvent());
+            });
+        }
+    }, [item.id, setWalletChange]);
+
+    const eTag = useMemo(() => walletChange?.getMatchingTags('e', 'redeemed')[0], [walletChange?.id]);
 
     const nutzapCounterpart = useMemo(() => {
         if (!walletChange) return null;
@@ -173,24 +187,34 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
             const eTag = walletChange.getMatchingTags('e', 'redeemed')[0];
             return eTag ? (nutzap?.pubkey ?? eTag[4]) : null;
         }
-    }, [walletChange]);
+    }, [walletChange?.id]);
 
     useEffect(() => {
-        if (eTag) {
+        let isValid = true;
+        let nutzapFetched = false;
+
+        if (eTag && isValid && ndk && !nutzap && !nutzapFetched) {
+            nutzapFetched = true;
             ndk.fetchEventFromTag(eTag, walletChange).then((event) => {
-                if (event) {
+                if (event && isValid) {
                     setNutzap(NDKNutzap.from(event));
+                    nutzapItemCache.set(item.id, NDKNutzap.from(event));
                 }
             });
         }
-    }, [eTag]);
 
-    if (!walletChange) return null;
-    if (walletChange.amount < 0) return null;
+        return () => {
+            isValid = false;
+            nutzapFetched = false;
+        }
+    }, [eTag, ndk]);
+
+    if (!walletChange) return <></>
+    if (walletChange.amount < 0) return <Text>invalid item {item.id}</Text>;
 
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
             leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterpart} />}
             item={{
@@ -198,17 +222,19 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
                 title: nutzapCounterpart ? null : walletChange.description,
                 subTitle: nutzapCounterpart ? null : nicelyFormattedMintName(walletChange.mint)
             }}
-            rightView={<RightView amount={walletChange.amount} unit={walletChange.unit ?? wallet.unit ?? "sat"} createdAt={walletChange.created_at} />}
+            rightView={<RightView amount={walletChange.amount} unit={walletChange.unit ?? wallet.unit ?? "sat"} createdAt={item.created_at} />}
             index={index}
             onPress={onPress}
         >
-            {nutzapCounterpart && ( <Zapper pubkey={nutzapCounterpart} /> )}
-            {/* <Text className="text-xs text-muted-foreground">{item.id}</Text> */}
+            {nutzapCounterpart && ( <Zapper pubkey={nutzapCounterpart} timestamp={item.created_at} /> )}
+            {/* <Text className="text-xs text-muted-foreground">{nutzapCounterpart?.substring(0, 6)}</Text>
+            <Text className="text-xs text-muted-foreground">{id?.substring(0, 6)}</Text>
+            <Text className="text-xs text-muted-foreground">{walletChange.id?.substring(0, 6)}</Text> */}
         </ListItem>  
     )
 }
 
-function RightView({ amount, unit }: { amount: number, unit: string }) {
+function RightView({ amount, unit, createdAt }: { amount: number, unit: string, createdAt: number }) {
     if (!amount) return null;
 
     const niceAmount = formatMoney({ amount, unit, hideUnit: true });

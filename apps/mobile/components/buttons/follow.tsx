@@ -3,7 +3,7 @@ import { NDKEvent, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/
 import { Button } from '../nativewindui/Button';
 import { ButtonProps } from '../nativewindui/Button';
 import { Text } from '../nativewindui/Text';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Check } from 'lucide-react-native';
 
 export default function FollowButton({
@@ -19,7 +19,7 @@ export default function FollowButton({
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
-    const [enabling, setEnabling] = useState(false);
+    const [enabling, setEnabling] = useState<Hexpubkey | null>(null);
 
     const follow = useCallback(async () => {
         if (!ndk) return;
@@ -31,18 +31,21 @@ export default function FollowButton({
             ['k', NDKKind.Image.toString()],
             ['k', NDKKind.VerticalVideo.toString()],
         ];
-        await followEvent.sign();
+        setEnabling(pubkey);
         followEvent.publish();
 
-        setEnabling(true);
         setTimeout(async () => {
-            setEnabling(false);
+            setEnabling(null);
         }, 10000);
     }, [ndk, setEnabling, pubkey]);
 
-    if (follows && (follows?.includes(pubkey) || pubkey === currentUser?.pubkey)) {
-        return null;
-    }
+    const isFollowing = useMemo(() => (
+        enabling === pubkey || follows?.includes?.(pubkey)
+    ), [ pubkey, enabling, follows?.length])
+
+    if (pubkey === currentUser?.pubkey) return null;
+
+    if (enabling !== pubkey && isFollowing) return null;
 
     return (
         <Button
@@ -54,7 +57,11 @@ export default function FollowButton({
             }}
             className="rounded-md"
         >
-            {enabling ? <Check size={18} strokeWidth={2} /> : <Text>Follow</Text>}
+            {isFollowing ? (
+                <Text>Following</Text>
+            ) : (
+                <Text>Follow</Text>
+            )}
         </Button>
     );
 }

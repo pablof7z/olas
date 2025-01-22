@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { IconView } from '.';
+import { createNip60Wallet } from '@/utils/wallet';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
@@ -22,10 +23,9 @@ export default function WalletsScreen() {
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
     const currentUser = useNDKCurrentUser();
 
-    const filters = useMemo(() => ([
+    const { events: wallets } = useSubscribe(currentUser ? [
         { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey]}
-    ]), [currentUser?.pubkey])
-    const { events: wallets } = useSubscribe({ filters })
+    ] : false)
 
     const activateWallet = async (wallet: NDKEvent) => {
         router.back();
@@ -90,21 +90,8 @@ export default function WalletsScreen() {
     }
 
     async function newWallet() {
-        const wallet = NDKCashuWallet.create(
-            ndk,
-            ['https://nofees.testnut.cashu.space'],
-            Array.from(ndk!.pool.relays.values()).map((r) => r.url)
-        );
-        wallet.name = 'My Wallet';
-        await wallet.getP2pk();
-        await wallet.publish().then(() => {
-            setActiveWallet(wallet);
-            const mintList = new NDKCashuMintList(ndk);
-            mintList.mints = wallet.mints;
-            mintList.p2pk = wallet.p2pk;
-            mintList.relays = wallet.relays;
-            mintList.publishReplaceable();
-        });
+        const wallet = await createNip60Wallet(ndk);
+        setActiveWallet(wallet);
     }
 
     return (

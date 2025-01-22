@@ -27,6 +27,7 @@ export default function NwcScreen() {
                 setActiveWallet(nwc);
                 router.back();  
             } catch (e) {
+                console.error('ready callback', e)
                 setStatus(e.message);
                 setTimeout(() => setStatus(null), 4000);
             }

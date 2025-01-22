@@ -1,7 +1,8 @@
 import { useNDK, useNDKCurrentUser, useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
@@ -9,7 +10,8 @@ import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { router } from 'expo-router';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();
@@ -25,9 +27,31 @@ export default function WalletSettings() {
     const forceSync = async () => {
         setSyncing(true);
         const res = await (activeWallet as NDKCashuWallet).checkProofs();
-        console.log('forceSync', res);
         setSyncing(false);
     }
+
+    const copyDebugInfo = useCallback(() => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
+
+        const dump = activeWallet.state.dump()
+        const journal = activeWallet.state.journal;
+        const dumpStr = {
+            proofs: dump.proofs,
+            balances: dump.balances,
+            totalBalance: dump.totalBalance,
+            tokens: dump.tokens.map((tokenEntry) => ({
+                token: tokenEntry.token?.rawEvent(),
+                state: tokenEntry.state,
+            }))
+        }
+
+        const data = JSON.stringify({...dumpStr, journal}, null, 4);
+
+        Clipboard.setStringAsync(data);
+        
+        toast.success('Copied')
+        router.back();
+    }, [ activeWallet?.walletId ])
 
     const data = useMemo(() => {
         const opts = [
@@ -57,6 +81,13 @@ export default function WalletSettings() {
         ];
 
         if (activeWallet instanceof NDKCashuWallet) {
+            opts.push({
+                id: 'copy-debug',
+                title: 'Copy Debug Info',
+                onPress: copyDebugInfo,
+                rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
+            });
+            
             opts.push(`P2PK: ${activeWallet.p2pk ? activeWallet.p2pk : 'Not set'}`);
         }
 
@@ -85,6 +116,27 @@ export default function WalletSettings() {
 
         return opts;
     }, [currentUser, activeWallet, balance]);
+
+    const [nwcWalletInfo, setNWCWalletInfo] = useState<NDKNWCGetInfoResult | null>(null);
+    const nwcRequested = useRef(false);
+
+    if (activeWallet instanceof NDKNWCWallet) {
+        if (!nwcRequested.current) {
+            activeWallet.getInfo().then((info) => {
+                console.log('nwc info', info);
+                setNWCWalletInfo(info);
+            });
+            nwcRequested.current = true;
+        }
+
+        return (
+            <View className="flex-1 p-8">
+                <Text variant="title1">
+                    {nwcWalletInfo?.alias ? nwcWalletInfo.alias : 'NWC Wallet'}
+                </Text>
+            </View>
+        )
+    }
 
     return (
         <>

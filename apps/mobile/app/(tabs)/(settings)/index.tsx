@@ -1,4 +1,5 @@
 import { Icon, MaterialIconName } from '@roninoss/icons';
+import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 
@@ -7,7 +8,7 @@ import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
 import { useMuteList, useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
@@ -16,6 +17,7 @@ import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Button } from '@/components/nativewindui/Button';
+import { humanWalletType } from '@/utils/wallet';
 
 const relaysItem = {
     id: 'relays',
@@ -48,14 +50,14 @@ const devItem = {
 };
 
 export default function SettingsIosStyleScreen() {
-    const { logout } = useNDK();
+    const { ndk, logout } = useNDK();
     const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const { activeWallet, balance, setActiveWallet } = useNDKWallet();
+    const { activeWallet, setActiveWallet } = useNDKWallet();
     const defaultBlossomServer = useActiveBlossomServer();
     const muteList = useMuteList();
     const wot = useWOT();
-    const unpubliedEvents = useNDKUnpublishedEvents();
+    const unpublishedEvents = useNDKUnpublishedEvents();
     const resetAppSettings = useAppSettingsStore(s => s.reset);
     const toggleAdvancedMode = useAppSettingsStore(s => s.toggleAdvancedMode)
     const advancedMode = useAppSettingsStore(s => s.advancedMode);
@@ -63,6 +65,7 @@ export default function SettingsIosStyleScreen() {
     const appLogout = useCallback(() => {
         router.back();
         resetAppSettings();
+        SecureStore.setItem('timeSinceLastAppSync', '0');
         logout();
     }, [logout, resetAppSettings]);
     
@@ -85,18 +88,8 @@ export default function SettingsIosStyleScreen() {
             //     leftView: <IconView name="person-outline" className="bg-red-500" />,
             //     rightText: <Text variant="body" className="text-muted-foreground">{wot?.size.toString() ?? '0'}</Text>,
             // });
-            opts.unshift({
-                id: 'muted',
-                title: 'Muted Users',
-                leftView: <IconView name="person-outline" className="bg-red-500" />,
-                rightText: (
-                    <Text variant="body" className="text-muted-foreground">
-                        {muteList?.size.toString() ?? '0'}
-                    </Text>
-                ),
-                onPress: () => router.push('/(tabs)/(settings)/muted'),
-            });
-            opts.unshift({
+            
+            opts.push({
                 id: 'profile',
                 onPress: () => {
                     router.push(`/profile?pubkey=${currentUser.pubkey}`);
@@ -109,21 +102,19 @@ export default function SettingsIosStyleScreen() {
             });
             
             if (advancedMode) {
-                opts.push(' ')
-                opts.push(relaysItem)
-                if (unpubliedEvents.size) {
+                if (unpublishedEvents.length) {
+                    opts.push(' ')
                     opts.push({
                         id: 'unpublished-events',
                         title: 'Unpublished Events',
                         leftView: (<IconView name="warning" className="bg-green-500" />),
-                        rightText: unpubliedEvents.size,
+                        rightText: unpublishedEvents.length,
                         onPress: () => router.push('/unpublished')
                     }); 
                 }
             }
             
             opts.push('Wallet & zaps')
-            opts.push(walletItem)
             if (activeWallet) {
                 let name = activeWallet.type.toString();
                 if (activeWallet instanceof NDKCashuWallet)
@@ -132,7 +123,7 @@ export default function SettingsIosStyleScreen() {
                 opts.push({
                     id: 'wallet-balance',
                     title: name,
-                    subTitle: activeWallet.type,
+                    subTitle: humanWalletType(activeWallet.type),
                     leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
                     rightView: <View className="items-center justify-center flex-col m-2">
                         <Button variant="secondary" className="flex-col"
@@ -142,14 +133,23 @@ export default function SettingsIosStyleScreen() {
                     </View>,
                     onPress: () => {
                         if (!activeWallet) return;
-                        console.log('activeWallet', activeWallet instanceof NDKCashuWallet, activeWallet)
                         activeWallet.updateBalance?.();
                         router.push('/(wallet)')
                     }
                 });
+
+                opts.push({
+                    id: 'zaps',
+                    title: 'Zaps',
+                    leftView: <IconView name="lightning-bolt" className="bg-yellow-500" />,
+                    onPress: () => router.push('/(tabs)/(settings)/zaps'),
+                })
+            } else {
+                opts.push(walletItem)
             }
 
-            opts.push('Blossom');
+            opts.push('  ');
+
             opts.push({
                 id: 'blossom',
                 title: 'Media Servers',
@@ -161,17 +161,34 @@ export default function SettingsIosStyleScreen() {
                 ),
                 onPress: () => router.push('/(tabs)/(settings)/blossom'),
             });
-
-            opts.push('  ');
-            opts.push({
-                id: '4',
-                title: 'Logout',
-                leftView: <IconView name="send-outline" className="bg-destructive" />,
-                onPress: appLogout,
-            });
         }
 
         opts.push('   ');
+
+        opts.push(relaysItem);
+        opts.push(keyItem);
+        
+        opts.push('    ');
+
+        opts.push({
+            id: 'muted',
+            title: 'Muted Users',
+            leftView: <IconView name="person-outline" className="bg-red-500" />,
+            rightText: (
+                <Text variant="body" className="text-muted-foreground">
+                    {muteList?.size.toString() ?? '0'}
+                </Text>
+            ),
+            onPress: () => router.push('/(tabs)/(settings)/muted'),
+        });
+        opts.push({
+            id: '4',
+            title: 'Logout',
+            leftView: <IconView name="send-outline" className="bg-destructive" />,
+            onPress: appLogout,
+        });
+
+        opts.push('       ');
 
         opts.push({
             id: 'advanced',
@@ -184,11 +201,11 @@ export default function SettingsIosStyleScreen() {
         opts.push(`Version ${appVersion} (${buildVersion})`);
 
         return opts;
-    }, [currentUser, activeWallet?.walletId, muteList, wot, defaultBlossomServer, unpubliedEvents.size, advancedMode]);
+    }, [currentUser, activeWallet?.walletId, muteList, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode]);
 
     return (
         <>
-            <LargeTitleHeader title="Settings" searchBar={{ iosHideWhenScrolling: true }} rightView={() => <ThemeToggle />} />
+            <Stack.Screen options={{ title: 'Settings', headerRight: () => <ThemeToggle /> }} />
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"

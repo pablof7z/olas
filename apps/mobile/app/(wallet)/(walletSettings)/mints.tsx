@@ -14,7 +14,7 @@ import {
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router, Tabs } from 'expo-router';
+import { router, Stack, Tabs } from 'expo-router';
 import { CashuMint, GetInfoResponse } from '@cashu/cashu-ts';
 import { NDKCashuMintList, useNDKSession, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
@@ -35,7 +35,7 @@ export default function MintsScreen() {
 
     const insets = useSafeAreaInsets();
 
-    const addFn = () => {
+    const addFn = useCallback(() => {
         console.log("addFn", url)
         try {
             const uri = new URL(url)
@@ -49,7 +49,7 @@ export default function MintsScreen() {
             console.log("addFn", e)
             alert("Invalid URL2")
         }
-    };
+    }, [url, mints]);
 
     const data = useMemo(() => {
         if (!ndk || !activeWallet) return []
@@ -83,7 +83,7 @@ export default function MintsScreen() {
         }
         
         return m;
-  }, [mintList, mints, searchText, mintInfos]);
+  }, [mintList, mints, searchText, mintInfos, addFn]);
 
     const save = async () => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
@@ -110,29 +110,29 @@ export default function MintsScreen() {
   
 
   return (
-    <View className="flex-1" style={{ marginTop: insets.top }}>
-        <LargeTitleHeader
-          title="Mints"
-          searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
-          rightView={() => (
-            <TouchableOpacity onPress={save}>
-                <Text className="text-primary">Save</Text>
-            </TouchableOpacity>
-          )}
-        />
         <View className="flex-1">
-            <List
-                contentContainerClassName="pt-4"
-                contentInsetAdjustmentBehavior="automatic"
-                variant="insets"
-                data={data}
-                estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                sectionHeaderAsGap
+            <LargeTitleHeader
+                title="Mints"
+                searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}
+                rightView={() => (
+                    <TouchableOpacity onPress={save}>
+                        <Text className="text-primary">Save</Text>
+                    </TouchableOpacity>
+                )}
             />
+            <View className="flex-1">
+                <List
+                    contentContainerClassName="pt-4"
+                    contentInsetAdjustmentBehavior="automatic"
+                    variant="insets"
+                    data={data}
+                    estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
+                    renderItem={renderItem}
+                    keyExtractor={keyExtractor}
+                    sectionHeaderAsGap
+                />
+            </View>
         </View>
-    </View>
   );
 }
 
@@ -142,7 +142,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
             <ListItem
                 className={cn(
                 'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
                 )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
@@ -168,7 +168,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
             <ListItem
                 className={cn(
                     'ios:pl-0 pl-2',
-                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
+                    info.item.id.match(/testnut/i) && '!bg-red-500/20'
                 )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}

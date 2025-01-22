@@ -61,14 +61,18 @@ const NotificationItem = memo(({ event, currentUser }: { event: NDKEvent, curren
     const setActiveEvent = useSetAtom(activeEventAtom);
     
     const onPress = useCallback(() => {
-        const taggedEventId = event.getMatchingTags('e')[0];
+        console.log(JSON.stringify(event.rawEvent(), null, 2));
+        const taggedEventId =  event.getMatchingTags('E')[0]|| event.getMatchingTags('e')[0];
         if (taggedEventId) {
             ndk.fetchEventFromTag(taggedEventId, event)
                 .then((event) => {
-                    console.log(event.rawEvent());
+                    console.log('result', event);
+                    if (!event) return;
                     setActiveEvent(event);
                     router.push(`/view`);
-                });
+                })
+        } else {
+            console.log(JSON.stringify(event.rawEvent(), null, 2));
         }
     }, [event]);
 
@@ -112,7 +116,7 @@ const reactionFilter = (event: NDKEvent) => event.kind === NDKKind.Reaction;
 export default function Notifications() {
     const [settingsTab, setSettingsTab] = useAtom(settingsTabAtom);
     const currentUser = useNDKCurrentUser();
-    const notifications = useNotifications();
+    const notifications = useNotifications(false);
     const selectedIndex = useMemo(() => {
         switch (settingsTab) {
             case 'all': return 0;
@@ -120,15 +124,19 @@ export default function Notifications() {
             case 'reactions': return 2;
         }
     }, [settingsTab]);
+
+    console.log('notifications', notifications.length);
+
     const notificationsFilter = useMemo(() => {
+        const excludeOwn = (event: NDKEvent) => event.pubkey !== currentUser?.pubkey;
         if (settingsTab === 'all') {
-            return (event: NDKEvent) => true;
+            return (event: NDKEvent) => excludeOwn(event);
         } else if (settingsTab === 'replies') {
-            return replyFilter;
+            return (event: NDKEvent) => replyFilter(event) && excludeOwn(event);
         } else {
-            return reactionFilter;
+            return (event: NDKEvent) => reactionFilter(event) && excludeOwn(event);
         }
-    }, [settingsTab]);
+    }, [settingsTab, currentUser?.pubkey]);
 
     const sortedEvents = useMemo(
         () => {
@@ -136,7 +144,7 @@ export default function Notifications() {
                 .filter(notificationsFilter)
                 .sort((a, b) => b.created_at - a.created_at);
         },
-        [notifications, notificationsFilter]
+        [notifications.length, notificationsFilter]
     );
 
     // when the user views the notifications screen, we should mark all notifications as read

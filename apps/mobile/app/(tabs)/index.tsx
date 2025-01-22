@@ -1,20 +1,18 @@
 import {
-    NDKDVMRequest,
     NDKEventId,
     NDKSubscription,
-    NDKSubscriptionCacheUsage,
     useNDKWallet,
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as SettingsStore from 'expo-secure-store';
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
+import { Dimensions, Modal, Pressable, View } from 'react-native';
 import { myFollows } from '@/utils/myfollows';
 import { router, Stack } from 'expo-router';
 import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { Bitcoin, Bolt, Bookmark, Calendar, ChevronDown, CircleDashed, House, LucideCloudLightning, Trash, Wallet } from 'lucide-react-native';
+import { Calendar, ChevronDown } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
@@ -26,15 +24,23 @@ import { cn } from '@/lib/cn';
 import NotificationsButton from '@/components/NotificationsButton';
 import { Checkbox } from '@/components/nativewindui/Checkbox';
 import Feed from '@/components/Feed';
+import { FlashList } from '@shopify/flash-list';
 import { useObserver } from '@/hooks/observer';
 import Follows from '@/components/icons/follows';
 import ForYou from '@/components/icons/for-you';
 import Bookmarks from '@/components/icons/bookmarks';
-import { formatMoney } from '@/utils/bitcoin';
 import { Image } from 'expo-image';
 import { Button } from '@/components/nativewindui/Button';
 import { IconView } from '@/app/(wallet)/(walletSettings)';
 import Lightning from '@/components/icons/lightning';
+import { Hexpubkey } from '@nostr-dev-kit/ndk';
+import EventMediaContainer from '@/components/media/event';
+import EventContent from '@/components/ui/event/content';
+import UserAvatar from '@/components/ui/user/avatar';
+import { NDKSubscriptionOptions } from '@nostr-dev-kit/ndk';
+import { activeEventAtom } from '@/stores/event';
+import { videoKinds } from '@/utils/const';
+import { FeedEntry } from '@/components/Feed/hook';
 
 const includeTweetsAtom = atom(false);
 
@@ -42,26 +48,22 @@ export const feedTypeAtom = atom<'follows' | 'for-you' | 'bookmark-feed' | strin
 
 // const currentScrollIndexAtom = atom(0);
 
-// function median(values: number[]) {
-//     const sorted = values.sort((a, b) => a - b);
-//     const mid = Math.floor(sorted.length / 2);
-//     return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-// }
-
-// function average(values: number[]) {
-//     return values.reduce((sum, value) => sum + value, 0) / values.length;
-// }
-
 const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
     const { activeWallet } = useNDKWallet();
+    const currentUser = useNDKCurrentUser();
 
     const onWalletPress = useCallback(() => {
+        if (!currentUser?.pubkey) {
+            router.push('/login');
+            return;
+        }
+        
         if (activeWallet) router.push('/(wallet)')
         else router.push('/enable-wallet');
-    }, [ activeWallet ])
+    }, [ activeWallet?.walletId, currentUser?.pubkey ])
 
     return (
         <>
@@ -99,9 +101,9 @@ export default function HomeScreen() {
 function CalendarButton() {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
-    const observer = useObserver([
-        { kinds: [NDKKind.Image], authors: [ currentUser?.pubkey ], "#t": ["olas365"] }
-    ], currentUser?.pubkey || false)
+    const observer = useObserver(currentUser ? [
+        { kinds: [NDKKind.Image], authors: [ currentUser.pubkey ], "#t": ["olas365"] }
+    ] : false, [currentUser?.pubkey])
 
     const press = useCallback(() => {
         router.push('/365')
@@ -116,94 +118,131 @@ function CalendarButton() {
     </Pressable>
 }
 
-// function StoryEntry({ events }: { events: NDKEvent[] }) {
-//     const pTag = events[0].tagValue('p') ?? events[0].pubkey;
-//     const { userProfile } = useUserProfile(pTag);
-//     const insets = useSafeAreaInsets(); 
+function StoryEntry({ events }: { events: NDKEvent[] }) {
+    const pTag = events[0].tagValue('p') ?? events[0].pubkey;
+    const { userProfile } = useUserProfile(pTag);
+    const insets = useSafeAreaInsets(); 
 
-//     const [showStory, setShowStory] = useState(false);
+    const [showStory, setShowStory] = useState(false);
 
-//     if (showStory) {
-//         return (
-//             <Modal
-//                 animationType="slide"
-//                 transparent={false}
-//                 visible={true}
-//                 onRequestClose={() => setShowStory(false)}
-//             >
-//                 <View className="bg-black flex-1 h-screen w-screen flex-col">
-//                     <EventMediaContainer
-//                         event={event}
-//                         muted={false}
-//                         loop={false}
-//                         onFinished={() => setShowStory(false)}
-//                         onPress={(player: VideoPlayer) => {
-//                             player.pause();
-//                             setShowStory(false);
-//                         }}
-//                     />
+    if (showStory) {
+        return (
+            <Modal
+                transparent={false}
+                visible={true}
+                onRequestClose={() => setShowStory(false)}
+            >
+                <View className="bg-black flex-1 h-screen w-screen flex-col items-center justify-center">
+                    <EventMediaContainer
+                        singleMode={true}
+                        event={events[0]}
+                        muted={false}
+                        maxWidth={Dimensions.get('window').width}
+                        maxHeight={Dimensions.get('window').height}
+                        loop={false}
+                        onFinished={() => setShowStory(false)}
+                        // onPress={(player: VideoPlayer) => {
+                        //     player.pause();
+                        //     setShowStory(false);
+                        // }}
+                    />
 
-//                     <View className="absolute bottom-0 left-0 right-0 m-4" style={{ paddingBottom: insets.bottom }}>
-//                         <EventContent event={events[0]} content={events[0].content} className="text-sm text-white" />
-//                     </View>
-//                 </View>
-//             </Modal>
-//         );
-//     }
+                    <View className="absolute bottom-0 left-0 right-0 m-4" style={{ paddingBottom: insets.bottom }}>
+                        <EventContent event={events[0]} content={events[0].content} className="text-sm text-white" />
+                    </View>
+                </View>
+            </Modal>
+        );
+    }
 
-//     return (
-//         <Pressable className="flex-row items-center gap-2" onPress={() => {
-//             setShowStory(true);
-//         }}>
-//             <UserAvatar userProfile={userProfile} size={40} className="w-16 h-16 rounded-full" />
-//         </Pressable>
-//     );
-// }
+    return (
+        <Pressable className="flex-row items-center gap-2" onPress={() => {
+            setShowStory(true);
+        }}>
+            <UserAvatar userProfile={userProfile} size={40} className="w-16 h-16 rounded-full" />
+        </Pressable>
+    );
+}
 
 
-const storiesOpts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true, skipVerification: true, groupable: false, wrap: true };
+function LiveViewEntry({ event }) {
+    const setActiveEvent = useSetAtom(activeEventAtom);
+    const pubkey = event.tagValue("p") ?? event.pubkey;
+    const { userProfile } = useUserProfile(pubkey);
+    const isLive = event.tagValue("status") === "live";
+    
+    return (
+        <Pressable className="flex-col items-center gap-2 px-2" onPress={() => {
+            setActiveEvent(event);
+            console.log(JSON.stringify(event.rawEvent(), null, 4));
+            router.push('/live')
+        }}>
+            <UserAvatar userProfile={userProfile} size={40} className="w-14 h-14 rounded-full" />
+            {isLive && <Text className="text-xs text-white bg-red-500 px-0.5 rounded-lg -translate-y-full">LIVE</Text>}
+        </Pressable>
+    );
+}
 
-// function Stories() {
-//     const storiesFilters: NDKFilter[] = useMemo(() => ([{ kinds: [NDKKind.VerticalVideo ], limit: 5 }]), []);
-//     const { events } = useSubscribe({ filters: storiesFilters, opts: storiesOpts });
-//     const filteredEvents = useMemo(() => {
-//         const eventMaps = new Map<Hexpubkey, NDKEvent[]>();
-//         for (const event of events) {
-//             const pubkey = event.pubkey;
-//             if (!eventMaps.has(pubkey)) {
-//                 eventMaps.set(pubkey, []);
-//             }
-//             eventMaps.get(pubkey)!.push(event);
-//         }
-//         return eventMaps;
-//     }, [events]);
+function Stories({ follows }: { follows: false | Hexpubkey[] }) {
+    const twentyFourHoursAgo = (Date.now() - 600 * 60 * 60 * 1000) / 1000;
+    const storiesFilters: NDKFilter[] | false = follows ? [{ kinds: [30311 as NDKKind], authors: follows, since: twentyFourHoursAgo }] : false;
 
-//     return (
-//         <ScrollView horizontal className="flex-none flex border-b border-border">
-//             <View className="flex-1 flex-row gap-2 p-2">
-//                 <Text className="text-foreground">Stories {events.length} {filteredEvents.size}</Text>
-//                 {Array.from(filteredEvents.entries()).map(([pubkey, events]) => (
-//                     <StoryEntry key={pubkey} events={events} />
-//                 ))}
-//             </View>
-//         </ScrollView>
-//     );
-// }
+    // const storiesFilters: NDKFilter[] = useMemo(() => ([
+    //     { kinds: [NDKKind.VerticalVideo], since: twentyFourHoursAgo, authors: follows }
+    // ]), [follows?.length]);
+    const { events } = useSubscribe(storiesFilters, {
+        closeOnEose: true,
+        skipVerification: true,
+        groupable: false,
+        wrap: true,
+        cacheUnconstrainFilter: []
+    });
+    // const filteredEvents = useMemo(() => {
+    //     const eventMaps = new Map<Hexpubkey, NDKEvent[]>();
+    //     for (const event of events) {
+    //         const pubkey = event.pubkey;
+    //         if (!eventMaps.has(pubkey)) {
+    //             eventMaps.set(pubkey, []);
+    //         }
+    //         eventMaps.get(pubkey)!.push(event);
+    //     }
+    //     return eventMaps;
+    // }, [events]);
+
+    const filtered = useMemo(() => {
+        const e = new Map<NDKEventId, NDKEvent>();
+        for (const event of events) {
+            if (event.tagValue("status") === "live") {
+                e.set(event.id, event);
+                console.log(event.id);
+            }
+        }
+        return Array.from(e.values());
+    }, [events, follows]);
+
+    return (
+        <View className="flex-row" style={{ height: 70 }}>
+        <FlashList
+            data={filtered}
+            horizontal
+            estimatedItemSize={100}
+            keyExtractor={(event) => event.id}
+            renderItem={({item, index, target}) => (
+                <LiveViewEntry event={item} />
+            )}
+        />
+        </View>
+            // horizontal className="flex-none flex border-b border-border">
+            // <View className="flex-1 flex-row gap-4 p-2">
+            //     {Array.from(filteredEvents.entries()).map(([pubkey, events]) => (
+            //         <StoryEntry key={pubkey} events={events} />
+            //     ))}
+            // </View>
+    );
+}
 
 const bookmarksFilters = [{ kinds: [3006], "#k": ["20"] }];
 const bookmarksOpts = { skipVerification: true, groupable: false, wrap: true };
-function BookmarksMode() {
-    const { events: bookmarks } = useSubscribe({ filters: bookmarksFilters, opts: bookmarksOpts });
-
-    return (
-        <View className="flex-1 gap-2 bg-card">
-            <Feed
-                filters={bookmarksFilters}
-                filterKey={key}
-            />
-        </View>
-    );
-}
 
 function useBookmarkIds() {
     const { ndk } = useNDK();
@@ -239,6 +278,7 @@ function useBookmarkIds() {
     
         sub.current.on("eose", () => {
             eosed.current = true;
+            console.log('eose', ids.size);
             setRet(Array.from(ids));
         });
 
@@ -254,6 +294,22 @@ function useBookmarkIds() {
     return ret;
 }
 
+function hashtagFeedToTags(feedType: string) {
+    switch (feedType) {
+        case '#photography': return ['photography', 'photo', 'circunvagar'];
+        case '#introductions': return ['introductions'];
+        case '#family': return ['family', 'kids'];
+        case '#travel': return ['travel', 'explore'];
+        case '#nature': return ['nature', 'beach', 'mountains', 'forest', 'animals', 'wildlife'];
+        case '#memes': return ['memes'];
+        case '#art': return ['art', 'artstr', 'aiart', 'circunvagar'];
+        case '#music': return ['music', 'jitterbug'];
+        case '#food': return ['food', 'foodstr'];
+        default:
+            return [feedType.slice(1, 99)];
+    }
+}
+
 function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
@@ -263,37 +319,35 @@ function DataList() {
 
     const withTweets = useMemo(() => includeTweets || feedType.startsWith('#'), [includeTweets, feedType])
 
+    const bookmarkIdsForFilter = useMemo(() => {
+        if (feedType === 'bookmark-feed') return bookmarkIds;
+        return [];
+    }, [bookmarkIds.length, feedType])
+
     const {filters, key} = useMemo(() => {
         if (feedType === 'bookmark-feed') {
-            console.log('bookmark feed with ids', bookmarkIds.length);
-            if (bookmarkIds.length === 0) return { filters: undefined, key: 'empty' };
+            if (bookmarkIdsForFilter.length === 0) return { filters: undefined, key: 'empty' };
             return {
-                filters: [
-                    { ids: bookmarkIds },
-                    { "#e": bookmarkIds, kinds: [3006] },
-                ], key: 'bookmark-feed'
+                filters: [ { ids: bookmarkIdsForFilter } ], key: 'bookmark-feed'+bookmarkIdsForFilter.length
             };
         }
         
-        const keyParts = [feedType, currentUser?.pubkey ?? "", !!includeTweets];
+        const keyParts = [currentUser?.pubkey ?? "", !!includeTweets, !!feedType.startsWith('#')];
         
         if (feedType === 'follows' && follows && follows?.length > 2) keyParts.push(follows.length.toString())
 
-        const followsFilter = feedType === 'follows' && follows?.length > 2 ? { authors: [...follows, currentUser?.pubkey] } : {};
-        const hashtagFilter = feedType.startsWith('#') ? { "#t": [feedType.slice(1, 99)] } : {};
+        const hashtagFilter = feedType.startsWith('#') ? { "#t": hashtagFeedToTags(feedType) } : {};
 
-        const filters: NDKFilter[] = [
-            { kinds: [NDKKind.Image], ...followsFilter, ...hashtagFilter },
-            { kinds: [NDKKind.Text], '#k': ['20'], ...followsFilter, ...hashtagFilter },
-            { kinds: [NDKKind.Text], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter, ...hashtagFilter },
-            { kinds: [NDKKind.EventDeletion], '#k': ['20'], ...followsFilter, limit: 50 },
-        ];
+        const filters: NDKFilter[] = [];
+    
+        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter });
+        filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter });
 
-        if (!feedType.startsWith('#')) {
-            filters.push({
-                kinds: [NDKKind.Repost, NDKKind.GenericRepost, 3006], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter
-            });
-        }
+        // if (!feedType.startsWith('#')) {
+        //     filters.push({
+        //         kinds: [NDKKind.Repost, NDKKind.GenericRepost, 3006], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter
+        //     });
+        // }
 
         if (currentUser) {
             filters.push({ kinds: [NDKKind.EventDeletion], '#k': ['20'], authors: [currentUser.pubkey] });
@@ -305,13 +359,48 @@ function DataList() {
         }
 
         return {filters, key: keyParts.join()};
-    }, [follows?.length, withTweets, feedType, currentUser?.pubkey]);
+    }, [follows?.length, withTweets, feedType, currentUser?.pubkey, bookmarkIdsForFilter.length]);
 
+    // useEffect(() => {
+    //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
+    //     // if there is no author tag, add 0
+
+    //     const authorCountPerFilter = filters.map((filter) => {
+    //         const authorTag = filter.authors;
+    //         if (authorTag) return authorTag.length;
+    //         return 0;
+    //     });
+    //     console.log('filters', JSON.stringify(authorCountPerFilter, null, 4), key);
+    // }, [filters, key])
+
+    const followSet = useMemo(() => {
+        const set = new Set(follows);
+        if (currentUser) set.add(currentUser.pubkey)
+        return set;
+    }, [currentUser?.pubkey, follows?.length])
+
+    const filterFn = useMemo(() => {
+        if (feedType.startsWith('#')) return null;
+
+        return (feedEntry: FeedEntry, index: number) => {
+            const isFollowed = followSet.has(feedEntry.event?.pubkey)
+            if (isFollowed) return true;
+            if (feedType === 'follows') return false;
+
+            const isVideo = videoKinds.has(feedEntry.event?.kind)
+
+            return !isVideo || isFollowed;
+        };
+    }, [ feedType, followSet.size ])
+    
     return (
-        <View className="flex-1 gap-2 bg-card">
+        <View className="flex-1 bg-card">
             <Feed
+                // prepend={[<Stories follows={followsForFilter} />]}
                 filters={filters}
                 filterKey={key}
+                filterByFollows={feedType === 'follows'}
+                filterFn={filterFn}
             />
         </View>
     );
@@ -406,7 +495,13 @@ function HomeTitle() {
             },
             { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365' },
             { title: '#photography', subTitle: 'Photography posts', value: '#photography' },
-            { title: '#introductions', subTitle: 'Photography posts', value: '#introductions' },
+            { title: '#food', subTitle: 'Food posts', value: '#food' },
+            { title: '#family', subTitle: 'Family posts', value: '#family' },
+            { title: '#art', subTitle: 'Art posts', value: '#art' },
+            { title: '#music', subTitle: 'Music posts', value: '#music' },
+            { title: '#nature', subTitle: 'Nature posts', value: '#nature' },
+            { title: '#travel', subTitle: 'Travel posts', value: '#travel' },
+            { title: '#memes', subTitle: 'Memes posts', value: '#memes' },
         ];
 
         // v.push(...dvms);
@@ -419,27 +514,25 @@ function HomeTitle() {
         setFeedType(value);
         SettingsStore.setItemAsync('feed', value);
     }, [sheetRef.current, setFeedType])
+
+    const buttonWidth = Dimensions.get('window').width / 3 - 15;
     
     return (
         <>
-            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
+            <Pressable style={{ paddingLeft: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
                 <Text className="text-xl font-semibold">{feedTypeTitle}</Text>
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
-            <Sheet ref={sheetRef}>
-                <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.7 }}>
-                    <Pressable className="my-4 flex-row items-center gap-4" onPress={() => setIncludeTweets(!includeTweets)}>
-                        <Checkbox checked={includeTweets} />
-                        <Text className="text-lg font-semibold">Include Tweets</Text>
-                    </Pressable>
-
+            <Sheet snapPoints={['80%']} ref={sheetRef}>
+                <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, flex: 1 }}>
                     <Text variant="title1">Feed Type</Text>
 
-                    <View className="flex-row items-stretch gap-4 justify-equal my-4">
+                    <View className="flex-row gap-1 justify-between my-4 min-h-24">
                         <Button
                             variant={feedType === 'follows' ? 'tonal' : 'secondary'}
-                            className="flex-1 flex-col !py-4"
-                            style={{ paddingVertical: 40 }}
+                            size="none"
+                            className="flex-1 flex-col !py-2"
+                            style={{ paddingVertical: 20, width: buttonWidth }}
                             onPress={() => setOption('follows')}
                         >
                             <Follows stroke={colors.foreground} size={38} />
@@ -448,7 +541,9 @@ function HomeTitle() {
                         
                         <Button
                             variant={feedType === 'for-you' ? 'tonal' : 'secondary'}
+                            size="none"
                             className="flex-1 flex-col"
+                            style={{ paddingVertical: 20, width: buttonWidth }}
                             onPress={() => setOption('for-you')}
                         >
                             <ForYou stroke={colors.foreground} size={38} />
@@ -457,7 +552,9 @@ function HomeTitle() {
 
                         <Button
                             variant={feedType === 'bookmark-feed' ? 'tonal' : 'secondary'}
+                            size="none"
                             className="flex-1 flex-col gap-1"
+                            style={{ paddingVertical: 20, width: buttonWidth }}
                             onPress={() => setOption('bookmark-feed')}
                         >
                             <Bookmarks stroke={colors.foreground} size={38} />
@@ -491,6 +588,11 @@ function HomeTitle() {
                             />
                         )}
                     />
+
+                    <Pressable className="my-4 flex-row items-center gap-4" onPress={() => setIncludeTweets(!includeTweets)}>
+                        <Checkbox checked={includeTweets} />
+                        <Text className="text-lg font-semibold">Include Tweets</Text>
+                    </Pressable>
                 </BottomSheetView>
             </Sheet>
         </>

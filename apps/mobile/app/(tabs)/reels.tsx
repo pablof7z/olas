@@ -93,7 +93,7 @@ const Reel = memo(
                 />
 
                 <SafeAreaView className="absolute bottom-0 pb-10 left-4 flex-col items-start gap-2">
-                    <Reactions event={event} relatedEvents={[]} foregroundColor="white" mutedColor="white" />
+                    <Reactions event={event} foregroundColor="white" mutedColor="white" />
                     
                     <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
                         <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
@@ -111,11 +111,10 @@ const Reel = memo(
     }
 );
 
-const opts = { groupable: false, closeOnEose: false, wrap: true };
-
 export default function ReelsScreen() {
-    const filters = useMemo(() => [{ kinds: [NDKKind.VerticalVideo] }], []);
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe([
+        { kinds: [NDKKind.VerticalVideo] }
+    ], { groupable: false, closeOnEose: false, wrap: true });
     const safeAreaInsets = useSafeAreaInsets();
 
     const setVisibleItem = useSetAtom(visibleItemAtom);

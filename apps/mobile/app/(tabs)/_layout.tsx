@@ -11,17 +11,19 @@ import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import { usePostTypeSelectorBottomSheet } from '@/components/NewPost/TypeSelectorBottomSheet/hook';
 import { useNewPost } from '@/hooks/useNewPost';
+import { postTypeSelectorSheetRefAtom } from '@/components/NewPost/TypeSelectorBottomSheet/store';
+import { Platform } from 'react-native';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const postTypeSelectorSheetRef = useAtomValue(postTypeSelectorSheetRefAtom);
 
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
 
-    const openNewPostTypeSelector = usePostTypeSelectorBottomSheet();
     const newPost = useNewPost();
 
     return (
@@ -33,7 +35,7 @@ export default function TabsLayout() {
                 tabBarInactiveTintColor: colors.muted,
             }}>
             <Tabs.Screen
-                name="(home)"
+                name="index"
                 options={{
                     headerTintColor: colors.foreground,
                     headerTransparent: false,
@@ -62,13 +64,24 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="publish2"
                 listeners={{
+                    // tabPress: (e) => {
+                    //     e.preventDefault();
+                    //     if (!currentUser) {
+                    //         router.push('/login');
+                    //     } else {
+                    //         newPost({ types: ['images', 'videos'] });
+                    //     }
+                    // },
                     tabPress: (e) => {
-                        e.preventDefault();
+                        e?.preventDefault?.();
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            newPost({ types: ['images', 'videos'] });
-                            // openNewPostTypeSelector();
+                            if (postTypeSelectorSheetRef.current) {
+                                postTypeSelectorSheetRef.current.present();
+                            } else {
+                                newPost({ types: ['images', 'videos'] });
+                            }
                         }
                     },
                 }}

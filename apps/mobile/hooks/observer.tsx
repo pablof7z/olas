@@ -1,4 +1,4 @@
-import { NDKEvent, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKFilter, wrapEvent, NDKSubscription, NDKSubscriptionCacheUsage, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * @returns 
  */
 export function useObserver(
-    filters: NDKFilter[],
-    key: string | false
+    filters: NDKFilter[] | false,
+    dependencides: any[] = []
 ) {
     const { ndk } = useNDK();
     const sub = useRef<NDKSubscription | null>(null);
@@ -17,6 +17,8 @@ export function useObserver(
     const buffer = useRef<NDKEvent[]>([]);
     const bufferTimeout = useRef<NodeJS.Timeout | null>(null);
     const addedEventIds = new Set();
+
+    dependencides.push(!!filters);
 
     const stopFilters = useCallback(() => {
         sub.current?.stop();
@@ -29,13 +31,11 @@ export function useObserver(
     }, [ setEvents ]);
 
     useEffect(() => {
-        if (!ndk) return;
+        if (!ndk || !filters || !filters.length) return;
         
         let isValid = true;
 
         if (sub.current) stopFilters();
-
-        if (key === false) return;
 
         sub.current = ndk.subscribe(filters, {
             skipVerification: true,
@@ -53,7 +53,7 @@ export function useObserver(
                 return;
             }
             addedEventIds.add(tagId);
-            buffer.current.push(event);
+            buffer.current.push(wrapEvent(event));
             if (!bufferTimeout.current) {
                 bufferTimeout.current = setTimeout(() => {
                     setEvents(prev => [...prev, ...buffer.current]);
@@ -68,7 +68,7 @@ export function useObserver(
             isValid = false;
             stopFilters();
         };
-    }, [ndk, key]);
+    }, [ndk, ...dependencides]);
 
     return events;
 }

@@ -1,8 +1,9 @@
-import { NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
+import { NDKKind, NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
 import { Heart } from "lucide-react-native";
 import { useCallback, useMemo } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
+import { useObserver } from "@/hooks/observer";
 
 type ReactProps = {
     /**
@@ -45,28 +46,22 @@ type ReactProps = {
 
 export default function React({
     event,
-    reactedByUser,
     mutedColor,
     iconSize = 24,
     showReactionCount = true,
-    allReactions,
     currentUser
 }: ReactProps) {
+    const allReactions = useObserver([{ kinds: [NDKKind.Reaction], ...event.filter()} ], [event.id])
+    const reactedByUser = currentUser ? allReactions?.filter(r => r.pubkey === currentUser.pubkey) : [];
+    const isReactedByUser = reactedByUser && reactedByUser.length > 0;
     const react = useCallback(async () => {
+        if (isReactedByUser) return;
+        
         const r = await event.react('+', false);
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
         r.publish();
-    }, [event.id]);
-
-    if (!reactedByUser && allReactions) {
-        reactedByUser = useMemo(() => {
-            if (!currentUser) return [];
-            return allReactions?.filter(r => r.pubkey === currentUser.pubkey);
-        }, [allReactions, currentUser?.pubkey, event.id]);
-    }
-
-    const isReactedByUser = reactedByUser && reactedByUser.length > 0;
+    }, [event.id, isReactedByUser]);
     
     return (
         <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>

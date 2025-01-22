@@ -5,7 +5,6 @@ yarn.lock
 /ios
 android
 __generated__
-node_modules
 .expo/*
 npm-debug.*
 *.jks

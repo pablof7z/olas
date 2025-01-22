@@ -51,7 +51,7 @@ export default function Bookmarks() {
         [imageCurationSet.items.length, otherBookmarkIds]
     );
 
-    const { events } = useSubscribe({ filters });
+    const { events } = useSubscribe(filters, {}, [filters]);
 
     const sortedEvents = useMemo(() => events.sort((a, b) => b.created_at! - a.created_at!), [events]);
     const setActiveEvent = useSetAtom(activeEventAtom);

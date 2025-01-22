@@ -21,7 +21,7 @@ export default function VideoComponent({
     muted?: boolean;
     dimensions?: MediaDimensions;
     maxDimensions?: Partial<MediaDimensions>;
-    onPress: (player: VideoPlayer) => void;
+    onPress?: (player: VideoPlayer) => void;
     onLongPress: () => void;
     onFinished?: () => void;
 }) {
@@ -54,13 +54,14 @@ export default function VideoComponent({
 
 
     return (
-        <Pressable style={styles.container} onPress={() => onPress(player)} onLongPress={onLongPress}>
+        <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
             <VideoView
                 style={{ height: _style.height, width: _style.width }}
                 contentFit="cover"
                 player={player}
                 allowsFullscreen
                 allowsPictureInPicture
+                nativeControls={false}
             />
         </Pressable>
     );

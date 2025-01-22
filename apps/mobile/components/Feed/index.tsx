@@ -1,9 +1,9 @@
-import { NDKEvent, NDKEventId, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKEventId, NDKFilter, useFollows } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
 import { ForwardedRef, forwardRef, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Pressable, View } from "react-native";
+import { Pressable, RefreshControl, View } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { ArrowUp } from "lucide-react-native";
 import { useSetAtom } from "jotai";
@@ -15,20 +15,26 @@ type FeedProps = {
     onPress?: (event: NDKEvent) => void;
     filters: NDKFilter[];
     filterKey: string;
+    prepend?: React.ReactNode;
+    filterByFollows?: boolean;
+    filterFn?: (feedEntry: FeedEntry, index: number) => boolean
 }
 
 const keyExtractor = (entry: FeedEntry) => entry.id;
 
-export default function Feed({ onPress, filters, filterKey }: FeedProps) {
+export default function Feed({ onPress, filters, filterKey, prepend, filterByFollows, filterFn }: FeedProps) {
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>();
+    const [refreshCount, setRefreshCount] = useState(0);
 
     useScrollToTop(ref);
 
-    const { entries, newEntries, updateEntries } = useFeedEvents(filters, filterKey);
+    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterByFollows, filterFn }, [filterKey + refreshCount]);
     const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event))
 
-    console.log('rendering feed', entries?.length, newEntries?.length)
+    // useEffect(() => {
+    //     console.log('rendering feed', entries?.length, newEntries?.length)
+    // }, [entries?.length])
 
     const onViewableItemsChanged = useCallback(({ viewableItems }) => {
         visibleIndex.current = viewableItems[0]?.index ?? null;
@@ -67,7 +73,25 @@ export default function Feed({ onPress, filters, filterKey }: FeedProps) {
             router.push('/view');
         }
     }, [onPress, setActiveEvent])
+
+    const [refreshing, setRefreshing] = useState(false);
+
+    const forceRefresh = useCallback(() => {
+        setRefreshing(true);
+        updateEntries('force refresh');
+        setShowNewEntriesPrompt(false)
+        setRefreshCount(refreshCount + 1);
+        setTimeout(() => {
+            setRefreshing(false);
+        }, 1000);
+    }, [updateEntries, setRefreshCount, setRefreshing]);
     
+    const renderEntries = useMemo(() => {
+        const ret: (FeedEntry | { id: string, node: React.ReactNode })[] = [...entries];
+        if (prepend) ret.unshift({ id: 'prepend', node: prepend });
+        return ret;
+    }, [entries, prepend])
+
     return (
         <>
         {showNewEntriesPrompt && (
@@ -78,14 +102,23 @@ export default function Feed({ onPress, filters, filterKey }: FeedProps) {
         )}
         <FlashList
             ref={ref}
-            data={entries}
+            data={renderEntries}
             estimatedItemSize={500}
             keyExtractor={keyExtractor}
             onViewableItemsChanged={onViewableItemsChanged}
             scrollEventThrottle={100}
-            renderItem={({ item, index }) =>
-                <Post event={item.event} index={index} reposts={item.reposts} timestamp={item.timestamp} onPress={() => _onPress(item.event)} />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
+            getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
+            renderItem={({ item, index }) => {
+                if (item.id === 'prepend') return item.node;
+                return <Post 
+                    event={item.event} 
+                    index={index} 
+                    reposts={item.reposts} 
+                    timestamp={item.timestamp} 
+                    onPress={() => _onPress(item.event)} 
+                />;
+            }}
             disableIntervalMomentum={true}
         />
         </>

@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
+import { useObserver } from '@/hooks/observer';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -48,7 +49,7 @@ export default function ViewScreen() {
         const isAndroid = Platform.OS === 'android';
         if (isAndroid) {
             return {
-                marginTop: insets.top,
+                paddingTop: insets.top,
             }
         }
     }, [Platform.OS])
@@ -72,15 +73,16 @@ export default function ViewScreen() {
                         event={activeEvent}
                         maxWidth={Dimensions.get('window').width}
                         maxHeight={Dimensions.get('window').height * 0.7}
+                        muted={false}
                     />
                 </ScrollView>
 
                 {/* Content */}
-                <View className="p-4">
+                <View className="p-4 flex-col gap-4" style={{ paddingBottom: insets.bottom * 4 }}>
                     <EventContent event={activeEvent} content={content} className="text-sm text-white" />
+                    <Reactions event={activeEvent} foregroundColor='white' mutedColor='white' />
                 </View>
 
-                <Reactions event={activeEvent} relatedEvents={[]} foregroundColor='white' mutedColor='white' />
             </View>
         </ScrollView>
     );

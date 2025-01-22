@@ -1,7 +1,7 @@
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useMuteList, useNDK, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
+import { usePubkeyBlacklist } from "@/hooks/blacklist";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useMuteList, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { blacklistPubkeys } from "@/utils/const";
 
 /**
  * An entry in the feed. It ultimately resolves to an event,
@@ -31,27 +31,31 @@ export type FeedEntry = {
 /**
  * Handles creating a feed that accounts for reposts, mutes
  * @param filters 
- * @param key Key by which to redo the subscription
- * @param subId 
+ * @param opts.subId The subscription ID to use for this feed
+ * @param opts.filterByFollows Whether to filter by follows
+ * @param dependencies Dependencies to re-run the subscription
  * @returns 
  */
 export function useFeedEvents(
     filters: NDKFilter[] | undefined,
-    key: string,
-    subId = 'feed'
+    { subId, filterByFollows, filterFn }: { subId?: string, filterByFollows?: boolean, filterFn?: (feedEntry: FeedEntry, index: number) => boolean } = {},
+    dependencies = []
 ) {
+    subId ??= 'feed';
+    filterByFollows ??= false;
+    
     const { ndk } = useNDK();
 
     /**
      * This reference keeps all the events that have been received
-     * and that will be rendered.
+     * and that might be rendered (after filtering)
      */
     const feedEntriesRef = useRef(new Map<NDKEventId, FeedEntry>());
-    const muteList = useMuteList();
-    const follows = useFollows();
-
+    
     /**
-     * Tracks the event Ids we have already processed
+     * Tracks the event Ids we have already processed, note that this includes
+     * IDs that don't are not feed entries (like reposts), that's why we need
+     * to keep track of them separately.
      */
     const addedEventIds = useRef(new Set());
 
@@ -70,46 +74,45 @@ export function useFeedEvents(
      */
     const [newEntries, setNewEntries] = useState<FeedEntry[]>([]);
 
-    const effectiveBlackList = useMemo(() => {
-        let list = new Set(blacklistPubkeys);
+    const pubkeyBlacklist = usePubkeyBlacklist();
 
-        if (muteList) muteList.forEach(p => list.add(p))
-        if (follows) for (const pk of follows) list.delete(pk);
-        return list;
-    }, [muteList?.size, follows?.length])
-
-    useEffect(() => {
-        // remove muted and blacklisted pubkeys
-        for (const [id, event] of feedEntriesRef.current.entries()) {
-            if (!event.event) continue;
-            const {pubkey} = event.event;
-
-            if (effectiveBlackList.has(pubkey)) {
-                feedEntriesRef.current.delete(id);
-            }
-        }
-
-        updateEntries('skip list changed');
-    }, [effectiveBlackList.size]);
-
-    const discardMutedPubkeys = useCallback((entry: FeedEntry) => !effectiveBlackList.has(entry.event?.pubkey), [effectiveBlackList.size]);
+    const currentUser = useNDKCurrentUser();
+    const follows = useFollows();
+    // const followSet = useMemo(() => {
+    //     const set = new Set(follows);
+    //     if (currentUser) set.add(currentUser.pubkey)
+    //     return set;
+    // }, [currentUser?.pubkey, follows?.length])
 
     /**
      * This modifies entries in a way that the user of the hook will receive the
      * update in the feed of entries to render
      */
     const updateEntries = useCallback((reason: string) => {
-        console.log('updating entries, we start with', entries.length, { reason });
-        const newEntries = Array.from(feedEntriesRef.current.values())
+        const time = Date.now() - subscriptionStartTime.current;
+        console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
+        let newEntries = Array.from(feedEntriesRef.current.values())
             .filter((entry) => !!entry.event)
-            .filter(discardMutedPubkeys)
-            .sort((a, b) => b.timestamp - a.timestamp);
+            .filter((entry: FeedEntry) => !pubkeyBlacklist.has(entry.event?.pubkey))
+        
+        // if (filterByFollows)
+        //     newEntries = newEntries.filter((feedEntry: FeedEntry) => followSet.has(feedEntry.event?.pubkey));
+        if (filterFn)
+            newEntries = newEntries.filter(filterFn);
+        
+        newEntries = newEntries.sort((a, b) => b.timestamp - a.timestamp);
 
         setEntries(newEntries);
         if (newEntries.length > 0) setNewEntries([]);
         
-        // console.log('updated entries, finished with', newEntries.length)
-    }, [setEntries, newEntries, setNewEntries, discardMutedPubkeys]);
+        // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
+    }, [setEntries, setNewEntries, pubkeyBlacklist.size, filterByFollows, filterFn]);
+
+    useEffect(() => {
+        updateEntries('update entries changed');
+    }, [updateEntries]);
+
+    const highestTimestamp = useRef(-1);
 
     const addEntry = useCallback((id: string, cb: (currentEntry: FeedEntry) => FeedEntry) => {
         let entry: FeedEntry = feedEntriesRef.current.get(id);
@@ -118,6 +121,13 @@ export function useFeedEvents(
         if (!!ret) {
             ret.timestamp = ret.event?.created_at ?? -1;
             feedEntriesRef.current.set(id, ret)
+
+            // if this is the newest timestamp, we haven't timestamped
+            // show the new entry
+            if (ret.timestamp > highestTimestamp.current) {
+                highestTimestamp.current = ret.timestamp;
+                updateEntries('new entry');
+            }
         }
         return entry;
     }, []);
@@ -211,22 +221,40 @@ export function useFeedEvents(
     const handleEose = useCallback(() => {
         eosed.current = true;
         updateEntries('eose');
-    }, [])
+    }, [updateEntries])
+
+    /**
+     * We want to flush the buffer the moment the cache finishes loading, particularly for when
+     * we are not connected to relays and there won't be an EOSE coming any time soon.
+     */
+    const handleCacheEose = useCallback(() => {
+        updateEntries('cache-eose');
+    }, [updateEntries]);
 
     const filterExistingEvents = useCallback(() => {
+        let changed = false;
+
         for (const [id, feedEntry] of feedEntriesRef.current) {
             if (!feedEntry.event) continue;
             const keep = feedEntry.event && matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent)
             if (!keep) {
                 // console.log('filtering out', id)
                 feedEntriesRef.current.delete(id)
+                addedEventIds.current.delete(id);
+                changed = true;
             }
         }
-    }, [key]);
+
+        if (changed) updateEntries('filtering out events');
+    }, dependencies);
+
+    const subscriptionStartTime = useRef(0);
     
     useEffect(() => {
         if (!ndk) return;
         if (!filters) return;
+
+        subscriptionStartTime.current = Date.now();
 
         if (subscription.current) {
             subscription.current.stop();
@@ -235,25 +263,21 @@ export function useFeedEvents(
             addedEventIds.current.clear();
 
             filterExistingEvents()
-            updateEntries('finalizing subscription, will update entries');
         }
-        
-        console.log('subscribe feed filters', JSON.stringify(filters));
         
         const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId }, undefined, false);
 
         sub.on("event", handleEvent);
-        sub.on('cacheEose', handleEose);
         sub.once('eose', handleEose);
+        sub.once('cacheEose', handleCacheEose);
 
         sub.start();
         subscription.current = sub;
 
         return () => {
-            // console.log('unsubscribing', JSON.stringify(filters).substring(0, 400));
             sub.stop();
         }
-    }, [ndk, key])
+    }, [ndk, ...dependencies])
 
     return {
         entries,
@@ -314,7 +338,12 @@ export function useFeedMonitor(
         slice.sub = ndk.subscribe(
             filters
         , {
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, closeOnEose: false, groupable: false, skipVerification: true, subId: `feed-${slice.start}2${slice.end}` }, undefined, true);
+                cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+                closeOnEose: false,
+                groupable: false,
+                skipVerification: true,
+                subId: `feed-${slice.start}2${slice.end}`
+            }, undefined, true);
         activeSlices.current.push(slice);
     }
 

@@ -1,7 +1,7 @@
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
-import { NDKCashuMintList, NDKEvent, NDKKind, NDKNutzap, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit, useNDK, useNDKCurrentUser, useNDKSession, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Pressable } from "react-native";
+import { NDKPrivateKeySigner, NDKCashuMintList, NDKEvent, NDKKind, NDKNutzap, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit, useNDK, useNDKCurrentUser, useNDKSession, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletBalance, NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, Stack, Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Button } from "@/components/nativewindui/Button";
@@ -11,6 +11,7 @@ import { useColorScheme } from "@/lib/useColorScheme";
 import TransactionHistory from "@/components/wallet/transactions/list";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePaymentStore } from "@/stores/payments";
 
 function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
     const [info, setInfo] = useState<Record<string, any> | null>(null);
@@ -37,6 +38,15 @@ export default function WalletScreen() {
     const currentUser = useNDKCurrentUser();
     const { activeWallet, balance } = useNDKWallet();
     const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList, NDKKind.CashuMintList, { create: true });
+    const [isTestnutWallet, setIsTestnutWallet] = useState(false);
+
+    useEffect(() => {
+        if (!activeWallet) return;
+
+        if (activeWallet instanceof NDKCashuWallet && activeWallet.mints?.some(m => m.match(/testnut\.cashu/))) {
+            setIsTestnutWallet(true);
+        }
+    }, [ mintList?.id ])
 
     const isNutzapWallet = useMemo(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return false;
@@ -62,6 +72,38 @@ export default function WalletScreen() {
 
     const inset = useSafeAreaInsets();
 
+    const pendingPayments = usePaymentStore(s => s.pendingPayments);
+
+    const onLongPress = useCallback(() => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
+        const dump = activeWallet.state.dump();
+        console.log("balances", JSON.stringify(dump.balances, null, 2)); 
+        console.log("proofs", JSON.stringify(dump.proofs, null, 2));
+        console.log("tokens", JSON.stringify(dump.tokens.map(te => ({
+            tokenId: te.token?.id,
+            proofCount: te.token?.proofs.length,
+            proofAmount: te.token?.proofs.reduce((acc, p) => acc + p.amount, 0),
+            proofs: te.token?.proofs.map(p => p.C),
+            mint: te.token?.mint,
+            status: te.state,
+            date: new Date(te.token?.created_at*1000).toLocaleString(),
+        })), null, 2));
+        console.log("Journal");
+        console.log(JSON.stringify(activeWallet.state.journal, null, 2));
+        // const signer = NDKPrivateKeySigner.generate();
+        // const pablo = ndk.getUser({ npub: "npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft" });
+        // [dump.balances, dump.proofs, dump.tokens, activeWallet.state.journal].forEach(async (data) => {
+        //     const message = new NDKEvent(ndk);
+        //     message.kind = 4;
+        //     message.content = JSON.stringify(data);
+        //     await message.encrypt(pablo);
+        //     message.tags.push(['p', pablo.pubkey]);
+        //     await message.sign(signer);
+        //     await message.publish();
+        //     console.log('message', message.rawEvent());
+        // });
+    }, [activeWallet?.walletId]);
+
     return (
         <>
             <Tabs.Screen
@@ -74,20 +116,37 @@ export default function WalletScreen() {
             <SafeAreaView className="flex-1" style={{ paddingTop: inset.top }}>
                 <View className="flex-1 flex-col">
                     <View className="flex-col grow">
+                        {isTestnutWallet && (
+                            <Pressable className="flex-row items-center justify-center bg-red-500/30 ios:rounded-t-md p-4" onPress={() => {
+                                router.push('/(wallet)/(walletSettings)/mints');
+                            }}>
+                                <Text className="text-red-800">
+                                    You are using a test mint. Click here to remove it.
+                                </Text>
+                            </Pressable>
+                        )}
                         {/* {!isNutzapWallet && (
                             <Button onPress={setNutzapWallet}>
                                 <Text>Enable Nutzaps</Text>
                             </Button>
                         )} */}
                         
-                        {balance && <WalletBalance amount={balance.amount} unit={balance.unit} onPress={() => activeWallet?.updateBalance?.()} />}
+                        {balance && <WalletBalance amount={balance.amount} unit={balance.unit} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>}
+                        {pendingPayments.size > 0 && (
+                            <View className="flex-row items-center justify-center bg-foreground/10 rounded-md p-2">
+                                <Text className="text-muted-foreground text-sm">
+                                    {pendingPayments.size} pending zaps
+                                </Text>
+                            </View>
+                        )}
+
                         <Footer activeWallet={activeWallet} currentUser={currentUser} />
                         {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />}
                         {activeWallet instanceof NDKCashuWallet && <WalletNip60 wallet={activeWallet} />}
                     </View>
                 </View>
             </SafeAreaView>
-            </>
+        </>
     );
 }
 

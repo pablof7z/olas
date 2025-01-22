@@ -1,7 +1,7 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, TouchableOpacity, View } from 'react-native';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
@@ -9,10 +9,11 @@ import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router } from 'expo-router';
 import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
-import { Fullscreen, MapPin, Timer, Type } from 'lucide-react-native';
+import { Fullscreen, MapPin, Tag, Timer, Type } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { communityBottomSheetRefAtom } from './CommunityBottomSheet';
+import { tagSelectorBottomSheetRefAtom } from '../TagSelectorBottomSheet';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { generateEvent } from './event';
 import { postTypeSheetRefAtom } from './PostTypeBottomSheet';
@@ -39,7 +40,6 @@ export function PostMetadataStep() {
 
     async function realPublish() {
         const {event, relaySet} = await generateEvent(ndk, metadata, selectedMedia);
-        await event.sign();
         router.push('/');
         event.publish(relaySet).then(() => {
             setSelectedMedia([]);
@@ -61,6 +61,7 @@ export function PostMetadataStep() {
     }, [uploading, wantsToPublish, publishing]);
 
     const publish = useCallback(async () => {
+        console.log('publish', { uploading, wantsToPublish, publishing });
         if (uploading) {
             setWantsToPublish(true);
             return;
@@ -76,14 +77,10 @@ export function PostMetadataStep() {
     const [fullPreview, setFullPreview] = useState(false);
     const { colors } = useColorScheme();
     return (
-        <View className="flex-1 grow relative" style={{ marginBottom: inset.bottom }}>
-            <View
-                className={cn('w-full bg-foreground/5', !fullPreview ? 'h-2/5' : 'grow')}
-            >
-                <SelectedMediaPreview />
-            </View>
+        <View className="flex-1 grow" style={{ marginBottom: inset.bottom }}>
+            <SelectedMediaPreview />
 
-            <Button className="absolute z-50 top-0 left-0" variant="secondary" size="icon" onPress={() => setFullPreview(!fullPreview)}>
+            <Button className="" variant="secondary" size="icon" onPress={() => setFullPreview(!fullPreview)}>
                 <Fullscreen size={24} color={colors.foreground} />
             </Button>
 
@@ -108,6 +105,7 @@ function PostOptions() {
     const [metadata, setMetadata] = useAtom(metadataAtom);
     const locationBottomSheetRef = useAtomValue(locationBottomSheetRefAtom);
     const communityBottomSheetRef = useAtomValue(communityBottomSheetRefAtom);
+    const tagSelectorBottomSheetRef = useAtomValue(tagSelectorBottomSheetRefAtom);
     const { colors } = useColorScheme();
     const isUploading = useAtomValue(uploadingAtom);
     const selectedMedia = useAtomValue(selectedMediaAtom);
@@ -128,6 +126,11 @@ function PostOptions() {
     const openCommunity = () => {
         communityBottomSheetRef?.current?.present();
         communityBottomSheetRef?.current?.expand();
+    };
+
+    const openTags = () => {
+        tagSelectorBottomSheetRef?.current?.present();
+        tagSelectorBottomSheetRef?.current?.expand();
     };
 
     const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
@@ -191,24 +194,45 @@ function PostOptions() {
             },
         ];
 
-        data.push({
-            id: 'location',
-            title: 'Location',
-            onPress: openLocation,
-            subTitle: metadata.location ? 'Photo coordinates' : 'Location not available',
+        if (metadata.location) {
+            data.push({
+                id: 'location',
+                title: 'Location',
+                onPress: openLocation,
+                subTitle: metadata.location ? 'Photo coordinates' : 'Location not available',
+                leftView: (
+                    <View style={{ paddingHorizontal: 10 }}>
+                        <MapPin size={24} color={colors.muted} />
+                    </View>
+                ),
+                rightView: (
+                    <View className="flex-1 justify-center">
+                        <Text className="text-sm text-muted-foreground">
+                            {metadata.removeLocation === true
+                                ? 'Not published'
+                                : metadata.location
+                                    ? `${metadata.location.latitude}\n${metadata.location.longitude}`
+                                    : 'None'}
+                        </Text>
+                    </View>
+                ),
+            });
+        }
+
+        data.unshift({
+            id: 'tags',
+            title: 'Tags',
+            subTitle: 'Help people find your post',
+            onPress: openTags,
             leftView: (
                 <View style={{ paddingHorizontal: 10 }}>
-                    <MapPin size={24} color={colors.muted} />
+                    <Tag size={24} color={colors.muted} />
                 </View>
             ),
             rightView: (
                 <View className="flex-1 justify-center">
                     <Text className="text-sm text-muted-foreground">
-                        {metadata.removeLocation === true
-                            ? 'Not published'
-                            : metadata.location
-                              ? `${metadata.location.latitude}\n${metadata.location.longitude}`
-                              : 'None'}
+                        {metadata.tags?.length ?? 'None'}
                     </Text>
                 </View>
             ),
@@ -236,14 +260,14 @@ function PostOptions() {
     }, [metadata]);
 
     return (
-        <>
+        <View className="flex-1 bg-card">
             <TouchableOpacity onPress={openCaption} className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
                 <Text className="text-sm text-foreground">{metadata.caption.trim().length > 0 ? metadata.caption : 'Add a caption'}</Text>
             </TouchableOpacity>
 
             <List
                 data={data}
-                contentContainerClassName="pt-4"
+                contentContainerClassName="pt-4 bg-card"
                 estimatedItemSize={59}
                 contentInsetAdjustmentBehavior="automatic"
                 renderItem={({ item, index, target }) => {
@@ -268,6 +292,6 @@ function PostOptions() {
                     );
                 }}
             />
-        </>
+        </View>
     );
 }

@@ -5,24 +5,23 @@ import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
-import { Text } from "@/components/nativewindui/Text";
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCacheInitialized, useNDKCurrentUser, useNDKNutzapMonitor, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { router, Stack } from 'expo-router';
+import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCurrentUser, useNDKNutzapMonitor, useNDKCacheInitialized } from '@nostr-dev-kit/ndk-mobile';
+import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKEvent, NDKKind, NDKList, NDKRelay, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, NDKRelay, } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { configurePushNotifications } from '~/lib/notifications';
 import { useNDK, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
@@ -33,26 +32,24 @@ import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
 import { PromptForNotifications } from './notification-prompt';
 import PostTypeSelectorBottomSheet from '@/components/NewPost/TypeSelectorBottomSheet';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
-import { Pressable } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
-import { feedTypeAtom } from './(tabs)/(home)';
-import { CommunityBottomSheet } from '@/components/NewPost/CommunityBottomSheet';
+import { feedTypeAtom } from './(tabs)';
+import { mainKinds } from '@/utils/const';
+import { mountTagSelectorAtom, TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
+import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { db, initialize } from "@/stores/db";
+import NutzapMonitor from '@/components/cashu/nutzap-monitor';
+import { useWalletMonitor } from '@/hooks/wallet';
 
-const mainKinds = [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo];
+initialize()
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
     [NDKKind.ImageCurationSet, { wrapper: NDKList }],
     [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
-    [NDKKind.SimpleGroupList, { wrapper: NDKList }],
-    [967],
+    // [NDKKind.SimpleGroupList, { wrapper: NDKList }],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
-
-const sessionFilters = (user: NDKUser) => [
-    { kinds: [NDKKind.GenericReply], '#K': mainKinds.map((k) => k.toString()), '#p': [user.pubkey] },
-    { kinds: [NDKKind.GenericRepost], '#k': mainKinds.map((k) => k.toString()), '#p': [user.pubkey] },
-    { authors: [user.pubkey] },
-];
 
 const settingsStore = {
     get: SecureStore.getItemAsync,
@@ -61,17 +58,21 @@ const settingsStore = {
     getSync: SecureStore.getItem,
 };
 
+const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+    const url = new URL(relay.url);
+    if (direction === 'send' && relay.url.match(/olas/)) console.log('👉', url.hostname, msg.slice(0, 400));
+    if (direction === 'recv' && relay.url.match(/olas/i)) console.log('👈', url.hostname, msg.slice(0, 400));
+};
+
+let timeSinceFirstRender = undefined;
+
 export default function RootLayout() {
     const [appReady, setAppReady] = useState(false);
-    const [wotReady, setWotReady] = useState(false);
+    const cacheInitialized = useNDKCacheInitialized();
+    // const [wotReady, setWotReady] = useState(false);
 
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
-    const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-        const url = new URL(relay.url);
-        if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 400));
-        // if (direction === 'recv' && msg.match(/EOSE/)) console.log('👈', url.hostname, msg.slice(0, 400));
-    };
 
     let relays = (SecureStore.getItem('relays') || '').split(',');
 
@@ -96,14 +97,16 @@ export default function RootLayout() {
         relays.unshift('wss://purplepag.es/');
     }
     
-    // relays = [ 'ws://localhost:2929' ];
-
-    const { ndk, init: initializeNDK } = useNDK();
+    const { ndk, init: initializeNDK } = useNDK() as { ndk: NDK, init: (opts: any) => void };
     const { init: initializeSession } = useNDKSession();
-    const [relayNotices, setRelayNotices] = useAtom(relayNoticesAtom);
+    const setRelayNotices = useSetAtom(relayNoticesAtom);
     const currentUser = useNDKCurrentUser();
     const timeoutRef = useRef(null);
     const setFeedType = useSetAtom(feedTypeAtom);
+
+    // useEffect(() => { console.log('ndk changed', !!ndk, Date.now() - timeSinceFirstRender); }, [ndk])
+    // useEffect(() => { console.log('initializeSession changed', !!initializeSession, Date.now() - timeSinceFirstRender); }, [initializeSession])
+    // useEffect(() => { console.log('currentUser changed', !!currentUser, Date.now() - timeSinceFirstRender); }, [currentUser])
     
     useEffect(() => {
         const storedFeed = SettingsStore.getItem('feed');
@@ -118,25 +121,74 @@ export default function RootLayout() {
         if (!ndk || !currentUser?.pubkey) return;
         if (ndk && timeoutRef.current) return;
 
+        const timeSinceLastAppSync = SecureStore.getItem('timeSinceLastAppSync');
+        const sinceFilter = timeSinceLastAppSync ? { since: parseInt(timeSinceLastAppSync) } : {};
+
+        const kindString = Array.from(mainKinds).map((k) => k.toString());
+
+        const appSub = ndk.subscribe([
+            { kinds: [NDKKind.Text], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericReply], "#K": kindString, '#P': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericReply], "#K": kindString, '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
+                // { authors: [user.pubkey], limit: 100 },
+        ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' }, undefined);
+        let receivedEvents = 0;
+        appSub.on('event', (event) => receivedEvents++);
+        appSub.on('eose', () => {
+            const time = Date.now()/1000;
+            console.log('appSub eose, setting timeSinceLastAppSync to', time, {receivedEvents});
+            SecureStore.setItem('timeSinceLastAppSync', time.toString());
+        })
+    }, [ndk, currentUser?.pubkey])
+
+    useEffect(() => {
+        if (!ndk) return;
+        if (!appReady) {
+                        setAppReady(true);
+                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    }
+    }, [ndk])
+
+    useEffect(() => {
+        if (appReady) return;
+
+        if (!timeoutRef.current) {  
+            timeoutRef.current = setTimeout(() => {
+                if (!appReady) {
+                    console.log("app wasn't ready, so timing out");
+                    setAppReady(true);
+                }
+            }, 1000);
+        }
+
+        if (!ndk || !currentUser?.pubkey || !cacheInitialized) return;
+
         initializeSession(
             ndk,
             currentUser,
             settingsStore,
             {
-                follows: true,
+                follows: { kinds: [NDKKind.Image, NDKKind.VerticalVideo] },
                 muteList: true,
                 wot: false,
                 kinds: sessionKinds,
-                filters: sessionFilters,
+                subOpts: { skipVerification: true }
             },
             {
-                onReady: () => setAppReady(true),
-                onWotReady: () => setWotReady(true),
+                onReady: () => {
+                    console.log('onReady');
+                    if (!appReady) {
+                        setAppReady(true);
+                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    }
+                }
+                // onWotReady: () => setWotReady(true),
             }
         );
-
-        timeoutRef.current = setTimeout(() => setAppReady(true), 1500);
-    }, [ndk, currentUser?.pubkey])
+    }, [ndk, currentUser?.pubkey, cacheInitialized, appReady])
 
     useEffect(() => {
         const currentUserInSettings = SecureStore.getItem('currentUser');
@@ -147,15 +199,18 @@ export default function RootLayout() {
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            // netDebug,
+            netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,
         });
 
         if (!currentUserInSettings) {
+            console.log('there was no current user in settings, so setting app ready');
             setAppReady(true);
-            setWotReady(true);
+            // setWotReady(true);
+        } else {
+            console.log('there was a current user in settings, so not setting app ready');
         }
     }, []);
 
@@ -169,6 +224,8 @@ export default function RootLayout() {
             }));
         });
     }, [ndk]);
+
+    const mountTagSelector = useAtomValue(mountTagSelectorAtom);
 
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
@@ -195,20 +252,26 @@ export default function RootLayout() {
         };
     }, []);
 
-    const promptedForNotifications = useAppSettingsStore(state => state.promptedForNotifications);
+    if (!timeSinceFirstRender) timeSinceFirstRender = Date.now();
+    // console.log('app layout rerender', Date.now() - timeSinceFirstRender);
 
-    const { setActiveWallet } = useNDKWallet();
-    const unlinkWallet = useCallback(() => {
-        setActiveWallet(null);
-        router.push('/(tabs)/(settings)/wallets');
-    }, [setActiveWallet])
+    const modalPresentation = useCallback((opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
+        const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
+        const headerShown = Platform.OS !== 'ios';
+
+        return { presentation, headerShown, ...opts }
+    }, [])
+
+    useWalletMonitor();
+
+    // useEffect(() => { console.log('modalPresentation changed', !!modalPresentation, Date.now() - timeSinceFirstRender); }, [modalPresentation])
 
     return (
         <>
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
-                    <LoaderScreen appReady={appReady} wotReady={wotReady}>
+                    <LoaderScreen appReady={appReady} wotReady={true}>
                         <NutzapMonitor />
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -229,35 +292,34 @@ export default function RootLayout() {
                                         }}
                                     />
 
-                                    <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
                                     <Stack.Screen name="notifications" options={{ headerShown: false }} />
-                                    <Stack.Screen name="communities" options={{ headerShown: false }} />
+                                    {/* <Stack.Screen name="communities" options={{ headerShown: false }} /> */}
                                     <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
 
                                     <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
-                                    <Stack.Screen name="comments" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="comments" options={modalPresentation({ title: 'Comments' })} />
                                     <Stack.Screen name="365" options={{ headerShown: true, title: '#olas365' }} />
 
-                                    <Stack.Screen
-                                        name="view"
-                                        options={{
-                                            headerShown: false,
+                                    <Stack.Screen name="view" options={{
+                                            contentStyle: { backgroundColor: 'black' },
                                             presentation: 'modal',
+                                            headerShown: false,
+                                        }}
+                                    />
+
+                                    <Stack.Screen name="live" options={{
+                                            contentStyle: { backgroundColor: 'black' },
                                         }}
                                     />
 
                                     <Stack.Screen
                                         name="(wallet)"
-                                        options={{
-                                            headerShown: false,
+                                        options={modalPresentation({
                                             title: "Wallet",
-                                            presentation: 'modal',
-                                            headerRight: () => (
-                                                <Pressable onPress={unlinkWallet}>
-                                                    <Text className="text-red-500">Unlink</Text>
-                                                </Pressable>
-                                            )
-                                        }} />
+                                            headerShown: false,
+                                        })}
+                                    />
                                     
                                     <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
                                     <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
@@ -266,11 +328,13 @@ export default function RootLayout() {
                                 <PostOptionsMenu />
                                 <PostTypeBottomSheet />
                                 <LocationBottomSheet />
-                                <CommunityBottomSheet />
+                                {/* <CommunityBottomSheet /> */}
                                 <AlbumsBottomSheet />
                                 <PostTypeSelectorBottomSheet />
                                 
-                                {appReady &&!promptedForNotifications && <PromptForNotifications />}
+                                <HandleNotificationPrompt />
+                                <TagSelectorBottomSheet />
+                                <PostTypeSelectorBottomSheet />
                             </NavThemeProvider>
                             <Toasts />
                         </KeyboardProvider>
@@ -281,24 +345,8 @@ export default function RootLayout() {
     );
 }
 
-function NutzapMonitor() {
-    const { nutzapMonitor } = useNDKNutzapMonitor();
-    const connected = useRef(false);
-
-    if (!nutzapMonitor) return null;
-    if (connected.current) {
-        return null;
-    }
-
-    connected.current = true;
-
-    nutzapMonitor.on("seen", (event) => {
-        console.log("seen", JSON.stringify(event.rawEvent(), null, 4));
-        console.log(`https://njump.me/${event.encode()}`)
-        // toast.success("Received a nutzap for " + event.amount + " " + event.unit);
-    });
-    nutzapMonitor.on("redeem", (event) => {
-        const nutzap = NDKNutzap.from(event);
-        toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);
-    });
+function HandleNotificationPrompt() {
+    const promptedForNotifications = useAppSettingsStore(state => state.promptedForNotifications);
+    
+    if (!promptedForNotifications) return <PromptForNotifications />;
 }

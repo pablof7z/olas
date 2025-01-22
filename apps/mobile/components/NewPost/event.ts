@@ -37,8 +37,9 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
 
     if (metadata.expiration) event.tags.push(['expiration', Math.floor(metadata.expiration / 1000).toString()]);
 
-    console.log('removeLocation', metadata.removeLocation);
-    console.log('location', metadata.location);
+    if (metadata.tags) {
+        event.tags.push(...metadata.tags.map((tag) => ['t', tag]));
+    }
 
     if (metadata.removeLocation === false && metadata.location) {
         for (let i = 1; i <= 6; i++) {
@@ -48,7 +49,6 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
     }
 
     await event.sign();
-    console.log('event', JSON.stringify(event.rawEvent(), null, 4));
 
     return {
         event,
@@ -80,6 +80,7 @@ function generateImeta(media: MediaLibraryItem): NDKTag[] {
     if (media.width && media.height) imetaTag.push(['dim', `${media.width}x${media.height}`].join(' '));
     if (media.mimeType) imetaTag.push(['m', media.mimeType].join(' '));
     if (media.blurhash) imetaTag.push(['blurhash', media.blurhash].join(' '));
+    if (media.size) imetaTag.push(['size', media.size.toString()].join(' '));
 
     tags.push(imetaTag);
 

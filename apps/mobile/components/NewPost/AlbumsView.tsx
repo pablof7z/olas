@@ -11,10 +11,10 @@ import { Text } from '@/components/nativewindui/Text';
 import { Check, ChevronDown, Images } from 'lucide-react-native';
 import { Button } from '../nativewindui/Button';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { albumBottomSheetRefAtom } from './AlbumsBottomSheet';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { albumsAtom, selectedAlbumAtom } from '../albums/store';
 import AlbumSelectorHandler from '../albums/AlbumSelectorHandler';
+import { mapAssetToMediaLibraryItem } from '@/utils/media';
 
 export default function AlbumsView() {
     return (
@@ -42,31 +42,9 @@ export async function determineMimeType(uri: string) {
     return mimeType;
 }
 
-export function mapAssetToMediaLibraryItem(asset: MediaLibrary.Asset): MediaLibraryItem {
-    console.log('asset', asset.type, asset.mediaType);
-    
-    let mediaType: 'photo' | 'video' = 'photo';
-    if (asset.type === 'video') mediaType = 'video';
-    else if (asset.type === 'photo') mediaType = 'photo';
 
-    if (!mediaType) {
-        mediaType = 'photo';
-    }
 
-    return {
-        id: asset.id ?? asset.uri,
-        uri: asset.uri,
-        mediaType,
-        contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
-        duration: asset.duration,
-        width: asset.width,
-        height: asset.height,
-    };
-}
 
-export function isPortrait(width: number, height: number) {
-    return width < height;
-}
 
 export function AlbumContent() {
     const selectedAlbum = useAtomValue(selectedAlbumAtom);
@@ -101,7 +79,7 @@ export function AlbumContent() {
                     console.log('asset was already loaded in index', index);
                     continue;
                 }
-                albumAssets.current[albumId].push(mapAssetToMediaLibraryItem(asset));
+                albumAssets.current[albumId].push(await mapAssetToMediaLibraryItem(asset));
             }
 
             setCurrentAlbumAssets([...albumAssets.current[albumId]]);
@@ -118,7 +96,7 @@ export function AlbumContent() {
             endCursor.current[albumId] = albumLoadedPage.hasNextPage ? albumLoadedPage.endCursor : false;
 
             if (selectedMedia.length === 0 && albumLoadedPage.assets.length > 0) {
-                setSelectedMedia([mapAssetToMediaLibraryItem(albumLoadedPage.assets[0])]);
+                setSelectedMedia([await mapAssetToMediaLibraryItem(albumLoadedPage.assets[0])]);
             }
         } catch (error) {
             console.error('error getting album assets', error);
@@ -235,7 +213,7 @@ export function SelectedMediaPreview() {
 
     return (
         <View className="flex-1 flex-col items-center justify-between">
-            <MediaPreview assets={selectedMedia} style={{ width: size, height: size }} />
+            <MediaPreview assets={selectedMedia} />
         </View>
     );
 }

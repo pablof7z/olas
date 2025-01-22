@@ -17,6 +17,11 @@ export type MediaLibraryItem = {
     contentMode: 'portrait' | 'landscape';
     duration?: number;
 
+    /**
+     * Size in bytes
+     */
+    size?: number;
+
     location?: Location;
 
     width?: number;

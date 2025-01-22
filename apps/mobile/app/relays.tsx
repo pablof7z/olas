@@ -18,12 +18,10 @@ const RelayListItem: React.FC<
         }),
         []
     );
-    const relays = useMemo(() => [item.title], [item.title]);
-    const { events: groupEvents } = useSubscribe({
-        filters: groupFilters,
+    const { events: groupEvents } = useSubscribe(groupFilters,
         opts,
-        relays,
-    });
+        [item.title]
+    );
 
     const adminPubkeys = useMemo(() => groupEvents.map((event) => event.getMatchingTags('p').map((tag) => tag[1])).flat(), [groupEvents]);
 
@@ -54,7 +52,7 @@ const RelayListScreen: React.FC = () => {
         []
     );
 
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe(filters, opts);
 
     const listData = useMemo(
         () =>

@@ -1,41 +1,45 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { Animated, PanResponder, View, Text, TouchableOpacity } from 'react-native';
 import { Zap } from 'lucide-react-native';
-import { useStore } from 'zustand';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
 import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
-import { usePaymentStore, paymentStore } from '@/stores/payments';
+import { usePaymentStore } from '@/stores/payments';
+import { useAppSettingsStore } from '@/stores/app';
+import { useObserver } from '@/hooks/observer';
 
-const sendZap = async (sats, event: NDKEvent, wallet: NDKWallet, addPendingPayment) => {
+const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
     if (!wallet) {
         alert("You don't have a wallet connected yet.");
         router.push('/wallets');
         return;
     }
 
-    sats = Math.min(sats, 1000);
+    sats = Math.min(sats, 5000);
 
     try {
         const zapper = new NDKZapper(event, Math.round(sats) * 1000, 'msat', {
-            comment: "Zap from Olas",
-            tags: [['k', event.kind.toString()]]
+            comment: message,
+            // tags: [['k', event.kind.toString()]],
+            nutzapAsFallback: withFallbackZap,
         });
 
         addPendingPayment(zapper);
 
         await zapper.zap();
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error while zapping:', error);
         toast.error(error.message);
     }
 }
 
-export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }) {
-    const currentUser = useNDKCurrentUser();
+export default function Zaps({ event, style, foregroundColor, mutedColor, currentUser }) {
+    const zaps = useObserver([
+        { kinds: [NDKKind.Zap, NDKKind.Nutzap], ...event.filter() },
+    ], [event.id])
     const { activeWallet } = useNDKWallet();
     const { colors } = useColorScheme();
     const [amount, setAmount] = useState(0);
@@ -45,19 +49,21 @@ export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }
     const directionRef = useRef<'up' | 'down' | null>(null);
     const growthFactorRef = useRef(1);
     const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
-    const allPending = useStore(paymentStore, s => s.pendingPayments);
+    const allPending = usePaymentStore(s => s.pendingPayments);
     const pendingZaps = allPending.get(event.tagId()) || [];
+    const defaultZap = useAppSettingsStore(s => s.defaultZap);
 
+    const withFallbackZap = useMemo(() => {
+        return !!(activeWallet instanceof NDKCashuWallet);
+    }, [activeWallet?.walletId]);
+    
     const { totalZapped, zappedByUser } = useMemo(() => {
         let zappedByUser = false;
 
         let totalZapped = zaps.reduce((acc, zap) => {
             if (zap.kind === NDKKind.Nutzap) {
                 const nutzap = NDKNutzap.from(zap);
-                if (!nutzap) {
-                    console.log('refusing to parse nutzap', JSON.stringify(zap.rawEvent(), null, 4));
-                    return acc;
-                }
+                if (!nutzap) return acc;
                 if (nutzap.pubkey === currentUser?.pubkey) {
                     zappedByUser = true;
                 }
@@ -146,7 +152,7 @@ export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }
         }
 
         touchTimer.current = setInterval(() => {
-            amountRef.current = Math.min(10000000, amountRef.current * (growthFactorRef.current + 1));
+            amountRef.current = Math.min(10000, amountRef.current * (growthFactorRef.current + 1));
             setAmount(Math.floor(amountRef.current));
         }, 100);
     };
@@ -155,20 +161,20 @@ export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }
         clearInterval(touchTimer.current);
     };
 
-    const sendZapWithAmount = useCallback((amount: number) => {
-        sendZap(amount, event, activeWallet, addPendingPayment);
-    }, [event?.id, activeWallet?.walletId]);
+    const sendZapWithAmount = useCallback((message: string, amount: number) => {
+        sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
+    }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
     const onPanResponderRelease = useCallback((evt, gestureState) => {
         stopCounting(); // Stop timer during movement
         if (!canceled && amountRef.current > 0) {
-            sendZap(amountRef.current, event, activeWallet, addPendingPayment);
+            sendZap(defaultZap.message, amountRef.current, event, activeWallet, addPendingPayment, withFallbackZap);
         }
         setAmount(0);
-    }, [event?.id, activeWallet?.walletId]);
+    }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
-    const panResponder = useRef(
-        PanResponder.create({
+    const panResponder = useMemo(() => {    
+        return PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
             onPanResponderGrant: (evt, gestureState) => {
@@ -181,13 +187,13 @@ export default function Zaps({ event, zaps, style, foregroundColor, mutedColor }
             },
             onPanResponderRelease,
         })
-    ).current;
+    }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center' }} {...panResponder.panHandlers}>
             {/* <View style={{ flexDirection: "row", alignItems: "center" }}> */}
             <TouchableOpacity
-                onPress={() => sendZapWithAmount(21)}
+                onPress={() => sendZapWithAmount(defaultZap.message, defaultZap.amount)}
                 style={[style, { flexDirection: 'row', alignItems: 'center', position: 'absolute' }]}>
                 <Zap strokeWidth={2} size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? 'orange' : mutedColor} />
                 {amount > 0 ? (

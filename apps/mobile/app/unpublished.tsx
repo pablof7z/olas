@@ -47,7 +47,7 @@ export default function Unpublished() {
     const unpublishedEvents = useNDKUnpublishedEvents();
 
     const discardAll = () => {
-        for (let entry of unpublishedEvents.values()) {
+        for (let entry of unpublishedEvents) {
             ndk?.cacheAdapter?.discardUnpublishedEvent?.(entry.event.id);
         }
 
@@ -63,6 +63,7 @@ export default function Unpublished() {
             } catch (e) {
                 console.error('error publishing', entry.event.id, e);
                 toast.error('Error publishing event: ' + e.message);
+                break;
             }
         }
     };

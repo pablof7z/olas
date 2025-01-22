@@ -2,9 +2,7 @@ import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Image, ImageSource, useImage } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle, StyleSheet, Dimensions } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSetAtom } from 'jotai';
 import { type MediaDimensions } from "./types";
-import { Text } from '../nativewindui/Text';
 
 /**
  * This keeps a record of the known image heights for a given url.

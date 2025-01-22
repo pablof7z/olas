@@ -1,6 +1,6 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit } from '@nostr-dev-kit/ndk-mobile';
-import { create, useStore } from 'zustand';
+import { NDKEvent, NDKFilter, NDKKind, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit } from '@nostr-dev-kit/ndk-mobile';
+import { create } from 'zustand';
 
 type PendingZap = { zapper: NDKZapper, internalId: string }
 
@@ -16,7 +16,7 @@ type PaymentActions = {
  * This store tracks outgoing payments so that we can provide
  * a good, immediate experience when the user sends a payment.
  */
-export const paymentStore = create<PaymentStore & PaymentActions>((set, get) => ({
+export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) => ({
     pendingPayments: new Map(),
     addPendingPayment(zapper: NDKZapper): void {
         const zapperWithId: PendingZap = {
@@ -52,18 +52,13 @@ export const paymentStore = create<PaymentStore & PaymentActions>((set, get) => 
             const pending = copy.get(id) || [];
             pending.push(zapperWithId);
             copy.set(id, pending);
-            console.log('size', copy.size)
             return { pendingPayments: copy }
         });
 
-        waitForZap()
+        waitForZap(zapper)
             .then(() => removeZap());
     }
 }));
-
-export const usePaymentStore = (fn?) => {
-    return useStore(paymentStore, fn);
-}
 
 function getZapperTargetId(zapper: NDKZapper) {
     const { target } = zapper;

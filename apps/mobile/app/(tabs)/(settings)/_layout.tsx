@@ -17,6 +17,7 @@ export default function SettingsLayout() {
             <Stack.Screen name="wallets" options={{ headerShown: false }} />
             <Stack.Screen name="nwc" options={{ headerShown: false }} />
             <Stack.Screen name="dev" />
+            <Stack.Screen name="zaps" />
         </Stack>
     );
 }

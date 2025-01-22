@@ -14,13 +14,15 @@ export class Uploader {
     private response?: BlobDescriptor;
     public signer?: NDKSigner;
     private ndk: NDK;
+    private sha256: string;
 
-    constructor(ndk: NDK, fileUri: string, mime: string, server: string) {
+    constructor(ndk: NDK, fileUri: string, mime: string, server: string, sha256: string) {
         this.ndk = ndk;
         this.fileUri = fileUri;
         this.mime = mime;
         this.url = new URL(server);
         this.url.pathname = '/upload';
+        this.sha256 = sha256;
 
         this.xhr = new XMLHttpRequest();
     }
@@ -38,6 +40,7 @@ export class Uploader {
     }
 
     private encodeAuthorizationHeader(uploadAuth: SignedEvent) {
+        console.log('uploadAuth', JSON.stringify(uploadAuth, null, 4));
         return 'Nostr ' + btoa(unescape(encodeURIComponent(JSON.stringify(uploadAuth))));
     }
 
@@ -48,7 +51,11 @@ export class Uploader {
                 throw new Error('No signer found');
             }
             let _sign = signWith(this.signer);
-            const uploadAuth = await BlossomClient.getUploadAuth(this.fileUri, this.mime, _sign as any, 'Upload file');
+            const uploadAuth = await BlossomClient.getUploadAuth(
+                _sign as any,
+                'Upload file',
+                this.sha256
+            );
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
 
             this.xhr.open('PUT', this.url.toString(), true);
@@ -82,11 +89,11 @@ export class Uploader {
 
         if (status < 200 || status >= 300) {
             if (this._onError) {
-                console.log('upload error', this.xhr.responseText);
+                console.log('upload error:', this.xhr.responseText, this.xhr.status, this.fileUri);
                 this._onError(new Error(this.xhr.responseText ?? `Error ${status}`));
                 return;
             } else {
-                console.log('upload error', this.xhr);
+                console.log('upload error:', this.xhr, this.xhr.responseText, this.xhr.status, this.fileUri);
                 throw new Error(`Failed to upload file: ${status}`);
             }
         }
@@ -107,7 +114,7 @@ export class Uploader {
             console.log('upload error', JSON.stringify(Object.keys(this.xhr)));
             console.log('upload error', this.xhr.responseText);
             console.log('upload error', this.xhr.status);
-            this._onError(new Error(this.xhr.responseText ?? 'Failed to upload file'));
+            this._onError(new Error(this.xhr.responseText ?? 'Failed to upload file: '));
         }
     }
 

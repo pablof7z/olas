@@ -20,8 +20,6 @@ import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import EventMediaContainer, { getImetas } from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useObserver } from '@/hooks/observer';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
@@ -162,25 +160,9 @@ const onMentionPress = (pubkey: string) => {
 const reactionKinds = [ NDKKind.Text, NDKKind.GenericReply, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap ];
 
 function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
-    // const currentUser = useNDKCurrentUser();
-    // const follows = useFollows();
-    const filters = useMemo(() => ([
-        { kinds: reactionKinds, ...event.filter() },
-        { kinds: [NDKKind.GenericReply], ...event.nip22Filter() }
-    ]), [ event.id ]);
-
-    const relatedEvents = useObserver(filters, event.id);
-
-    // const isComment = (e: NDKEvent) => [NDKKind.Text, 1111].includes(e.kind);
-
-    // const commentsByFollows = useMemo(() => {
-    //     if (!follows) return [];
-    //     return relatedEvents.filter(isComment).filter((c) => c.pubkey === currentUser?.pubkey || follows.includes(c.pubkey));
-    // }, [relatedEvents, follows, currentUser?.pubkey]);
-
     return (
         <View className="flex-1 flex-col gap-1 p-2">
-            <Reactions event={event} relatedEvents={relatedEvents} />
+            <Reactions event={event} />
 
             {trimmedContent.length > 0 && (
                 <EventContent
@@ -191,7 +173,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 />
             )}
 
-            {/* <InlinedComments comments={commentsByFollows} allCommentsCount={relatedEvents.filter(isComment).length} /> */}
+            <InlinedComments event={event} />
         </View>
     );
 }

@@ -2,10 +2,10 @@ import { Stack } from "expo-router";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="relays" options={{ headerShown: true, presentation: 'modal' }} />
-            <Stack.Screen name="mints" options={{ headerShown: true, presentation: 'modal' }} />
+        <Stack screenOptions={{ headerShown: true }}>
+            <Stack.Screen name="index" options={{ title: "Wallet", headerShown: true }} />
+            <Stack.Screen name="relays" options={{ title: "Relays", headerShown: false }} />
+            <Stack.Screen name="mints" options={{ title: "Mints", headerShown: false }} />
         </Stack>
     )
 }

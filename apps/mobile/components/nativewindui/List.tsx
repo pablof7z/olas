@@ -14,12 +14,12 @@ cssInterop(FlashList, {
     contentContainerClassName: 'contentContainerStyle',
 });
 
-type ListDataItem = string | { title: string; subTitle?: string };
+export type ListDataItem = string | { title: string; subTitle?: string };
 type ListVariant = 'insets' | 'full-width';
 
 type ListRef<T extends ListDataItem> = React.Ref<FlashList<T>>;
 
-type ListRenderItemProps<T extends ListDataItem> = ListRenderItemInfo<T> & {
+export type ListRenderItemProps<T extends ListDataItem> = ListRenderItemInfo<T> & {
     variant?: ListVariant;
     isFirstInSection?: boolean;
     isLastInSection?: boolean;

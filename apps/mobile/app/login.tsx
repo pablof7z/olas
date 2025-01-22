@@ -194,11 +194,11 @@ export default function LoginScreen() {
                             <ArrowRight size={24} color="white" />
                         </Button>
 
-                        {Platform.OS === 'android' && (
+                        {/* {Platform.OS === 'android' && (
                             <Button variant="accent" onPress={loginWithAmber}>
                                 <Text>Login with Amber</Text>
                             </Button>
-                        )}
+                        )} */}
 
                         <Button
                             variant="plain"

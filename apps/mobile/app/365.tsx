@@ -9,6 +9,7 @@ import { useColorScheme } from "@/lib/useColorScheme";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
+import { useObserver } from "@/hooks/observer";
 let cellWidth = 0;
 let cellHeight = 0;
 
@@ -37,14 +38,13 @@ function DayCell({ day, events, index }: { day: number, events: NDKEvent[], inde
     }, [events?.[0]?.id, setActiveEvent]);
     
     return (
-        <Pressable className="flex-1 items-center relative" style={{ ...style, overflow: 'hidden', backgroundColor: colors.grey5 }}>
+        <Pressable className="flex-1 items-center relative bg-foreground/20" style={{ ...style, overflow: 'hidden' }}>
             {events && events.length > 0 && <EventMediaContainer onPress={openEvent} singleMode event={events[0]} maxWidth={cellWidth} maxHeight={cellHeight} />}
-            <Text className="text-center text-xs absolute bottom-0  z-50 text-white rounded-2xl overflow-hidden py-1 px-4 bg-black/70">Day {day}</Text>
+            <Text className="text-center text-sm absolute bottom-0  z-50 text-white rounded-md overflow-hidden py-1 px-2 bg-black/50">Day {day}</Text>
         </Pressable>
     )
 }
 
-const opts = { groupable: false, closeOnEose: true, wrap: true };
 const currentYear = new Date().getFullYear();
 
 function getDayOfYear(timestamp: number) {
@@ -59,29 +59,20 @@ function getDayOfYear(timestamp: number) {
     return difference_In_Days;
 }
 
-const isLeapYear = (year: number) => {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
 export default function ThreeSixtyFivePage() {
     // days this year
-    const totalDays = isLeapYear(currentYear) ? 366 : 365;
     const viewableScreenWidth = Dimensions.get('window').width;
     const minimumCellWidth = 50;
     const currentUser = useNDKCurrentUser();
-    const filters = useMemo(() => {
-        if (!currentUser) return undefined;
-        return [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey] }];
-    }, [currentUser]);
-    const { events } = useSubscribe({filters, opts});
+    const filters = currentUser ? [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey] }] : false;
+    const events = useObserver(filters);
 
     cellWidth = Math.max(minimumCellWidth, viewableScreenWidth / COLUMNS);
     cellHeight = cellWidth;
 
-    const dayOfTodayInTheYear = getDayOfYear(new Date().getTime());
+    const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
     
     const days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => index + 1);
-
 
     const eventsPerDayOfYear = useMemo(() => {
         const eventsPerDay: Record<number, NDKEvent[]> = {};

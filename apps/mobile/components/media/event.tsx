@@ -1,11 +1,11 @@
-import { ImetaData } from '@/utils/imeta';
 import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, ScrollView, StyleProp, useWindowDimensions, View, ViewStyle } from 'react-native';
+import { Dimensions, ScrollView, StyleProp, View, ViewStyle } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import MediaComponent from './media';
 
 export type EventMediaProps = {
     event: NDKEvent;
+    muted?: boolean;
     width?: number;
     className?: string;
     singleMode?: boolean;
@@ -50,6 +50,7 @@ export default function EventMediaContainer({
     event,
     width,
     className,
+    muted,
     singleMode,
     maxWidth,
     maxHeight,
@@ -76,6 +77,7 @@ export default function EventMediaContainer({
                 maxHeight={maxHeight}
                 priority={priority}
                 onPress={onPress}
+                muted={muted}
                 onLongPress={onLongPress}
                 className={className}
                 style={style}

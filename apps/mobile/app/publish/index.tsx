@@ -1,24 +1,34 @@
-import { View, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Pressable } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { router, Stack } from 'expo-router';
 
-import { ChevronLeft, ImageIcon, VideoIcon, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Text } from '@/components/nativewindui/Text';
 import { metadataAtom, selectedMediaAtom, stepAtom } from '@/components/NewPost/store';
 import ChooseContentStep from '@/components/NewPost/ChooseContentStep';
 import { PostMetadataStep } from '@/components/NewPost/MetadataStep';
-import { prepareMedia, uploadMedia } from '@/components/NewPost/upload';
+import { prepareMedia } from '@/components/NewPost/prepare';
+import { uploadMedia } from '@/components/NewPost/upload';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { mountTagSelectorAtom } from '@/components/TagSelectorBottomSheet';
+import { useEffect } from 'react';
+import { BlurView } from 'expo-blur';
 
 export default function NewPostScreen() {
     const activeBlossomServer = useActiveBlossomServer();
     const { ndk } = useNDK();
     const { colors } = useColorScheme();
 
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const [ mountTagSelector, setMountTagSelector ] = useAtom(mountTagSelectorAtom);
+    const setMetadata = useSetAtom(metadataAtom);
+
+    useEffect(() => {
+        if (!mountTagSelector) setMountTagSelector(true);
+        console.log('setting mountTagSelector to true');
+    }, [mountTagSelector]);
 
     const step = 1;
 
@@ -47,7 +57,9 @@ export default function NewPostScreen() {
         <>
             <Stack.Screen
                 options={{
+                    headerTransparent: true,
                     headerShown: true,
+                    headerBackground: () => <BlurView tint="dark" intensity={50} style={{ flex: 1, width: '100%' }} />,
                     title: 'New Post',
                     headerLeft: () => {
                         if (step === 0) {

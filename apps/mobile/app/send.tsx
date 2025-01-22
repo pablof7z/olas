@@ -5,7 +5,7 @@ import { CashuPaymentInfo, Hexpubkey, NDKKind, NDKLnUrlData, NDKUser, NDKUserPro
 import { TextInput, TouchableOpacity, View, KeyboardAvoidingView } from "react-native";
 import * as User from "@/components/ui/user"
 import { Text } from "@/components/nativewindui/Text";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonProps, ButtonState } from "@/components/nativewindui/Button";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
@@ -37,7 +37,8 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
     const [amount, setAmount] = useState(21);
     const user = useMemo(() => ndk.getUser({ pubkey }), [pubkey]);
     const zap = useMemo(() => new NDKZapper(user, 0, 'msat', {
-        comment: "Honeypot nutzap"
+        comment: note ?? "Sending from Olas",
+        nutzapAsFallback: true,
     }), [pubkey, amount]);
     const [methods, setMethods] = useState<NDKZapMethodInfo[]>([]);
     const [buttonState, setButtonState] = useState<ButtonState>('idle');
@@ -147,10 +148,10 @@ function FollowItem({ index, target, item, onPress }: { index: number, target: L
             id: item,
             title: ""
         }}
-        leftView={<TouchableOpacity className="flex-row items-center py-2">
+        leftView={<View className="flex-row items-center py-2">
             <User.Avatar userProfile={userProfile} size={16} className="w-10 h-10 mr-2" />
             <User.Name userProfile={userProfile} pubkey={item} className="text-lg text-foreground" />
-        </TouchableOpacity>}
+        </View>}
         onPress={onPress}
     />
 }
@@ -163,20 +164,27 @@ export default function SendView() {
     const inset = useSafeAreaInsets();
     const { colors } = useColorScheme();
 
-    const mintlistFilter = useMemo(() => [{ kinds: [0, NDKKind.CashuMintList], authors: Array.from(new Set([...follows, ...myFollows])) }], [follows]);
-    const opts = useMemo(() => ({ groupable: false, closeOnEose: true }), []);
-    const { events: mintlistEvents } = useSubscribe({ filters: mintlistFilter, opts });
+    console.log({selectedPubkey});
 
-    const usersWithMintlist = useMemo(() => {
-        const pubkeysWithKind0 = new Set<Hexpubkey>(
-            mintlistEvents.filter(e => e.kind === 0).map(e => e.pubkey)
-        );
+    const onPress = useCallback((pubkey: Hexpubkey) => {
+        console.log('pubkey', pubkey);
+        setSelectedPubkey(pubkey);
+    }, [setSelectedPubkey]);
 
-        return mintlistEvents
-            .filter(e => pubkeysWithKind0.has(e.pubkey))
-            .filter(e => e.kind === NDKKind.CashuMintList)
-            .map((event) => event.pubkey);
-    }, [mintlistEvents]);
+    // const mintlistFilter = useMemo(() => [{ kinds: [0, NDKKind.CashuMintList], authors: Array.from(new Set([...follows, ...myFollows])) }], [follows]);
+    // const opts = useMemo(() => ({ groupable: false, closeOnEose: true }), []);
+    // const { events: mintlistEvents } = useSubscribe({ filters: mintlistFilter, opts });
+
+    // const usersWithMintlist = useMemo(() => {
+    //     const pubkeysWithKind0 = new Set<Hexpubkey>(
+    //         mintlistEvents.filter(e => e.kind === 0).map(e => e.pubkey)
+    //     );
+
+    //     return mintlistEvents
+    //         .filter(e => pubkeysWithKind0.has(e.pubkey))
+    //         .filter(e => e.kind === NDKKind.CashuMintList)
+    //         .map((event) => event.pubkey);
+    // }, [mintlistEvents]);
 
     if (selectedPubkey) {
         return (<SendToUser pubkey={selectedPubkey} onCancel={() => setSelectedPubkey(null)} />)
@@ -203,7 +211,6 @@ export default function SendView() {
 
         toast.error("Couldn't find anyone with that");
     }
-    
 
     return (
         <>
@@ -231,7 +238,7 @@ export default function SendView() {
                             index={index}
                             target={target}
                             item={item}
-                            onPress={() => setSelectedPubkey(item)}
+                            onPress={() => onPress(item)}
                         />
                     )}
                 />

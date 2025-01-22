@@ -1,17 +1,32 @@
 import { useActiveEventStore, useAppStateStore, ZapperWithId } from "@/components/wallet/store";
-import { useNDK, NDKKind, useSubscribe, NDKEvent, NDKZapSplit, NDKPaymentConfirmation, NDKNutzap, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKWallet, NDKKind, useSubscribe, NDKEvent, NDKZapSplit, NDKPaymentConfirmation, NDKNutzap, useNDKCurrentUser, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuDeposit, NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import HistoryItem from "./item";
 import { router } from "expo-router";
 import { List } from "@/components/nativewindui/List";
 import React, { useMemo, useRef, useEffect } from "react";
-import { View } from "react-native";
+import { FlatList, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet }) {
+    const { activeWallet } = useNDKWallet();
     const currentUser = useNDKCurrentUser();
-    const filters = useMemo(() => [{ kinds: [NDKKind.WalletChange], authors: [currentUser?.pubkey] }], [currentUser?.pubkey])
-    const { events: history } = useSubscribe({ filters });
+
+    const filters = useMemo(() => {
+        if (!currentUser || !(activeWallet instanceof NDKCashuWallet)) return false;
+
+        return [{
+            kinds: [NDKKind.WalletChange],
+            authors: [currentUser.pubkey],
+            ...activeWallet.event.filter()
+        }];
+    }, [ currentUser?.pubkey, activeWallet?.walletId])
+
+    const { events: history} = useSubscribe(
+        filters,
+        { subId: 'tx-list', groupable: false },
+        [currentUser?.pubkey, activeWallet?.walletId]
+    );
     const { setActiveEvent } = useActiveEventStore();
     const { pendingPayments } = useAppStateStore();
 
@@ -28,6 +43,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
     const completedPendingZaps = useRef(new Map<string, string>());
 
     const keyExtractor = (item: NDKEvent | NDKCashuDeposit | ZapperWithId) => {
+        return item.id;
         if (item instanceof NDKCashuDeposit) return item.quoteId;
         const id = item instanceof NDKEvent ? item.id : item.internalId;
         const res = completedPendingZaps.current.get(id) ?? id
@@ -60,42 +76,39 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
 
             listening.current.delete(payment.internalId);
         }
-    }, [pendingPayments]);
+    }, [pendingPayments.length]);
 
     const onItemPress = (item: NDKEvent) => {
         setActiveEvent(item);
         router.push('/tx');
     }
 
-    const historyWithPendingZaps = useMemo(() => {
-        return [
-            ...pendingPayments,
-            ...history.sort((a, b) => b.created_at - a.created_at)
-        ]
-    }, [history, pendingPayments]);
+    const sortedHistory = useMemo(() => {
+        return history.sort((a, b) => b.created_at - a.created_at)
+    }, [history.length]);
+
+    // const historyWithPendingZaps = useMemo(() => {
+    //     return [
+    //         ...pendingPayments,
+    //         ...history.sort((a, b) => b.created_at - a.created_at)
+    //     ]
+    // }, [history.length, pendingPayments.length]);
 
     return (
         <View className="flex-1">
-            {/* <Text className="text-xs text-muted-foreground">
-                history.length = {history.length}
-                pendingPayments.length = {pendingPayments.length}
-            </Text> */}
-        <List
-            data={historyWithPendingZaps}
-            keyExtractor={keyExtractor}
-            estimatedItemSize={56}
-            contentInsetAdjustmentBehavior="automatic"
-            sectionHeaderAsGap
-            variant="insets"
-            renderItem={({ item, index, target }) => (
-                <HistoryItem
-                    wallet={wallet}
-                    item={item}
-                    index={index}
-                    target={target}
-                    onPress={() => onItemPress(item)}
-                />
-            )}
+            {/* <Text className="text-white">{sortedHistory.length}</Text> */}
+            <FlatList
+                data={sortedHistory}
+                keyExtractor={(item: NDKEvent) => item.id}
+                contentInsetAdjustmentBehavior="automatic"
+                renderItem={({ item, index, target }) => (
+                    <HistoryItem
+                        wallet={wallet}
+                        item={item}
+                        index={index}
+                        onPress={() => onItemPress(item)}
+                    />
+                )}
             />
         </View>
     )

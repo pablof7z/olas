@@ -3,10 +3,8 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { NDKKind, NDKRelaySet, NDKSubscriptionCacheUsage, NostrEvent, useNDK, useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { MediaSection } from '@/components/events/Post';
-import { registerForPushNotificationsAsync } from '@/lib/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import * as Notifications from 'expo-notifications';
 import { useEnableNotifications, useNotificationPermission } from '@/hooks/notifications';
 
 const opts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true };
@@ -22,11 +20,7 @@ export function PromptForNotifications() {
     const [eventForPrompt, setEventForPrompt] = useAtom(eventForPromptAtom);
     const permissionStatus = useNotificationPermission();
 
-    const filters = useMemo(() => {
-        if (!currentUser) return [];
-        return [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey], limit: 1 }];
-    }, [currentUser]);
-    const { events } = useSubscribe({ filters, opts });
+    const { events } = useSubscribe(currentUser ? [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey], limit: 1 }] : false, opts);
 
     useEffect(() => {
         if (!currentUser || promptedForNotifications || permissionStatus === 'granted') return;

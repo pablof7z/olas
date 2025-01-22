@@ -1,6 +1,7 @@
 import { PostType } from "@/components/NewPost/store";
 import { create } from "zustand";
 import * as SecureStore from 'expo-secure-store';
+import { ZapOption } from "@/app/(tabs)/(settings)/zaps";
 
 export type AppSettingsStoreState = {
     removeLocation?: boolean;
@@ -14,6 +15,11 @@ export type AppSettingsStoreState = {
      * Whether to show advanced settings.
      */
     advancedMode: boolean;
+
+    /**
+     * The default zap to use when sending a zap.
+     */
+    defaultZap: ZapOption;
 };
 
 export type AppSettingsStoreActions = {
@@ -25,19 +31,28 @@ export type AppSettingsStoreActions = {
     notificationsPrompted: () => void;
     toggleAdvancedMode: () => void;
 
+    setDefaultZap: (zap: ZapOption) => void;
+
     reset: () => void;
 };
+
+const defaultZapSetting = {
+    amount: 21,
+    message: '😍😍😍😍'
+}
 
 export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set, get) => ({
     seenNotificationsAt: 0,
     promptedForNotifications: false,
     advancedMode: false,
+    defaultZap: defaultZapSetting,
 
     init: async () => {
         const state: AppSettingsStoreState = {
             seenNotificationsAt: 0,
             promptedForNotifications: false,
-            advancedMode: false
+            advancedMode: false,
+            defaultZap: defaultZapSetting,
         };
 
         const removeLocation = await SecureStore.getItemAsync('removeLocation');
@@ -54,6 +69,12 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const advancedMode = await SecureStore.getItemAsync('advancedMode');
         if (advancedMode) state.advancedMode = advancedMode === 'true';
+
+        let defaultZapVal = await SecureStore.getItemAsync('defaultZap');
+        if (defaultZapVal) {
+            try { state.defaultZap = JSON.parse(defaultZapVal); } catch { }
+        }
+        state.defaultZap ??= defaultZapSetting;
 
         set(state);
     },
@@ -86,11 +107,17 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         })
     },
 
+    setDefaultZap: (zap: ZapOption) => {
+        SecureStore.setItemAsync('defaultZap', JSON.stringify(zap));
+        set({ defaultZap: zap });
+    },
+
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
         SecureStore.deleteItemAsync('postType');
         SecureStore.deleteItemAsync('seenNotificationsAt');
         SecureStore.deleteItemAsync('advancedMode');
+        SecureStore.deleteItemAsync('defaultZap');
         set({ seenNotificationsAt: 0, promptedForNotifications: false });
     }
 }));

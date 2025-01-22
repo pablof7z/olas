@@ -13,6 +13,7 @@ export default function MediaComponent({
     priority,
     onPress,
     onLongPress,
+    muted,
     style,
     ...props
 }: {
@@ -22,6 +23,7 @@ export default function MediaComponent({
     priority?: 'low' | 'normal' | 'high',
     onPress?: () => void;
     onLongPress?: () => void;
+    muted?: boolean;
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
@@ -47,6 +49,7 @@ export default function MediaComponent({
                 maxDimensions={{ width: maxWidth, height: maxHeight }}
                 onPress={onPress}
                 onLongPress={onLongPress}
+                muted={muted}
                 {...props}
             />
         );

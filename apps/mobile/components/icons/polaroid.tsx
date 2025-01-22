@@ -1,14 +1,15 @@
 import * as React from "react"
-import Svg, { G, Path } from "react-native-svg"
-const SvgComponent = (props) => (
+import Svg, { G, Path, SvgProps } from "react-native-svg"
+const SvgComponent = ({ size = 48, ...props }: SvgProps) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={48}
-    height={48}
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
     fill="none"
     {...props}
   >
-    <G stroke="#000" strokeLinecap="round" strokeWidth={3}>
+    <G strokeLinecap="round" strokeWidth={3}>
       <Path
         strokeLinejoin="round"
         d="M3.539 39.743c.208 2.555 2.163 4.51 4.718 4.718C11.485 44.723 16.636 45 24 45c7.364 0 12.515-.277 15.743-.539 2.555-.208 4.51-2.163 4.718-4.718C44.723 36.515 45 31.364 45 24c0-7.364-.277-12.515-.539-15.743-.208-2.555-2.163-4.51-4.718-4.718C36.515 3.277 31.364 3 24 3c-7.364 0-12.515.277-15.743.539-2.555.208-4.51 2.163-4.718 4.718C3.277 11.485 3 16.636 3 24c0 7.364.277 12.515.539 15.743Z"

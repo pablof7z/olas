@@ -20,6 +20,7 @@ export type Location = {
 
 export type PostMetadata = {
     caption: string;
+    tags?: string[];
     expiration?: number;
     type?: PostType;
     removeLocation?: boolean;

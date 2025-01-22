@@ -40,8 +40,8 @@ function RenderMention({ entity, onMentionPress }: { entity: string | null; onMe
         const { userProfile } = useUserProfile(pubkey);
 
         return (
-            <Text style={style.mention} onPress={() => onMentionPress?.(pubkey)}>
-                @<User.Name userProfile={userProfile} pubkey={pubkey} style={style.mention} />
+            <Text className="font-bold text-primary" onPress={() => onMentionPress?.(pubkey)}>
+                @<User.Name userProfile={userProfile} pubkey={pubkey} />
             </Text>
         );
     } catch (e) {
@@ -136,7 +136,7 @@ function RenderPart({
     return <Text {...props}>{part}</Text>;
 }
 
-const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof View>> = ({ event, content, ...props }) => {
+const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, content, ...props }) => {
     content ??= event.content;
 
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+)/);

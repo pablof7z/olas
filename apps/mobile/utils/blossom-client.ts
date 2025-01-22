@@ -1,4 +1,3 @@
-import * as Crypto from 'expo-crypto';
 import * as RNFS from 'react-native-fs';
 
 const now = () => Math.floor(new Date().valueOf() / 1000);
@@ -65,35 +64,6 @@ export class BlossomClient {
     constructor(server: string | URL, signer?: Signer) {
         this.server = new URL('/', server);
         this.signer = signer;
-    }
-
-    static async getFileSha256(fileUri: string, mime: string) {
-        console.log('file', fileUri);
-        let buffer: ArrayBuffer;
-        // Use FileReader for React Native compatibility
-        // buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        //     const reader = new FileReader();
-        //     reader.onload = () => resolve(reader.result as ArrayBuffer);
-        //     reader.onerror = reject;
-        //     reader.readAsArrayBuffer(fileUri);
-        // });
-
-        const hash = await RNFS.hash(fileUri, 'sha256');
-        console.log('hash from RNFS', hash);
-
-        // console.log('read the file which is length', buffer.byteLength);
-
-        // Convert ArrayBuffer to string
-        // const uint8Array = new Uint8Array(buffer);
-        // let stringData = uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '');
-
-        // const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, stringData);
-        // console.log('SHA256', {
-        //     hash,
-        //     bufferLength: buffer.byteLength,
-        // });
-
-        return hash;
     }
 
     static encodeAuthorizationHeader(event: SignedEvent) {
@@ -168,11 +138,10 @@ export class BlossomClient {
     }
 
     /** Creates a one-off upload auth event for a file */
-    static async getUploadAuth(fileUri: string, mime: string, signer: Signer, message = 'Upload Blob', expiration = oneHour()) {
-        const sha256 = await BlossomClient.getFileSha256(fileUri);
-        console.log('sha256', { sha256, fileUri });
+    static async getUploadAuth(signer: Signer, message = 'Upload Blob', sha256: string, expiration = oneHour()) {
         return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
     }
+    
     static async uploadBlob(server: ServerType, file: UploadType, auth?: SignedEvent) {
         const res = await fetch(new URL('/upload', server), {
             method: 'PUT',
@@ -275,7 +244,7 @@ export class BlossomClient {
     // upload blob
     async getUploadAuth(file: UploadType, message?: string, expiration?: number) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getUploadAuth(file, this.signer, message, expiration);
+        return await BlossomClient.getUploadAuth(this.signer, message, expiration);
     }
     async uploadBlob(file: UploadType, auth: SignedEvent | boolean = true) {
         if (typeof auth === 'boolean' && auth) auth = await this.getUploadAuth(file);

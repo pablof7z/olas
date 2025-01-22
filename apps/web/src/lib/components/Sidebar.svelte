@@ -54,7 +54,6 @@
 		{
 			text: 'create',
 			icon: NewPost,
-			disabled: true
 		},
 		
 	];
@@ -105,7 +104,6 @@
 				{href}
 				role="none"
 				class="hover:bg-muted flex flex-1 md:flex-none justify-center md:justify-start items-center gap-1 rounded-md p-2 md:p-3 text-sm capitalize {disabled && 'opacity-50 pointer-events-none cursor-not-allowed'}"
-				disabled={disabled}
 				onclick={() => {
 					if (text === 'create') {
 						openModal = true;
