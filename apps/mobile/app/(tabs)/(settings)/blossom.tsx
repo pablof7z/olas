@@ -1,4 +1,4 @@
-import { useNDK, useNDKSession, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useState } from 'react';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';

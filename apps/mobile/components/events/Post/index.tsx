@@ -157,9 +157,16 @@ const onMentionPress = (pubkey: string) => {
     router.push(`/profile?pubkey=${pubkey}`);
 };
 
-const reactionKinds = [ NDKKind.Text, NDKKind.GenericReply, NDKKind.Reaction, NDKKind.GenericRepost, NDKKind.Repost, NDKKind.BookmarkList, NDKKind.Zap, NDKKind.Nutzap ];
-
 function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
+    const tagsToRender = useMemo(() => {
+        const tags = new Set(event.getMatchingTags('t').map(t => t[1]));
+        // remove the tags that are already in the content
+        tags.forEach(tag => {
+            if (trimmedContent.match(new RegExp(`#${tag}`, 'i'))) tags.delete(tag);
+        });
+        return tags;
+    }, [event.id]);
+    
     return (
         <View className="flex-1 flex-col gap-1 p-2">
             <Reactions event={event} />
@@ -171,6 +178,14 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                     className="text-sm text-foreground"
                     onMentionPress={onMentionPress}
                 />
+            )}
+
+            {tagsToRender.size > 0 && (
+                <View className="flex-row flex-wrap gap-1">
+                    <Text className="text-sm font-bold text-primary">
+                        {`#${Array.from(tagsToRender).join(' ')}`}
+                    </Text>
+                </View>
             )}
 
             <InlinedComments event={event} />

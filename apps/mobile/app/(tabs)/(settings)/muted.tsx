@@ -7,7 +7,7 @@ import * as User from '@/components/ui/user';
 import { RenderTarget } from '@shopify/flash-list';
 
 export default function MutedScreen() {
-    const muteList = useMuteList();
+    const { muteList } = useMuteList();
 
     return (
         <View style={{ flex: 1 }}>

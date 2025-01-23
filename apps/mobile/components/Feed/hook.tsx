@@ -1,5 +1,5 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useMuteList, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

@@ -6,7 +6,7 @@ import { useMemo } from "react";
  * Returns a set of pubkeys that should be blacklisted
  */
 export function usePubkeyBlacklist() {
-    const muteList = useMuteList();
+    const {muteList} = useMuteList();
     const follows = useFollows();
     
     let list = new Set(blacklistPubkeys);

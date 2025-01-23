@@ -1,4 +1,4 @@
-import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKSession, useNDKSessionEvents, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo, useState } from 'react';
 import { Text } from '~/components/nativewindui/Text';
 import { TouchableOpacity } from 'react-native-gesture-handler';

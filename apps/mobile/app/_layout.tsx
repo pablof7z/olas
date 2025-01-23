@@ -20,7 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { configurePushNotifications } from '~/lib/notifications';
 import { useNDK, NDKUser } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -98,7 +98,7 @@ export default function RootLayout() {
     }
     
     const { ndk, init: initializeNDK } = useNDK() as { ndk: NDK, init: (opts: any) => void };
-    const { init: initializeSession } = useNDKSession();
+    const initializeSession = useNDKSessionInit();
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const currentUser = useNDKCurrentUser();
     const timeoutRef = useRef(null);
@@ -199,7 +199,7 @@ export default function RootLayout() {
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            netDebug,
+            // netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,

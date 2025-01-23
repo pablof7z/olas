@@ -1,4 +1,4 @@
-import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSession, useNDKSessionEvents, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';

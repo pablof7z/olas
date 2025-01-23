@@ -55,7 +55,7 @@ export default function SettingsIosStyleScreen() {
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const defaultBlossomServer = useActiveBlossomServer();
-    const muteList = useMuteList();
+    const {muteList} = useMuteList();
     const wot = useWOT();
     const unpublishedEvents = useNDKUnpublishedEvents();
     const resetAppSettings = useAppSettingsStore(s => s.reset);

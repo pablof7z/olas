@@ -298,7 +298,7 @@ function hashtagFeedToTags(feedType: string) {
     switch (feedType) {
         case '#photography': return ['photography', 'photo', 'circunvagar'];
         case '#introductions': return ['introductions'];
-        case '#family': return ['family', 'kids'];
+        case '#family': return ['family', 'kids', 'parenting'];
         case '#travel': return ['travel', 'explore'];
         case '#nature': return ['nature', 'beach', 'mountains', 'forest', 'animals', 'wildlife'];
         case '#memes': return ['memes'];

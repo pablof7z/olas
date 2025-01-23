@@ -4,7 +4,7 @@ import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef } from 'react';
 import { useStore } from 'zustand';
-import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage, useNDKSession } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
