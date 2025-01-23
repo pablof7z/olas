@@ -213,7 +213,7 @@ export function SelectedMediaPreview() {
 
     return (
         <View className="flex-1 flex-col items-center justify-between">
-            <MediaPreview assets={selectedMedia} />
+            <MediaPreview assets={selectedMedia} style={{ width: '100%', height: '100%' }} />
         </View>
     );
 }

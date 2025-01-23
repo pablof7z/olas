@@ -26,11 +26,11 @@ export default function NutzapMonitor() {
 
     connected.current = true;
 
-    nutzapMonitor.on("seen", (event) => {
-        console.log("seen", JSON.stringify(event.rawEvent(), null, 4));
-        console.log(`https://njump.me/${event.encode()}`)
-        // toast.success("Received a nutzap for " + event.amount + " " + event.unit);
-    });
+    // nutzapMonitor.on("seen", (event) => {
+    //     console.log("seen", JSON.stringify(event.rawEvent(), null, 4));
+    //     console.log(`https://njump.me/${event.encode()}`)
+    //     // toast.success("Received a nutzap for " + event.amount + " " + event.unit);
+    // });
     nutzapMonitor.on("redeem", (event) => {
         const nutzap = NDKNutzap.from(event);
         toast.success("Redeemed a nutzap for " + nutzap.amount + " " + nutzap.unit);

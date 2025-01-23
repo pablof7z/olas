@@ -59,7 +59,6 @@ export default function NewPostScreen() {
                 options={{
                     headerTransparent: true,
                     headerShown: true,
-                    headerBackground: () => <BlurView tint="dark" intensity={50} style={{ flex: 1, width: '100%' }} />,
                     title: 'New Post',
                     headerLeft: () => {
                         if (step === 0) {

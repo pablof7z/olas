@@ -308,6 +308,8 @@ export default function RootLayout() {
                                         }}
                                     />
 
+                                    <Stack.Screen name="edit" options={{ headerShown: false, presentation: 'modal' }} />
+
                                     <Stack.Screen name="live" options={{
                                             contentStyle: { backgroundColor: 'black' },
                                         }}

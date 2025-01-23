@@ -10,6 +10,7 @@ import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
+import { editImageAtom } from "@/app/edit";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -66,11 +67,15 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterByFol
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 
+    const setEditImage = useSetAtom(editImageAtom);
+
     const _onPress = useCallback((event: NDKEvent) => {
         if (onPress) onPress(event)
         else {
-            setActiveEvent(event);
-            router.push('/view');
+            // setActiveEvent(event);
+            setEditImage("///Users/pablofernandez/Library/Developer/CoreSimulator/Devices/9CD722DC-C034-44EC-A061-009A9561A39B/data/Containers/Data/Application/B0A800A8-F2D1-4755-9D4A-DE1A8723B37F/Library/Caches/filtered-1737648333397.jpg");
+
+            router.push('/edit');
         }
     }, [onPress, setActiveEvent])
 
