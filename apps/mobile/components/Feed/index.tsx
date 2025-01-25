@@ -17,20 +17,20 @@ type FeedProps = {
     filters: NDKFilter[];
     filterKey: string;
     prepend?: React.ReactNode;
-    filterByFollows?: boolean;
     filterFn?: (feedEntry: FeedEntry, index: number) => boolean
+    relayUrls?: string[]
 }
 
 const keyExtractor = (entry: FeedEntry) => entry.id;
 
-export default function Feed({ onPress, filters, filterKey, prepend, filterByFollows, filterFn }: FeedProps) {
+export default function Feed({ onPress, filters, filterKey, prepend, filterFn, relayUrls }: FeedProps) {
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>();
     const [refreshCount, setRefreshCount] = useState(0);
 
     useScrollToTop(ref);
 
-    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterByFollows, filterFn }, [filterKey + refreshCount]);
+    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls }, [filterKey + refreshCount]);
     const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event))
 
     // useEffect(() => {
@@ -67,15 +67,11 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterByFol
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 
-    const setEditImage = useSetAtom(editImageAtom);
-
     const _onPress = useCallback((event: NDKEvent) => {
         if (onPress) onPress(event)
         else {
-            // setActiveEvent(event);
-            setEditImage("///Users/pablofernandez/Library/Developer/CoreSimulator/Devices/9CD722DC-C034-44EC-A061-009A9561A39B/data/Containers/Data/Application/B0A800A8-F2D1-4755-9D4A-DE1A8723B37F/Library/Caches/filtered-1737648333397.jpg");
-
-            router.push('/edit');
+            setActiveEvent(event);
+            router.push('/view');
         }
     }, [onPress, setActiveEvent])
 
@@ -96,7 +92,7 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterByFol
         if (prepend) ret.unshift({ id: 'prepend', node: prepend });
         return ret;
     }, [entries, prepend])
-
+    
     return (
         <>
         {showNewEntriesPrompt && (

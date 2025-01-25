@@ -1,11 +1,10 @@
-import { PostType } from "@/components/NewPost/store";
 import { create } from "zustand";
 import * as SecureStore from 'expo-secure-store';
 import { ZapOption } from "@/app/(tabs)/(settings)/zaps";
 
 export type AppSettingsStoreState = {
     removeLocation?: boolean;
-    postType?: PostType;
+    boost?: boolean;
 
     seenNotificationsAt: number;
 
@@ -25,7 +24,7 @@ export type AppSettingsStoreState = {
 export type AppSettingsStoreActions = {
     init: () => void;
     setRemoveLocation: (removeLocation: boolean) => void;
-    setPostType: (postType: PostType) => void;
+    setBoost: (boost: boolean) => void;
     notificationsSeen: () => void;
 
     notificationsPrompted: () => void;
@@ -58,8 +57,8 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         const removeLocation = await SecureStore.getItemAsync('removeLocation');
         if (removeLocation) state.removeLocation = removeLocation === 'true';
 
-        const postType = await SecureStore.getItemAsync('postType');
-        if (postType) state.postType = postType as PostType;
+        const boost = await SecureStore.getItemAsync('boost');
+        if (boost) state.boost = boost;
 
         const seenNotificationsAt = await SecureStore.getItemAsync('seenNotificationsAt');
         if (seenNotificationsAt) state.seenNotificationsAt = parseInt(seenNotificationsAt);
@@ -84,9 +83,9 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         set({ removeLocation });
     },
 
-    setPostType: (postType: PostType) => {
-        SecureStore.setItemAsync('postType', postType);
-        set({ postType });
+    setBoost: (boost: boolean) => {
+        SecureStore.setItemAsync('boost', boost.toString());
+        set({ boost });
     },
 
     notificationsSeen: (time = Date.now() / 1000) => {
@@ -114,7 +113,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
-        SecureStore.deleteItemAsync('postType');
+        SecureStore.deleteItemAsync('boost');
         SecureStore.deleteItemAsync('seenNotificationsAt');
         SecureStore.deleteItemAsync('advancedMode');
         SecureStore.deleteItemAsync('defaultZap');

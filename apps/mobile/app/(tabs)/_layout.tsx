@@ -24,7 +24,7 @@ export default function TabsLayout() {
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
 
-    const newPost = useNewPost();
+    const {imagePicker: newPost} = useNewPost();
 
     return (
         <Tabs
@@ -77,11 +77,11 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            if (postTypeSelectorSheetRef.current) {
-                                postTypeSelectorSheetRef.current.present();
-                            } else {
+                            // if (postTypeSelectorSheetRef.current) {
+                            //     postTypeSelectorSheetRef.current.present();
+                            // } else {
                                 newPost({ types: ['images', 'videos'] });
-                            }
+                            // }
                         }
                     },
                 }}

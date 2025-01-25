@@ -49,7 +49,7 @@ export default function NewPostScreen() {
     function abort() {
         setStep(0);
         setSelectedMedia([]);
-        setMetadata({ caption: '', expiration: 0, type: 'high-quality' });
+        setMetadata({ caption: '', expiration: 0 });
         router.back();
     }
 
@@ -57,7 +57,7 @@ export default function NewPostScreen() {
         <>
             <Stack.Screen
                 options={{
-                    headerTransparent: true,
+                    headerTransparent: false,
                     headerShown: true,
                     title: 'New Post',
                     headerLeft: () => {
@@ -81,82 +81,10 @@ export default function NewPostScreen() {
                     },
                 }}
             />
-            <View style={styles.container} className="flex-1 flex-row bg-card !p-0">
+            <View className="flex-1 flex-row bg-card !p-0">
                 {step === 0 && <ChooseContentStep />}
                 {step === 1 && <PostMetadataStep />}
             </View>
         </>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 10,
-    },
-    imageContainer: {
-        position: 'relative',
-    },
-    image: {
-        flex: 1,
-        borderRadius: 12,
-        width: '100%',
-        height: '100%',
-    },
-    removeButton: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-        padding: 8,
-    },
-    uploadContainer: {},
-    buttonContainer: {
-        flex: 1,
-        gap: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    button: {
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 40,
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
-    },
-    helperText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#666',
-        textAlign: 'center',
-    },
-    textInput: {
-        marginTop: 16,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        minHeight: 100,
-        textAlignVertical: 'top',
-    },
-    audioContainer: {
-        position: 'relative',
-        width: '100%',
-        padding: 20,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 16,
-    },
-    audioText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#666',
-    },
-});

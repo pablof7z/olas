@@ -39,6 +39,47 @@ export function TagSelectorBottomSheet() {
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
     const [metadata, setMetadata] = useAtom(metadataAtom);
+    const selectedTags = useRef<Set<string>>(new Set());
+    const [selectedCount, setSelectedCount] = useState(0);
+
+    useEffect(() => {
+        selectedTags.current.clear();
+        for (const tag of metadata.tags ?? []) {
+            selectedTags.current.add(tag);
+        }
+        setSelectedCount(selectedTags.current.size);
+    }, [metadata?.tags?.length])
+
+    useEffect(() => {
+        setBottomSheetRef(ref);
+    }, [ref, setBottomSheetRef]);
+
+    const updateCaption = useCallback(() => {
+        const currentCaptionTags = generateHashtags(metadata?.caption ?? "");
+
+        // see if the caption has tags we don't have, if it does, let's remove them 
+        const tagsToRemove = currentCaptionTags.filter((tag) => !selectedTags.current.has(tag));
+        const newCaption = (metadata?.caption ?? "")
+            .replace(/#(\w+)/g, (match, tag) => {
+                if (tagsToRemove.includes(tag)) return '';
+                return match;
+            })
+            .trim();
+        setMetadata({ ...metadata, caption: newCaption });
+    }, [metadata, setMetadata]);
+
+    return (
+        <Sheet ref={ref} onDismiss={updateCaption}>
+            <BottomSheetView style={{ paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
+                <TagSelector />
+            </BottomSheetView>
+        </Sheet>
+    );
+}
+
+export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void }) {
+    const inset = useSafeAreaInsets();
+    const [metadata, setMetadata] = useAtom(metadataAtom);
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
@@ -82,43 +123,35 @@ export function TagSelectorBottomSheet() {
         return result;
     }, [ndk, currentUser?.pubkey, follows?.length, search, selectedTags.current, mountTagSelector]);
 
-    useEffect(() => {
-        setBottomSheetRef(ref);
-    }, [ref, setBottomSheetRef]);
-
     const setTagsInMetadata = useCallback((tags: string[]) => {
         setMetadata({ ...metadata, tags });
     }, [metadata, setMetadata]);
 
     const addTagManually = useCallback(() => {
         if (!search) return;
+        if (onSelected) {
+            onSelected(search);
+            return;
+        }
+
         selectedTags.current.add(search);
         setTagsInMetadata(Array.from(selectedTags.current));
         setSelectedCount(selectedTags.current.size);
         setSearch('');
     }, [search, setSearch, setTagsInMetadata]);
 
-    const onItemPress = (tag: string) => {
+    const onItemPress = useCallback((tag: string) => {
+        if (onSelected) {
+            onSelected(tag);
+            return;
+        }
+        
         if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
         else selectedTags.current.add(tag);
         setTagsInMetadata(Array.from(selectedTags.current));
         setSelectedCount(selectedTags.current.size);
         setSearch('');
-    };
-
-    const updateCaption = useCallback(() => {
-        const currentCaptionTags = generateHashtags(metadata?.caption ?? "");
-
-        // see if the caption has tags we don't have, if it does, let's remove them 
-        const tagsToRemove = currentCaptionTags.filter((tag) => !selectedTags.current.has(tag));
-        const newCaption = (metadata?.caption ?? "")
-            .replace(/#(\w+)/g, (match, tag) => {
-                if (tagsToRemove.includes(tag)) return '';
-                return match;
-            })
-            .trim();
-        setMetadata({ ...metadata, caption: newCaption });
-    }, [metadata, setMetadata]);
+    }, [setTagsInMetadata, setSelectedCount, setSearch, onSelected]);
 
     const keyExtractor = (item: TagEntry) => item.tag;
     const renderItem = useCallback(({ item, index }: { item: TagEntry, index: number, target }) => {
@@ -147,49 +180,36 @@ export function TagSelectorBottomSheet() {
     }, [tagsToShow, selectedCount, renderItem, onItemPress]);
 
     return (
-        <Sheet ref={ref} onDismiss={updateCaption}>
-            <BottomSheetView style={{ paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
-                <View className="px-4 flex-col gap-2">
-                    <View className="flex-row items-center justify-between">
-                        <Text variant="title1">Tags</Text>
+        <View className="px-4 flex-col gap-2">
+            <View className="flex-row items-center bg-card border border-border/25 dark:border-border/80 rounded-md px-4 py-3">
+                <Text className="text-foreground">#</Text>
+                <TextInput
+                    className="text-foreground flex-1 px-1"
+                    value={search}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus={false}
+                    onChangeText={setSearch}
+                    placeholder="tags"
+                />
 
-                        <Button variant="tonal" onPress={() => ref.current?.dismiss()}>
-                            <Text>Save</Text>
-                        </Button>
-                    </View>
-                    <Text variant="callout">Help people find your post</Text>
+                <Button
+                    size="sm"
+                    variant={tagsToShow.length === 0 ? 'primary' : 'secondary' }
+                    disabled={search.length === 0}
+                    onPress={addTagManually}
+                >
+                    <Text>Add</Text>
+                </Button>
+            </View>
 
-                    <View className="flex-row items-center bg-card border border-border/25 dark:border-border/80 rounded-md px-4 py-3">
-                        <Text className="text-foreground">#</Text>
-                        <TextInput
-                            className="text-foreground flex-1 px-1"
-                            value={search}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            autoFocus={false}
-                            onChangeText={setSearch}
-                            placeholder="tags"
-                        />
-
-                        <Button
-                            size="sm"
-                            variant={tagsToShow.length === 0 ? 'primary' : 'secondary' }
-                            disabled={search.length === 0}
-                            onPress={addTagManually}
-                        >
-                            <Text>Add</Text>
-                        </Button>
-                    </View>
-
-                    <FlatList
-                        data={data}
-                        variant="insets"
-                        keyExtractor={keyExtractor}
-                        renderItem={renderItem}
-                    />
-                </View>
-            </BottomSheetView>
-        </Sheet>
+            <FlatList
+                data={data}
+                variant="insets"
+                keyExtractor={keyExtractor}
+                renderItem={renderItem}
+            />
+        </View>
     );
 }
 
@@ -201,12 +221,9 @@ export function TagSelectorBottomSheet() {
  * network.
  */
 function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: string): Array<TagEntry> {
-    const start = performance.now();
-    const tagsFromUser = getTagsUsedBy(ndk, [user.pubkey], 4, search);
+    const tagsFromUser = getTagsUsedBy(ndk, [user.pubkey], 8, search);
 
-    const tagsFromNetwork = getTagsUsedBy(ndk, follows, 10, search);
-    const end = performance.now();
-    console.log(`${module}: getTagsToShow: ${end - start}ms`);
+    const tagsFromNetwork = getTagsUsedBy(ndk, follows, 20, search);
 
     const tagsToReturn: TagEntry[] = tagsFromUser;
     const idsFromUser = new Set(tagsFromUser.map((tag) => tag.id));

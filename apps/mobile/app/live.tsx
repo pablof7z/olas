@@ -29,7 +29,7 @@ export default function LiveScreen() {
     let source = activeEvent?.tagValue?.('streaming');
     source ??= activeEvent?.tagValue?.('recording');
     const video = useVideoPlayer(source, (player) => {
-        player.muted = true;
+        player.muted = false;
         player.play();
     });
     const title = activeEvent.tagValue('title');

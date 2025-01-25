@@ -1,10 +1,11 @@
 import { router, Stack } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Button } from 'react-native';
+import { Button, NativeSyntheticEvent, TextInputKeyPressEventData, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { metadataAtom, PostMetadata } from '@/components/NewPost/store';
 import { generateHashtags } from '@nostr-dev-kit/ndk-mobile';
+import { TagSelector, tagSelectorBottomSheetRefAtom } from '@/components/TagSelectorBottomSheet';
 
 function modifyTagsFromCaptionChange(
     tags: string[],
@@ -29,16 +30,29 @@ function modifyTagsFromCaptionChange(
 export default function Caption() {
     const [metadata, setMetadata] = useAtom(metadataAtom);
     const [description, setDescription] = useState(metadata?.caption ?? '');
+    const [showTagSelector, setShowTagSelector] = useState(false);
 
     const setCaption = useCallback((caption: string) => {
         const tags = modifyTagsFromCaptionChange(metadata?.tags??[], metadata?.caption??'', caption);
-        setMetadata({ caption, tags });
+        setMetadata({ ...metadata, caption, tags });
     }, [metadata, setMetadata]);
 
     const onPress = useCallback(() => {
         setCaption(description);
         router.back();
     }, [description, setCaption]);
+
+    const onKeyPress = useCallback((e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+        if (e.nativeEvent.key === '#') {
+            e.preventDefault();
+            setShowTagSelector(true);
+        }
+    }, [onPress]);
+
+    const onTagSelected = useCallback((tag: string) => {
+        setDescription(description + ` #${tag} `);
+        setShowTagSelector(false);
+    }, [description, setDescription]);
 
     return (
         <>
@@ -58,10 +72,20 @@ export default function Caption() {
                 className="p-4 text-lg text-foreground"
                 placeholder="Write a caption or comment..."
                 autoFocus
+                style={styles.input}
                 value={description}
+                onKeyPress={onKeyPress}
                 onChangeText={setDescription}
                 multiline
             />
+
+            <TagSelector onSelected={onTagSelected} />
         </>
     );
 }
+
+const styles = StyleSheet.create({
+    input: {
+        minHeight: 200,
+    },
+});

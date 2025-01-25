@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { View, StyleSheet, Pressable, Text, Linking } from 'react-native';
 import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '../user';
 import { Image } from 'expo-image';
@@ -7,7 +7,7 @@ import { nip19 } from 'nostr-tools';
 import { router } from 'expo-router';
 
 interface EventContentProps {
-    event: NDKEvent;
+    event?: NDKEvent;
     content?: string;
 
     onMentionPress?: (pubkey: string) => void;
@@ -107,7 +107,7 @@ function RenderPart({
 }: { part: string; onMentionPress?: (pubkey: string) => void; onHashtagPress?: (hashtag: string) => void } & React.ComponentProps<
     typeof Text
 >) {
-    if (part.startsWith('https://')) {
+    if (part.startsWith('https://') && part.match(/\.(jpg|jpeg|png|gif)/)) {
         return (
             <Pressable>
                 <Image
@@ -120,6 +120,12 @@ function RenderPart({
                     }}
                 />
             </Pressable>
+        );
+    } else if (part.startsWith('https://') || part.startsWith('http://')) {
+        return (
+            <Text className="font-bold text-primary underline" onPress={() => Linking.openURL(part)}>
+                {part}
+            </Text>
         );
     }
 
@@ -136,12 +142,12 @@ function RenderPart({
     return <Text {...props}>{part}</Text>;
 }
 
-const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, content, ...props }) => {
+const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, content, ...props }: EventContentProps & React.ComponentProps<typeof Text>) => {
     content ??= event.content;
 
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+)/);
 
-    if (event.kind === NDKKind.Reaction) {
+    if (event?.kind === NDKKind.Reaction) {
         switch (event.content) {
             case '+': case '+1': return <Text {...props}>❤️</Text>;
             case '-': case '-1': return <Text {...props}>👎</Text>;

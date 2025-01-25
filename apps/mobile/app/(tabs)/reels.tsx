@@ -15,6 +15,8 @@ import { memo } from 'react';
 import { Reactions } from '@/components/events/Post/Reactions';
 import { getImetas } from '@/components/media/event';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import RelativeTime from '../components/relative-time';
+import { getClientName } from '@/utils/event';
 
 const visibleItemAtom = atom<string>("");
 
@@ -50,6 +52,8 @@ const Reel = memo(
                 player.pause();
             }
         }, [player, isVisible]);
+
+        const clientName = getClientName(event);
 
         return (
             <View
@@ -97,8 +101,16 @@ const Reel = memo(
                     
                     <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
                         <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
-                        <Text className="text-base font-semibold text-white">
+                        <Text className="flex-col text-base font-semibold text-white">
                             <User.Name userProfile={userProfile} pubkey={event.pubkey} />
+                            <Text>
+                                <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                                {clientName && (
+                                    <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
+                                        {` via ${clientName}`}
+                                    </Text>
+                                )}
+                            </Text>
                         </Text>
                     </Pressable>
                     <EventContent event={event} className="text-sm text-white" />

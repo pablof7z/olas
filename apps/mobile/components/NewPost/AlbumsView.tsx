@@ -207,10 +207,6 @@ function GridItem({
 export function SelectedMediaPreview() {
     const selectedMedia = useAtomValue(selectedMediaAtom);
 
-    const size = Dimensions.get('screen').width;
-
-    console.log('selectedMedia', selectedMedia.length);
-
     return (
         <View className="flex-1 flex-col items-center justify-between">
             <MediaPreview assets={selectedMedia} style={{ width: '100%', height: '100%' }} />

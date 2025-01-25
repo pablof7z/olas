@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { editImageAtom, editCallbackAtom } from '@/app/edit';
 import { useSetAtom } from 'jotai';
+import { BlurView } from 'expo-blur';
+import { Edit2 } from 'lucide-react-native';
 
 export type MediaLibraryItem = {
     id: string;
@@ -41,11 +43,9 @@ export type MediaLibraryItem = {
 export function MediaPreview({
     assets,
     style,
-    containerStyle,
 }: {
     assets: MediaLibraryItem[];
     style?: ImageStyle;
-    containerStyle?: ViewStyle;
 }) {
     const multiple = assets.length > 1;
     const size = Dimensions.get('screen').width;
@@ -75,6 +75,20 @@ export function MediaPreview({
     const width = Dimensions.get('screen').width;
     const height = (Dimensions.get('screen').height - insets.top - insets.bottom) / 2;
 
+    const containerStyle = useMemo<ViewStyle>(() => {
+        if (multiple) return { flex: 1, width: size - 50, overflow: 'hidden', borderRadius: 20, marginRight: 20, marginTop: 20 };
+        return { flex: 1, width: size, overflow: 'hidden' };
+    }, [multiple, size]);
+
+    const setEditImage = useSetAtom(editImageAtom);
+    const setEditCallback = useSetAtom(editCallbackAtom);
+
+    const handlePress = useCallback((uri: string, index: number) => {
+        setEditImage(uri);
+        setEditCallback((newUri) => onImageChange(newUri, index));
+        router.push('/edit');
+    }, [onImageChange]);
+
     return (
         <Container>
             {assets.map((asset, index) => (
@@ -82,19 +96,22 @@ export function MediaPreview({
                     {asset.mediaType === 'video' ? (
                         <VideoAlbumItem key={asset.id} uri={asset.uri} style={style} />
                     ) : (
-                        <PhotoAlbumItem
-                            key={asset.id}
-                            uri={asset.uri}
-                            style={{
-                                flex: 1,
-                                width: size - 40,
-                                overflow: 'hidden',
-                            }}
-                            onImageChange={(newUri) => {
-                                console.log('first onImageChange', index);
-                                onImageChange(newUri, index)
-                            }}
-                        />
+                        <View style={{...containerStyle, position: 'relative'}}>
+                            <PhotoAlbumItem
+                                key={asset.id}
+                                uri={asset.uri}
+                                style={containerStyle}
+                                onImageChange={(newUri) => onImageChange(newUri, index)}
+                            />
+                                
+                            <Pressable  
+                                onPress={() => handlePress(asset.uri, index)}
+                                className="bg-black/50 px-4 py-2 rounded-full items-center absolute left-2 bottom-2 flex-row gap-4"
+                            >
+                                <Edit2 size={18} color="white" />
+                                <Text className="text-white font-bold">Edit</Text>
+                            </Pressable>
+                        </View>
                     )}
                 </View>
             ))}
@@ -105,27 +122,12 @@ export function MediaPreview({
 export function PhotoAlbumItem({
     uri,
     style,
-    onImageChange,
     ...props
 }: {
     uri: string;
     style: ViewStyle;
-    onImageChange?: (newUri: string) => void;
 } & ComponentProps<typeof Image>) {
-    const setEditImage = useSetAtom(editImageAtom);
-    const setEditCallback = useSetAtom(editCallbackAtom);
-
-    const handlePress = useCallback(() => {
-        setEditImage(uri);
-        setEditCallback(onImageChange);
-        router.push('/edit');
-    }, [uri, onImageChange]);
-
-    return (
-        <Pressable onPress={handlePress} style={style} {...props}>
-            <Image source={{ uri }} style={style} {...props} />
-        </Pressable>
-    );
+    return <Image source={{ uri }} style={style} {...props} />;
 }
 
 export function VideoAlbumItem({ uri, style, ...props }: { uri: string; style: ViewStyle } & ComponentProps<typeof View>) {

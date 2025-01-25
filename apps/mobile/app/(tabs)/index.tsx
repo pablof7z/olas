@@ -5,50 +5,36 @@ import {
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import * as SettingsStore from 'expo-secure-store';
+import { Image } from 'expo-image';
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Dimensions, Modal, Pressable, View } from 'react-native';
 import { myFollows } from '@/utils/myfollows';
 import { router, Stack } from 'expo-router';
-import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { Calendar, ChevronDown } from 'lucide-react-native';
+import { Calendar, ChevronDown, House } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { List, ListItem } from '@/components/nativewindui/List';
-import { cn } from '@/lib/cn';
 import NotificationsButton from '@/components/NotificationsButton';
-import { Checkbox } from '@/components/nativewindui/Checkbox';
 import Feed from '@/components/Feed';
 import { FlashList } from '@shopify/flash-list';
 import { useObserver } from '@/hooks/observer';
-import Follows from '@/components/icons/follows';
-import ForYou from '@/components/icons/for-you';
-import Bookmarks from '@/components/icons/bookmarks';
-import { Image } from 'expo-image';
-import { Button } from '@/components/nativewindui/Button';
-import { IconView } from '@/app/(wallet)/(walletSettings)';
+
 import Lightning from '@/components/icons/lightning';
-import { Hexpubkey } from '@nostr-dev-kit/ndk';
+import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 import EventMediaContainer from '@/components/media/event';
 import EventContent from '@/components/ui/event/content';
 import UserAvatar from '@/components/ui/user/avatar';
-import { NDKSubscriptionOptions } from '@nostr-dev-kit/ndk';
 import { activeEventAtom } from '@/stores/event';
 import { videoKinds } from '@/utils/const';
 import { FeedEntry } from '@/components/Feed/hook';
+import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
+import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
+import { useGroup } from '@/lib/groups/store';
 
-const includeTweetsAtom = atom(false);
-
-export const feedTypeAtom = atom<'follows' | 'for-you' | 'bookmark-feed' | string>('for-you');
-
-// const currentScrollIndexAtom = atom(0);
-
-const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
+// const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
@@ -165,7 +151,7 @@ function StoryEntry({ events }: { events: NDKEvent[] }) {
 }
 
 
-function LiveViewEntry({ event }) {
+function LiveViewEntry({ event }: { event: NDKEvent }) {
     const setActiveEvent = useSetAtom(activeEventAtom);
     const pubkey = event.tagValue("p") ?? event.pubkey;
     const { userProfile } = useUserProfile(pubkey);
@@ -174,7 +160,6 @@ function LiveViewEntry({ event }) {
     return (
         <Pressable className="flex-col items-center gap-2 px-2" onPress={() => {
             setActiveEvent(event);
-            console.log(JSON.stringify(event.rawEvent(), null, 4));
             router.push('/live')
         }}>
             <UserAvatar userProfile={userProfile} size={40} className="w-14 h-14 rounded-full" />
@@ -183,9 +168,14 @@ function LiveViewEntry({ event }) {
     );
 }
 
-function Stories({ follows }: { follows: false | Hexpubkey[] }) {
+function Stories() {
+    const currentUser = useNDKCurrentUser();
     const twentyFourHoursAgo = (Date.now() - 600 * 60 * 60 * 1000) / 1000;
-    const storiesFilters: NDKFilter[] | false = follows ? [{ kinds: [30311 as NDKKind], authors: follows, since: twentyFourHoursAgo }] : false;
+    const follows = useFollows();
+    const storiesFilters: NDKFilter[] | false = currentUser ? [
+        { kinds: [30311 as NDKKind], authors: follows, since: twentyFourHoursAgo },
+        { kinds: [30311 as NDKKind], "#p": follows, since: twentyFourHoursAgo }
+    ] : false;
 
     // const storiesFilters: NDKFilter[] = useMemo(() => ([
     //     { kinds: [NDKKind.VerticalVideo], since: twentyFourHoursAgo, authors: follows }
@@ -212,25 +202,25 @@ function Stories({ follows }: { follows: false | Hexpubkey[] }) {
     const filtered = useMemo(() => {
         const e = new Map<NDKEventId, NDKEvent>();
         for (const event of events) {
-            if (event.tagValue("status") === "live") {
+            // if (event.tagValue("status") === "live") {
                 e.set(event.id, event);
                 console.log(event.id);
-            }
+            // }
         }
         return Array.from(e.values());
     }, [events, follows]);
 
     return (
         <View className="flex-row" style={{ height: 70 }}>
-        <FlashList
-            data={filtered}
-            horizontal
-            estimatedItemSize={100}
-            keyExtractor={(event) => event.id}
-            renderItem={({item, index, target}) => (
-                <LiveViewEntry event={item} />
-            )}
-        />
+            <FlashList
+                data={filtered}
+                horizontal
+                estimatedItemSize={100}
+                keyExtractor={(event) => event.id}
+                renderItem={({item, index, target}) => (
+                    <LiveViewEntry event={item} />
+                )}
+            />
         </View>
             // horizontal className="flex-none flex border-b border-border">
             // <View className="flex-1 flex-row gap-4 p-2">
@@ -254,7 +244,7 @@ function useBookmarkIds() {
 
     useEffect(() => {
         if (!ndk) return;
-        if (feedType !== 'bookmark-feed') {
+        if (feedType.value !== 'bookmark-feed') {
             sub.current?.stop();
             sub.current = null;
             eosed.current = false;
@@ -278,7 +268,6 @@ function useBookmarkIds() {
     
         sub.current.on("eose", () => {
             eosed.current = true;
-            console.log('eose', ids.size);
             setRet(Array.from(ids));
         });
 
@@ -294,8 +283,8 @@ function useBookmarkIds() {
     return ret;
 }
 
-function hashtagFeedToTags(feedType: string) {
-    switch (feedType) {
+function hashtagFeedToTags(feedType: FeedType) {
+    switch (feedType.value) {
         case '#photography': return ['photography', 'photo', 'circunvagar'];
         case '#introductions': return ['introductions'];
         case '#family': return ['family', 'kids', 'parenting'];
@@ -306,7 +295,7 @@ function hashtagFeedToTags(feedType: string) {
         case '#music': return ['music', 'jitterbug'];
         case '#food': return ['food', 'foodstr'];
         default:
-            return [feedType.slice(1, 99)];
+            return [feedType.value.slice(1, 99)];
     }
 }
 
@@ -314,52 +303,70 @@ function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
-    const includeTweets = useAtomValue(includeTweetsAtom);
     const bookmarkIds = useBookmarkIds();
 
-    const withTweets = useMemo(() => includeTweets || feedType.startsWith('#'), [includeTweets, feedType])
+    const withTweets = useMemo(() => feedType.kind === 'hashtag', [feedType.kind])
 
     const bookmarkIdsForFilter = useMemo(() => {
-        if (feedType === 'bookmark-feed') return bookmarkIds;
+        if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
         return [];
     }, [bookmarkIds.length, feedType])
 
-    const {filters, key} = useMemo(() => {
-        if (feedType === 'bookmark-feed') {
+    const followSet = useMemo(() => {
+        const set = new Set(follows);
+        if (currentUser) set.add(currentUser.pubkey)
+        return set;
+    }, [currentUser?.pubkey, follows?.length])
+
+    const { filters, key, filterFn, relayUrls } = useMemo(() => {
+        if (feedType.kind === 'group') {
+            return {
+                filters: [
+                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], "#h": [feedType.value] },
+                ],
+                key: 'groups-' + feedType.value,
+                filterFn: null,
+                relayUrls: feedType.relayUrls
+            }
+        } else if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') {
             if (bookmarkIdsForFilter.length === 0) return { filters: undefined, key: 'empty' };
             return {
                 filters: [ { ids: bookmarkIdsForFilter } ], key: 'bookmark-feed'+bookmarkIdsForFilter.length
             };
         }
         
-        const keyParts = [currentUser?.pubkey ?? "", !!includeTweets, !!feedType.startsWith('#')];
+        const keyParts = [currentUser?.pubkey ?? "", feedType.value, feedType.kind === 'hashtag'];
         
-        if (feedType === 'follows' && follows && follows?.length > 2) keyParts.push(follows.length.toString())
+        if (feedType.kind === 'discover' && feedType.value === 'follows' && follows && follows?.length > 2) keyParts.push(follows.length.toString())
 
-        const hashtagFilter = feedType.startsWith('#') ? { "#t": hashtagFeedToTags(feedType) } : {};
+        const hashtagFilter = feedType.kind === 'hashtag' ? { "#t": hashtagFeedToTags(feedType) } : {};
 
         const filters: NDKFilter[] = [];
     
         filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter });
         filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter });
 
-        // if (!feedType.startsWith('#')) {
-        //     filters.push({
-        //         kinds: [NDKKind.Repost, NDKKind.GenericRepost, 3006], '#k': [NDKKind.Image.toString()], limit: 50, ...followsFilter
-        //     });
-        // }
-
-        if (currentUser) {
-            filters.push({ kinds: [NDKKind.EventDeletion], '#k': ['20'], authors: [currentUser.pubkey] });
-        }
-
         if (withTweets) {
             if (follows) filters.push({ kinds: [1], authors: follows, limit: 50, ...hashtagFilter });
             else filters.push({ kinds: [1], authors: myFollows, limit: 50, ...hashtagFilter });
         }
 
-        return {filters, key: keyParts.join()};
-    }, [follows?.length, withTweets, feedType, currentUser?.pubkey, bookmarkIdsForFilter.length]);
+        let filterFn = null;
+
+        if (feedType.kind !== 'hashtag') {
+            filterFn = (feedEntry: FeedEntry, index: number) => {
+                const isFollowed = followSet.has(feedEntry.event?.pubkey)
+                if (isFollowed) return true;
+                if (feedType.kind === 'discover' && feedType.value === 'follows') return false;
+
+                const isVideo = videoKinds.has(feedEntry.event?.kind)
+
+                return !isVideo || isFollowed;
+            };
+        }
+
+        return {filters, key: keyParts.join(), filterFn};
+    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length]);
 
     // useEffect(() => {
     //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
@@ -373,33 +380,13 @@ function DataList() {
     //     console.log('filters', JSON.stringify(authorCountPerFilter, null, 4), key);
     // }, [filters, key])
 
-    const followSet = useMemo(() => {
-        const set = new Set(follows);
-        if (currentUser) set.add(currentUser.pubkey)
-        return set;
-    }, [currentUser?.pubkey, follows?.length])
-
-    const filterFn = useMemo(() => {
-        if (feedType.startsWith('#')) return null;
-
-        return (feedEntry: FeedEntry, index: number) => {
-            const isFollowed = followSet.has(feedEntry.event?.pubkey)
-            if (isFollowed) return true;
-            if (feedType === 'follows') return false;
-
-            const isVideo = videoKinds.has(feedEntry.event?.kind)
-
-            return !isVideo || isFollowed;
-        };
-    }, [ feedType, followSet.size ])
-    
     return (
         <View className="flex-1 bg-card">
             <Feed
-                // prepend={[<Stories follows={followsForFilter} />]}
+                // prepend={[<Stories />]}
                 filters={filters}
+                relayUrls={relayUrls}
                 filterKey={key}
-                filterByFollows={feedType === 'follows'}
                 filterFn={filterFn}
             />
         </View>
@@ -407,31 +394,18 @@ function DataList() {
 }
 
 function HomeTitle() {
-    const [feedType, setFeedType] = useAtom(feedTypeAtom);
+    const feedType = useAtomValue(feedTypeAtom);
     const { colors } = useColorScheme();
-    const { ndk } = useNDK();
-    const [relays, setRelays] = useState<string[]>([]);
-    const sheetRef = useSheetRef();
-    const inset = useSafeAreaInsets();
-
-    const showSheet = useCallback(() => {
-        if (!ndk) return;
-        const connectedRelays = ndk.pool.connectedRelays();
-        const connectedRelaysNames = connectedRelays.map((r) => r.url);
-
-        setRelays(connectedRelaysNames);
-
-        sheetRef.current?.present();
-    }, [ndk]);
+    const { show: showSheet } = useFeedTypeBottomSheet();
+    const group = useGroup(feedType.kind === 'group' ? feedType.value : undefined, feedType.kind === 'group' ? feedType.relayUrls[0] : undefined);
 
     const feedTypeTitle = useMemo(() => {
-        if (feedType === 'follows') return 'Follows';
-        if (feedType === 'for-you') return 'For You';
-        if (feedType === 'bookmark-feed') return 'Bookmarks';
-        return feedType;
+        if (feedType.kind === 'discover' && feedType.value === 'follows') return 'Follows';
+        if (feedType.kind === 'discover' && feedType.value === 'for-you') return 'For You';
+        if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return 'Bookmarks';
+        return feedType.value;
     }, [feedType]);
 
-    const [includeTweets, setIncludeTweets] = useAtom(includeTweetsAtom);
     // const [dvms, setDvms] = useState([]);
     // const setExplicitFeed = useSetAtom(explicitFeedAtom);
 
@@ -486,115 +460,19 @@ function HomeTitle() {
     //     });
     // }, []);
 
-    const follows = useFollows();
-    const listOptions = useMemo(() => {
-        const v = [
-            {
-                title: 'Bookmarks', subTitle: 'Posts you have bookmarked', onPress: () => router.push('/bookmarks'),
-                leftView: <IconView name="bookmark" className="bg-orange-500" size={35} />
-            },
-            { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365' },
-            { title: '#photography', subTitle: 'Photography posts', value: '#photography' },
-            { title: '#food', subTitle: 'Food posts', value: '#food' },
-            { title: '#family', subTitle: 'Family posts', value: '#family' },
-            { title: '#art', subTitle: 'Art posts', value: '#art' },
-            { title: '#music', subTitle: 'Music posts', value: '#music' },
-            { title: '#nature', subTitle: 'Nature posts', value: '#nature' },
-            { title: '#travel', subTitle: 'Travel posts', value: '#travel' },
-            { title: '#memes', subTitle: 'Memes posts', value: '#memes' },
-        ];
-
-        // v.push(...dvms);
-
-        return v;
-    }, [follows?.length]);
-    
-    const setOption = useCallback((value) => {
-        sheetRef.current?.dismiss();
-        setFeedType(value);
-        SettingsStore.setItemAsync('feed', value);
-    }, [sheetRef.current, setFeedType])
-
-    const buttonWidth = Dimensions.get('window').width / 3 - 15;
-    
     return (
         <>
             <Pressable style={{ paddingLeft: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
-                <Text className="text-xl font-semibold">{feedTypeTitle}</Text>
+                {group ? (
+                    <>
+                        <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
+                        <Text className="text-xl font-semibold">{group.name}</Text>
+                    </>) : (<>
+                        <Text className="text-xl font-semibold">{feedTypeTitle}</Text>
+                    </>)
+                }
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
-            <Sheet snapPoints={['80%']} ref={sheetRef}>
-                <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, flex: 1 }}>
-                    <Text variant="title1">Feed Type</Text>
-
-                    <View className="flex-row gap-1 justify-between my-4 min-h-24">
-                        <Button
-                            variant={feedType === 'follows' ? 'tonal' : 'secondary'}
-                            size="none"
-                            className="flex-1 flex-col !py-2"
-                            style={{ paddingVertical: 20, width: buttonWidth }}
-                            onPress={() => setOption('follows')}
-                        >
-                            <Follows stroke={colors.foreground} size={38} />
-                            <Text className="text-base text-muted-foreground font-semibold">Follows</Text>
-                        </Button>
-                        
-                        <Button
-                            variant={feedType === 'for-you' ? 'tonal' : 'secondary'}
-                            size="none"
-                            className="flex-1 flex-col"
-                            style={{ paddingVertical: 20, width: buttonWidth }}
-                            onPress={() => setOption('for-you')}
-                        >
-                            <ForYou stroke={colors.foreground} size={38} />
-                            <Text className="text-base text-muted-foreground font-semibold">For You</Text>
-                        </Button>
-
-                        <Button
-                            variant={feedType === 'bookmark-feed' ? 'tonal' : 'secondary'}
-                            size="none"
-                            className="flex-1 flex-col gap-1"
-                            style={{ paddingVertical: 20, width: buttonWidth }}
-                            onPress={() => setOption('bookmark-feed')}
-                        >
-                            <Bookmarks stroke={colors.foreground} size={38} />
-                            <Text className="text-base text-muted-foreground font-semibold">Bookmarks</Text>
-                        </Button>
-                    </View>
-
-                    <List
-                        variant="full-width"
-                        data={listOptions}
-                        estimatedItemSize={50}
-                        renderItem={({ item, target, index }) => (
-                            <ListItem
-                                className={cn(
-                                    'ios:pl-0 pl-2',
-                                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                                )}
-                                titleClassName={cn('text-lg', item.value === feedType && '!font-extrabold')}
-                                item={item}
-                                index={index}
-                                target={target}
-                                leftView={
-                                    item.icon ? (
-                                        <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
-                                    ) : item.leftView ? item.leftView : null
-                                }
-                                onPress={() => {
-                                    if (item.onPress) item.onPress();
-                                    else setOption(item.value)
-                                }}
-                            />
-                        )}
-                    />
-
-                    <Pressable className="my-4 flex-row items-center gap-4" onPress={() => setIncludeTweets(!includeTweets)}>
-                        <Checkbox checked={includeTweets} />
-                        <Text className="text-lg font-semibold">Include Tweets</Text>
-                    </Pressable>
-                </BottomSheetView>
-            </Sheet>
         </>
     );
 }

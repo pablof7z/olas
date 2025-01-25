@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform, Linking, Pressable } from 'react-native';
 import * as User from '@/components/ui/user';
 import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import { useStore } from 'zustand';
 import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
@@ -13,10 +14,36 @@ import FollowButton from '@/components/buttons/follow';
 import { EventMediaGridContainer } from '@/components/media/event';
 import { useSetAtom } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
+import EventContent from '@/components/ui/event/content';
+import { Check, Copy } from 'lucide-react-native';
+import { toast } from '@backpackapp-io/react-native-toast';
+import { useColorScheme } from '@/lib/useColorScheme';
+
+function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
+    const { colors } = useColorScheme();
+    const [copied, setCopied] = useState(false);
+    const copy = useCallback(() => {
+        Clipboard.setStringAsync(text);
+        setCopied(true);
+        setTimeout(() => { setCopied(false); }, 2000);
+    }, [text]);
+
+    return (
+        <Pressable onPress={copy} style={{ marginLeft: 4 }}>
+            {copied ? (
+                <Check size={size} color={colors.muted} />
+            ) : (
+                <Copy size={size} color={colors.muted} />
+            )}
+        </Pressable>
+    );
+}
 
 export default function Profile() {
     const follows = useFollows();
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
+    const { ndk } = useNDK();
+    const user = ndk.getUser({ pubkey });
     const { userProfile } = useUserProfile(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -75,6 +102,7 @@ export default function Profile() {
     }
 
     const setActiveEvent = useSetAtom(activeEventAtom);
+    const { colors } = useColorScheme();
 
     const insets = useSafeAreaInsets();
     return (
@@ -132,11 +160,15 @@ export default function Profile() {
                 })}
                 scrollEventThrottle={16}>
                 <View style={styles.bioSection}>
-                    <Text style={styles.username} className="text-foreground">
-                        <User.Name userProfile={userProfile} pubkey={pubkey} />
-                    </Text>
+                    <View className="text-foreground flex-row gap-4 items-center">
+                        <Text style={styles.username} className="text-foreground ">
+                            <User.Name userProfile={userProfile} pubkey={pubkey} />
+                        </Text>
+
+                        <CopyToClipboard text={user.npub} size={16} />
+                    </View>
                     <Text style={styles.bio} className="text-muted-foreground">
-                        <User.Field userProfile={userProfile} label="about" />
+                        {userProfile?.about ? <EventContent content={userProfile.about} /> : null}
                     </Text>
                 </View>
 

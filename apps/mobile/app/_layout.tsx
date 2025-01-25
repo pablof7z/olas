@@ -27,20 +27,22 @@ import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
 import { useAppSettingsStore } from '@/stores/app';
 import { AlbumsBottomSheet } from '@/components/NewPost/AlbumsBottomSheet';
-import { PostTypeBottomSheet } from '@/components/NewPost/PostTypeBottomSheet';
+import { BoostBottomSheet } from '@/components/NewPost/BoostBottomSheet';
 import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
 import { PromptForNotifications } from './notification-prompt';
 import PostTypeSelectorBottomSheet from '@/components/NewPost/TypeSelectorBottomSheet';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
-import { feedTypeAtom } from './(tabs)';
+import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { mainKinds } from '@/utils/const';
 import { mountTagSelectorAtom, TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { db, initialize } from "@/stores/db";
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
+import { CommunityBottomSheet } from '@/components/NewPost/CommunityBottomSheet';
+import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 
 initialize()
 
@@ -48,7 +50,7 @@ const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
     [NDKKind.ImageCurationSet, { wrapper: NDKList }],
     [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
-    // [NDKKind.SimpleGroupList, { wrapper: NDKList }],
+    [NDKKind.SimpleGroupList, { wrapper: NDKList }],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
 const settingsStore = {
@@ -110,7 +112,23 @@ export default function RootLayout() {
     
     useEffect(() => {
         const storedFeed = SettingsStore.getItem('feed');
-        if (storedFeed) setFeedType(storedFeed);
+        let feedType: FeedType | null = null;
+        if (storedFeed) {
+            try {
+                const payload = JSON.parse(storedFeed);
+                feedType = payload;
+            } catch (e) {
+                if (storedFeed.startsWith('#')) {
+                    feedType = { kind: 'hashtag', value: storedFeed };
+                } else {
+                    feedType = { kind: 'discover', value: storedFeed };
+                }
+            }
+        } else {
+            feedType = { kind: 'discover', value: 'for-you' };
+        }
+
+        setFeedType(feedType);
     }, [])
 
     useEffect(() => {
@@ -133,6 +151,7 @@ export default function RootLayout() {
             { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [currentUser.pubkey], ...sinceFilter },
                 // { authors: [user.pubkey], limit: 100 },
         ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' }, undefined);
         let receivedEvents = 0;
@@ -292,6 +311,8 @@ export default function RootLayout() {
                                         }}
                                     />
 
+                                    <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
+
                                     <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
                                     <Stack.Screen name="notifications" options={{ headerShown: false }} />
                                     {/* <Stack.Screen name="communities" options={{ headerShown: false }} /> */}
@@ -328,15 +349,14 @@ export default function RootLayout() {
                                 </Stack>
 
                                 <PostOptionsMenu />
-                                <PostTypeBottomSheet />
+                                <BoostBottomSheet />
                                 <LocationBottomSheet />
-                                {/* <CommunityBottomSheet /> */}
+                                <CommunityBottomSheet />
                                 <AlbumsBottomSheet />
                                 <PostTypeSelectorBottomSheet />
-                                
+                                <FeedTypeBottomSheet />
                                 <HandleNotificationPrompt />
                                 <TagSelectorBottomSheet />
-                                <PostTypeSelectorBottomSheet />
                             </NavThemeProvider>
                             <Toasts />
                         </KeyboardProvider>

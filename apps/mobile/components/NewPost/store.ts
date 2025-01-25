@@ -2,8 +2,6 @@ import { atom } from 'jotai';
 import { MediaLibraryItem } from './MediaPreview';
 import { GroupEntry } from '@/app/communities';
 
-export type PostType = 'generic' | 'high-quality';
-
 export const stepAtom = atom(0);
 
 /**
@@ -22,7 +20,7 @@ export type PostMetadata = {
     caption: string;
     tags?: string[];
     expiration?: number;
-    type?: PostType;
+    boost?: boolean;
     removeLocation?: boolean;
     location?: Location;
     group?: {

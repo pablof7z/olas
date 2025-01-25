@@ -69,44 +69,40 @@ export default function PostTypeSelectorBottomSheet() {
         cb();
     }, [ref]);
 
-    const newPost = useNewPost();
+    const { imagePicker, camera } = useNewPost();
     const insets = useSafeAreaInsets();
 
     return (
-        <Sheet snapPoints={['50%']} ref={ref}>
-            <BottomSheetView style={{ flexDirection: 'column', width: '100%', flex: 1, alignContent: 'stretch', paddingBottom: insets.bottom }}>
+        <Sheet ref={ref}>
+            <BottomSheetView style={{ flexDirection: 'column', width: '100%', alignContent: 'stretch', paddingBottom: insets.bottom }}>
                 {/* <InlineCamera /> */}
                 
                 <View className="flex-row mb-4" style={{ height: 140}}>
                     <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
-                        <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => newPost({ types: ['images'], square: true }))}>
+                        <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => imagePicker({ types: ['images'] }))}>
                             <Polaroid size={40} stroke={colors.foreground} />
-                            <Text className="text-sm text-muted-foreground">1:1 Photo</Text>
+                            <Text className="text-sm text-muted-foreground">Image</Text>
                         </Button>
                     </View>
-                    <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
-                        <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => newPost({ types: ['images'], square: false }))}>
-                            <Photo size={40} stroke={colors.foreground} />
-                            <Text className="text-sm text-muted-foreground">Uncropped</Text>
-                        </Button>
-                    </View>
-                </View>
 
-                <View className="flex-row" style={{ height: 140}}>
                     <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
-                        <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => newPost({ types: ['videos'] }))}>
+                        <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => imagePicker({ types: ['videos'] }))}>
                             <Reel color={colors.foreground} size={40} />
                             <Text className="text-sm text-muted-foreground">Reel</Text>
                         </Button>
                     </View>
+                </View>
+
+                {/* <View className="flex-row" style={{ height: 140}}>
+                    
                     
                     <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
-                        <Button size="none" style={{ height: 140}} variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => newPost({ types: ['videos'] }))}>
+                        <Button size="none" style={{ height: 140}} variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => camera({ types: ['videos'] }))}>
                             <ShortVideo color={colors.foreground} size={48} />
                             <Text className="text-sm text-muted-foreground">Short Video</Text>
                         </Button>
                     </View>
-                </View>
+                </View> */}
             </BottomSheetView>
         </Sheet>
     );

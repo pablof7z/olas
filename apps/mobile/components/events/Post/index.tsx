@@ -20,6 +20,7 @@ import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import EventMediaContainer, { getImetas } from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { getClientName } from '@/utils/event';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
@@ -87,10 +88,7 @@ export default function Post({ event, reposts, timestamp, onPress, index }: { in
 export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
     const { colors } = useColorScheme();
-    let clientName = event.tagValue('client');
-    if (!clientName && event.alt?.match(/Olas/)) clientName = 'Olas';
-
-    if (clientName?.startsWith('31990')) clientName = undefined;
+    const clientName = getClientName(event);
 
     const setOptionsMenuEvent = useSetAtom(optionsMenuEventAtom);
     const optionsSheetRef = useAtomValue(optionsSheetRefAtom);

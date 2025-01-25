@@ -1,5 +1,5 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -32,17 +32,19 @@ export type FeedEntry = {
  * Handles creating a feed that accounts for reposts, mutes
  * @param filters 
  * @param opts.subId The subscription ID to use for this feed
- * @param opts.filterByFollows Whether to filter by follows
  * @param dependencies Dependencies to re-run the subscription
  * @returns 
  */
 export function useFeedEvents(
     filters: NDKFilter[] | undefined,
-    { subId, filterByFollows, filterFn }: { subId?: string, filterByFollows?: boolean, filterFn?: (feedEntry: FeedEntry, index: number) => boolean } = {},
+    { subId, filterFn, relayUrls }: {
+        subId?: string,
+        filterFn?: (feedEntry: FeedEntry, index: number) => boolean,
+        relayUrls?: string[]
+    } = {},
     dependencies = []
 ) {
     subId ??= 'feed';
-    filterByFollows ??= false;
     
     const { ndk } = useNDK();
 
@@ -76,8 +78,6 @@ export function useFeedEvents(
 
     const pubkeyBlacklist = usePubkeyBlacklist();
 
-    const currentUser = useNDKCurrentUser();
-    const follows = useFollows();
     // const followSet = useMemo(() => {
     //     const set = new Set(follows);
     //     if (currentUser) set.add(currentUser.pubkey)
@@ -95,8 +95,6 @@ export function useFeedEvents(
             .filter((entry) => !!entry.event)
             .filter((entry: FeedEntry) => !pubkeyBlacklist.has(entry.event?.pubkey))
         
-        // if (filterByFollows)
-        //     newEntries = newEntries.filter((feedEntry: FeedEntry) => followSet.has(feedEntry.event?.pubkey));
         if (filterFn)
             newEntries = newEntries.filter(filterFn);
         
@@ -106,7 +104,7 @@ export function useFeedEvents(
         if (newEntries.length > 0) setNewEntries([]);
         
         // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
-    }, [setEntries, setNewEntries, pubkeyBlacklist.size, filterByFollows, filterFn]);
+    }, [setEntries, setNewEntries, pubkeyBlacklist.size, filterFn]);
 
     useEffect(() => {
         updateEntries('update entries changed');
@@ -130,7 +128,7 @@ export function useFeedEvents(
             }
         }
         return entry;
-    }, []);
+    }, [updateEntries]);
 
     const handleContentEvent = useCallback((eventId: string, event: NDKEvent) => {
         const entry = addEntry(eventId, (entry: FeedEntry) => {
@@ -144,7 +142,7 @@ export function useFeedEvents(
         if (eosed.current) {
             setNewEntries([ entry, ...newEntries ])
         }
-    }, [setNewEntries, newEntries]);
+    }, [setNewEntries, newEntries, addEntry]);
 
     /**
      * Adds the repost to the right feed item, whether the item has been
@@ -186,7 +184,7 @@ export function useFeedEvents(
             }
             return entry;
         });
-    }, []);
+    }, [addEntry]);
 
     const handleDeletion = useCallback((event: NDKEvent) => {
         for (const deletedId of event.getMatchingTags("e")) {
@@ -201,7 +199,7 @@ export function useFeedEvents(
                 addEntry(deletedId[0], (entry) => ({ ...entry, deletedBy: [...(entry.deletedBy||[]), event.pubkey ] }));
             }
         }
-    }, []);
+    }, [addEntry]);
 
     const handleEvent = useCallback((event: NDKEvent) => {
         const eventId = event.tagId();
@@ -211,12 +209,13 @@ export function useFeedEvents(
         switch (event.kind) {
             case NDKKind.VerticalVideo:
             case NDKKind.HorizontalVideo:
+            case NDKKind.Text:
             case NDKKind.Image: return handleContentEvent(eventId, event);
             case NDKKind.GenericRepost: return handleRepost(event);
             case 3006: return handleBookmark(event);
             case NDKKind.EventDeletion: return handleDeletion(event);
         }
-    }, []);
+    }, [handleContentEvent, handleRepost, handleBookmark, handleDeletion]);
 
     const handleEose = useCallback(() => {
         eosed.current = true;
@@ -264,8 +263,15 @@ export function useFeedEvents(
 
             filterExistingEvents()
         }
+
+        let relaySet: NDKRelaySet | undefined = undefined;
+        if (relayUrls) {
+            relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
+        }
+
+        console.log('subscribing to', filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
         
-        const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId }, undefined, false);
+        const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId }, relaySet, false);
 
         sub.on("event", handleEvent);
         sub.once('eose', handleEose);

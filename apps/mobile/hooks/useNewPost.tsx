@@ -10,6 +10,7 @@ import { toast } from '@backpackapp-io/react-native-toast';
 import { router } from 'expo-router';
 import { useAppSettingsStore } from '@/stores/app';
 import { mapAssetToMediaLibraryItem } from '@/utils/media';
+import ImageCropPicker from 'react-native-image-crop-picker';
 
 type NewPostProps = {
     types: ('images' | 'videos')[];
@@ -26,12 +27,12 @@ export function useNewPost() {
     const setUploading = useSetAtom(uploadingAtom);
     const [step, setStep] = useAtom(stepAtom);
     const setSelectedMedia = useSetAtom(selectedMediaAtom);
-    const { postType, removeLocation } = useAppSettingsStore();
+    const { removeLocation } = useAppSettingsStore();
     const [metadata, setMetadata] = useAtom(metadataAtom);
 
     const launchImagePicker = useCallback(({types, square} : NewPostProps) => {
         // reset metadata
-        setMetadata({ ...metadata, caption: '', type: 'high-quality', removeLocation });
+        setMetadata({ ...metadata, caption: '', removeLocation });
 
         ImagePicker.launchImageLibraryAsync({
             mediaTypes: types,
@@ -47,24 +48,34 @@ export function useNewPost() {
                     setStep(step + 1);
                     setUploading(true);
                     router.push('/publish');
-                    return new Promise<void>(async (resolve) => {
-                        try {
-                            const preparedMedia = await prepareMedia(sel);
-
-                            const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
-                            setSelectedMedia(uploadedMedia);
-                            setUploading(false);
-                        } catch (error) {
-                            console.error('Error uploading media', error);
-                            toast.error('Error uploading media: ' + error.message);
-                        } finally {
-                            resolve();
-                        }
-                    });
                 });
             }
         });
-    }, [ndk, activeBlossomServer, postType, removeLocation]);
+    }, [ndk, activeBlossomServer, removeLocation]);
 
-    return launchImagePicker;
+    const launchCamera = useCallback(({types, square} : NewPostProps) => {
+        // reset metadata
+        setMetadata({ ...metadata, caption: '', removeLocation, tags: [] });
+
+        ImagePicker.launchCameraAsync({
+            mediaTypes: types,
+            allowsMultipleSelection: true,
+            videoMaxDuration: 5,
+            selectionLimit: 6,
+            allowsEditing: !!square,
+            aspect: square ? [1, 1] : undefined,
+            exif: true,
+        }).then((result) => {
+            if (result.assets) {
+                Promise.all(result.assets.map(mapAssetToMediaLibraryItem)).then((sel) => {
+                    setSelectedMedia(sel);
+                    setStep(step + 1);
+                    setUploading(true);
+                    router.push('/publish');
+                });
+            }
+        });
+    }, [ndk, activeBlossomServer, removeLocation]);
+
+    return { imagePicker: launchImagePicker, camera: launchCamera };
 }

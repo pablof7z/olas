@@ -1,4 +1,5 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Toggle } from '~/components/nativewindui/Toggle';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, TouchableOpacity, View } from 'react-native';
@@ -9,44 +10,56 @@ import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router } from 'expo-router';
 import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
-import { Fullscreen, MapPin, Tag, Timer, Type } from 'lucide-react-native';
+import { Fullscreen, Group, MapPin, Tag, Timer, Type, Users2, UsersIcon } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { communityBottomSheetRefAtom } from './CommunityBottomSheet';
 import { tagSelectorBottomSheetRefAtom } from '../TagSelectorBottomSheet';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { generateEvent } from './event';
-import { postTypeSheetRefAtom } from './PostTypeBottomSheet';
+import { boostSheetRefAtom } from './BoostBottomSheet';
 import { toast } from '@backpackapp-io/react-native-toast';
 import Community from '@/components/icons/community';
+import { prepareMedia } from './prepare';
+import { uploadMedia } from './upload';
+import { useActiveBlossomServer } from '@/hooks/blossom';
+import { MediaLibraryItem } from './MediaPreview';
+import { useGroup } from '@/lib/groups/store';
+import { Image } from 'expo-image';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
     const inset = useSafeAreaInsets();
-    const postTypeSheetRef = useAtomValue(postTypeSheetRefAtom);
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
     const [metadata, setMetadata] = useAtom(metadataAtom);
     const setStep = useSetAtom(stepAtom);
-    const uploading = useAtomValue(uploadingAtom);
+    const [uploading, setUploading] = useAtom(uploadingAtom);
     const [wantsToPublish, setWantsToPublish] = useState(false);
     const publishing = useRef(false);
 
-    useEffect(() => {
-        if (!metadata.type) {
-            postTypeSheetRef?.current?.present();
-            postTypeSheetRef?.current?.expand({ duration: 1000 });
-        }
-    }, [postTypeSheetRef]);
-
-    async function realPublish() {
-        const {event, relaySet} = await generateEvent(ndk, metadata, selectedMedia);
+    async function realPublish(uploadedMedia: MediaLibraryItem[] = selectedMedia) {
+        const {event, relaySet} = await generateEvent(ndk, metadata, uploadedMedia);
         router.push('/');
+
+        console.log('metadata', JSON.stringify(metadata, null, 2));
+        console.log('event', JSON.stringify(event.rawEvent(), null, 2));
+
+        await event.sign();
+
         event.publish(relaySet).then(() => {
             setSelectedMedia([]);
-            setMetadata({ caption: '', expiration: 0, type: 'high-quality' });
+            setMetadata({ caption: '', expiration: 0 });
             setStep(0);
             publishing.current = false;
             setWantsToPublish(false);
+
+            if (metadata.boost) {
+                const boost = new NDKEvent(ndk);
+                boost.kind = NDKKind.Text;
+                boost.content = "nostr:" + event.encode();
+                boost.tag(event, "mention", false, "q");
+                boost.publish().then(() => console.log('boost', boost.encode()));
+            }
         }).catch((e) => {
             console.error('error publishing event', e);
             toast.error('Error publishing event: ' + e.message);
@@ -60,13 +73,22 @@ export function PostMetadataStep() {
         }
     }, [uploading, wantsToPublish, publishing]);
 
+    const activeBlossomServer = useActiveBlossomServer();
+
     const publish = useCallback(async () => {
         console.log('publish', { uploading, wantsToPublish, publishing });
-        if (uploading) {
-            setWantsToPublish(true);
-            return;
-        } else {
-            realPublish();
+
+        try {
+            setUploading(true);
+            const preparedMedia = await prepareMedia(selectedMedia);
+            console.log('preparedMedia', preparedMedia);
+            const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
+            console.log('uploadedMedia', uploadedMedia);
+            setSelectedMedia(uploadedMedia);
+            realPublish(uploadedMedia);
+        } catch (error) {
+            console.error('Error publishing event', error);
+            toast.error('Error publishing event: ' + error.message);
         }
     }, [selectedMedia, metadata, uploading]);
 
@@ -74,22 +96,13 @@ export function PostMetadataStep() {
 
     useEffect(() => console.log({ uploading, publishing, wantsToPublish, busy }), [uploading, publishing, wantsToPublish, busy]);
 
-    const [fullPreview, setFullPreview] = useState(false);
-    const { colors } = useColorScheme();
     return (
         <View className="flex-1 grow" style={{ marginBottom: inset.bottom }}>
             <SelectedMediaPreview />
 
-            <Button className="" variant="secondary" size="icon" onPress={() => setFullPreview(!fullPreview)}>
-                <Fullscreen size={24} color={colors.foreground} />
-            </Button>
-
-
-            {!fullPreview && (
-                <View className="grow flex-col justify-between px-4">
-                    <PostOptions />
-                </View>
-            )}
+            <View className="grow flex-col justify-between px-4">
+                <PostOptions />
+            </View>
 
             <View className="flex-col justify-between px-4">
                 <Button variant="accent" onPress={publish} disabled={busy}>
@@ -109,13 +122,13 @@ function PostOptions() {
     const { colors } = useColorScheme();
     const isUploading = useAtomValue(uploadingAtom);
     const selectedMedia = useAtomValue(selectedMediaAtom);
-    const postTypeSheetRef = useAtomValue(postTypeSheetRefAtom);
+    const boostSheetRef = useAtomValue(boostSheetRefAtom);
 
     const openCaption = () => router.push('/publish/caption');
     const openExpiration = () => router.push('/publish/expiration');
     const openType = () => {
-        postTypeSheetRef?.current?.present();
-        postTypeSheetRef?.current?.expand();
+        boostSheetRef?.current?.present();
+        boostSheetRef?.current?.expand();
     };
 
     const openLocation = () => {
@@ -126,11 +139,6 @@ function PostOptions() {
     const openCommunity = () => {
         communityBottomSheetRef?.current?.present();
         communityBottomSheetRef?.current?.expand();
-    };
-
-    const openTags = () => {
-        tagSelectorBottomSheetRef?.current?.present();
-        tagSelectorBottomSheetRef?.current?.expand();
     };
 
     const calculateRelativeExpirationTimeInDaysOrHours = (expiration: number) => {
@@ -149,9 +157,10 @@ function PostOptions() {
     }, [selectedMedia]);
 
     useEffect(() => {
-        if (metadata.type === undefined) metadata.type = 'high-quality';
-        else if (metadata.location && metadata.removeLocation === undefined) openLocation();
-    }, [metadata.type, metadata.location]);
+        if (metadata.location && metadata.removeLocation === undefined) openLocation();
+    }, [metadata.location]);
+
+    const group = useGroup(metadata.group?.groupId, metadata.group?.relays?.[0]);
 
     const data = useMemo(() => {
         const data = [
@@ -175,8 +184,8 @@ function PostOptions() {
             },
             {
                 id: 'type',
-                title: 'Post type',
-                subTitle: 'Choose the type of post',
+                title: 'Boost',
+                subTitle: 'Make your post visible in incompatible nostr apps',
                 onPress: openType,
                 leftView: (
                     <View style={{ paddingHorizontal: 10 }}>
@@ -185,10 +194,7 @@ function PostOptions() {
                 ),
                 rightView: (
                     <View className="flex-1 justify-center">
-                        <Text className="text-sm text-muted-foreground">
-                            {metadata.type === 'generic' && 'Generic'}
-                            {metadata.type === 'high-quality' && 'High-quality'}
-                        </Text>
+                        <Toggle value={metadata.boost} onValueChange={(value) => setMetadata({ ...metadata, boost: value })} />
                     </View>
                 ),
             },
@@ -219,42 +225,28 @@ function PostOptions() {
             });
         }
 
-        data.unshift({
-            id: 'tags',
-            title: 'Tags',
-            subTitle: 'Help people find your post',
-            onPress: openTags,
+        data.push({
+            id: 'community',
+            title: 'Community',
+            subTitle: group?.name ? `Publish to ${group.name}` : 'Publish to a community',
+            onPress: openCommunity,
             leftView: (
                 <View style={{ paddingHorizontal: 10 }}>
-                    <Tag size={24} color={colors.muted} />
+                    <Users2 size={24} stroke={colors.muted} />
                 </View>
             ),
             rightView: (
-                <View className="flex-1 justify-center">
-                    <Text className="text-sm text-muted-foreground">
-                        {metadata.tags?.length ?? 'None'}
-                    </Text>
-                </View>
-            ),
+                group && (
+                    <View className="justify-center flex-row items-center gap-2 mr-2 h-full">
+                        {(group.picture ? (
+                            <Image source={{ uri: group.picture }} style={{ width: 32, height: 32, borderRadius: 10 }} />
+                        ) : (
+                            <Text className="text-sm text-muted-foreground">{group.name}</Text>
+                        ))}
+                    </View>
+                )
+            )
         });
-
-        // data.push({
-        //     id: 'community',
-        //     title: 'Community',
-        //     onPress: openCommunity,
-        //     leftView: (
-        //         <View style={{ paddingHorizontal: 10 }}>
-        //             <Community size={24} color={colors.muted} />
-        //         </View>
-        //     ),
-        //     rightView: (
-        //         <View className="flex-1 justify-center">
-        //             <Text className="text-sm text-muted-foreground">
-        //                 {metadata.group?.relays}
-        //             </Text>
-        //         </View>
-        //     )
-        // });
 
         return data;
     }, [metadata]);

@@ -1,13 +1,13 @@
 import NDK, { NDKEvent, NDKKind, NDKRelay, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { PostMetadata, PostType } from './store';
+import { PostMetadata } from './store';
 import { MediaLibraryItem } from './MediaPreview';
-import { encodeBase32, decodeBase32 } from 'geohashing';
+import { encodeBase32 } from 'geohashing';
 
 export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: MediaLibraryItem[]) {
     if (media.length === 0) return;
 
     const event = new NDKEvent(ndk, {
-        kind: getKind(metadata.type, media[0]),
+        kind: getKind(metadata, media[0]),
         content: metadata.caption,
     } as NostrEvent);
 
@@ -56,8 +56,9 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
     };
 }
 
-function getKind(type: PostType, media: MediaLibraryItem) {
-    if (type === 'generic') return NDKKind.Text;
+function getKind(metadata: PostMetadata, media: MediaLibraryItem) {
+    // if (metadata.boost) return NDKKind.Text;
+
     if (media.mediaType === 'photo') return NDKKind.Image;
 
     if (media.contentMode === 'portrait') return NDKKind.VerticalVideo;
