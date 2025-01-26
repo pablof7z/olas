@@ -33,4 +33,17 @@ export const migrations = [
             );
         }
     },
+
+    {
+        version: 2,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(
+                `CREATE TABLE IF NOT EXISTS blacklisted_words (
+                    word TEXT PRIMARY KEY,
+                    created_at INTEGER,
+                    updated_at INTEGER
+                );`
+            );
+        }
+    }
 ];

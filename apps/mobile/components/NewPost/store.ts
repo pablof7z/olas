@@ -1,6 +1,5 @@
 import { atom } from 'jotai';
 import { MediaLibraryItem } from './MediaPreview';
-import { GroupEntry } from '@/app/communities';
 
 export const stepAtom = atom(0);
 
@@ -11,6 +10,11 @@ export const selectedMediaAtom = atom<MediaLibraryItem[], [MediaLibraryItem[]], 
     set(selectedMediaAtom, media)
 );
 
+export const selectingMediaAtom = atom(false);
+
+export const uploadErrorAtom = atom<string | null, [string | null], void>(null, (get, set, error: string | null) =>
+    set(uploadErrorAtom, error)
+);
 export type Location = {
     latitude: number;
     longitude: number;

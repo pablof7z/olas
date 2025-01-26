@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, Stack, Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Button } from "@/components/nativewindui/Button";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bolt, BookDown, ChevronDown, Cog, Eye, Settings, Settings2, User2, ZoomIn } from "lucide-react-native";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bolt, BookDown, ChevronDown, Cog, Eye, QrCode, Settings, Settings2, SettingsIcon, User2, ZoomIn } from "lucide-react-native";
 import * as User from '@/components/ui/user';
 import { useColorScheme } from "@/lib/useColorScheme";
 import TransactionHistory from "@/components/wallet/transactions/list";
@@ -104,21 +104,27 @@ export default function WalletScreen() {
         // });
     }, [activeWallet?.walletId]);
 
+    const { colors } = useColorScheme();
+
     return (
         <>
-            <Tabs.Screen
+            <Stack.Screen
                 options={{
-                    headerShown: false,
+                    headerShown: true,
                     headerTransparent: true,
+                    title: null,
                     headerBackground: () => <BlurView intensity={100} tint="light" />,  
+                    headerRight: () => <TouchableOpacity onPress={() => router.push('/(home)/(wallet)/(walletSettings)')}>
+                        <SettingsIcon size={24} color={colors.foreground} />
+                    </TouchableOpacity>
                 }}
             />
-            <SafeAreaView className="flex-1" style={{ paddingTop: inset.top }}>
+            <SafeAreaView className="flex-1">
                 <View className="flex-1 flex-col">
                     <View className="flex-col grow">
                         {isTestnutWallet && (
                             <Pressable className="flex-row items-center justify-center bg-red-500/30 ios:rounded-t-md p-4" onPress={() => {
-                                router.push('/(wallet)/(walletSettings)/mints');
+                                router.push('/(home)/(wallet)/(walletSettings)/mints');
                             }}>
                                 <Text className="text-red-800">
                                     You are using a test mint. Click here to remove it.
@@ -157,7 +163,7 @@ function HeaderLeft() {
     const { userProfile } = useUserProfile(currentUser?.pubkey);
 
     return (
-        <TouchableOpacity className="ml-2" onPress={() => router.push('/(tabs)/(settings)')}>
+        <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>
             {currentUser && userProfile?.image ? (
                 <User.Avatar userProfile={userProfile} size={24} className="w-10 h-10" />
             ) : (
@@ -180,13 +186,20 @@ function Footer({ activeWallet, currentUser }: { activeWallet: NDKWallet, curren
 function WalletButtons() {
     const receive = () => router.push('/receive')
     const send = () => router.push('/send')
+    const scan = () => router.push('/scan')
+    const { colors } = useColorScheme();
     
     return (
-        <View className="flex-row justify-evenly p-4 gap-6">
-            <Button variant="secondary" className="grow items-center bg-foreground" onPress={receive}>
+        <View className="flex-row justify-evenly p-4">
+            <Button variant="secondary" className="grow items-center bg-foreground -mr-[25px] h-[65px]" onPress={receive}>
                 <Text className="py-2 text-background font-bold text-lg uppercase">Receive</Text>
             </Button>
-            <Button variant="secondary" className="grow items-center bg-foreground" onPress={send}>
+            <Button variant="secondary" className="flex-none border-2 border-foreground items-center bg-card !rounded-full -mt-[5px] w-[80px] h-[80px] z-50" onPress={scan}>
+                <View className="!py-5">
+                    <QrCode size={24} color={colors.foreground} />
+                </View>
+            </Button>
+            <Button variant="secondary" className="grow items-center bg-foreground -ml-[25px] h-[65px]" onPress={send}>
                 <Text className="py-2 text-background font-bold text-lg uppercase">Send</Text>
             </Button>
         </View>

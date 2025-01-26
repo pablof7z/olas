@@ -48,7 +48,7 @@ const sharePost = async (event: NDKEvent) => {
 
 function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.RefObject<BottomSheetModal> }) {
     const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
-    const mutePubkey = useMuteList();
+    const { mute } = useMuteList();
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
     const inset = useSafeAreaInsets();
@@ -63,7 +63,7 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
     };
 
     const muteUser = useCallback(() => {
-        mutePubkey(event.pubkey);
+        mute(event.pubkey, 'pubkey');
     }, [event.pubkey]);
 
     const close = useCallback(
@@ -102,6 +102,8 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
                     <Code size={24} color={colors.muted} />
                     <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
                 </Button>
+
+
                 
                 {currentUser?.pubkey === event.pubkey ? (
                     <Button

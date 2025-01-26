@@ -7,11 +7,12 @@ import {
 import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Dimensions, Modal, Pressable, View } from 'react-native';
-import { myFollows } from '@/utils/myfollows';
-import { router, Stack } from 'expo-router';
+import { Dimensions, Modal, Pressable, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button } from '@/components/nativewindui/Button';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { router, Stack, useNavigation } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
-import { Calendar, ChevronDown, House } from 'lucide-react-native';
+import { Calendar, ChevronDown, House, UserCircle2, X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
@@ -22,8 +23,7 @@ import Feed from '@/components/Feed';
 import { FlashList } from '@shopify/flash-list';
 import { useObserver } from '@/hooks/observer';
 
-import Lightning from '@/components/icons/lightning';
-import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
+
 import EventMediaContainer from '@/components/media/event';
 import EventContent from '@/components/ui/event/content';
 import UserAvatar from '@/components/ui/user/avatar';
@@ -33,24 +33,26 @@ import { FeedEntry } from '@/components/Feed/hook';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { metadataAtom, selectedMediaAtom, uploadErrorAtom, uploadingAtom } from '@/components/NewPost/store';
+import { MediaPreview } from '@/components/NewPost/MediaPreview';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
+function HeaderBackground() {
+    return (
+        <LinearGradient
+            colors={[
+                '#00000099',
+                'transparent'
+            ]}
+            style={{ flex: 1 }}
+        />
+    )
+}
+
 export default function HomeScreen() {
-    const { colors } = useColorScheme();
-    const { activeWallet } = useNDKWallet();
-    const currentUser = useNDKCurrentUser();
-
-    const onWalletPress = useCallback(() => {
-        if (!currentUser?.pubkey) {
-            router.push('/login');
-            return;
-        }
-        
-        if (activeWallet) router.push('/(wallet)')
-        else router.push('/enable-wallet');
-    }, [ activeWallet?.walletId, currentUser?.pubkey ])
-
     return (
         <>
             <Stack.Screen
@@ -58,6 +60,8 @@ export default function HomeScreen() {
                     headerShown: true,
                     headerTransparent: false,
                     headerLeft: () => <HomeTitle />,
+                    // headerBackground: () => <HeaderBackground />,
+                    // headerBackground: () => <BlurView intensity={150} style={{ flex: 1 }} />,
                     title: '',
                     headerRight: () => <View className="flex-row items-center gap-2">
                         {/* <Pressable
@@ -66,22 +70,64 @@ export default function HomeScreen() {
                         >
                             <House />
                         </Pressable> */}
-                        <Pressable
-                            className="flex-row items-center px-2"
-                            onPress={onWalletPress}
-                        >
-                            <Lightning size={24} strokeWidth={2} stroke={colors.foreground} />
-                        </Pressable>
                         
                         <CalendarButton />
+
                         <NotificationsButton />
                     </View>,
                 }}
             />
 
+            <UploadingIndicator />
+
             <DataList />
         </>
     );
+}
+
+function UploadingIndicator() {
+    const selectedMedia = useAtomValue(selectedMediaAtom);
+    const { colors } = useColorScheme();
+    const metadata = useAtomValue(metadataAtom);
+    const [uploading, setUploading] = useAtom(uploadingAtom);
+    const setSelectedMedia = useSetAtom(selectedMediaAtom);
+    const [ uploadError, setUploadError ] = useAtom(uploadErrorAtom);
+
+    const cancel = useCallback(() => {
+        setUploading(false);
+        setUploadError(null);
+        setSelectedMedia([]);
+    }, [setUploading, setUploadError, setSelectedMedia]);
+    
+    if (!selectedMedia.length) return null;
+    
+    return (
+        <Pressable
+            onPress={() => router.push('/publish')}
+            className="border-b border-border"
+            style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, backgroundColor: colors.card, flexDirection: 'row', gap: 10, alignItems: 'center' }}
+        >
+            <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden'}}>
+                <MediaPreview assets={selectedMedia} withEdit={false} maxWidth={60} maxHeight={60} />
+            </View>
+
+            <View className="flex-col items-start flex-1">
+                {uploadError ? (
+                    <Text className="text-red-500 text-sm">{uploadError}</Text>
+                ) : (
+                    <Text className="text-lg font-medium">
+                        {uploading ? 'Uploading' : 'Publishing'}
+                    </Text>
+                )}
+                <Text variant="caption1" numberOfLines={1} className="text-muted-foreground">{metadata.caption}</Text>
+            </View>
+
+
+            <Button variant="plain" onPress={cancel}>
+                <X size={24} color={colors.foreground} />
+            </Button>
+        </Pressable>
+    )
 }
 
 function CalendarButton() {
@@ -304,6 +350,7 @@ function DataList() {
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
     const bookmarkIds = useBookmarkIds();
+    const insets = useSafeAreaInsets();
 
     const withTweets = useMemo(() => feedType.kind === 'hashtag', [feedType.kind])
 
@@ -335,10 +382,8 @@ function DataList() {
             };
         }
         
-        const keyParts = [currentUser?.pubkey ?? "", feedType.value, feedType.kind === 'hashtag'];
+        const keyParts = [currentUser?.pubkey ?? "", feedType.kind === 'hashtag' ? feedType.value : ''];
         
-        if (feedType.kind === 'discover' && feedType.value === 'follows' && follows && follows?.length > 2) keyParts.push(follows.length.toString())
-
         const hashtagFilter = feedType.kind === 'hashtag' ? { "#t": hashtagFeedToTags(feedType) } : {};
 
         const filters: NDKFilter[] = [];
@@ -346,15 +391,24 @@ function DataList() {
         filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter });
         filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter });
 
-        if (withTweets) {
-            if (follows) filters.push({ kinds: [1], authors: follows, limit: 50, ...hashtagFilter });
-            else filters.push({ kinds: [1], authors: myFollows, limit: 50, ...hashtagFilter });
-        }
+        // if (withTweets) {
+        //     filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
+        // }
 
         let filterFn = null;
 
         if (feedType.kind !== 'hashtag') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
+                // if it's a kind 1, make sure we have a URL of an image or video
+                if (feedEntry.event?.kind === 1) {
+                    const imeta = feedEntry.event?.tagValue("imeta");
+                    if (imeta) return true;
+                    // parse the content for a URL that has .jpg, .jpeg, .png, .gif, .mp4, .mov, .avi, .mkv
+                    const imageOrVideoRegex = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
+                    const matches = feedEntry.event?.content.match(imageOrVideoRegex);
+                    return matches !== null;
+                } 
+                
                 const isFollowed = followSet.has(feedEntry.event?.pubkey)
                 if (isFollowed) return true;
                 if (feedType.kind === 'discover' && feedType.value === 'follows') return false;
@@ -380,9 +434,15 @@ function DataList() {
     //     console.log('filters', JSON.stringify(authorCountPerFilter, null, 4), key);
     // }, [filters, key])
 
+    // get the height of the navigation bar using expo-navigation   
+    const headerHeight = useHeaderHeight();
+    const { colors } = useColorScheme();
+    const firstItemStyle = useMemo(() => ({ paddingTop: headerHeight, backgroundColor: colors.card }), [insets.top, headerHeight])
+
     return (
         <View className="flex-1 bg-card">
             <Feed
+                // prepend={<View style={firstItemStyle} />}
                 // prepend={[<Stories />]}
                 filters={filters}
                 relayUrls={relayUrls}
@@ -406,73 +466,24 @@ function HomeTitle() {
         return feedType.value;
     }, [feedType]);
 
-    // const [dvms, setDvms] = useState([]);
-    // const setExplicitFeed = useSetAtom(explicitFeedAtom);
-
-    // useEffect(() => {
-    //     ndk.fetchEvents([
-    //         { kinds: [NDKKind.AppHandler], "#k": ["5300"] }
-    //     ]).then((events) => {
-    //         const v = [];
-    //         events.forEach((event) => {
-    //             try {
-    //                 const payload = JSON.parse(event.content) as { name: string, about: string, picture: string };
-    //                 v.push({
-    //                     title: payload.name,
-    //                     subTitle: payload.about,
-    //                     icon: payload.picture,
-    //                     value: payload.name,
-    //                     onPress: async () => {
-    //                         const e = new NDKDVMRequest(ndk);
-    //                         e.dvm = event.author;
-    //                         e.kind = 5300;
-    //                         e.tags.push(["relays", "wss://relay.primal.net"])
-    //                         await e.sign();
-    //                         e.publish();
-    //                         setFeedType(payload.name);
-
-    //                         const sub = ndk.subscribe([
-    //                             { ...e.filter(), authors: [event.pubkey] }
-    //                         ]);
-    //                         sub.on("event", (response) => {
-    //                             if (response.kind !== 6300) return;
-    //                             console.log(response);
-    //                             sub.stop();
-    //                             sheetRef.current?.dismiss();
-
-    //                             try {
-    //                                 const res = JSON.parse(response.content)
-    //                                 const ids = [];
-    //                                 res.forEach((tag) => ids.push(tag[1]));
-    //                                 setExplicitFeed([{ ids }]);
-    //                             } catch (e) {
-    //                                 console.error(e);
-    //                             }
-    //                         });
-    //                     }
-    //                 });
-    //             } catch (e) {
-    //                 console.error(e);
-    //             }
-    //         });
-
-    //         setDvms(v);
-    //     });
-    // }, []);
-
     return (
         <>
-            <Pressable style={{ paddingLeft: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={showSheet}>
+            <Pressable style={{
+                flexDirection: 'row', alignItems: 'center', gap: 10,
+                maxWidth: 150,
+                paddingHorizontal: 10,
+                justifyContent: 'space-between',
+            }} onPress={showSheet}>
                 {group ? (
                     <>
                         <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
-                        <Text className="text-xl font-semibold">{group.name}</Text>
+                        <Text className="text-xl font-semibold truncate">{group.name}</Text>
                     </>) : (<>
-                        <Text className="text-xl font-semibold">{feedTypeTitle}</Text>
+                        <Text className="text-xl font-semibold text-foregorund">{feedTypeTitle}</Text>
                     </>)
                 }
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
         </>
-    );
+    );  
 }

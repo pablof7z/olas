@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import * as SecureStore from 'expo-secure-store';
-import { ZapOption } from "@/app/(tabs)/(settings)/zaps";
+import { ZapOption } from "@/app/(home)/(settings)/zaps";
+
+export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
 export type AppSettingsStoreState = {
     removeLocation?: boolean;
@@ -19,6 +21,16 @@ export type AppSettingsStoreState = {
      * The default zap to use when sending a zap.
      */
     defaultZap: ZapOption;
+
+    /**
+     * Whether to show videos in the feed.
+     */
+    videosInFeed: VideosInFeed;
+
+    /**
+     * Force square-aspect ratio in feed.
+     */
+    forceSquareAspectRatio: boolean;
 };
 
 export type AppSettingsStoreActions = {
@@ -31,6 +43,10 @@ export type AppSettingsStoreActions = {
     toggleAdvancedMode: () => void;
 
     setDefaultZap: (zap: ZapOption) => void;
+
+    setVideosInFeed: (videosInFeed: VideosInFeed) => void;
+
+    setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
 
     reset: () => void;
 };
@@ -45,6 +61,8 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     promptedForNotifications: false,
     advancedMode: false,
     defaultZap: defaultZapSetting,
+    videosInFeed: 'from-follows',
+    forceSquareAspectRatio: true,
 
     init: async () => {
         const state: AppSettingsStoreState = {
@@ -52,6 +70,8 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
             promptedForNotifications: false,
             advancedMode: false,
             defaultZap: defaultZapSetting,
+            videosInFeed: 'from-follows',
+            forceSquareAspectRatio: true,
         };
 
         const removeLocation = await SecureStore.getItemAsync('removeLocation');
@@ -74,6 +94,12 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
             try { state.defaultZap = JSON.parse(defaultZapVal); } catch { }
         }
         state.defaultZap ??= defaultZapSetting;
+
+        const videosInFeed = await SecureStore.getItemAsync('videosInFeed');
+        if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
+
+        const forceSquareAspectRatio = await SecureStore.getItemAsync('forceSquareAspectRatio');
+        if (forceSquareAspectRatio) state.forceSquareAspectRatio = forceSquareAspectRatio === 'true';
 
         set(state);
     },
@@ -111,12 +137,24 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         set({ defaultZap: zap });
     },
 
+    setVideosInFeed: (videosInFeed: VideosInFeed) => {
+        SecureStore.setItemAsync('videosInFeed', videosInFeed);
+        set({ videosInFeed });
+    },
+
+    setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => {
+        SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
+        set({ forceSquareAspectRatio });
+    },
+
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
         SecureStore.deleteItemAsync('boost');
         SecureStore.deleteItemAsync('seenNotificationsAt');
         SecureStore.deleteItemAsync('advancedMode');
+        SecureStore.deleteItemAsync('videosInFeed');
         SecureStore.deleteItemAsync('defaultZap');
+        SecureStore.deleteItemAsync('forceSquareAspectRatio');
         set({ seenNotificationsAt: 0, promptedForNotifications: false });
     }
 }));

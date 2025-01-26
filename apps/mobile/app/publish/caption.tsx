@@ -50,7 +50,9 @@ export default function Caption() {
     }, [onPress]);
 
     const onTagSelected = useCallback((tag: string) => {
-        setDescription(description + ` #${tag} `);
+        const newDescription = [description];
+        newDescription.push(...tag.split(' ').map(t => t.trim().replace(/[^a-zA-Z0-9]/g, '')).map(t => `#${t}`));
+        setDescription(newDescription.join(' '));
         setShowTagSelector(false);
     }, [description, setDescription]);
 

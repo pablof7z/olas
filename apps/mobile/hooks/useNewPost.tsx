@@ -2,15 +2,11 @@ import { useCallback } from 'react';
 import { NDKEvent, NDKPrivateKeySigner, NDKRelaySet, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from './blossom';
 import { useAtom, useSetAtom } from 'jotai';
-import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from '@/components/NewPost/store';
-import { prepareMedia } from '@/components/NewPost/prepare';
-import { uploadMedia } from '@/components/NewPost/upload';
+import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadingAtom } from '@/components/NewPost/store';
 import * as ImagePicker from 'expo-image-picker';
-import { toast } from '@backpackapp-io/react-native-toast';
 import { router } from 'expo-router';
 import { useAppSettingsStore } from '@/stores/app';
 import { mapAssetToMediaLibraryItem } from '@/utils/media';
-import ImageCropPicker from 'react-native-image-crop-picker';
 
 type NewPostProps = {
     types: ('images' | 'videos')[];
@@ -24,32 +20,38 @@ type NewPostProps = {
 export function useNewPost() {
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
-    const setUploading = useSetAtom(uploadingAtom);
     const [step, setStep] = useAtom(stepAtom);
-    const setSelectedMedia = useSetAtom(selectedMediaAtom);
+    const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
     const { removeLocation } = useAppSettingsStore();
     const [metadata, setMetadata] = useAtom(metadataAtom);
+    const setSelectingMedia = useSetAtom(selectingMediaAtom);
 
     const launchImagePicker = useCallback(({types, square} : NewPostProps) => {
         // reset metadata
         setMetadata({ ...metadata, caption: '', removeLocation });
 
+        setSelectingMedia(true);
         ImagePicker.launchImageLibraryAsync({
             mediaTypes: types,
-            allowsMultipleSelection: true,
-            selectionLimit: 6,
+            allowsMultipleSelection: false,
             allowsEditing: !!square,
             aspect: square ? [1, 1] : undefined,
             exif: true,
         }).then((result) => {
-            if (result.assets) {
+            if (result.assets && result.assets.length > 0) {
                 Promise.all(result.assets.map(mapAssetToMediaLibraryItem)).then((sel) => {
-                    setSelectedMedia(sel);
-                    setStep(step + 1);
-                    setUploading(true);
-                    router.push('/publish');
+                    setSelectedMedia([...selectedMedia, ...sel]);
                 });
+            } else {
+                if (selectedMedia.length === 0) {
+                    router.back();
+                }
             }
+        }).catch((e) => {
+            console.error('error launching image picker', e);
+        })
+        .finally(() => {
+            setSelectingMedia(false);
         });
     }, [ndk, activeBlossomServer, removeLocation]);
 
@@ -70,7 +72,6 @@ export function useNewPost() {
                 Promise.all(result.assets.map(mapAssetToMediaLibraryItem)).then((sel) => {
                     setSelectedMedia(sel);
                     setStep(step + 1);
-                    setUploading(true);
                     router.push('/publish');
                 });
             }

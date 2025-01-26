@@ -8,8 +8,8 @@ import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { router } from 'expo-router';
-import { metadataAtom, selectedMediaAtom, stepAtom, uploadingAtom } from './store';
+import { router, useFocusEffect } from 'expo-router';
+import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadErrorAtom, uploadingAtom } from './store';
 import { Fullscreen, Group, MapPin, Tag, Timer, Type, Users2, UsersIcon } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
@@ -26,23 +26,42 @@ import { useActiveBlossomServer } from '@/hooks/blossom';
 import { MediaLibraryItem } from './MediaPreview';
 import { useGroup } from '@/lib/groups/store';
 import { Image } from 'expo-image';
+import { useNewPost } from '@/hooks/useNewPost';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
     const inset = useSafeAreaInsets();
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
     const [metadata, setMetadata] = useAtom(metadataAtom);
+    const setUploadError = useSetAtom(uploadErrorAtom);
     const setStep = useSetAtom(stepAtom);
     const [uploading, setUploading] = useAtom(uploadingAtom);
-    const [wantsToPublish, setWantsToPublish] = useState(false);
+    const [wantsToPublish, setWantsToPublish] = useState(true);
     const publishing = useRef(false);
+    const { imagePicker: newPost } = useNewPost();
+    const openedImagePicker = useRef(false);
+
+    // when the component is visible:
+    // useFocusEffect(() => {
+    //     console.log('focus running', selectedMedia.length, openedImagePicker.current);
+    //     if (selectedMedia.length === 0 && !openedImagePicker.current) {
+    //         console.log('opening image picker');
+    //         openedImagePicker.current = true;
+    //         setTimeout(() => {
+    //             newPost({ types: ['images', 'videos'] });
+    //         }, 300);
+    //         setTimeout(() => {
+    //             openedImagePicker.current = false;
+    //         }, 6000);
+    //     }
+
+    //     return () => {
+    //         console.log('focus ended');
+    //     };
+    // });
 
     async function realPublish(uploadedMedia: MediaLibraryItem[] = selectedMedia) {
         const {event, relaySet} = await generateEvent(ndk, metadata, uploadedMedia);
-        router.push('/');
-
-        console.log('metadata', JSON.stringify(metadata, null, 2));
-        console.log('event', JSON.stringify(event.rawEvent(), null, 2));
 
         await event.sign();
 
@@ -62,43 +81,48 @@ export function PostMetadataStep() {
             }
         }).catch((e) => {
             console.error('error publishing event', e);
+            setUploadError(e.message);
             toast.error('Error publishing event: ' + e.message);
         });
     }
 
-    useEffect(() => {
-        if (!uploading && wantsToPublish && !publishing.current) {
-            publishing.current = true;
-            realPublish();
-        }
-    }, [uploading, wantsToPublish, publishing]);
+    // useEffect(() => {
+    //     if (!uploading && wantsToPublish && !publishing.current) {
+    //         publishing.current = true;
+    //         realPublish();
+    //     }
+    // }, [uploading, wantsToPublish, publishing]);
 
     const activeBlossomServer = useActiveBlossomServer();
 
     const publish = useCallback(async () => {
-        console.log('publish', { uploading, wantsToPublish, publishing });
+        router.back();  
 
         try {
             setUploading(true);
+            const start = performance.now();
             const preparedMedia = await prepareMedia(selectedMedia);
-            console.log('preparedMedia', preparedMedia);
+            console.log('preparedMedia', preparedMedia, performance.now() - start);
             const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
-            console.log('uploadedMedia', uploadedMedia);
+            console.log('uploadedMedia', uploadedMedia, performance.now() - start);
+            setUploading(false);
             setSelectedMedia(uploadedMedia);
-            realPublish(uploadedMedia);
+            await realPublish(uploadedMedia);
         } catch (error) {
             console.error('Error publishing event', error);
             toast.error('Error publishing event: ' + error.message);
+            setUploading(false);
         }
     }, [selectedMedia, metadata, uploading]);
 
-    const busy = useMemo(() => (uploading || publishing) && wantsToPublish, [uploading, publishing, wantsToPublish]);
-
-    useEffect(() => console.log({ uploading, publishing, wantsToPublish, busy }), [uploading, publishing, wantsToPublish, busy]);
+    const busy = useMemo(() => (uploading || publishing.current) && wantsToPublish, [uploading, publishing, wantsToPublish]);
+    const selecting = useAtomValue(selectingMediaAtom);
 
     return (
         <View className="flex-1 grow" style={{ marginBottom: inset.bottom }}>
-            <SelectedMediaPreview />
+            <SelectedMediaPreview>
+                {selecting && <ActivityIndicator />}
+            </SelectedMediaPreview>
 
             <View className="grow flex-col justify-between px-4">
                 <PostOptions />
@@ -118,7 +142,6 @@ function PostOptions() {
     const [metadata, setMetadata] = useAtom(metadataAtom);
     const locationBottomSheetRef = useAtomValue(locationBottomSheetRefAtom);
     const communityBottomSheetRef = useAtomValue(communityBottomSheetRefAtom);
-    const tagSelectorBottomSheetRef = useAtomValue(tagSelectorBottomSheetRefAtom);
     const { colors } = useColorScheme();
     const isUploading = useAtomValue(uploadingAtom);
     const selectedMedia = useAtomValue(selectedMediaAtom);
@@ -225,28 +248,28 @@ function PostOptions() {
             });
         }
 
-        data.push({
-            id: 'community',
-            title: 'Community',
-            subTitle: group?.name ? `Publish to ${group.name}` : 'Publish to a community',
-            onPress: openCommunity,
-            leftView: (
-                <View style={{ paddingHorizontal: 10 }}>
-                    <Users2 size={24} stroke={colors.muted} />
-                </View>
-            ),
-            rightView: (
-                group && (
-                    <View className="justify-center flex-row items-center gap-2 mr-2 h-full">
-                        {(group.picture ? (
-                            <Image source={{ uri: group.picture }} style={{ width: 32, height: 32, borderRadius: 10 }} />
-                        ) : (
-                            <Text className="text-sm text-muted-foreground">{group.name}</Text>
-                        ))}
-                    </View>
-                )
-            )
-        });
+        // data.push({
+        //     id: 'community',
+        //     title: 'Community',
+        //     subTitle: group?.name ? `Publish to ${group.name}` : 'Publish to a community',
+        //     onPress: openCommunity,
+        //     leftView: (
+        //         <View style={{ paddingHorizontal: 10 }}>
+        //             <Users2 size={24} stroke={colors.muted} />
+        //         </View>
+        //     ),
+        //     rightView: (
+        //         group && (
+        //             <View className="justify-center flex-row items-center gap-2 mr-2 h-full">
+        //                 {(group.picture ? (
+        //                     <Image source={{ uri: group.picture }} style={{ width: 32, height: 32, borderRadius: 10 }} />
+        //                 ) : (
+        //                     <Text className="text-sm text-muted-foreground">{group.name}</Text>
+        //                 ))}
+        //             </View>
+        //         )
+        //     )
+        // });
 
         return data;
     }, [metadata]);

@@ -20,6 +20,9 @@ export async function uploadMedia(
                 m.uploadedSha256 = data.sha256;
                 resolve();
             };
+            uploader.onProgress = (progress) => {
+                console.log('uploader.onProgress', progress);
+            };
             uploader.onError = (error) => {
                 reject(error);
             };

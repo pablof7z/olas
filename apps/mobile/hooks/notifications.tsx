@@ -24,7 +24,9 @@ export function useNotifications(onlyNew = false) {
 
     const filteredNotifications = useMemo(() => {
         if (onlyNew && seenNotificationsAt > 0) {
-            return events.filter(e => e.created_at > seenNotificationsAt);
+            return events
+                .filter(e => !!e)
+                .filter(e => e.created_at > seenNotificationsAt);
         }
         return events;
     }, [events?.length, onlyNew, seenNotificationsAt]);

@@ -2,24 +2,25 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import * as MediaLibrary from 'expo-media-library';
-import { albumPermission, albumsAtom, selectedMediaAtom, stepAtom, uploadingAtom, uploadingPromiseAtom } from './store';
+import { selectedMediaAtom, stepAtom, uploadingAtom } from './store';
 import AlbumsView, { mapAssetToMediaLibraryItem } from './AlbumsView';
 import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '../nativewindui/Button';
 import { Image } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { prepareMedia, uploadMedia } from './upload';
+import { uploadMedia } from './upload';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { toast } from '@backpackapp-io/react-native-toast';
+import { albumPermission, albumsAtom } from '../albums/store';
 
 export default function ChooseContentStep() {
     const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
-    const setAlbumPermission = useSetAtom(albumPermission);
-    const setAlbums = useSetAtom(albumsAtom);
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
     const [step, setStep] = useAtom(stepAtom);
+    const setAlbumPermission = useSetAtom(albumPermission);
+    const setAlbums = useSetAtom(albumsAtom);
 
     async function getAlbums() {
         if (permissionResponse?.status !== 'granted') {
@@ -72,13 +73,13 @@ export default function ChooseContentStep() {
 
     const { colors } = useColorScheme();
 
-    useEffect(() => {
-        launchImagePicker();
-    }, []);
+    // useEffect(() => {
+    //     launchImagePicker();
+    // }, []);
 
     return (
         <View className="flex-1 grow">
-            {albumPermission && false ? (
+            {albumPermission ? (
                 <AlbumsView />
             ) : (
                 <View className="flex-1 grow items-center justify-center">

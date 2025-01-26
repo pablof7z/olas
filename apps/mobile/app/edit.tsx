@@ -38,22 +38,22 @@ export const editCallbackAtom = atom<EditImageCallback, [EditImageCallback | nul
 });
 
 const filters = {
-    "Sepia": Sepia,
-    "Browni": Browni,
-    "Polaroid": Polaroid,
-    "Kodachrome": Kodachrome,
-    "Grayscale": Grayscale,
-    "Warm": Warm,
-    "Cool": Cool,
-    "Achromatopsia": Achromatopsia,
-    "Deuteranopia": Deuteranopia,
-    "Tritanopia": Tritanopia,
-    "DuoTone": DuoTone,
-    "Contrast": Contrast,
-    "Invert": Invert,
-    "Saturate": Saturate,
-    "HueRotate": HueRotate,
-    "Temperature": Temperature,
+    "Sepia": { component: Sepia, hasAmount: true },
+    "Browni": { component: Browni, hasAmount: false },
+    "Polaroid": { component: Polaroid, hasAmount: false },
+    "Kodachrome": { component: Kodachrome, hasAmount: false },
+    "Grayscale": { component: Grayscale, hasAmount: true },
+    "Warm": { component: Warm, hasAmount: false },
+    "Cool": { component: Cool, hasAmount: false },
+    "Achromatopsia": { component: Achromatopsia, hasAmount: false },
+    "Deuteranopia": { component: Deuteranopia, hasAmount: false },
+    "Tritanopia": { component: Tritanopia, hasAmount: false },
+    "DuoTone": { component: DuoTone, hasAmount: false },
+    "Contrast": { component: Contrast, hasAmount: true },
+    "Invert": { component: Invert, hasAmount: false },
+    "Saturate": { component: Saturate, hasAmount: true },
+    "HueRotate": { component: HueRotate, hasAmount: true },
+    "Temperature": { component: Temperature, hasAmount: true },
 };
 
 function ImageWithFilter({
@@ -73,14 +73,14 @@ function ImageWithFilter({
 }
 
 function FilterButton({
-    filter: Filter,
+    filter,
     name,
     active,
     onPress,
     image,
     style,
 }: {
-    filter: React.ComponentType<{ amount?: number }> | null;
+    filter: { component: React.ComponentType<{ amount?: number }>, hasAmount: boolean } | null;
     name: string;
     active: boolean;
     onPress: () => void;
@@ -92,16 +92,17 @@ function FilterButton({
         <Pressable
             onPress={onPress}
             className="flex-col items-center justify-center overflow-hidden"
-            style={{ width: 140, height: 150 }}
+            style={{ width: 80, height: 90 }}
         >
-            {Filter ? (
-                <ImageWithFilter style={style} filter={Filter} amount={1}>
+            {filter ? (
+                <ImageWithFilter style={style} filter={filter.component} amount={1}>
                     <Image source={image} style={style} />
                 </ImageWithFilter>
             ) : (
                 <Image source={image} style={style} />
             )}
             <Text 
+                numberOfLines={1}
                 className="text-white text-xs mt-2"
                 style={{ fontWeight: active ? 'bold' : 'normal', borderRadius: 10, overflow: 'hidden' }}
             >
@@ -114,10 +115,9 @@ function FilterButton({
 export default function EditScreen() {
     const [editImage, setEditImage] = useAtom(editImageAtom);
     const callback = useAtomValue(editCallbackAtom);
-    const [activeFilter, setActiveFilter] = useState<React.ComponentType<{ amount?: number }> | null>(null);
+    const [activeFilter, setActiveFilter] = useState<{ component: React.ComponentType<{ amount?: number }>, hasAmount: boolean } | null>(null);
     const [filterAmount, setFilterAmount] = useState(0);
 
-    // Debounced filter amount setter
     const debouncedSetFilterAmount = useRef<NodeJS.Timeout>();
     const handleFilterAmountChange = (value: number) => {
         if (debouncedSetFilterAmount.current) {
@@ -130,7 +130,7 @@ export default function EditScreen() {
     const viewShotRef = useRef<ViewShot>(null);
     const insets = useSafeAreaInsets();
     
-    const style = { borderRadius: 18, width: 125, height: 125 }; // Square aspect ratio for now
+    const style = { borderRadius: 9, width: 60, height: 60 };
 
     const image = useImage({ uri: editImage });
 
@@ -140,19 +140,14 @@ export default function EditScreen() {
     console.log({ width, height });
 
     const imageWidth = Dimensions.get('screen').width;
-    const imageHeight = imageWidth * (height / width);
+    const imageHeight = width ? imageWidth * (height / width) : 0;
 
     const saveFilteredImage = async () => {
         if (!viewShotRef.current || !activeFilter) return;
         
         try {
-            // Capture the filtered image
             const uri = await viewShotRef.current.capture();
-            
-            // Generate a unique filename
             const filename = `${FileSystem.cacheDirectory}filtered-${Date.now()}.jpg`;
-            
-            // Copy the file to our desired location
             await FileSystem.copyAsync({
                 from: uri,
                 to: filename
@@ -160,15 +155,11 @@ export default function EditScreen() {
 
             console.log('Image saved to:', filename);
 
-            // Call the callback with the new image URI
             if (callback) {
                 console.log('calling callback', filename);
                 callback(filename);
-            } else {
-                console.log('no callback');
             }
 
-            // Go back
             router.back();
         } catch (error) {
             console.error('Error saving filtered image:', error);
@@ -203,7 +194,7 @@ export default function EditScreen() {
         <SafeAreaView className="flex-1 items-center justify-end bg-black flex-col w-full gap-4" style={areaStyle}>
             <ViewShot ref={viewShotRef} options={{ format: 'jpg', quality: 1.0 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, width: imageWidth, height: imageHeight, backgroundColor: 'transparent' }}>
                 {activeFilter ? (
-                    <ImageWithFilter filter={activeFilter} amount={filterAmount}>
+                    <ImageWithFilter filter={activeFilter.component} amount={activeFilter.hasAmount ? filterAmount : undefined}>
                         <Image source={image} style={{ width: imageWidth, height: imageHeight }} contentFit="contain" />
                     </ImageWithFilter>
                 ) : (
@@ -215,7 +206,7 @@ export default function EditScreen() {
 
             <View style={styles.toolsContainer}>
                 <View className="w-full px-4">
-                    {activeFilter && (
+                    {activeFilter && activeFilter.hasAmount && (
                         <Slider
                             value={filterAmount}
                             onValueChange={handleFilterAmountChange}
@@ -236,13 +227,13 @@ export default function EditScreen() {
                             image={image}
                             style={style}
                         />
-                        {Object.entries(filters).map(([key, Filter]) => (
+                        {Object.entries(filters).map(([key, { component, hasAmount }]) => (
                             <FilterButton
                                 key={key}
-                                filter={Filter}
+                                filter={hasAmount ? { component, hasAmount } : { component, hasAmount }}
                                 name={key}
-                                active={activeFilter === Filter}
-                                onPress={() => setActiveFilter(Filter)}
+                                active={activeFilter?.component === component}
+                                onPress={() => setActiveFilter(hasAmount ? { component, hasAmount } : { component, hasAmount })}
                                 image={image}
                                 style={style}
                             />
@@ -286,7 +277,6 @@ export default function EditScreen() {
 const styles = StyleSheet.create({
     toolsContainer: {
         paddingTop: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
         flexDirection: 'column',
         width: '100%',
         gap: 20,
@@ -294,16 +284,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     filtersContainer: {
-        height: 150,
+        height: 90,
+        width: '100%',
     },
     applyButton: {
         width: '100%',
     },
     cropButton: {
-        width: 100,
-        height: 100,
+        width: 90,
+        height: 80,
         borderRadius: 18,
-        padding: 10,
+        padding: 5,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         flexDirection: 'column',
         alignItems: 'center',

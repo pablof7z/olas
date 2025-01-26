@@ -74,4 +74,16 @@ const ANDROID_COLORS = {
 
 const COLORS = Platform.OS === 'ios' ? IOS_SYSTEM_COLORS : ANDROID_COLORS;
 
+export function colorWithOpacity(color: string, opacity: number): string {
+    // Extract the numeric values from the rgb() string using a regex
+    const match = color.match(/^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/);
+
+    if (!match) {
+        throw new Error("Invalid RGB color format. Expected format: 'rgb(r, g, b)'.");
+    }
+
+    const [, r, g, b] = match.map(Number); // Convert the matches to numbers
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`; // Construct the rgba() string
+}
+
 export { COLORS };

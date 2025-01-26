@@ -1,4 +1,5 @@
 import { useNDK, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { useActionSheet } from '@expo/react-native-action-sheet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
@@ -50,23 +51,43 @@ export default function WalletSettings() {
         
         toast.success('Copied')
         router.back();
-    }, [ activeWallet?.walletId ])
+    }, [activeWallet?.walletId])
+
+
+    const { showActionSheetWithOptions } = useActionSheet();
+
+    const showDeleteActionSheet = useCallback((wallet: NDKCashuWallet) => {
+        showActionSheetWithOptions({
+            title: 'Delete Wallet',
+            message: 'Are you sure you want to delete this wallet?',
+            options: ['Delete', 'Cancel'],
+            destructiveButtonIndex: 0,
+            cancelButtonIndex: 1,
+        }, (index) => {
+            if (index === 0) {
+                wallet.delete();
+                setActiveWallet(null);
+            }
+        });
+    }, [ showActionSheetWithOptions])
 
     const data = useMemo(() => {
-        const opts = [
+        const opts = [];
+    
+        opts.push(...[
             {
                 id: '2',
                 title: 'Relays',
                 subTitle: 'Relays where this wallet is stored',
                 leftView: <IconView name="wifi" className="bg-blue-500" />,
-                onPress: () => router.push('/(wallet)/(walletSettings)/relays')
+                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/relays')
             },
             {
                 id: '3',
                 title: 'Mints',
                 subTitle: "Mints that serve as your wallet's bank",
                 leftView: <IconView name="home-outline" className="bg-green-500" />,
-                onPress: () => router.push('/(wallet)/(walletSettings)/mints'),
+                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/mints'),
             },
 
             'Tools',
@@ -77,7 +98,7 @@ export default function WalletSettings() {
                 onPress: forceSync,
                 rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
             },
-        ];
+        ]);
 
         if (activeWallet instanceof NDKCashuWallet) {
             opts.push({
@@ -86,6 +107,15 @@ export default function WalletSettings() {
                 onPress: copyDebugInfo,
                 rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
             });
+            
+            opts.push('  ');
+
+            opts.push({
+                id: 'delete',
+                title: 'Delete Wallet',
+                titleClassName: 'text-red-500',
+                onPress: () => showDeleteActionSheet(activeWallet as NDKCashuWallet)
+            })
             
             opts.push(`P2PK: ${activeWallet.p2pk ? activeWallet.p2pk : 'Not set'}`);
         }
@@ -159,7 +189,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-            titleClassName="text-lg"
+            titleClassName={cn("text-lg", info.item.titleClassName)}
             leftView={info.item.leftView}
             rightView={
                 <View className="flex-1 flex-row items-center justify-center gap-2 px-4">

@@ -131,6 +131,7 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         if (!search) return;
         if (onSelected) {
             onSelected(search);
+            setSearch('');
             return;
         }
 
@@ -138,11 +139,12 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         setTagsInMetadata(Array.from(selectedTags.current));
         setSelectedCount(selectedTags.current.size);
         setSearch('');
-    }, [search, setSearch, setTagsInMetadata]);
+    }, [search, setSearch, setTagsInMetadata, onSelected]);
 
     const onItemPress = useCallback((tag: string) => {
         if (onSelected) {
             onSelected(tag);
+            setSearch('');
             return;
         }
         

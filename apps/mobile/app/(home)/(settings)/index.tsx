@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 
-import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
@@ -18,26 +17,27 @@ import { useAppSettingsStore } from '@/stores/app';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Button } from '@/components/nativewindui/Button';
 import { humanWalletType } from '@/utils/wallet';
+import { IconView } from '@/components/icon-view';
 
 const relaysItem = {
     id: 'relays',
     title: 'Relays',
     leftView: <IconView name="wifi" className="bg-blue-500" />,
-    onPress: () => router.push('/(tabs)/(settings)/relays'),
+    onPress: () => router.push('/(home)/(settings)/relays'),
 };
 
 const keyItem = {
     id: 'key',
     title: 'Key',
     leftView: <IconView name="key-outline" className="bg-gray-500" />,
-    onPress: () => router.push('/(tabs)/(settings)/key'),
+    onPress: () => router.push('/(home)/(settings)/key'),
 };
 
 const walletItem = {
     id: 'wallet',
     title: 'Wallet',
     leftView: <IconView name="lightning-bolt" className="bg-green-500" />,
-    onPress: () => router.push('/(tabs)/(settings)/wallets'),
+    onPress: () => router.push('/(home)/(settings)/wallets'),
 };
 
 const devItem = {
@@ -45,7 +45,7 @@ const devItem = {
     title: `Development`,
     leftView: <IconView name="code-braces" className="bg-green-500" />,
     onPress: () => {
-        router.push('/(tabs)/(settings)/dev');
+        router.push('/(home)/(settings)/dev');
     },
 };
 
@@ -134,7 +134,7 @@ export default function SettingsIosStyleScreen() {
                     onPress: () => {
                         if (!activeWallet) return;
                         activeWallet.updateBalance?.();
-                        router.push('/(wallet)')
+                        router.push('/(home)/(wallet)')
                     }
                 });
 
@@ -142,11 +142,21 @@ export default function SettingsIosStyleScreen() {
                     id: 'zaps',
                     title: 'Zaps',
                     leftView: <IconView name="lightning-bolt" className="bg-yellow-500" />,
-                    onPress: () => router.push('/(tabs)/(settings)/zaps'),
+                    onPress: () => router.push('/(home)/(settings)/zaps'),
                 })
             } else {
                 opts.push(walletItem)
             }
+
+            opts.push('      ');
+
+            opts.push({
+                id: 'content',
+                title: 'Content Preferences',
+                subTitle: 'Manage the type of content you see',
+                leftView: <IconView name="text" className="bg-purple-500" />,
+                onPress: () => router.push('/(home)/(settings)/content'),
+            });
 
             opts.push('  ');
 
@@ -159,28 +169,16 @@ export default function SettingsIosStyleScreen() {
                         <Text>🌸</Text>
                     </IconView>
                 ),
-                onPress: () => router.push('/(tabs)/(settings)/blossom'),
+                onPress: () => router.push('/(home)/(settings)/blossom'),
             });
-        }
+        }            opts.push('   ');
 
-        opts.push('   ');
+            opts.push(relaysItem);
+            opts.push(keyItem);
+            
+            opts.push('    ');
 
-        opts.push(relaysItem);
-        opts.push(keyItem);
         
-        opts.push('    ');
-
-        opts.push({
-            id: 'muted',
-            title: 'Muted Users',
-            leftView: <IconView name="person-outline" className="bg-red-500" />,
-            rightText: (
-                <Text variant="body" className="text-muted-foreground">
-                    {muteList?.size.toString() ?? '0'}
-                </Text>
-            ),
-            onPress: () => router.push('/(tabs)/(settings)/muted'),
-        });
         opts.push({
             id: '4',
             title: 'Logout',
@@ -255,16 +253,6 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
 function ChevronRight() {
     const { colors } = useColorScheme();
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
-}
-
-export function IconView({ className, name, children }: { className?: string; name?: MaterialIconName; children?: React.ReactNode }) {
-    return (
-        <View className="px-3">
-            <View className={cn('h-6 w-6 items-center justify-center rounded-md', className)}>
-                {name ? <Icon name={name} size={15} color="white" /> : children}
-            </View>
-        </View>
-    );
 }
 
 function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {

@@ -43,12 +43,18 @@ export type MediaLibraryItem = {
 export function MediaPreview({
     assets,
     style,
+    withEdit = true,
+    maxWidth,
+    maxHeight
 }: {
     assets: MediaLibraryItem[];
     style?: ImageStyle;
+    withEdit?: boolean;
+    maxWidth?: number;
+    maxHeight?: number;
 }) {
     const multiple = assets.length > 1;
-    const size = Dimensions.get('screen').width;
+    const size = maxWidth ?? Dimensions.get('screen').width;
     const setSelectedMedia = useSetAtom(selectedMediaAtom);
 
     const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -72,8 +78,8 @@ export function MediaPreview({
     }, [assets, setSelectedMedia]);
 
     const insets = useSafeAreaInsets();
-    const width = Dimensions.get('screen').width;
-    const height = (Dimensions.get('screen').height - insets.top - insets.bottom) / 2;
+    maxHeight ??= (Dimensions.get('screen').height - insets.top - insets.bottom) / 2
+    maxWidth ??= Dimensions.get('screen').width
 
     const containerStyle = useMemo<ViewStyle>(() => {
         if (multiple) return { flex: 1, width: size - 50, overflow: 'hidden', borderRadius: 20, marginRight: 20, marginTop: 20 };
@@ -92,7 +98,7 @@ export function MediaPreview({
     return (
         <Container>
             {assets.map((asset, index) => (
-                <View key={asset.id} className="flex-1 flex-row items-stretch justify-stretch" style={{ width: '100%', height }}>
+                <View key={asset.id} className="flex-1 flex-row items-stretch justify-stretch" style={{ width: maxWidth, height: maxHeight }}>
                     {asset.mediaType === 'video' ? (
                         <VideoAlbumItem key={asset.id} uri={asset.uri} style={style} />
                     ) : (
@@ -103,14 +109,16 @@ export function MediaPreview({
                                 style={containerStyle}
                                 onImageChange={(newUri) => onImageChange(newUri, index)}
                             />
-                                
-                            <Pressable  
-                                onPress={() => handlePress(asset.uri, index)}
-                                className="bg-black/50 px-4 py-2 rounded-full items-center absolute left-2 bottom-2 flex-row gap-4"
-                            >
-                                <Edit2 size={18} color="white" />
-                                <Text className="text-white font-bold">Edit</Text>
-                            </Pressable>
+                            
+                            {withEdit && (
+                                <Pressable  
+                                    onPress={() => handlePress(asset.uri, index)}
+                                    className="bg-black/50 px-4 py-2 rounded-full items-center absolute left-2 bottom-2 flex-row gap-4"
+                                >
+                                    <Edit2 size={18} color="white" />
+                                    <Text className="text-white font-bold">Edit</Text>
+                                </Pressable>
+                            )}
                         </View>
                     )}
                 </View>

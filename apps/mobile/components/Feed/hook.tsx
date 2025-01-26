@@ -1,5 +1,5 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useFollows, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -77,6 +77,7 @@ export function useFeedEvents(
     const [newEntries, setNewEntries] = useState<FeedEntry[]>([]);
 
     const pubkeyBlacklist = usePubkeyBlacklist();
+    const isMutedEvent = useMuteFilter();
 
     // const followSet = useMemo(() => {
     //     const set = new Set(follows);
@@ -90,10 +91,10 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
+        // console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
         let newEntries = Array.from(feedEntriesRef.current.values())
             .filter((entry) => !!entry.event)
-            .filter((entry: FeedEntry) => !pubkeyBlacklist.has(entry.event?.pubkey))
+            .filter((entry: FeedEntry) => ( !isMutedEvent(entry.event) && !pubkeyBlacklist.has(entry.event?.pubkey) ))
         
         if (filterFn)
             newEntries = newEntries.filter(filterFn);
@@ -104,7 +105,7 @@ export function useFeedEvents(
         if (newEntries.length > 0) setNewEntries([]);
         
         // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
-    }, [setEntries, setNewEntries, pubkeyBlacklist.size, filterFn]);
+    }, [setEntries, setNewEntries, pubkeyBlacklist.size, isMutedEvent, filterFn]);
 
     useEffect(() => {
         updateEntries('update entries changed');
@@ -269,7 +270,7 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        console.log('subscribing to', filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
+        console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
         
         const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId }, relaySet, false);
 

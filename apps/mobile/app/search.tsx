@@ -43,7 +43,7 @@ export default function SearchScreen() {
     const openPostBottomSheet = usePostBottomSheet();
 
     return (
-        <KeyboardAvoidingView style={{ paddingTop: inset.top }} className="flex-1 bg-card">
+        <KeyboardAvoidingView className="flex-1 bg-card">
             <View className="border-b border-border">
                 <Input onSearch={onSearch} />
             </View>

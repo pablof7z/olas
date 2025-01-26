@@ -15,6 +15,7 @@
     "@backpackapp-io/react-native-toast": "^0.13.0",
     "@bacons/text-decoder": "^0.0.0",
     "@cashu/cashu-ts": "^2.0.0",
+    "@expo/react-native-action-sheet": "^4.1.0",
     "@expo/vector-icons": "^14.0.4",
     "@gorhom/bottom-sheet": "^5.0.6",
     "@lodev09/react-native-exify": "^0.2.7",

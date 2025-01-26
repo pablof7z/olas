@@ -2,10 +2,11 @@ import { atom, useAtom, useSetAtom } from "jotai";
 import * as SettingsStore from 'expo-secure-store';
 import { Sheet, useSheetRef } from "../nativewindui/Sheet";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FeedTypeList from ".";
 import { FeedType, feedTypeAtom } from "./store";
+import { Dimensions } from "react-native";
 
 export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(null, (get, set, value) => {
     set(sheetAtom, value);
@@ -29,7 +30,11 @@ export default function FeedTypeBottomSheet() {
         sheetRef.current?.dismiss();
     }, [setValue, sheetRef.current]);
 
-    return (<Sheet snapPoints={['80%']} ref={sheetRef}>
+    const snapPoints = useMemo(() => ['80%'], []);
+
+    const maxHeight = Dimensions.get('window').height - inset.top - inset.bottom;
+
+    return (<Sheet snapPoints={snapPoints} ref={sheetRef} maxDynamicContentSize={maxHeight}>
         <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom, flex: 1 }}>
             <FeedTypeList
                 value={value}

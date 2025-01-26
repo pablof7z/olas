@@ -204,12 +204,13 @@ function GridItem({
     );
 }
 
-export function SelectedMediaPreview() {
+export function SelectedMediaPreview({ children }: { children?: React.ReactNode }) {
     const selectedMedia = useAtomValue(selectedMediaAtom);
 
     return (
-        <View className="flex-1 flex-col items-center justify-between">
-            <MediaPreview assets={selectedMedia} style={{ width: '100%', height: '100%' }} />
+        <View className="flex-1 flex-col items-center justify-center !bg-gray-500/10">
+            {children}
+            {selectedMedia.length > 0 && <MediaPreview assets={selectedMedia} style={{ width: '100%', height: '100%' }} />}
         </View>
     );
 }

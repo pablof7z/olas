@@ -1,16 +1,14 @@
 import { useFollows, useNDK } from "@nostr-dev-kit/ndk-mobile";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { Button } from "../nativewindui/Button";
 import { Text } from "../nativewindui/Text";
 import { List, ListItem, ListSectionHeader } from "../nativewindui/List";
-import { Checkbox } from "../nativewindui/Checkbox";
 import Follows from '@/components/icons/follows';
 import ForYou from '@/components/icons/for-you';
 import Bookmarks from '@/components/icons/bookmarks';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useGroups } from "@/app/communities";
-import { IconView } from '@/app/(wallet)/(walletSettings)';
+import { IconView    } from '@/app/(home)/(wallet)/(walletSettings)';
 import { cn } from '@/lib/cn';
 import { Image } from 'expo-image';
 import { SegmentedControl } from "../nativewindui/SegmentedControl";
@@ -18,6 +16,7 @@ import { router } from "expo-router";
 import GroupsIcon from '@/components/icons/groups';
 import { FeedKind, FeedType } from "./store";
 import { useMyGroups } from "@/lib/groups/store";
+import { Search } from "lucide-react-native";
 
 function kindToSelectionIndex(kind: FeedKind) {
     if (kind === 'discover') return 0;
@@ -30,6 +29,11 @@ export default function FeedTypeList({ value, onSelect }: { value: FeedType, onS
     const { ndk } = useNDK();
     const [relays, setRelays] = useState<string[]>([]);
 
+    const search = useCallback(() => {
+        router.push('/search');
+        onSelect();
+    }, [onSelect])
+
     useEffect(() => {
         if (!ndk) return;
         const connectedRelays = ndk.pool.connectedRelays();
@@ -39,22 +43,39 @@ export default function FeedTypeList({ value, onSelect }: { value: FeedType, onS
     }, [ndk]);
 
     const [selectedIndex, setSelectedIndex] = useState(kindToSelectionIndex(value.kind));
+    const { colors } = useColorScheme();
 
     return (
         <View style={styles.container}>
-            <Text variant="title1">Feeds</Text>
+            <View className="flex-row items-center justify-between w-full gap-6">
+                <View className="flex-1 px-4">
 
-            <SegmentedControl
-                values={['Discover', 'Hashtags', 'Groups']}
-                selectedIndex={selectedIndex}
-                onIndexChange={(index) => {
-                    setSelectedIndex(index);
-                }}
-            />
+                    <Text variant="title1">Feed</Text>
+                {/* <SegmentedControl
+                    values={['Feeds', 'Groups']}
+                    selectedIndex={selectedIndex}
+                    onIndexChange={(index) => {
+                        if (index === 2) {
+                            router.push('/search');
+                            onSelect();
+                        } else {
+                            setSelectedIndex(index);
+                        }
+                    }}
+                    /> */}
+                </View>
+                
+                <Button variant="secondary" onPress={search} size="icon">
+                    <Search size={24} color={colors.foreground} />
+                </Button>
+            </View>
+            
+            
 
-            {selectedIndex === 0 && <Feeds value={value} onSelect={onSelect} />}
-            {selectedIndex === 1 && <Hashtags value={value} onSelect={onSelect} />}
-            {selectedIndex === 2 && <Groups value={value} onSelect={onSelect} />}
+            <Feeds value={value} onSelect={onSelect} />
+            {/* {selectedIndex === 0 && <Feeds value={value} onSelect={onSelect} />} */}
+            {/* {selectedIndex === 1 && <Hashtags value={value} onSelect={onSelect} />} */}
+            {/* {selectedIndex === 1 && <Groups value={value} onSelect={onSelect} />} */}
         </View>
     );
 }
@@ -214,10 +235,11 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
     const { colors } = useColorScheme();
 
     const data = useMemo(() => {
-        const v = [
-            {
-                title: 'Follows', subTitle: 'Posts from people you follow', onPress: () => onSelect({ kind: 'discover', value: 'follows' }),
-                leftView: <IconView className="bg-yellow-500" size={35}>
+        const v = [];
+
+        v.push(...[{
+            title: 'Follows', subTitle: 'Posts from people you follow', onPress: () => onSelect({ kind: 'discover', value: 'follows' }),
+            leftView: <IconView className="bg-yellow-500" size={35}>
                     <Follows stroke={colors.foreground} size={24} />
                 </IconView>,
                 value: 'follows'
@@ -230,16 +252,33 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
                 value: 'for-you'
             },
             {
-                title: 'Your Saved Posts', subTitle: 'Posts you have bookmarked', onPress: () => onSelect({ kind: 'discover', value: 'bookmarks' }),
-                leftView: <IconView name="bookmark" className="bg-orange-500" size={35} />,
-                value: 'bookmarks'
+                title: 'Bookmarks', subTitle: 'Posts you have bookmarked',
+                leftView: <IconView name="bookmark" className="bg-red-500" size={35} />,
+                value: 'bookmarks',
+                onPress: () => {
+                    router.push('/bookmarks');
+                    onSelect();
+                }
             },
-            {
-                title: 'Bookmark Feed', subTitle: 'Posts your network has bookmarked', onPress: () => onSelect({ kind: 'discover', value: 'bookmark-feed' }),
-                leftView: <IconView name="bookmark" className="bg-orange-500" size={35} />,
-                value: 'bookmark-feed'
-            }
-        ];
+            // {
+            //     title: 'Network Bookmarks', subTitle: 'Posts your network has bookmarked', onPress: () => onSelect({ kind: 'discover', value: 'bookmark-feed' }),
+            //     leftView: <IconView name="bookmark-outline" className="bg-orange-500" size={35} />,
+            //     value: 'bookmark-feed'
+            // }
+        ]);
+
+        v.push(...[
+            { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365', onPress: () => onSelect({ kind: 'hashtag', value: '#olas365' }) },
+            { title: '#photography', subTitle: 'Photography posts', value: '#photography', onPress: () => onSelect({ kind: 'hashtag', value: '#photography' }) },
+            { title: '#food', subTitle: 'Food posts', value: '#food', onPress: () => onSelect({ kind: 'hashtag', value: '#food' }) },
+            { title: '#family', subTitle: 'Family posts', value: '#family', onPress: () => onSelect({ kind: 'hashtag', value: '#family' }) },
+            { title: '#art', subTitle: 'Art posts', value: '#art', onPress: () => onSelect({ kind: 'hashtag', value: '#art' }) },
+            { title: '#music', subTitle: 'Music posts', value: '#music', onPress: () => onSelect({ kind: 'hashtag', value: '#music' }) },
+            { title: '#nature', subTitle: 'Nature posts', value: '#nature', onPress: () => onSelect({ kind: 'hashtag', value: '#nature' }) },
+            { title: '#travel', subTitle: 'Travel posts', value: '#travel', onPress: () => onSelect({ kind: 'hashtag', value: '#travel' }) },
+            { title: '#memes', subTitle: 'Memes posts', value: '#memes', onPress: () => onSelect({ kind: 'hashtag', value: '#memes' }) },
+        ]);
+
         return v;
     }, []);
     

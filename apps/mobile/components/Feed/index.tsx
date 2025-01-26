@@ -1,4 +1,4 @@
-import { NDKEvent, NDKEventId, NDKFilter, useFollows } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKEventId, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
 import { ForwardedRef, forwardRef, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";

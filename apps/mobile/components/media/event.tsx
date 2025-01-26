@@ -151,7 +151,7 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
     
     try {
         if (event.kind === NDKKind.Text) {
-            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/gi);
+            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/gi);
             if (urls?.length) return urls.map((url) => ({ url }));
         }
 

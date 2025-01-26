@@ -1,7 +1,7 @@
-import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
-import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -9,95 +9,145 @@ import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
+import { useAtom } from 'jotai';
+import { relayNoticesAtom } from '@/stores/relays';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
-import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
-import { IconView } from '.';
-import { createNip60Wallet } from '@/utils/wallet';
 
-export default function WalletsScreen() {
+const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
+    [NDKRelayStatus.RECONNECTING]: '#f1c40f',
+    [NDKRelayStatus.CONNECTING]: '#f1c40f',
+    [NDKRelayStatus.DISCONNECTED]: '#aa4240',
+    [NDKRelayStatus.DISCONNECTING]: '#aa4240',
+    [NDKRelayStatus.CONNECTED]: '#66cc66',
+    [NDKRelayStatus.FLAPPING]: '#2ecc71',
+    [NDKRelayStatus.AUTHENTICATING]: '#3498db',
+    [NDKRelayStatus.AUTHENTICATED]: '#e74c3c',
+    [NDKRelayStatus.AUTH_REQUESTED]: '#e74c3c',
+} as const;
+
+function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
+    const color = CONNECTIVITY_STATUS_COLORS[relay.status];
+
+    return (
+        <Pressable
+            onPress={() => {
+                console.log('connect to', relay.url);
+                relay.connect()
+                    .then(() => {
+                        console.log('connected');
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                    });
+            }}
+            style={{
+                borderRadius: 10,
+                width: 8,
+                height: 8,
+                backgroundColor: color,
+            }}
+        />
+    );
+}
+
+export default function RelaysScreen() {
     const { ndk } = useNDK();
-    const { activeWallet, setActiveWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
-    const currentUser = useNDKCurrentUser();
+    const [url, setUrl] = useState('');
 
-    const { events: wallets } = useSubscribe(currentUser ? [
-        { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey]}
-    ] : false)
-
-    const activateWallet = async (wallet: NDKEvent) => {
-        router.back();
-        const w = await NDKCashuWallet.from(wallet);
-        setActiveWallet(w);
+    const addFn = () => {
+        console.log({ url });
+        try {
+            const uri = new URL(url);
+            if (!['wss:', 'ws:'].includes(uri.protocol)) {
+                alert('Invalid protocol');
+                return;
+            }
+            const relay = ndk?.addExplicitRelay(url);
+            if (relay) setRelays([...relays, relay]);
+            setUrl('');
+        } catch (e) {
+            alert('Invalid URL');
+        }
     };
+
+    
+    // const removeRelay = useCallback(relay: NDKRelay) => {
+        
+    //     setRelays(relays.filter((r) => r.url !== relay.url));
+    // }, [relays]);
 
     const data = useMemo(() => {
         if (!ndk) return [];
+        const data: ListDataItem[] = [];
 
-        const options = Array.from(wallets.values())
-            .map((walletEvent: NDKEvent) => ({
-                id: walletEvent.id,
-                title: walletEvent.dTag,
-                subTitle: walletEvent.getMatchingTags('mint').length + ' mint(s)',
-                onPress: () => activateWallet(walletEvent),
-                rightView: (
-                    <View className="flex-1 items-center px-2">
-                        <Button variant="secondary" size="sm" onPress={() => activateWallet(walletEvent)}>
-                            <Text>Use</Text>
-                        </Button>
-                    </View>
-                ),
-            }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+        for (const pool of ndk.pools) {
+            data.push(pool.name);
 
-        if (options.length > 0) {
-            options.unshift('Existing Wallets');
+            for (const relay of pool.relays.values()) {
+                data.push({
+                    id: `${pool.name}-${relay.url}`,
+                    title: relay.url,
+                    rightView: (
+                        <View className="flex-1 items-center px-4 py-2">
+                            <RelayConnectivityIndicator relay={relay} />
+                        </View>
+                    ),
+                });
+            }
         }
 
-        options.push('New Wallet');
-
-        options.push({
-            id: 'nip60',
-            title: 'Nostr-Native Wallet',
-            leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
-            subTitle: 'Create a new NIP-60 wallet',
-            disabled: true,
-            onPress: () => {
-                newWallet().then(() => {
-                    router.back();
-                });
-            },
+        const allRelays = new Map<string, NDKRelay>();
+        ndk.pool.relays.forEach((r) => allRelays.set(r.url, r));
+        relays.forEach((r) => {
+            if (!allRelays.has(r.url)) allRelays.set(r.url, r);
         });
 
-        options.push({
-            id: 'nwc',
-            title: 'Nostr Wallet Connect',
-            leftView: <IconView name="link" className="bg-gray-500" />,
-            subTitle: 'Connect to a Nostr Wallet',
-            onPress: () => {
-                router.push('nwc');
-            },
-        });
-
-        return options;
-    }, [searchText, wallets.length]);
+        return Array.from(allRelays.values())
+            .map((relay: NDKRelay) => ({
+                id: relay.url,
+                title: relay.url,
+                rightView: (
+                    <View className="flex-1 items-center px-4 py-2 flex-row gap-4">
+                        {/* <Button variant="secondary" size="sm" onPress={() => removeRelay(relay)}>
+                                <Text>Remove</Text>
+                            </Button> */}
+                        <RelayConnectivityIndicator relay={relay} />
+                    </View>
+                ),
+                onPress: () => {
+                    router.push(`/(home)/(settings)/relay?relayUrl=${relay.url}`);
+                },
+            }))
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+    }, [ndk?.pool.relays, searchText, relays]);
 
     function save() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
         router.back();
     }
 
-    async function newWallet() {
-        const wallet = await createNip60Wallet(ndk);
-        setActiveWallet(wallet);
-    }
+    const [relayNotices] = useAtom(relayNoticesAtom);
+
+    const noticesAsData = useMemo(() => {
+        return Object.entries(relayNotices).map(([relayUrl, notices]) => ({
+            id: relayUrl,
+            title: relayUrl,
+            badge: notices.length,
+            rightView: <Text>{notices.length}</Text>,
+            onPress: () => {
+                router.push(`/(home)/(settings)/relay?relayUrl=${relayUrl}`);
+            },
+        }));
+    }, [relayNotices]);
 
     return (
         <>
             <LargeTitleHeader
-                title={`Wallets`}
+                title="Relays"
                 searchBar={{
                     iosHideWhenScrolling: true,
                     onChangeText: setSearchText,
@@ -112,7 +162,7 @@ export default function WalletsScreen() {
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={data}
+                data={[...data, { id: 'add', fn: addFn, set: setUrl }, 'Notices', ...noticesAsData]}
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
@@ -146,6 +196,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     } else if (typeof info.item === 'string') {
         return <ListSectionHeader {...info} />;
     }
+
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
@@ -171,7 +222,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={() => info.item.onPress?.()}
+            onPress={info.item.onPress}
         />
     );
 }

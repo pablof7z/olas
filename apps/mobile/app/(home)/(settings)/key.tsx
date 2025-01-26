@@ -7,13 +7,13 @@ import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk-mobile';
+import { NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function SettingsIosStyleScreen() {
-    const { ndk, currentUser } = useNDKCurrentUser();
+    const { ndk } = useNDK();
+    const currentUser = useNDKCurrentUser();
     const privateKey = (ndk?.signer as NDKPrivateKeySigner)?._privateKey;
 
     const nsec = useMemo(() => {

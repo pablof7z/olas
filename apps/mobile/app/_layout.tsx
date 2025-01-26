@@ -4,6 +4,7 @@ import '@bacons/text-decoder/install';
 import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
@@ -198,7 +199,6 @@ export default function RootLayout() {
             },
             {
                 onReady: () => {
-                    console.log('onReady');
                     if (!appReady) {
                         setAppReady(true);
                         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -293,9 +293,10 @@ export default function RootLayout() {
                     <LoaderScreen appReady={appReady} wotReady={true}>
                         <NutzapMonitor />
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                <PortalHost />
-                                <Stack>
+                            <ActionSheetProvider>
+                                <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                    <PortalHost />
+                                    <Stack>
                                     <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
 
                                     <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
@@ -304,13 +305,21 @@ export default function RootLayout() {
                                     <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
                                     <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
                                     <Stack.Screen
-                                        name="(tabs)"
+                                        name="(home)"
                                         options={{
                                             headerShown: false,
                                             title: 'Home',
                                         }}
                                     />
 
+                                    <Stack.Screen
+                                        name="search"
+                                        options={{
+                                            headerShown: true,
+                                            title: 'Search',
+                                        }}
+                                    />
+                                    
                                     <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
 
                                     <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
@@ -335,14 +344,6 @@ export default function RootLayout() {
                                             contentStyle: { backgroundColor: 'black' },
                                         }}
                                     />
-
-                                    <Stack.Screen
-                                        name="(wallet)"
-                                        options={modalPresentation({
-                                            title: "Wallet",
-                                            headerShown: false,
-                                        })}
-                                    />
                                     
                                     <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
                                     <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
@@ -355,9 +356,10 @@ export default function RootLayout() {
                                 <AlbumsBottomSheet />
                                 <PostTypeSelectorBottomSheet />
                                 <FeedTypeBottomSheet />
-                                <HandleNotificationPrompt />
+                                {/* <HandleNotificationPrompt /> */}
                                 <TagSelectorBottomSheet />
                             </NavThemeProvider>
+                            </ActionSheetProvider>
                             <Toasts />
                         </KeyboardProvider>
                     </LoaderScreen>

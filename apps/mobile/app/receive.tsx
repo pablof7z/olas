@@ -6,7 +6,7 @@ import ReceiveEcash from '~/components/cashu/receive/ecash';
 import { router } from 'expo-router';
 
 function ReceiveView() {
-    const [view, setView] = useState<'ecash' | 'ln'>('ecash');
+    const [view, setView] = useState<'ecash' | 'ln'>('ln');
 
     const onReceived = () => {
         router.back();

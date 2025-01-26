@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'center',
+        padding: 20,
     },
     message: {
       textAlign: 'center',
@@ -153,6 +154,7 @@ const styles = StyleSheet.create({
     camera: {
       flex: 1,
       maxHeight: '50%',
+      borderRadius: 30,
     },
     buttonContainer: {
       flexDirection: 'row',

@@ -1,30 +1,25 @@
 import { router, Tabs } from 'expo-router';
+import Lightning from '@/components/icons/lightning';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, Search, UserCircle2 } from 'lucide-react-native';
-import * as User from '@/components/ui/user';
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Home, Search, UserCircle2, WalletIcon } from 'lucide-react-native';
 import { useScrollToTop } from '@react-navigation/native';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { useAtomValue } from 'jotai';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
-import { usePostTypeSelectorBottomSheet } from '@/components/NewPost/TypeSelectorBottomSheet/hook';
+import UserAvatar from '@/components/ui/user/avatar';
 import { useNewPost } from '@/hooks/useNewPost';
-import { postTypeSelectorSheetRefAtom } from '@/components/NewPost/TypeSelectorBottomSheet/store';
-import { Platform } from 'react-native';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const postTypeSelectorSheetRef = useAtomValue(postTypeSelectorSheetRefAtom);
 
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
 
-    const {imagePicker: newPost} = useNewPost();
+    const { imagePicker: newPost } = useNewPost();
 
     return (
         <Tabs
@@ -53,11 +48,13 @@ export default function TabsLayout() {
             />
 
             <Tabs.Screen
-                name="search"
+                name="reels"
                 options={{
+                    title: 'Reels',
                     headerShown: false,
-                    title: 'Search',
-                    tabBarIcon: ({ color, focused }) => <Search size={24} color={color} strokeWidth={2.5} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} style={{ color: color }} />
+                    ),
                 }}
             />
 
@@ -77,10 +74,11 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
+                            router.push('/publish');
                             // if (postTypeSelectorSheetRef.current) {
                             //     postTypeSelectorSheetRef.current.present();
                             // } else {
-                                newPost({ types: ['images', 'videos'] });
+                            newPost({ types: ['images', 'videos'] });
                             // }
                         }
                     },
@@ -94,37 +92,42 @@ export default function TabsLayout() {
             />
 
             <Tabs.Screen
-                name="reels"
+                name="(wallet)"
                 options={{
-                    title: 'Reels',
+                    title: 'Wallets',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} style={{ color: color }} />
+                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} stroke={color} fill={color} />
                     ),
                 }}
             />
 
             <Tabs.Screen
                 name="(settings)"
-                listeners={{
-                    tabPress: (e) => {
-                        if (!currentUser) {
-                            e.preventDefault();
-                            router.push('/login');
-                        }
-                    },
-                }}
                 options={{
                     title: 'Settings',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) =>
-                        currentUser ? (
-                            <User.Avatar userProfile={userProfile} size={16} className="h-6 w-6 rounded-full" />
-                        ) : (
-                            <UserCircle2 size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
-                        ),
+                    tabBarIcon: ({ color, focused }) => (
+                        <UserButton />
+                    )
                 }}
             />
         </Tabs>
     );
+}
+
+
+function UserButton() {
+    const currentUser = useNDKCurrentUser();
+    const { colors } = useColorScheme();
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
+
+    
+    if (currentUser) {
+        return <UserAvatar userProfile={userProfile} size={24} className="h-6 w-6 rounded-full" />
+    }
+    
+    return (
+            <UserCircle2 size={24} color={colors.foreground} strokeWidth={2} />
+    )
 }

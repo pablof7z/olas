@@ -65,7 +65,11 @@ export default function Post({ event, reposts, timestamp, onPress, index }: { in
 
     if (event.kind === NDKKind.Text) {
         // remove the urls from the content
-        content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp)/g, '');
+        content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g, '');
+        // replace \n\n\n or more with \n
+        content = content.replace(/\n\s*\n\s*\n+/g, '\n');
+        // remove from content \n that are after the last word
+        content = content.replace(/\n\s*$/g, '');
     }
 
     const priority = useMemo<('high' | 'normal' | 'low')>(() => {
@@ -181,7 +185,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
             {tagsToRender.size > 0 && (
                 <View className="flex-row flex-wrap gap-1">
                     <Text className="text-sm font-bold text-primary">
-                        {`#${Array.from(tagsToRender).join(' ')}`}
+                        {`${Array.from(tagsToRender).map(t => `#${t}`).join(' ')}`}
                     </Text>
                 </View>
             )}

@@ -5,7 +5,7 @@ import { X } from 'lucide-react-native';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Text } from '@/components/nativewindui/Text';
-import { metadataAtom, selectedMediaAtom, stepAtom } from '@/components/NewPost/store';
+import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadingAtom, } from '@/components/NewPost/store';
 import ChooseContentStep from '@/components/NewPost/ChooseContentStep';
 import { PostMetadataStep } from '@/components/NewPost/MetadataStep';
 import { prepareMedia } from '@/components/NewPost/prepare';
@@ -14,8 +14,9 @@ import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mountTagSelectorAtom } from '@/components/TagSelectorBottomSheet';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BlurView } from 'expo-blur';
+import { useNewPost } from '@/hooks/useNewPost';
 
 export default function NewPostScreen() {
     const activeBlossomServer = useActiveBlossomServer();
@@ -32,24 +33,34 @@ export default function NewPostScreen() {
 
     const step = 1;
 
-    const next = async () => {
-        if (step === 0 && selectedMedia.length === 0) return;
-        if (step === 0) {
-            const preparedMedia = await prepareMedia(selectedMedia);
-            setSelectedMedia(await uploadMedia(preparedMedia, ndk, activeBlossomServer));
-        }
+    // const next = async () => {
+    //     if (step === 0 && selectedMedia.length === 0) return;
+    //     if (step === 0) {
+    //         const preparedMedia = await prepareMedia(selectedMedia);
+    //         setSelectedMedia(await uploadMedia(preparedMedia, ndk, activeBlossomServer));
+    //     }
 
-        setStep(step + 1);
-    };
+    //     setStep(step + 1);
+    // };
 
+    const { imagePicker: newPost } = useNewPost();
+
+    
     const setStep = useSetAtom(stepAtom);
 
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
+    const setSelectingMedia = useSetAtom(selectingMediaAtom);
+    const [uploading, setUploading] = useAtom(uploadingAtom);
 
     function abort() {
-        setStep(0);
-        setSelectedMedia([]);
-        setMetadata({ caption: '', expiration: 0 });
+        if (!uploading) {
+            setStep(0);
+            setSelectedMedia([]);
+            setSelectingMedia(false);
+            setUploading(false);
+            setMetadata({ caption: '', expiration: 0 });
+        }
+        
         router.back();
     }
 
@@ -82,7 +93,7 @@ export default function NewPostScreen() {
                 }}
             />
             <View className="flex-1 flex-row bg-card !p-0">
-                {step === 0 && <ChooseContentStep />}
+                {/* {step === 0 && <ChooseContentStep />} */}
                 {step === 1 && <PostMetadataStep />}
             </View>
         </>

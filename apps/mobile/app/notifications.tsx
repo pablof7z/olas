@@ -1,13 +1,13 @@
-import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage, NDKUser, useNDK, useNDKCurrentUser, useNDKSessionEvents, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKUser, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
 import { FlashList } from '@shopify/flash-list';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { atom, useAtom, useSetAtom, useStore } from 'jotai';
+import { atom, useAtom, useSetAtom } from 'jotai';
 import EventContent from '@/components/ui/event/content';
 import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
@@ -124,8 +124,6 @@ export default function Notifications() {
             case 'reactions': return 2;
         }
     }, [settingsTab]);
-
-    console.log('notifications', notifications.length);
 
     const notificationsFilter = useMemo(() => {
         const excludeOwn = (event: NDKEvent) => event.pubkey !== currentUser?.pubkey;

@@ -28,6 +28,7 @@ export class Uploader {
     }
 
     set onProgress(cb: (progress: number) => void) {
+        console.log('UPLOADER set onProgress', !!cb);
         this._onProgress = cb;
     }
 
@@ -60,7 +61,8 @@ export class Uploader {
 
             this.xhr.open('PUT', this.url.toString(), true);
             this.xhr.setRequestHeader('Authorization', encodedAuthHeader);
-            this.xhr.upload.addEventListener('progress', (e) => this.xhrOnProgress(e));
+            this.xhr.upload.addEventListener('progress', (e) => console.log('xhr.upload.onprogress event listener', e));
+            this.xhr.upload.onprogress = (e) => console.log('xhr.upload.onprogress', e);
             this.xhr.addEventListener('load', (e) => this.xhrOnLoad(e));
             this.xhr.addEventListener('error', (e) => this.xhrOnError(e));
 
