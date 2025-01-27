@@ -68,6 +68,7 @@ export default function ContentScreen() {
             title: 'Squared Posts',
             subTitle: "Show posts within a square",
             rightView: <Switch value={forceSquareAspectRatio} onValueChange={setForceSquareAspectRatio} />,
+            onPress: () => setForceSquareAspectRatio(!forceSquareAspectRatio)
         })
 
         return v;

@@ -34,7 +34,6 @@ import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { metadataAtom, selectedMediaAtom, uploadErrorAtom, uploadingAtom } from '@/components/NewPost/store';
 import { MediaPreview } from '@/components/NewPost/MediaPreview';
 
@@ -191,7 +190,7 @@ function StoryEntry({ events }: { events: NDKEvent[] }) {
         <Pressable className="flex-row items-center gap-2" onPress={() => {
             setShowStory(true);
         }}>
-            <UserAvatar userProfile={userProfile} size={40} className="w-16 h-16 rounded-full" />
+            <UserAvatar pubkey={pTag} userProfile={userProfile} className="w-16 h-16 rounded-full" />
         </Pressable>
     );
 }
@@ -208,7 +207,7 @@ function LiveViewEntry({ event }: { event: NDKEvent }) {
             setActiveEvent(event);
             router.push('/live')
         }}>
-            <UserAvatar userProfile={userProfile} size={40} className="w-14 h-14 rounded-full" />
+            <UserAvatar pubkey={pubkey} userProfile={userProfile} className="w-14 h-14 rounded-full" />
             {isLive && <Text className="text-xs text-white bg-red-500 px-0.5 rounded-lg -translate-y-full">LIVE</Text>}
         </Pressable>
     );
@@ -477,9 +476,9 @@ function HomeTitle() {
                 {group ? (
                     <>
                         <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
-                        <Text className="text-xl font-semibold truncate">{group.name}</Text>
+                        <Text className="text-xl font-semibold text-foreground truncate">{group.name}</Text>
                     </>) : (<>
-                        <Text className="text-xl font-semibold text-foregorund">{feedTypeTitle}</Text>
+                        <Text className="text-xl font-semibold text-foreground truncate">{feedTypeTitle}</Text>
                     </>)
                 }
                 <ChevronDown size={16} color={colors.foreground} />

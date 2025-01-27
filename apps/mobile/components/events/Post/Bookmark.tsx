@@ -12,23 +12,6 @@ type BookmarkProps = {
     event: NDKEvent;
 
     /**
-     * Bookmarkions the user has made, if undefined and the currentUser is set, the user's reactions will be calculated locally
-     */
-    reactedByUser?: NDKEvent[] | undefined;
-    
-    /**
-     * All reactions
-     * 
-     * If false, the number of reactions will not be shown
-    */
-    allBookmarkions?: NDKEvent[] | false;
-
-    /**
-     * Show reaction count
-     */
-    showBookmarkionCount?: boolean;
-
-    /**
      * Muted color
      */
     mutedColor: string;
@@ -39,38 +22,44 @@ type BookmarkProps = {
     iconSize?: number;
 
     /**
-     * Current user
+     * If the user has bookmarked the event
      */
-    currentUser?: NDKUser;
+    bookmarkedByUser: boolean;
 }
+
+let bookmarkRenderCost = 0;
+setInterval(() => {
+    console.log('bookmarkRenderCost', bookmarkRenderCost);
+}, 10000);
 
 export default function BookmarkButton({
     event,
     mutedColor,
     iconSize = 24,
-    showBookmarkionCount = true,
-    currentUser
+    bookmarkedByUser,
 }: BookmarkProps) {
-    const allBookmarkions = useObserver([{ kinds: [3006 as NDKKind], ...event.filter()} ], [event.id])
-    const reactedByUser = currentUser ? allBookmarkions?.filter(r => r.pubkey === currentUser.pubkey) : [];
-    const isBookmarkedByUser = reactedByUser && reactedByUser.length > 0;
+    const start = performance.now();
 
     const bookmark = useCallback(async () => {
-            const bookmarkEvent = new NDKEvent(event.ndk, {
-                kind: 3006,
-                tags: [['k', event.kind.toString()]],
-            } as NostrEvent);
-            bookmarkEvent.tag(event);
-            bookmarkEvent.publish();
-    }, [event.id, isBookmarkedByUser]);
+        if (bookmarkedByUser) return;
+        const bookmarkEvent = new NDKEvent(event.ndk, {
+            kind: 3006,
+            tags: [['k', event.kind.toString()]],
+        } as NostrEvent);
+        bookmarkEvent.tag(event);
+        bookmarkEvent.publish();
+    }, [event.id, bookmarkedByUser]);
+
+    const end = performance.now();
+    bookmarkRenderCost += end - start;
     
     return (
         <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity onPress={bookmark}>
                 <Bookmark
                     size={iconSize}
-                    fill={isBookmarkedByUser ? 'red' : 'transparent'}
-                    color={isBookmarkedByUser ? 'red' : mutedColor}
+                    fill={bookmarkedByUser ? 'red' : 'transparent'}
+                    color={bookmarkedByUser ? 'red' : mutedColor}
                 />
             </TouchableOpacity>
         </View>

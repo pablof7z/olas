@@ -91,7 +91,7 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        // console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
+        console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
         let newEntries = Array.from(feedEntriesRef.current.values())
             .filter((entry) => !!entry.event)
             .filter((entry: FeedEntry) => ( !isMutedEvent(entry.event) && !pubkeyBlacklist.has(entry.event?.pubkey) ))
@@ -104,12 +104,17 @@ export function useFeedEvents(
         setEntries(newEntries);
         if (newEntries.length > 0) setNewEntries([]);
         
-        // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
-    }, [setEntries, setNewEntries, pubkeyBlacklist.size, isMutedEvent, filterFn]);
+        console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
+    }, [setEntries, setNewEntries, isMutedEvent, filterFn]);
 
     useEffect(() => {
         updateEntries('update entries changed');
     }, [updateEntries]);
+
+    useEffect(() => console.log('set entries changed'), [setEntries])
+    useEffect(() => console.log('set new entries changed'), [setNewEntries])
+    useEffect(() => console.log('is muted event changed'), [isMutedEvent])
+    useEffect(() => console.log('filter fn changed'), [filterFn])
 
     const highestTimestamp = useRef(-1);
 
@@ -228,7 +233,7 @@ export function useFeedEvents(
      * we are not connected to relays and there won't be an EOSE coming any time soon.
      */
     const handleCacheEose = useCallback(() => {
-        updateEntries('cache-eose');
+        // updateEntries('cache-eose');
     }, [updateEntries]);
 
     const filterExistingEvents = useCallback(() => {
@@ -328,6 +333,7 @@ export function useFeedMonitor(
     const { ndk } = useNDK();
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const activeSlices = useRef<Slice[]>([]);
+    const eventsRef = useRef<Map<NDKEventId, NDKEvent>>(new Map());
 
     const sliceToFilter = (slice: Slice): NDKFilter => {
         const filters: Record<string, string[]> = {};
@@ -340,17 +346,21 @@ export function useFeedMonitor(
         return filters;
     }
 
+    // const handleEvent = (event: NDKEvent) => {
+    //     const id = event.tagId();
+    //     const current = 
+    //     eventsRef.current.set(id, event);
+    // }
+
     const addSlice = (slice: Slice) => {
         const filters = sliceToFilter(slice);
-        slice.sub = ndk.subscribe(
-            filters
-        , {
-                cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-                closeOnEose: false,
-                groupable: false,
-                skipVerification: true,
-                subId: `feed-${slice.start}2${slice.end}`
-            }, undefined, true);
+        slice.sub = ndk.subscribe(filters, {
+            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+            closeOnEose: false,
+            groupable: false,
+            skipVerification: true,
+            subId: `feed-${slice.start}2${slice.end}`
+        }, undefined);
         activeSlices.current.push(slice);
     }
 
@@ -363,7 +373,6 @@ export function useFeedMonitor(
     }
 
     useEffect(() => {
-        try {
         if (activeIndex === null) return;
 
         const neededSlices = calcNeededSlices(activeIndex, sliceSize, events.length)
@@ -386,21 +395,6 @@ export function useFeedMonitor(
 
             if (!exists) addSlice(neededSlice)
         }
-
-        // console.log(`Active Index: ${activeIndex}`);
-        // for (const slice of activeSlices.current) {
-        //     console.log(`\tfrom ${slice.start} to ${slice.end}`)
-        // }
-    } catch (e) {
-        console.error(e)
-    }
-
-        // return () => {
-        //     console.log('unmount')
-        //     for (const activeSlice of activeSlices.current) {
-        //         if (!activeSlice.removeTimeout) removeSlice(activeSlice);
-        //     }
-        // };
     }, [activeIndex]);
     
     return {

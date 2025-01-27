@@ -14,9 +14,6 @@ import Bookmark from './Bookmark';
 import { useObserver } from '@/hooks/observer';
 import EventContent from '@/components/ui/event/content';
 
-const repostKinds = [NDKKind.GenericRepost, NDKKind.Repost] as const;
-const zapKinds = [NDKKind.Zap, NDKKind.Nutzap] as const;
-
 export function Reactions({
     event,
     foregroundColor,
@@ -26,40 +23,80 @@ export function Reactions({
     foregroundColor?: string;
     mutedColor?: string;
 }) {
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    
+    const allEvents = useObserver([ event.filter() ], [event.id])
+
+    const { reactionCount, reactedByUser, commentCount, commentedByUser, zapEvents, bookmarkedByUser } = useMemo(() => {
+        let reactions = new Set();
+        let reactedByUser = false;
+        let commentCount = 0;
+        let commentedByUser = false;
+        let zapEvents = [];
+        let bookmarkedByUser = false;
+        for (const e of allEvents) {
+            switch (e.kind) {
+                case NDKKind.Reaction:
+                    reactions.add(e.pubkey);
+                    if (e.pubkey === currentUser?.pubkey) reactedByUser = true;
+                    break;
+                case NDKKind.Text:
+                case NDKKind.GenericReply:
+                    commentCount++;
+                    if (e.pubkey === currentUser?.pubkey) commentedByUser = true;
+                    break;
+                case NDKKind.Nutzap:
+                case NDKKind.Zap:
+                    zapEvents.push(e);
+                    break;
+                case 3006:
+                    bookmarkedByUser = e.pubkey === currentUser?.pubkey;
+                    break;
+            }
+        }
+        return {
+            reactionCount: reactions.size,
+            reactedByUser,
+            commentCount,
+            commentedByUser,
+            zapEvents,
+            bookmarkedByUser
+        };
+    }, [allEvents.length, currentUser?.pubkey])
+
     mutedColor ??= colors.muted;
     foregroundColor ??= colors.foreground;
-    
+
     return (
-        <View className="flex-1 flex-col gap-1">
-            <View className="w-full flex-1 flex-row justify-between gap-4">
-                <View style={{ flex: 1, gap: 10, flexDirection: 'row' }}>
-                    <React
-                        event={event}
-                        mutedColor={mutedColor}
-                        currentUser={currentUser}
-                    />
+        <View style={styles.container}>
+            <View style={styles.group}>
+                <React
+                    event={event}
+                    mutedColor={mutedColor}
+                    reactedByUser={reactedByUser}
+                    reactionCount={reactionCount}
+                />
 
-                    <Comment
-                        event={event}
-                        mutedColor={mutedColor}
-                        foregroundColor={foregroundColor}
-                        currentUser={currentUser}
-                    />
-
-                    <Zaps currentUser={currentUser} event={event} style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }} foregroundColor={foregroundColor} mutedColor={mutedColor} />
-                </View>
-
-                <Bookmark
+                <Comment
                     event={event}
                     mutedColor={mutedColor}
                     foregroundColor={foregroundColor}
-                    currentUser={currentUser}
+                    commentedByUser={commentedByUser}
+                    commentCount={commentCount}
                 />
+
+                <Zaps
+                    currentUser={currentUser}
+                    event={event}
+                    zaps={zapEvents}
+                    mutedColor={mutedColor} />
             </View>
+
+            <Bookmark
+                event={event}
+                mutedColor={mutedColor}
+                bookmarkedByUser={bookmarkedByUser}
+            />
         </View>
     );
 }
@@ -92,3 +129,17 @@ export function InlineComment({ comment }: { comment: NDKEvent }) {
         </Text>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {    
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+    },
+    group: {
+        flex: 1,
+        flexDirection: 'row',
+        gap: 10,
+    }
+});

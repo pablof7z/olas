@@ -115,7 +115,7 @@ export default function Profile() {
                         transform: [{ translateY: headerTranslateY }],
                     },
                 ]}>
-                <User.Avatar userProfile={userProfile} style={styles.profileImage} alt="Profile image" />
+                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} />
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statNumber} className="text-foreground">
@@ -147,7 +147,7 @@ export default function Profile() {
             </Animated.View>
 
             <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
-                <User.Avatar userProfile={userProfile} style={styles.smallProfileImage} alt="Profile image" />
+                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={40} />
                 <Text style={styles.username} className="grow text-lg font-bold text-foreground">
                     <User.Name userProfile={userProfile} pubkey={pubkey} />
                 </Text>
@@ -222,11 +222,6 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
     },
-    profileImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-    },
     statsContainer: {
         flex: 1,
         flexDirection: 'row',
@@ -282,12 +277,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         zIndex: 1,
-    },
-    smallProfileImage: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 12,
     },
     noEventsText: {
         textAlign: 'center',

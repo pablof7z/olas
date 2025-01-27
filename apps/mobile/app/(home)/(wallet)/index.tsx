@@ -165,7 +165,7 @@ function HeaderLeft() {
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>
             {currentUser && userProfile?.image ? (
-                <User.Avatar userProfile={userProfile} size={24} className="w-10 h-10" />
+                <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
             ) : (
                 <Settings size={24} color={colors.muted} className="w-10 h-10" />
             )}

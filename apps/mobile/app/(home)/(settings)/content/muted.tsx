@@ -152,7 +152,7 @@ function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: 
                 title: userProfile?.name ?? pubkey,
                 subtitle: <Text className="text-muted-foreground">{pubkey}</Text>,
             }}
-            leftView={<User.Avatar userProfile={userProfile} size={24} style={{ width: 28, height: 28, marginRight: 10 }} />}
+            leftView={<User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={24} />}
             rightView={<RemoveButton onPress={remove} />}
         />
     );

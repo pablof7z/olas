@@ -10,7 +10,6 @@ import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
-import { editImageAtom } from "@/app/edit";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -27,6 +26,8 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterFn, r
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>();
     const [refreshCount, setRefreshCount] = useState(0);
+
+    // useEffect(() => console.log('prop changed'), [onPress, filters, filterKey, prepend, filterFn, relayUrls])
 
     useScrollToTop(ref);
 
@@ -54,6 +55,13 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterFn, r
     }, [updateEntries]);
 
     const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
+    
+    // useEffect(() => console.log('update entries changes'), [updateEntries])
+    // useEffect(() => console.log('new entries changes', newEntries?.length), [newEntries?.length])
+    // useEffect(() => console.log('entries changes', entries?.length), [entries?.length])
+    // useEffect(() => console.log('setActiveIndex changes'), [setActiveIndex])
+    // useEffect(() => console.log('showNewEntriesPrompt changes'), [showNewEntriesPrompt])
+
     useEffect(() => {
         if (newEntries.length === 0) return;
         const firstVisibleEntryTimestamp = entries[0]?.timestamp;
@@ -92,7 +100,7 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterFn, r
         if (prepend) ret.unshift({ id: 'prepend', node: prepend });
         return ret;
     }, [entries, prepend])
-    
+
     return (
         <>
         {showNewEntriesPrompt && (
@@ -110,18 +118,20 @@ export default function Feed({ onPress, filters, filterKey, prepend, filterFn, r
             scrollEventThrottle={100}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
             getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
-            renderItem={({ item, index }) => {
-                if (item.id === 'prepend') return item.node;
-                return <Post 
-                    event={item.event} 
-                    index={index} 
-                    reposts={item.reposts} 
-                    timestamp={item.timestamp} 
-                    onPress={() => _onPress(item.event)} 
-                />;
-            }}
+            renderItem={({ item, index }) => <FeedItem item={item} index={index} _onPress={_onPress} />}
             disableIntervalMomentum={true}
         />
         </>
     )
+}
+
+function FeedItem({ item, index, _onPress }: { item: FeedEntry, index: number, _onPress: (event: NDKEvent) => void }) {
+    if (item.id === 'prepend') return item.node;
+    return <Post 
+        event={item.event} 
+        index={index} 
+        reposts={item.reposts} 
+        timestamp={item.timestamp} 
+        onPress={() => _onPress(item.event)} 
+    />;
 }

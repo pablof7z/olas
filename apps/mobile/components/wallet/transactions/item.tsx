@@ -23,7 +23,7 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: str
     if (pubkey && userProfile) {
         return (
             <View className="flex-row items-center gap-2 relative" style={{ marginRight: 10}}>
-                {userProfile && <User.Avatar userProfile={userProfile} size={24} className="w-10 h-10" />}
+                {userProfile && <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={24} />}
                 {direction === 'out' && (
                     <View className="absolute -right-2 -top-2 rotate-45">
                         <ArrowUp size={18} color={color} />

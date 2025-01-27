@@ -1,9 +1,8 @@
-import { NDKKind, NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
 import { Heart } from "lucide-react-native";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
-import { useObserver } from "@/hooks/observer";
 
 type ReactProps = {
     /**
@@ -12,16 +11,14 @@ type ReactProps = {
     event: NDKEvent;
 
     /**
-     * Reactions the user has made, if undefined and the currentUser is set, the user's reactions will be calculated locally
+     * Reaction count
      */
-    reactedByUser?: NDKEvent[] | undefined;
-    
+    reactionCount: number;
+
     /**
-     * All reactions
-     * 
-     * If false, the number of reactions will not be shown
-    */
-    allReactions?: NDKEvent[] | false;
+     * Whether the user has reacted to the event
+     */
+    reactedByUser: boolean;
 
     /**
      * Show reaction count
@@ -37,44 +34,37 @@ type ReactProps = {
      * Icon size
      */
     iconSize?: number;
-
-    /**
-     * Current user
-     */
-    currentUser?: NDKUser;
 }
 
 export default function React({
     event,
     mutedColor,
     iconSize = 24,
+    reactionCount,
+    reactedByUser,
     showReactionCount = true,
-    currentUser
 }: ReactProps) {
-    const allReactions = useObserver([{ kinds: [NDKKind.Reaction], ...event.filter()} ], [event.id])
-    const reactedByUser = currentUser ? allReactions?.filter(r => r.pubkey === currentUser.pubkey) : [];
-    const isReactedByUser = reactedByUser && reactedByUser.length > 0;
     const react = useCallback(async () => {
-        if (isReactedByUser) return;
+        if (reactedByUser) return;
         
         const r = await event.react('+', false);
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
         r.publish();
-    }, [event.id, isReactedByUser]);
-    
+    }, [event.id, reactedByUser]);
+
     return (
         <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity onPress={react}>
                 <Heart
                     size={iconSize}
-                    fill={isReactedByUser ? 'red' : 'transparent'}
-                    color={isReactedByUser ? 'red' : mutedColor}
+                    fill={reactedByUser ? 'red' : 'transparent'}
+                    color={reactedByUser ? 'red' : mutedColor}
                 />
             </TouchableOpacity>
-            {showReactionCount && allReactions && allReactions.length > 0 && (
+            {showReactionCount && reactionCount > 0 && (
                 <Text className="text-sm font-medium" style={{ color: mutedColor }}>
-                    {allReactions.length}
+                    {reactionCount}
                 </Text>
             )}
         </View>

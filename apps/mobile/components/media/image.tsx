@@ -3,6 +3,7 @@ import { Image, ImageSource, useImage } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle, StyleSheet, Dimensions } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { type MediaDimensions } from "./types";
+import { Text } from '../nativewindui/Text';
 
 /**
  * This keeps a record of the known image heights for a given url.
@@ -11,13 +12,17 @@ const knownImageDimensions: Record<string, MediaDimensions> = {};
 
 export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Partial<MediaDimensions>) {
     let { width, height } = dimensions;
-    const { width: maxWidth } = maxDimensions;
+    const { width: maxWidth, height: maxHeight } = maxDimensions;
 
-    if (maxWidth && width > maxWidth) {
-        width = maxWidth;
-        height = Math.floor(height / (width / maxWidth));
+    const aspectRatio = width / height;
+
+    width = maxWidth;
+    height = Math.round(maxWidth / aspectRatio);
+
+    // Adjust height if it exceeds maxHeight
+    if (maxHeight && height > maxHeight) {
+        height = maxHeight;
     }
-
 
     return { width, height };
 }
@@ -49,65 +54,82 @@ export default function ImageComponent({
 
     const pUri = useImgProxy ? getProxiedImageUrl(url, maxDimensions?.width) : url;
     const renderDimensions = knownImageDimensions[url];
-    
+
     // if we know the image dimensions but not the render, calculate
     if (dimensions && !renderDimensions) {
         dimensions = calcDimensions(dimensions, maxDimensions);
     }
 
-    const _style = useMemo(() => {
-        let width = renderDimensions?.width ?? maxDimensions?.width;
-        let height = renderDimensions?.height ?? maxDimensions?.height;
-
-        if (maxDimensions?.width && width > maxDimensions?.width) {
-            height = Math.floor(height / (width / maxDimensions?.width));
-            width = maxDimensions?.width;
-        } else if (maxDimensions?.height && height > maxDimensions?.height) {
-            width = Math.floor(width / (height / maxDimensions?.height));
-            height = maxDimensions?.height;
+    // Calculate dimensions only once
+    const finalDimensions = useMemo(() => {
+        if (dimensions && !renderDimensions) {
+            return calcDimensions(dimensions, maxDimensions);
         }
-        
-        return { width, height };
-    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
+        return renderDimensions || maxDimensions;
+    }, [dimensions, renderDimensions, maxDimensions]);
 
     const cacheKey = useMemo(
         () => [url, maxDimensions?.width??"", maxDimensions?.height??""].join('-'),
         [url, maxDimensions?.width, maxDimensions?.height]
     );
     const imageSource = useImage({
-        blurhash,
         uri: pUri,
-        width: dimensions?.width,
-        height: dimensions?.height,
-        cacheKey
+        cacheKey,
     })
+
+    useEffect(() => {
+        // Image.
+    }, [cacheKey])
+
+    const blurhashObj = { blurhash };
 
     return (
         <Pressable
-            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            style={styles.pressable}
             onPress={onPress}
             onLongPress={onLongPress}
             className={className}
             {...props}
         >
             <Image
-                placeholder={{blurhash}}
+                placeholder={blurhashObj}
                 placeholderContentFit="cover"
                 priority={priority}
                 source={imageSource}
                 contentFit="cover"
                 recyclingKey={url}
+                onProgress={(r) => {
+                    console.log('onProgress', r.loaded, r.total)
+                }}
+                // onLoadStart={() => {
+                //     console.log('onLoadStart', cacheKey)
+                // }}
                 onLoadEnd={() => {
+                    // console.log('onLoadEnd', cacheKey)
                     try {
                         if (!imageSource) return;
                         const { width, height} = imageSource;
                         knownImageDimensions[url] = { width, height }
+                        if (url.match(/dfd5c029815af6cbcc50b8e9acb3010716e9d54e8beb2efae42301c93c900c9e/)) {
+                            console.log('onLoadEnd', url, { width, height })
+                        }
                     } catch (e) {
                         console.error(e);
                     }
                 }}
-                style={{ width: _style.width, height: _style.height }}
+                style={{
+                    width: finalDimensions?.width,
+                    height: finalDimensions?.height
+                }}
             />
         </Pressable>
     );
 }
+
+const styles = StyleSheet.create({
+    pressable: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
+})

@@ -67,7 +67,7 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
             isReplying && "bg-accent/10"
         )} style={style}>
             <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}>
-                <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+                <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={24} />
             </Pressable>
 
             <View className="flex-col flex-1">
@@ -168,7 +168,7 @@ export default function CommentScreen() {
                         style={[styles.inputContainer, { paddingBottom: insets.bottom }]}
                         className="border-t border-border flex-row items-start"
                     > 
-                        <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+                        <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} />
                         <TextInput
                             style={styles.input}
                             className="text-foreground"

@@ -55,13 +55,8 @@ function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent, t
     const [taggedEvent, setTaggedEvent] = useState<NDKEvent | null>(null);
     const marker = tag[3];
     
-    if (marker === 'created') {
-        return <View className="flex-col gap-2">
-            <Text className="font-mono font-bold">Created: </Text>
-            <Text className="font-mono">{tag[1]}</Text>
-        </View>
-    }
-
+    if (marker === 'created' || marker === 'redeemed') return null;
+    
     useEffect(() => {
         const fetch = tag[1];
         

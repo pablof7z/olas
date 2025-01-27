@@ -83,7 +83,7 @@ const NotificationItem = memo(({ event, currentUser }: { event: NDKEvent, curren
     return (
         <View style={styles.notificationItem} className="flex flex-row gap-2 border-b border-border">
             <TouchableOpacity onPress={onAvatarPress}>
-                <User.Avatar userProfile={userProfile} alt={event.pubkey} size={44} style={styles.avatar} />
+                <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={44} />
             </TouchableOpacity>
             <TouchableOpacity onPress={onPress} className="flex-1">
                 <View style={styles.content}>
@@ -138,6 +138,7 @@ export default function Notifications() {
 
     const sortedEvents = useMemo(
         () => {
+            // fond index that is null
             return [...notifications]
                 .filter(notificationsFilter)
                 .sort((a, b) => b.created_at - a.created_at);

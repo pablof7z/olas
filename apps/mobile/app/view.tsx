@@ -59,12 +59,14 @@ export default function ViewScreen() {
         router.push(`/profile?pubkey=${activeEvent.pubkey}`);
     }, [activeEvent.pubkey])
 
+    const maxHeight = Math.floor(Dimensions.get('window').height * 0.7);
+
     return (
         <ScrollView className="flex-1 bg-black" style={style}>
             <View className="flex-1">
                 {/* Header with user info */}
                 <TouchableOpacity onPress={viewProfile} className="flex-row items-center border-b border-border p-4">
-                    <User.Avatar className="h-8 w-8 rounded-full" alt={activeEvent.pubkey} userProfile={userProfile} />
+                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={24} />
                     <View className="ml-3">
                         <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} className="font-bold text-white" />
                         <Text className="text-sm text-gray-400">
@@ -77,7 +79,7 @@ export default function ViewScreen() {
                     <EventMediaContainer
                         event={activeEvent}
                         maxWidth={Dimensions.get('window').width}
-                        maxHeight={Dimensions.get('window').height * 0.7}
+                        maxHeight={maxHeight}
                         muted={false}
                     />
                 </ScrollView>

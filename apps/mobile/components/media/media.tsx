@@ -33,11 +33,15 @@ export default function MediaComponent({
         dim,
         dimensions,
     } = useMemo(() => {
+        const { url, blurhash, dim } = imeta;
+        const dimensions = dim?.split('x').map(Number) ?? undefined;
+        const validDimensions = dimensions && dimensions[0] && dimensions[1] ? { width: dimensions[0], height: dimensions[1] } : undefined;
+
         return {
-            url: imeta.url,
-            blurhash: imeta.blurhash,
-            dim: imeta.dim,
-            dimensions: dim?.split('x').map(Number) ?? undefined,
+            url,
+            blurhash,
+            dim,
+            dimensions: validDimensions,
         }
     }, [imeta]);
 
@@ -54,7 +58,7 @@ export default function MediaComponent({
             />
         );
     }
-    
+
     return (
         <ImageComponent
             url={url}

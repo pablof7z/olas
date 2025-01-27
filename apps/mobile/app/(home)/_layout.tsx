@@ -124,10 +124,10 @@ function UserButton() {
 
     
     if (currentUser) {
-        return <UserAvatar userProfile={userProfile} size={24} className="h-6 w-6 rounded-full" />
+        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
     }
     
     return (
-            <UserCircle2 size={24} color={colors.foreground} strokeWidth={2} />
+        <UserCircle2 size={24} color={colors.foreground} strokeWidth={2} />
     )
 }

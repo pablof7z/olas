@@ -1,15 +1,13 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { Animated, PanResponder, View, Text, TouchableOpacity } from 'react-native';
-import { Zap } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Lightning from '@/components/icons/lightning';
 import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
-import { NDKKind, NDKNutzap, NDKZapper, useNDKCurrentUser, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKNutzap, NDKZapper, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { usePaymentStore } from '@/stores/payments';
 import { useAppSettingsStore } from '@/stores/app';
-import { useObserver } from '@/hooks/observer';
 
 const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
     if (!wallet) {
@@ -36,18 +34,9 @@ const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent,
     }
 }
 
-export default function Zaps({ event, style, foregroundColor, mutedColor, currentUser }) {
-    const zaps = useObserver([
-        { kinds: [NDKKind.Zap, NDKKind.Nutzap], ...event.filter() },
-    ], [event.id])
+export default function Zaps({ event, style, mutedColor, currentUser, zaps }) {
     const { activeWallet } = useNDKWallet();
-    const { colors } = useColorScheme();
-    const [amount, setAmount] = useState(0);
-    const [canceled, setCanceled] = useState(false);
     const amountRef = useRef(0);
-    const touchTimer = useRef(null);
-    const directionRef = useRef<'up' | 'down' | null>(null);
-    const growthFactorRef = useRef(1);
     const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
     const allPending = usePaymentStore(s => s.pendingPayments);
     const pendingZaps = allPending.get(event.tagId()) || [];
@@ -96,119 +85,32 @@ export default function Zaps({ event, style, foregroundColor, mutedColor, curren
         return { totalZapped, zappedByUser, pendingZaps };
     }, [zaps, pendingZaps.length]);
 
-
-    const updateAmount = (dy) => {
-        stopCounting();
-
-        const factor = -(dy / 200);
-
-        // determine the direction
-        if (directionRef.current === null) {
-            directionRef.current = dy < 0 ? 'up' : 'down';
-        } else {
-            if (factor > growthFactorRef.current && directionRef.current === 'down') {
-                directionRef.current = 'up';
-            } else if (factor < growthFactorRef.current && directionRef.current === 'up') {
-                directionRef.current = 'down';
-            }
-        }
-
-        if (directionRef.current === 'up') {
-            amountRef.current = (amountRef.current + 1) * (factor * 0.1 + 1);
-        } else {
-            amountRef.current = (amountRef.current + 1) * (-factor * 0.1 + 1);
-        }
-
-        growthFactorRef.current = factor;
-
-        // startCounting();
-
-        // if (dy < 0) {
-        //     // Swiping up: Exponential growth
-        //     const growthFactor = Math.min(- dy / 2000, 100); // Cap growth to avoid extreme numbers
-        //     console.log("growth factor", growthFactor);
-        //     growthFactorRef.current = growthFactor;
-        //     startCounting();
-        //     amountRef.current = dy;
-        //     console.log("amount", amountRef.current);
-        // } else if (dy > 0) {
-        //     // Swiping down: Linear decrease
-        //     const growthFactor = Math.max(1 - dy / 200, 0.01); // Cap growth to avoid extreme numbers
-        //     growthFactorRef.current = -growthFactor;
-        //     amountRef.current = Math.max(0, amountRef.current - dy / 2);
-        // }
-
-        setAmount(amountRef.current);
-
-        // Cancel if amount reaches zero
-        if (amountRef.current === 0) {
-            setCanceled(true);
-        }
-    };
-
-    const startCounting = () => {
-        if (touchTimer.current) {
-            clearInterval(touchTimer.current);
-        }
-
-        touchTimer.current = setInterval(() => {
-            amountRef.current = Math.min(10000, amountRef.current * (growthFactorRef.current + 1));
-            setAmount(Math.floor(amountRef.current));
-        }, 100);
-    };
-
-    const stopCounting = () => {
-        clearInterval(touchTimer.current);
-    };
-
     const sendZapWithAmount = useCallback((message: string, amount: number) => {
         sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
     }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
-    const onPanResponderRelease = useCallback((evt, gestureState) => {
-        stopCounting(); // Stop timer during movement
-        if (!canceled && amountRef.current > 0) {
-            sendZap(defaultZap.message, amountRef.current, event, activeWallet, addPendingPayment, withFallbackZap);
-        }
-        setAmount(0);
-    }, [event?.id, activeWallet?.walletId, withFallbackZap]);
-
-    const panResponder = useMemo(() => {    
-        return PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt, gestureState) => {
-                setCanceled(false);
-                amountRef.current = 0;
-                setAmount(0);
-            },
-            onPanResponderMove: (evt, gestureState) => {
-                updateAmount(gestureState.dy); // Negative dy because upward swipe is negative
-            },
-            onPanResponderRelease,
-        })
-    }, [event?.id, activeWallet?.walletId, withFallbackZap]);
+    const color = zappedByUser || amountRef.current > 0 ? 'orange' : mutedColor;
 
     return (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }} {...panResponder.panHandlers}>
-            {/* <View style={{ flexDirection: "row", alignItems: "center" }}> */}
+        <View style={styles.container}>
             <TouchableOpacity
                 onPress={() => sendZapWithAmount(defaultZap.message, defaultZap.amount)}
-                style={[style, { flexDirection: 'row', alignItems: 'center', position: 'absolute' }]}>
-                <Zap strokeWidth={2} size={Math.min(24 + amount * 0.1, 72)} color={zappedByUser || amountRef.current > 0 ? 'orange' : mutedColor} />
-                {amount > 0 ? (
-                    <Animated.Text
-                        style={{
-                            fontSize: Math.min(16 + amount * 0.1, 72),
-                            color: colors.foreground,
-                            marginLeft: 10,
-                        }}>
-                        {nicelyFormattedMilliSatNumber(amount * 1000)}
-                    </Animated.Text>
-                ) : (
-                    <Text className="text-sm text-muted-foreground">{nicelyFormattedMilliSatNumber(totalZapped)}</Text>
-                )}
+                style={[style, styles.touchable]}>
+                <Lightning strokeWidth={2} size={32} stroke={color} />
+                <Text className="text-sm text-muted-foreground">{nicelyFormattedMilliSatNumber(totalZapped)}</Text>
             </TouchableOpacity>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    touchable: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        position: 'absolute',
+    }
+})

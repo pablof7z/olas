@@ -16,13 +16,12 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { myFollows } from "@/utils/myfollows";
 
 export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {
     const { userProfile } = useUserProfile(pubkey);
     return (
         <View className="flex-1 flex-col items-center gap-2">
-            <User.Avatar userProfile={userProfile} size={24} className="w-20 h-20" />
+            <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={100} />
             <Text className="text-xl font-bold">
                 <User.Name userProfile={userProfile} pubkey={pubkey} />
             </Text>

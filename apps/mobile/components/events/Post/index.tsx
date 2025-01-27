@@ -5,6 +5,7 @@ import {
 } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
@@ -17,41 +18,13 @@ import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
 import { MoreHorizontal, Repeat } from 'lucide-react-native';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import EventMediaContainer, { getImetas } from '@/components/media/event';
+import EventMediaContainer from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { getClientName } from '@/utils/event';
+import { useAppSettingsStore } from '@/stores/app';
 
-const WINDOW_WIDTH = Dimensions.get('window').width;
-
-const styles = StyleSheet.create({
-    image: {
-        width: WINDOW_WIDTH,
-        flex: 1,
-        aspectRatio: 1,
-    },
-    video: {
-        width: WINDOW_WIDTH,
-    },
-    container: {
-        flex: 1,
-        flexDirection: 'column',
-        flexGrow: 1,
-        minHeight: 240,
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        padding: 2,
-    },
-});
-
-export const MediaSection = function MediaSection({ event, priority, onPress }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void }) {
-    // const insets = useSafeAreaInsets();
-    // const maxHeight = Math.floor(Dimensions.get('window').height * 0.7 - insets.top - insets.bottom);
-    const maxHeight = Math.floor(Dimensions.get('window').width);
-
+export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     return <EventMediaContainer
         event={event}
         onPress={onPress}
@@ -78,11 +51,17 @@ export default function Post({ event, reposts, timestamp, onPress, index }: { in
         return 'low';
     }, [index])
 
+    const { forceSquareAspectRatio } = useAppSettingsStore();
+
+    const headerHeight = useHeaderHeight();
+    const screen = Dimensions.get('window');
+    const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width : ((screen.height * 0.8) - headerHeight));
+
     return (
         <View className="overflow-hidden border-b border-border py-2">
             <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
-            <MediaSection event={event} onPress={onPress} priority={priority} />
+            <MediaSection event={event} onPress={onPress} priority={priority} maxHeight={maxHeight} />
 
             <PostBottom event={event} trimmedContent={content} />
         </View>
@@ -127,7 +106,7 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
                         onPress={() => {
                             router.push(`/profile?pubkey=${event.pubkey}`);
                         }}>
-                        <User.Avatar userProfile={userProfile} />
+                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} />
                     </TouchableOpacity>
 
                     <View className="flex-col">
@@ -170,7 +149,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
     }, [event.id]);
     
     return (
-        <View className="flex-1 flex-col gap-1 p-2">
+        <View style={styles.postBottom}>
             <Reactions event={event} />
 
             {trimmedContent.length > 0 && (
@@ -182,15 +161,30 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 />
             )}
 
-            {tagsToRender.size > 0 && (
+            {/* {tagsToRender.size > 0 && (
                 <View className="flex-row flex-wrap gap-1">
                     <Text className="text-sm font-bold text-primary">
                         {`${Array.from(tagsToRender).map(t => `#${t}`).join(' ')}`}
                     </Text>
                 </View>
-            )}
+            )} */}
 
-            <InlinedComments event={event} />
+            {/* <InlinedComments event={event} /> */}
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    postBottom: {
+        flex: 1,
+        flexDirection: 'column',
+        gap: 10,
+        padding: 10,
+    },
+    profileContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: 2,
+    },
+});

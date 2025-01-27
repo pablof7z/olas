@@ -62,46 +62,44 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     advancedMode: false,
     defaultZap: defaultZapSetting,
     videosInFeed: 'from-follows',
-    forceSquareAspectRatio: true,
+    forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
 
     init: async () => {
-        const state: AppSettingsStoreState = {
+        const state: Partial<AppSettingsStoreState> = {
             seenNotificationsAt: 0,
             promptedForNotifications: false,
             advancedMode: false,
             defaultZap: defaultZapSetting,
             videosInFeed: 'from-follows',
-            forceSquareAspectRatio: true,
         };
 
-        const removeLocation = await SecureStore.getItemAsync('removeLocation');
+        const removeLocation = SecureStore.getItem('removeLocation');
         if (removeLocation) state.removeLocation = removeLocation === 'true';
 
-        const boost = await SecureStore.getItemAsync('boost');
+        const boost = SecureStore.getItem('boost');
         if (boost) state.boost = boost;
 
-        const seenNotificationsAt = await SecureStore.getItemAsync('seenNotificationsAt');
+        const seenNotificationsAt = SecureStore.getItem('seenNotificationsAt');
         if (seenNotificationsAt) state.seenNotificationsAt = parseInt(seenNotificationsAt);
 
-        const promptedForNotifications = await SecureStore.getItemAsync('promptedForNotifications');
+        const promptedForNotifications = SecureStore.getItem('promptedForNotifications');
         if (promptedForNotifications) state.promptedForNotifications = promptedForNotifications === 'true';
 
-        const advancedMode = await SecureStore.getItemAsync('advancedMode');
+        const advancedMode = SecureStore.getItem('advancedMode');
         if (advancedMode) state.advancedMode = advancedMode === 'true';
 
-        let defaultZapVal = await SecureStore.getItemAsync('defaultZap');
+        let defaultZapVal = SecureStore.getItem('defaultZap');
         if (defaultZapVal) {
             try { state.defaultZap = JSON.parse(defaultZapVal); } catch { }
         }
         state.defaultZap ??= defaultZapSetting;
 
-        const videosInFeed = await SecureStore.getItemAsync('videosInFeed');
+        const videosInFeed = SecureStore.getItem('videosInFeed');
         if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
 
-        const forceSquareAspectRatio = await SecureStore.getItemAsync('forceSquareAspectRatio');
-        if (forceSquareAspectRatio) state.forceSquareAspectRatio = forceSquareAspectRatio === 'true';
+        console.log('setting init state', state);
 
-        set(state);
+        set({ ...state });
     },
 
     setRemoveLocation: (removeLocation: boolean) => {
@@ -144,6 +142,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => {
         SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
+        console.log('setForceSquareAspectRatio', forceSquareAspectRatio);
         set({ forceSquareAspectRatio });
     },
 

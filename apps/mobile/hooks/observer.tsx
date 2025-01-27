@@ -53,7 +53,10 @@ export function useObserver(
                 return;
             }
             addedEventIds.add(tagId);
-            buffer.current.push(wrapEvent(event));
+            const wrappedEvent = wrapEvent(event);
+            if (wrappedEvent) {
+                buffer.current.push(wrappedEvent);
+            }
             if (!bufferTimeout.current) {
                 bufferTimeout.current = setTimeout(() => {
                     setEvents(prev => [...prev, ...buffer.current]);

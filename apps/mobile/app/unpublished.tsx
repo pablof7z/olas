@@ -33,6 +33,10 @@ const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, targe
                     toast.error('Error publishing event: ' + e.message);
                 }
             }}
+            onLongPress={() => {
+                console.log(JSON.stringify(entry.event.rawEvent(), null, 4));
+                console.log(`https://njump.me/${entry.event.encode()}`);
+            }}
             rightView={
                 <TouchableOpacity onPress={discard}>
                     <Text className="pr-4 text-primary">Discard</Text>

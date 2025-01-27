@@ -1,35 +1,60 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/nativewindui/Avatar';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Image, ImageProps, useImage } from 'expo-image';
+import { cn } from '@/lib/cn';
 
-interface AvatarProps extends Omit<React.ComponentProps<typeof Avatar>, 'alt'> {
-    size?: number;
+interface AvatarProps extends ImageProps {
+    pubkey: Hexpubkey;
     userProfile: NDKUserProfile | null;
-    alt?: string;
+    imageSize?: number;
 }
 
-const UserAvatar: React.FC<AvatarProps> = ({ size, userProfile, ...props }) => {
-    size ??= 64;
+const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 128, ...props }) => {
+    const size = 128;
+    imageSize ??= size / 3;
 
-    const proxiedImageUrl = useMemo(() => userProfile?.image && getProxiedImageUrl(userProfile.image, size), [userProfile?.image, size]);
+    const proxiedImageUrl: string | null = userProfile?.image ? getProxiedImageUrl(userProfile.image, size) : null;
 
-    return (
-        <View
-        // style={{
-        //     borderRadius: 9999,
-        //     borderWidth: hasKind20 ? 4 : 0,
-        //     borderColor: colors.accent,
-        // }}
-        >
-            <Avatar {...props}>
-                {userProfile?.image && <AvatarImage source={{ uri: proxiedImageUrl }} {...props} />}
-                <AvatarFallback>
-                    <Text className="text-foreground">...</Text>
-                </AvatarFallback>
-            </Avatar>
-        </View>
+    const imageSource = useImage({
+        uri: proxiedImageUrl,
+        width: size,
+        height: size,
+        cacheKey: pubkey,
+    })
+
+    if (!imageSource) {
+        const color = pubkey.slice(0, 6);
+        const styles = {
+            width: imageSize,
+            height: imageSize,
+            borderRadius: imageSize,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: `#${color}`,
+            ...(props.style as object || {})
+        }
+        return (<View
+            className={props.className}
+            style={styles}
+            >   
+                <Text className="text-foreground text-xl">{pubkey.slice(0, 2).toUpperCase()}</Text>
+            </View>
+        );
+    }
+
+    return (<View
+        style={{ width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden' }}
+    >
+        <Image
+            source={imageSource}
+            recyclingKey={pubkey}
+            style={{ width: imageSize, height: imageSize }}
+            className="flex-1"
+        />
+    </View>
     );
 };
 

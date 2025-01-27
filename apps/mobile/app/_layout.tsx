@@ -249,6 +249,7 @@ export default function RootLayout() {
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
     useEffect(() => {
+        console.log('initAppSettings');
         initAppSettings();
         
         // Configure push notifications

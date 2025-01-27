@@ -100,7 +100,7 @@ const Reel = memo(
                     <Reactions event={event} foregroundColor="white" mutedColor="white" />
                     
                     <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
-                        <User.Avatar userProfile={userProfile} alt="Profile image" className="h-8 w-8" />
+                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={24} />
                         <Text className="flex-col text-base font-semibold text-white">
                             <User.Name userProfile={userProfile} pubkey={event.pubkey} />
                             <Text>

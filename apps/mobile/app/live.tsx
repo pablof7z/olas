@@ -213,7 +213,7 @@ function ChatItem({ event }: { event: NDKEvent }) {
     }
     
     return <Pressable className="flex-row gap-2 flex-1 text-white my-1" onPress={onPress}>
-        <UserAvatar userProfile={userProfile} size={4} className="w-6 h-6" />
+        <UserAvatar pubkey={event.pubkey} userProfile={userProfile} className="w-6 h-6" />
         <EventContent event={event} className="text-white text-base" />
     </Pressable>
 }

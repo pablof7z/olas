@@ -1,7 +1,8 @@
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Platform, Pressable, Switch, View } from 'react-native';
 
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -10,7 +11,7 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router, Stack } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
-import { useMuteList, useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
 import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
@@ -18,6 +19,7 @@ import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Button } from '@/components/nativewindui/Button';
 import { humanWalletType } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 const relaysItem = {
     id: 'relays',
@@ -49,13 +51,23 @@ const devItem = {
     },
 };
 
+const emptyCache = {
+    id: 'cache-empty',
+    title: 'Empty content cache',
+    leftView: <IconView name="tray-arrow-up" className="bg-red-500" />,
+    onPress: () => {
+        Image.clearDiskCache();
+        Image.clearMemoryCache();
+        toast.success('Content cache cleared');
+    }
+}
+
 export default function SettingsIosStyleScreen() {
     const { ndk, logout } = useNDK();
     const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const defaultBlossomServer = useActiveBlossomServer();
-    const {muteList} = useMuteList();
     const wot = useWOT();
     const unpublishedEvents = useNDKUnpublishedEvents();
     const resetAppSettings = useAppSettingsStore(s => s.reset);
@@ -95,7 +107,7 @@ export default function SettingsIosStyleScreen() {
                     router.push(`/profile?pubkey=${currentUser.pubkey}`);
                 },
                 title: (<View className="flex-row gap-4 items-center">
-                    <User.Avatar userProfile={userProfile} size={24} />
+                    <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
                     <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} className="text-foreground text-lg font-medium" />
                 </View>
                 ),
@@ -192,14 +204,18 @@ export default function SettingsIosStyleScreen() {
             id: 'advanced',
             title: 'Advanced',
             subTitle: 'Settings for advanced users',
+            rightView: <Switch value={advancedMode} onValueChange={toggleAdvancedMode} />,
             onPress: toggleAdvancedMode
         })
-        if (advancedMode) opts.push(devItem);
+        if (advancedMode) {
+            opts.push(devItem);
+            opts.push(emptyCache);
+        }
 
         opts.push(`Version ${appVersion} (${buildVersion})`);
 
         return opts;
-    }, [currentUser, activeWallet?.walletId, muteList, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode]);
+    }, [currentUser, activeWallet?.walletId, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode]);
 
     return (
         <>

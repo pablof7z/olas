@@ -351,13 +351,13 @@ function ListSectionHeaderComponent<T extends ListDataItem>(
         return null;
     }
 
-    if (sectionHeaderAsGap) {
+    if (sectionHeaderAsGap || item.trim().length === 0) {
         return (
             <View
                 className={cn('bg-background', Platform.OS !== 'ios' && 'border-border/25 dark:border-border/80 border-b', className)}
                 {...props}
                 ref={ref}>
-                <View className="h-8" />
+                <View className="h-4" />
             </View>
         );
     }
