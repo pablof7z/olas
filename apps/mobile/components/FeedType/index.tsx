@@ -16,7 +16,6 @@ import { router } from "expo-router";
 import GroupsIcon from '@/components/icons/groups';
 import { FeedKind, FeedType } from "./store";
 import { useMyGroups } from "@/lib/groups/store";
-import { Search } from "lucide-react-native";
 
 function kindToSelectionIndex(kind: FeedKind) {
     if (kind === 'discover') return 0;
@@ -28,11 +27,6 @@ function kindToSelectionIndex(kind: FeedKind) {
 export default function FeedTypeList({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
     const { ndk } = useNDK();
     const [relays, setRelays] = useState<string[]>([]);
-
-    const search = useCallback(() => {
-        router.push('/search');
-        onSelect();
-    }, [onSelect])
 
     useEffect(() => {
         if (!ndk) return;
@@ -64,13 +58,7 @@ export default function FeedTypeList({ value, onSelect }: { value: FeedType, onS
                     }}
                     /> */}
                 </View>
-                
-                <Button variant="secondary" onPress={search} size="icon">
-                    <Search size={24} color={colors.foreground} />
-                </Button>
             </View>
-            
-            
 
             <Feeds value={value} onSelect={onSelect} />
             {/* {selectedIndex === 0 && <Feeds value={value} onSelect={onSelect} />} */}

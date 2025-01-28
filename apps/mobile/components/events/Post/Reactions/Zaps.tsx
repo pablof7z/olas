@@ -1,6 +1,5 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Lightning from '@/components/icons/lightning';
+import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
 import { NDKKind, NDKNutzap, NDKZapper, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
@@ -8,6 +7,8 @@ import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { usePaymentStore } from '@/stores/payments';
 import { useAppSettingsStore } from '@/stores/app';
+import { Zap } from 'lucide-react-native';
+import Lightning from '@/components/icons/lightning';
 
 const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
     if (!wallet) {
@@ -34,9 +35,8 @@ const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent,
     }
 }
 
-export default function Zaps({ event, style, mutedColor, currentUser, zaps }) {
+export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser }) {
     const { activeWallet } = useNDKWallet();
-    const amountRef = useRef(0);
     const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
     const allPending = usePaymentStore(s => s.pendingPayments);
     const pendingZaps = allPending.get(event.tagId()) || [];
@@ -45,60 +45,23 @@ export default function Zaps({ event, style, mutedColor, currentUser, zaps }) {
     const withFallbackZap = useMemo(() => {
         return !!(activeWallet instanceof NDKCashuWallet);
     }, [activeWallet?.walletId]);
-    
-    const { totalZapped, zappedByUser } = useMemo(() => {
-        let zappedByUser = false;
 
-        let totalZapped = zaps.reduce((acc, zap) => {
-            if (zap.kind === NDKKind.Nutzap) {
-                const nutzap = NDKNutzap.from(zap);
-                if (!nutzap) return acc;
-                if (nutzap.pubkey === currentUser?.pubkey) {
-                    zappedByUser = true;
-                }
-                let amountInMilliSats = nutzap.amount;
-
-                if (nutzap.unit.startsWith('sat')) {
-                    amountInMilliSats = nutzap.amount * 1000;
-                }
-
-                return acc + amountInMilliSats;
-            } else {
-                const invoice = zapInvoiceFromEvent(zap);
-                if (invoice.zappee === currentUser?.pubkey) {
-                    zappedByUser = true;
-                }
-                return acc + invoice.amount;
-            }
-        }, 0);
-
-        if (pendingZaps.length > 0) {
-            zappedByUser = true;
-            pendingZaps.forEach(pending => {
-                let amountInMilliSats = pending.zapper.amount;
-                if (pending.zapper.unit.startsWith('sat')) 
-                    amountInMilliSats = pending.zapper.amount * 1000;
-                totalZapped += amountInMilliSats;
-            })
-        }
-
-        return { totalZapped, zappedByUser, pendingZaps };
-    }, [zaps, pendingZaps.length]);
+    const pendingZapAmount = useMemo(() => pendingZaps.reduce((acc, zap) => zap.zapper.amount + acc, 0), [pendingZaps.length]);
 
     const sendZapWithAmount = useCallback((message: string, amount: number) => {
         sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
     }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
-    const color = zappedByUser || amountRef.current > 0 ? 'orange' : mutedColor;
+    const color = zappedByUser || pendingZapAmount > 0 ? 'orange' : inactiveColor;
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity
+            <Pressable
                 onPress={() => sendZapWithAmount(defaultZap.message, defaultZap.amount)}
-                style={[style, styles.touchable]}>
-                <Lightning strokeWidth={2} size={32} stroke={color} />
-                <Text className="text-sm text-muted-foreground">{nicelyFormattedMilliSatNumber(totalZapped)}</Text>
-            </TouchableOpacity>
+                style={styles.touchable}>
+                <Lightning size={24} stroke={color} />
+            </Pressable>
+            <Text style={[styles.text, { color: inactiveColor }]}>{nicelyFormattedMilliSatNumber(zappedAmount + pendingZapAmount)}</Text>
         </View>
     );
 }
@@ -107,10 +70,14 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 6
     },
     touchable: {
         flexDirection: 'row',
         alignItems: 'center',
-        position: 'absolute',
+    },
+    text: {
+        fontSize: 14,
+        fontWeight: 'semibold',
     }
 })

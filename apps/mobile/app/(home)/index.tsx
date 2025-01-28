@@ -12,7 +12,7 @@ import { Button } from '@/components/nativewindui/Button';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { router, Stack, useNavigation } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
-import { Calendar, ChevronDown, House, UserCircle2, X } from 'lucide-react-native';
+import { Calendar, ChevronDown, House, Search, UserCircle2, X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
@@ -465,14 +465,17 @@ function HomeTitle() {
         return feedType.value;
     }, [feedType]);
 
+    const search = useCallback(() => {
+        router.push('/search')
+    }, [])
+
     return (
-        <>
-            <Pressable style={{
-                flexDirection: 'row', alignItems: 'center', gap: 10,
-                maxWidth: 150,
-                paddingHorizontal: 10,
-                justifyContent: 'space-between',
-            }} onPress={showSheet}>
+        <View style={headerStyle.container}>
+            <Pressable style={headerStyle.searchButton} onPress={search}>
+                <Search size={24} color={colors.foreground} />
+            </Pressable>
+            
+            <Pressable style={headerStyle.button} onPress={showSheet}>
                 {group ? (
                     <>
                         <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
@@ -483,6 +486,21 @@ function HomeTitle() {
                 }
                 <ChevronDown size={16} color={colors.foreground} />
             </Pressable>
-        </>
+        </View>
     );  
 }
+
+const headerStyle = StyleSheet.create({
+    container: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+    },
+    searchButton: {
+        paddingHorizontal: 5,
+    },
+    button: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        maxWidth: 150,
+        paddingHorizontal: 10,
+        justifyContent: 'space-between',
+    }
+})

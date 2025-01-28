@@ -139,14 +139,14 @@ const onMentionPress = (pubkey: string) => {
 };
 
 function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
-    const tagsToRender = useMemo(() => {
-        const tags = new Set(event.getMatchingTags('t').map(t => t[1]));
-        // remove the tags that are already in the content
-        tags.forEach(tag => {
-            if (trimmedContent.match(new RegExp(`#${tag}`, 'i'))) tags.delete(tag);
-        });
-        return tags;
-    }, [event.id]);
+    // const tagsToRender = useMemo(() => {
+    //     const tags = new Set(event.getMatchingTags('t').map(t => t[1]));
+    //     // remove the tags that are already in the content
+    //     tags.forEach(tag => {
+    //         if (trimmedContent.match(new RegExp(`#${tag}`, 'i'))) tags.delete(tag);
+    //     });
+    //     return tags;
+    // }, [event.id]);
     
     return (
         <View style={styles.postBottom}>

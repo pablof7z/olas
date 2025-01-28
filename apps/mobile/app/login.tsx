@@ -4,7 +4,7 @@ import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dim
 import { CameraView } from 'expo-camera';
 import { Image } from 'react-native';
 import { router, useRouter } from 'expo-router';
-import { NDKEvent, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKPrivateKeySigner, NostrEvent, useNip55 } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
@@ -13,30 +13,66 @@ import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { NDKNip55Signer } from '@nostr-dev-kit/ndk-mobile';
 import { toast } from '@backpackapp-io/react-native-toast';
+import ImageCropPicker from 'react-native-image-crop-picker';
+import { prepareMedia } from '@/components/NewPost/prepare';
+import { uploadMedia } from '@/components/NewPost/upload';
 
-const avatarAtom = atom<string | undefined>(undefined);
+const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
 const modeAtom = atom<'login' | 'signup'>('login');
 
+export function LoginWithNip55Button() {
+    const {isAvailable, apps} = useNip55();
+    const { login } = useNDK();
+    
+    const loginWith = useCallback(async (packageName: string) => {
+        login('nip55 ' + packageName);
+    }, [])
+    
+    if (apps.length === 0) return null;
+
+    return <View style={styles.container}>
+        {apps.map((app, index) => (
+            <Button key={index} variant="primary" onPress={() => loginWith(app.packageName)}>
+                <Text>Login with {app.name}</Text>
+            </Button>
+        ))}
+    </View>
+}
+
 function AvatarChooser() {
     const username = useAtomValue(usernameAtom);
+    const [avatar, setAvatar] = useAtom(avatarAtom);
+    const chooseImage = useCallback(() => {
+        ImageCropPicker.openPicker({
+            width: 400,
+            height: 400,
+            cropping: true,
+            multiple: false,
+            mediaType: 'photo',
+            includeExif: false,
+        }).then((image) => {
+            console.log(image);
+            setAvatar(image.path);
+        });
+    }, []);
 
     return (
         <View className="relative h-24 w-28 flex-row gap-4">
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
-                    source={{ uri: 'https://kawaii-avatar.now.sh/api/avatar?username=' + username }}
+                    source={{ uri: avatar || 'https://kawaii-avatar.now.sh/api/avatar?username=' + username }}
                     className="h-full w-full rounded-full object-cover"
                 />
             </View>
 
-            {/* <Button
+            <Button
                 size="icon"
                 variant="accent"
-                className="absolute bottom-0 right-0 !rounded-full" onPress={() => {
-            }}>
+                className="absolute bottom-0 right-0 !rounded-full" onPress={chooseImage}
+            >
                 <Plus size={24} color="white" />
-            </Button> */}
+            </Button>
         </View>
     );
 }
@@ -45,17 +81,26 @@ function SignUp() {
     const [username, setUsername] = useAtom(usernameAtom);
     const { ndk, login } = useNDK();
     const setMode = useSetAtom(modeAtom);
-
+    const avatar = useAtomValue(avatarAtom);
     const createAccount = useCallback(async () => {
         const signer = NDKPrivateKeySigner.generate();
         const nsec = nip19.nsecEncode(signer._privateKey!);
         await login(nsec);
 
+        let imageUrl = 'https://kawaii-avatar.now.sh/api/avatar?username=' + username;
+
+        if (avatar) {
+            const media = await prepareMedia([{ uri: avatar, id: 'avatar', mediaType: 'photo', contentMode: 'square' }]);
+            const uploaded = await uploadMedia(media, ndk);
+            console.log(uploaded);
+            imageUrl = uploaded[0].uploadedUri;
+        }
+
         const event = new NDKEvent(ndk, {
             kind: 0,
             content: JSON.stringify({
                 name: username.replace(/^@/, ''),
-                image: 'https://kawaii-avatar.now.sh/api/avatar?username=' + username,
+                image: imageUrl,
             }),
             tags: [],
         } as NostrEvent);
@@ -127,6 +172,7 @@ export default function LoginScreen() {
     }, [currentUser]);
 
     const [scanQR, setScanQR] = useState(false);
+    const { isAvailable, apps } = useNip55();
 
     async function handleBarcodeScanned({ data }: { data: string }) {
         setPayload(data.trim());
@@ -194,6 +240,8 @@ export default function LoginScreen() {
                             <ArrowRight size={24} color="white" />
                         </Button>
 
+                        <LoginWithNip55Button />
+                        
                         {/* {Platform.OS === 'android' && (
                             <Button variant="accent" onPress={loginWithAmber}>
                                 <Text>Login with Amber</Text>

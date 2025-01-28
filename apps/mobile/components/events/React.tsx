@@ -1,8 +1,9 @@
 import { NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
 import { Heart } from "lucide-react-native";
 import { useCallback } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
+import { useReactionsStore } from "@/stores/reactions";
 
 type ReactProps = {
     /**
@@ -28,7 +29,7 @@ type ReactProps = {
     /**
      * Muted color
      */
-    mutedColor: string;
+    inactiveColor: string;
 
     /**
      * Icon size
@@ -38,35 +39,61 @@ type ReactProps = {
 
 export default function React({
     event,
-    mutedColor,
+    inactiveColor,
     iconSize = 24,
     reactionCount,
     reactedByUser,
     showReactionCount = true,
 }: ReactProps) {
+    const addRelatedEvent = useReactionsStore(s => s.addEvent);
+    
     const react = useCallback(async () => {
-        if (reactedByUser) return;
+        if (reactedByUser) {
+            console.log('already reacted');
+            return;
+        }
         
         const r = await event.react('+', false);
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
-        r.publish();
+
+        addRelatedEvent(r, true);
+        
+        r.publish()
+            .then((relays) => {
+                console.log('reacted', Array.from(relays).map(r => r.url).join(', '));
+            })
+            .catch(e => {
+                console.error(e);
+            });
     }, [event.id, reactedByUser]);
 
     return (
-        <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.container}>
             <TouchableOpacity onPress={react}>
                 <Heart
                     size={iconSize}
                     fill={reactedByUser ? 'red' : 'transparent'}
-                    color={reactedByUser ? 'red' : mutedColor}
+                    color={reactedByUser ? 'red' : inactiveColor}
                 />
             </TouchableOpacity>
             {showReactionCount && reactionCount > 0 && (
-                <Text className="text-sm font-medium" style={{ color: mutedColor }}>
+                <Text style={[styles.text, { color: inactiveColor }]}>
                     {reactionCount}
                 </Text>
             )}
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    text: {
+        fontSize: 14,
+        fontWeight: 'semibold',
+    }
+});

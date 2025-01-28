@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
-import { NDKEvent, NDKSubscriptionCacheUsage, useNDKCurrentUser, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { KeyboardAvoidingView, Platform, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { NDKEvent, NDKUser, useNDKCurrentUser, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
@@ -41,7 +41,6 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
     const { userProfile } = useUserProfile(item.pubkey);
     const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
     const { colors } = useColorScheme();
-    const currentUser = useNDKCurrentUser();
 
     const reactions = useObserver(
         [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
@@ -86,9 +85,7 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
                 event={item}
                 mutedColor={colors.muted}
                 iconSize={18}
-                allReactions={reactions}
                 showReactionCount={false}
-                currentUser={currentUser}
             />
         </View>
     );
@@ -103,8 +100,6 @@ export default function CommentScreen() {
         { kinds: [NDKKind.GenericReply], ...activeEvent.nip22Filter() },
     ], { groupable: false, closeOnEose: false, subId: 'comments' }, [ activeEvent.id]);
 
-    const [comment, setComment] = useState('');
-
     const filteredComments = useMemo(() => {
         const [tagKey, tagValue] = activeEvent.tagReference();
         return [
@@ -113,21 +108,8 @@ export default function CommentScreen() {
         ]
     }, [events]);
     const insets = useSafeAreaInsets();
-    const { colors } = useColorScheme();
 
     const currentUser = useNDKCurrentUser();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const [replyTo, setReplyTo] = useAtom<NDKEvent>(replyEventAtom);
-
-    const handleSend = useCallback(async () => {
-        const commentEvent = (replyTo || activeEvent).reply();
-        commentEvent.content = comment;
-        await commentEvent.sign();
-        commentEvent.publish();
-        setComment('');
-        setReplyTo(null);
-        console.log('comment sent', JSON.stringify(commentEvent.rawEvent(), null, 2));
-    }, [activeEvent, comment]);
 
     const style = useMemo(() => {
         const isAndroid = Platform.OS === 'android';
@@ -164,30 +146,49 @@ export default function CommentScreen() {
                         style={{ flex: 1, width: '100%'  }}
                     />
                     </View>
-                    <View
-                        style={[styles.inputContainer, { paddingBottom: insets.bottom }]}
-                        className="border-t border-border flex-row items-start"
-                    > 
-                        <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} />
-                        <TextInput
-                            style={styles.input}
-                            className="text-foreground"
-                            value={comment}
-                            onChangeText={setComment}
-                            placeholder="Type a message..."
-                            multiline
-                            returnKeyType="done"
-                        />
-                        <Button variant="plain" disabled={!comment.trim()} onPress={handleSend}>
-                            <Send size={20} color={colors.foreground} />
-                        </Button>
-                    </View>
+                    {currentUser && <NewComment event={activeEvent} currentUser={currentUser} />}
                 </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );
 }
 
+function NewComment({ event, currentUser }: { event: NDKEvent, currentUser: NDKUser }) {
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const { colors } = useColorScheme();
+    const [comment, setComment] = useState('');
+    const insets = useSafeAreaInsets();
+
+    const handleSend = useCallback(async () => {
+        const commentEvent = event.reply();
+        commentEvent.content = comment;
+        await commentEvent.sign();
+        commentEvent.publish();
+        setComment('');
+        console.log('comment sent', JSON.stringify(commentEvent.rawEvent(), null, 2));
+    }, [event.id, comment]);
+
+    return (
+        <View
+            style={[styles.inputContainer, { paddingBottom: insets.bottom }]}
+            className="border-t border-border flex-row items-start"
+        > 
+            <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} />
+            <TextInput
+                style={styles.input}
+                className="text-foreground"
+                value={comment}
+                onChangeText={setComment}
+                placeholder="Type a message..."
+                multiline
+                returnKeyType="done"
+            />
+            <Button variant="plain" disabled={!comment.trim()} onPress={handleSend}>
+                <Send size={20} color={colors.foreground} />
+            </Button>
+        </View>
+    )
+}
 
 const styles = StyleSheet.create({
     container: {

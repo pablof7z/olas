@@ -97,7 +97,7 @@ export default function TabsLayout() {
                     title: 'Wallets',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} stroke={color} fill={color} />
+                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={color} />
                     ),
                 }}
             />
@@ -110,6 +110,16 @@ export default function TabsLayout() {
                     tabBarIcon: ({ color, focused }) => (
                         <UserButton />
                     )
+                }}
+                listeners={{
+                    tabPress: (e) => {
+                        e.preventDefault();
+                        if (!currentUser) {
+                            router.push('/login');
+                        } else {
+                            router.push('/(home)/(settings)');
+                        }
+                    }
                 }}
             />
         </Tabs>

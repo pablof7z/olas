@@ -35,7 +35,7 @@ export default function SettingsIosStyleScreen() {
                 title: (
                     <View className="flex-1 flex-row items-center justify-center">
                         <Text numberOfLines={1} variant="body" className="font-mono">
-                            {nsec ?? 'no key'}
+                            {nsec ? '*************************************' : 'no key'}
                         </Text>
                     </View>
                 ),

@@ -8,96 +8,68 @@ import { View, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import Zaps from './Reactions/Zaps';
 import Bookmark from './Bookmark';
-import { useObserver } from '@/hooks/observer';
 import EventContent from '@/components/ui/event/content';
+import { DEFAULT_STATS, useReactionsStore } from '@/stores/reactions';
+import { useObserver } from '@/hooks/observer';
 
 export function Reactions({
     event,
     foregroundColor,
-    mutedColor,
+    inactiveColor,
 }: {
     event: NDKEvent;
     foregroundColor?: string;
-    mutedColor?: string;
+    inactiveColor?: string;
 }) {
-    const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const allEvents = useObserver([ event.filter() ], [event.id])
-
-    const { reactionCount, reactedByUser, commentCount, commentedByUser, zapEvents, bookmarkedByUser } = useMemo(() => {
-        let reactions = new Set();
-        let reactedByUser = false;
-        let commentCount = 0;
-        let commentedByUser = false;
-        let zapEvents = [];
-        let bookmarkedByUser = false;
-        for (const e of allEvents) {
-            switch (e.kind) {
-                case NDKKind.Reaction:
-                    reactions.add(e.pubkey);
-                    if (e.pubkey === currentUser?.pubkey) reactedByUser = true;
-                    break;
-                case NDKKind.Text:
-                case NDKKind.GenericReply:
-                    commentCount++;
-                    if (e.pubkey === currentUser?.pubkey) commentedByUser = true;
-                    break;
-                case NDKKind.Nutzap:
-                case NDKKind.Zap:
-                    zapEvents.push(e);
-                    break;
-                case 3006:
-                    bookmarkedByUser = e.pubkey === currentUser?.pubkey;
-                    break;
-            }
-        }
-        return {
-            reactionCount: reactions.size,
-            reactedByUser,
-            commentCount,
-            commentedByUser,
-            zapEvents,
-            bookmarkedByUser
-        };
-    }, [allEvents.length, currentUser?.pubkey])
-
-    mutedColor ??= colors.muted;
+    const reactions = useReactionsStore(state => state.reactions);
+    const {
+        reactionCount,
+        reactedByUser,
+        commentCount,
+        commentedByUser,
+        zappedAmount,
+        zappedByUser,
+        bookmarkedByUser
+    } = useMemo(() => reactions.get(event.id) ?? DEFAULT_STATS, [reactions, event.id]);
+    
+    inactiveColor ??= colors.foreground;
     foregroundColor ??= colors.foreground;
 
     return (
-        <View style={styles.container}>
+        // <View style={styles.container}>
             <View style={styles.group}>
                 <React
                     event={event}
-                    mutedColor={mutedColor}
+                    inactiveColor={inactiveColor}
                     reactedByUser={reactedByUser}
                     reactionCount={reactionCount}
                 />
 
                 <Comment
                     event={event}
-                    mutedColor={mutedColor}
+                    inactiveColor={inactiveColor}
                     foregroundColor={foregroundColor}
                     commentedByUser={commentedByUser}
                     commentCount={commentCount}
                 />
 
                 <Zaps
-                    currentUser={currentUser}
                     event={event}
-                    zaps={zapEvents}
-                    mutedColor={mutedColor} />
+                    inactiveColor={inactiveColor}
+                    zappedAmount={zappedAmount}
+                    zappedByUser={zappedByUser}
+                />
             </View>
 
-            <Bookmark
-                event={event}
-                mutedColor={mutedColor}
-                bookmarkedByUser={bookmarkedByUser}
-            />
-        </View>
+        //     <Bookmark
+        //         event={event}
+        //         inactiveColor={inactiveColor}
+        //         bookmarkedByUser={bookmarkedByUser}
+        //     />
+        // </View>
     );
 }
 

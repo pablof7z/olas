@@ -4,17 +4,10 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { activeEventAtom } from '@/stores/event';
 import { useSetAtom } from 'jotai';
 import { router } from 'expo-router';
-import { useObserver } from '@/hooks/observer';
 import { Text } from '@/components/nativewindui/Text';
 
-export default function Comment({ event, mutedColor, foregroundColor, iconSize = 24, commentedByUser, commentCount }: { event: NDKEvent, mutedColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
-    const start = performance.now();
+export default function Comment({ event, inactiveColor, foregroundColor, iconSize = 24, commentedByUser, commentCount }: { event: NDKEvent, inactiveColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
     const setActiveEvent = useSetAtom(activeEventAtom);
-
-    const allComments = useObserver([
-        { kinds: [NDKKind.Text], ...event.filter() },
-        { kinds: [NDKKind.GenericReply], ...event.nip22Filter() },
-    ], [event.id])
 
     const comment = () => {
         setActiveEvent(event);
@@ -22,12 +15,12 @@ export default function Comment({ event, mutedColor, foregroundColor, iconSize =
     };
 
     return (
-        <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity style={styles.reactionButton} onPress={comment}>
-                <MessageCircle size={iconSize} color={commentedByUser ? foregroundColor : mutedColor} />
+        <View style={styles.container}>
+            <TouchableOpacity onPress={comment}>
+                <MessageCircle size={iconSize} color={commentedByUser ? foregroundColor : inactiveColor} />
             </TouchableOpacity>
             {commentCount > 0 && (
-                <Text className="text-sm font-medium" style={{ color: mutedColor }}>
+                <Text style={[styles.text, { color: inactiveColor }]}>
                     {commentCount}
                 </Text>
             )}
@@ -36,9 +29,13 @@ export default function Comment({ event, mutedColor, foregroundColor, iconSize =
 }
 
 const styles = StyleSheet.create({
-    reactionButton: {
+    container: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
+        gap: 10,
     },
+    text: {
+        fontSize: 14,
+        fontWeight: 'semibold',
+    }
 });

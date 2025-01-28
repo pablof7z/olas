@@ -1,8 +1,8 @@
 import { relayNoticesAtom } from '@/stores/relays';
 import { useLocalSearchParams } from 'expo-router';
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
-import { FlatList, View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { FlatList, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { List, ListItem } from '@/components/nativewindui/List';
@@ -10,6 +10,7 @@ import { List, ListItem } from '@/components/nativewindui/List';
 type Row = {
     id: string;
     filters: NDKFilter[];
+    rawFilters: NDKFilter[];
     count: number;
 };
 
@@ -25,6 +26,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string; ndk: NDK }) {
         const row = {
             id: id,
             filters: subscriptions.flatMap((s) => s.executeFilters),
+            rawFilters: subscriptions.flatMap((s) => s.executeFilters),
             count: subscriptions.length,
         };
 
@@ -59,6 +61,10 @@ export default function RelayScreen() {
 
     const subsData = subscriptions({ relayUrl, ndk });
 
+    const show = useCallback((filters: NDKFilter[]) => {
+        console.log(JSON.stringify(filters, null, 4));
+    }, []);
+
     return (
         <View className="flex-1">
             <Text>
@@ -77,13 +83,15 @@ export default function RelayScreen() {
                             title: item.id,
                             badge: item.count,
                         }}>
-                        <View className="flex-col">
-                            {item.filters.map((filter, index) => (
-                                <Text key={index} className="font-mono">
-                                    {JSON.stringify(filter)}
-                                </Text>
-                            ))}
-                        </View>
+                        <TouchableOpacity onPress={() => show(item.rawFilters)}>
+                            <View className="flex-col">
+                                {item.filters.map((filter, index) => (
+                                    <Text key={index} className="font-mono">
+                                        {JSON.stringify(filter)}
+                                    </Text>
+                                ))}
+                            </View>
+                        </TouchableOpacity>
                     </ListItem>
                 )}
             />

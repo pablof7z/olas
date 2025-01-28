@@ -1,5 +1,6 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
+import { useReactionsStore } from "@/stores/reactions";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -334,6 +335,8 @@ export function useFeedMonitor(
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const activeSlices = useRef<Slice[]>([]);
     const eventsRef = useRef<Map<NDKEventId, NDKEvent>>(new Map());
+    const currentUser = useNDKCurrentUser();
+    const addRelatedEvent = useReactionsStore(s => s.addEvent);
 
     const sliceToFilter = (slice: Slice): NDKFilter => {
         const filters: Record<string, string[]> = {};
@@ -354,13 +357,16 @@ export function useFeedMonitor(
 
     const addSlice = (slice: Slice) => {
         const filters = sliceToFilter(slice);
+        console.log('adding slice', slice.start, slice.end, filters);
         slice.sub = ndk.subscribe(filters, {
             cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
             closeOnEose: false,
             groupable: false,
             skipVerification: true,
             subId: `feed-${slice.start}2${slice.end}`
-        }, undefined);
+        }, undefined, {
+            onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey)
+        });
         activeSlices.current.push(slice);
     }
 
@@ -394,6 +400,7 @@ export function useFeedMonitor(
             const exists = activeSlices.current.find(slice => slice.start === neededSlice.start);
 
             if (!exists) addSlice(neededSlice)
+            else console.log('slice already exists', neededSlice.start)
         }
     }, [activeIndex]);
     

@@ -2,3 +2,6 @@
 	path = packages/ndk
 	url = https://github.com/nostr-dev-kit/ndk
 	branch = master
+[submodule "packages/expo-nip55"]
+	path = packages/expo-nip55
+	url = https://github.com/pablof7z/expo-nip55

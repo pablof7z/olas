@@ -64,7 +64,7 @@ const settingsStore = {
 const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
     const url = new URL(relay.url);
     if (direction === 'send' && relay.url.match(/olas/)) console.log('👉', url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && relay.url.match(/olas/i)) console.log('👈', url.hostname, msg.slice(0, 400));
+    // if (direction === 'recv' && relay.url.match(/olas/i)) console.log('👈', url.hostname, msg.slice(0, 400));
 };
 
 let timeSinceFirstRender = undefined;
@@ -218,7 +218,7 @@ export default function RootLayout() {
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            // netDebug,
+            netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,

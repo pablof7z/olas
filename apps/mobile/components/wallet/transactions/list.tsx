@@ -3,7 +3,6 @@ import { useNDKWallet, NDKKind, useSubscribe, NDKEvent, NDKZapSplit, NDKPaymentC
 import { NDKCashuDeposit, NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import HistoryItem from "./item";
 import { router } from "expo-router";
-import { List } from "@/components/nativewindui/List";
 import React, { useMemo, useRef, useEffect } from "react";
 import { FlatList, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -106,6 +105,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
                         wallet={wallet}
                         item={item}
                         index={index}
+                        target={target}
                         onPress={() => onItemPress(item)}
                     />
                 )}

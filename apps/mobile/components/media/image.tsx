@@ -98,9 +98,6 @@ export default function ImageComponent({
                 source={imageSource}
                 contentFit="cover"
                 recyclingKey={url}
-                onProgress={(r) => {
-                    console.log('onProgress', r.loaded, r.total)
-                }}
                 // onLoadStart={() => {
                 //     console.log('onLoadStart', cacheKey)
                 // }}
@@ -109,10 +106,7 @@ export default function ImageComponent({
                     try {
                         if (!imageSource) return;
                         const { width, height} = imageSource;
-                        knownImageDimensions[url] = { width, height }
-                        if (url.match(/dfd5c029815af6cbcc50b8e9acb3010716e9d54e8beb2efae42301c93c900c9e/)) {
-                            console.log('onLoadEnd', url, { width, height })
-                        }
+                        knownImageDimensions[url] = calcDimensions({ width, height }, maxDimensions);
                     } catch (e) {
                         console.error(e);
                     }

@@ -9,12 +9,10 @@ import { ImageStyle } from 'expo-image';
 
 import { router } from 'expo-router';
 import { Text } from '../nativewindui/Text';
-import { Slider } from '../nativewindui/Slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { editImageAtom, editCallbackAtom } from '@/app/edit';
 import { useSetAtom } from 'jotai';
-import { BlurView } from 'expo-blur';
 import { Edit2 } from 'lucide-react-native';
 
 export type MediaLibraryItem = {
@@ -26,7 +24,7 @@ export type MediaLibraryItem = {
     uploadedUri?: string;
     uploadedSha256?: string;
     blurhash?: string;
-    contentMode: 'portrait' | 'landscape';
+    contentMode: 'portrait' | 'landscape' | 'square';
     duration?: number;
 
     /**

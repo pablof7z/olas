@@ -49,7 +49,7 @@ const Zapper = ({ pubkey, timestamp }: { pubkey: string, timestamp: number }) =>
     const { userProfile } = useUserProfile(pubkey);
     return (
         <View className="flex-col gap-0">
-            <Text className="text-lg font-medium text-foreground">{userProfile?.name}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" className="text-lg font-medium text-foreground">{userProfile?.name || userProfile?.displayName}</Text>
             <RelativeTime className="text-xs text-muted-foreground" timestamp={timestamp} />
             {/* <Text className="text-xs text-muted-foreground">Nutzap</Text> */}
         </View>

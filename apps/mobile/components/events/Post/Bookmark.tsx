@@ -1,7 +1,7 @@
 import { NDKKind, NDKEvent, NDKUser, NostrEvent } from "@nostr-dev-kit/ndk-mobile";
 import { Bookmark } from "lucide-react-native";
 import { useCallback, useMemo } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useObserver } from "@/hooks/observer";
 
@@ -54,14 +54,22 @@ export default function BookmarkButton({
     bookmarkRenderCost += end - start;
     
     return (
-        <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={bookmark}>
+        <View style={styles.container}>
+            {/* <TouchableOpacity onPress={bookmark}>
                 <Bookmark
                     size={iconSize}
                     fill={bookmarkedByUser ? 'red' : 'transparent'}
                     color={bookmarkedByUser ? 'red' : mutedColor}
                 />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+});
