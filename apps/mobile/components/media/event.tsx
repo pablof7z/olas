@@ -1,5 +1,5 @@
 import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, ScrollView, StyleProp, View, ViewStyle } from 'react-native';
+import { Dimensions, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import MediaComponent from './media';
 
@@ -7,8 +7,11 @@ export type EventMediaProps = {
     event: NDKEvent;
     muted?: boolean;
     width?: number;
+    height?: number;
     className?: string;
     singleMode?: boolean;
+    forceProxy?: boolean;
+    contentFit?: 'contain' | 'cover';
     style?: StyleProp<ViewStyle>;
     priority?: 'low' | 'normal' | 'high',
     maxWidth?: number;
@@ -17,34 +20,53 @@ export type EventMediaProps = {
     onLongPress?: () => void;
 };
 
+export type EventMediaGridContainerProps = {
+    event: NDKEvent;
+    index: number;
+    forceProxy?: boolean;
+    onPress: () => void;
+    onLongPress: () => void;
+    size?: number;
+} & Partial<View>;
+
 export function EventMediaGridContainer({
     event,
     index,
     onPress,
+    forceProxy,
     onLongPress,
     size,
     ...props
-}: { event: NDKEvent; index: number; onPress: () => void; onLongPress: () => void; size?: number } & Partial<View>) {
+}: EventMediaGridContainerProps) {
     size ??= Dimensions.get('window').width / 3;
 
     return (
         <EventMediaContainer
             event={event}
             onPress={onPress}
+            forceProxy={forceProxy}
             onLongPress={onLongPress}
-            className="flex-1 flex-col items-stretch justify-stretch"
-            style={{
+            style={[styles.mediaGridContainer, {
                 marginHorizontal: index % 3 === 1 ? 1 : 0,
-                marginBottom: 1,
-                overflow: 'hidden',
-            }}
+            }]}
             singleMode
-            maxHeight={size}
-            maxWidth={index % 3 === 1 ? size - 1 : size}
+            width={size}
+            height={size}
             {...props}
         />
     );
 }
+
+const styles = StyleSheet.create({
+    mediaGridContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        marginBottom: 1,
+    }
+});
 
 export default function EventMediaContainer({
     event,
@@ -52,7 +74,10 @@ export default function EventMediaContainer({
     className,
     muted,
     singleMode,
+    height,
+    forceProxy,
     maxWidth,
+    contentFit,
     maxHeight,
     priority,
     onPress,
@@ -73,6 +98,10 @@ export default function EventMediaContainer({
         return (
             <MediaComponent
                 imeta={imetas[0]}
+                width={width}
+                height={height}
+                contentFit={contentFit}
+                forceProxy={true}
                 maxWidth={maxWidth}
                 maxHeight={maxHeight}
                 priority={priority}

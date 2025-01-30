@@ -8,7 +8,7 @@ import { NDKEvent, NDKPrivateKeySigner, NostrEvent, useNip55 } from '@nostr-dev-
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
-import { ArrowRight, Plus, QrCode } from 'lucide-react-native';
+import { ArrowRight, Camera, Plus, QrCode } from 'lucide-react-native';
 import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { NDKNip55Signer } from '@nostr-dev-kit/ndk-mobile';
@@ -19,10 +19,10 @@ import { uploadMedia } from '@/components/NewPost/upload';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
-const modeAtom = atom<'login' | 'signup'>('login');
+const modeAtom = atom<'login' | 'signup'>('signup');
 
 export function LoginWithNip55Button() {
-    const {isAvailable, apps} = useNip55();
+    const {apps} = useNip55();
     const { login } = useNDK();
     
     const loginWith = useCallback(async (packageName: string) => {
@@ -52,13 +52,33 @@ function AvatarChooser() {
             mediaType: 'photo',
             includeExif: false,
         }).then((image) => {
-            console.log(image);
+            setAvatar(image.path);
+        });
+    }, []);
+
+    const openCamera = useCallback(() => {
+        ImageCropPicker.openCamera({
+            width: 400,
+            height: 400,
+            cropping: true,
+            multiple: false,
+            mediaType: 'photo',
+            includeExif: false,
+        }).then((image) => {
             setAvatar(image.path);
         });
     }, []);
 
     return (
-        <View className="relative h-24 w-28 flex-row gap-4">
+        <View className="h-24 w-28 flex-row gap-4 items-center justify-center">
+            <Button
+                size="icon"
+                variant="accent"
+                className="!rounded-full" onPress={openCamera}
+            >
+                <Camera size={24} color="white" />
+            </Button>
+            
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
                     source={{ uri: avatar || 'https://kawaii-avatar.now.sh/api/avatar?username=' + username }}
@@ -69,7 +89,7 @@ function AvatarChooser() {
             <Button
                 size="icon"
                 variant="accent"
-                className="absolute bottom-0 right-0 !rounded-full" onPress={chooseImage}
+                className="!rounded-full" onPress={chooseImage}
             >
                 <Plus size={24} color="white" />
             </Button>
@@ -92,7 +112,6 @@ function SignUp() {
         if (avatar) {
             const media = await prepareMedia([{ uri: avatar, id: 'avatar', mediaType: 'photo', contentMode: 'square' }]);
             const uploaded = await uploadMedia(media, ndk);
-            console.log(uploaded);
             imageUrl = uploaded[0].uploadedUri;
         }
 

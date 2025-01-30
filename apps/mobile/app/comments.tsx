@@ -41,7 +41,7 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
     const { userProfile } = useUserProfile(item.pubkey);
     const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
     const { colors } = useColorScheme();
-
+    const currentUser = useNDKCurrentUser();
     const reactions = useObserver(
         [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
         [item.id]
@@ -83,7 +83,9 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
 
             <React
                 event={item}
-                mutedColor={colors.muted}
+                inactiveColor={colors.foreground}
+                reactionCount={reactions.length}
+                reactedByUser={reactions.some(r => r.pubkey === currentUser?.pubkey)}
                 iconSize={18}
                 showReactionCount={false}
             />
@@ -158,15 +160,16 @@ function NewComment({ event, currentUser }: { event: NDKEvent, currentUser: NDKU
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();
+    const replyEvent = useAtomValue<NDKEvent>(replyEventAtom);
 
     const handleSend = useCallback(async () => {
-        const commentEvent = event.reply();
+        const commentEvent = (replyEvent || event).reply();
         commentEvent.content = comment;
         await commentEvent.sign();
         commentEvent.publish();
         setComment('');
         console.log('comment sent', JSON.stringify(commentEvent.rawEvent(), null, 2));
-    }, [event.id, comment]);
+    }, [event.id, comment, replyEvent]);
 
     return (
         <View

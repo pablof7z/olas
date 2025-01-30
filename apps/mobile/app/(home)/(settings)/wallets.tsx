@@ -1,7 +1,8 @@
 import { NDKCashuMintList, NDKKind, useNDK, useNDKCurrentUser, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { Image } from 'react-native';
 import { Icon } from '@roninoss/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -14,6 +15,7 @@ import { router } from 'expo-router';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { createNip60Wallet } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
+import Primal from './primal';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
@@ -49,6 +51,14 @@ export default function WalletsScreen() {
         });
     }, [ndk, wallets.length, mintList?.[0]?.id]);
 
+    const [primalSupported, setPrimalSupported] = useState(false);
+
+    useEffect(() => {
+        Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
+            setPrimalSupported(supported);
+        });
+    }, []);
+
     const data = useMemo(() => {
         if (!ndk) return [];
 
@@ -74,7 +84,7 @@ export default function WalletsScreen() {
         options.push({
             id: 'nip60',
             title: 'Nostr-Native Wallet',
-            leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
+            leftView: <IconView name="lightning-bolt" className="bg-orange-500 w-11 h-11 rounded-lg" />,
             subTitle: 'Create a new NIP-60 wallet',
             disabled: true,
             onPress: () => {
@@ -87,15 +97,27 @@ export default function WalletsScreen() {
         options.push({
             id: 'nwc',
             title: 'Nostr Wallet Connect',
-            leftView: <IconView name="link" className="bg-gray-500" />,
+            leftView: <IconView name="link" className="bg-gray-500 w-11 h-11 rounded-lg" />,
             subTitle: 'Connect to a Nostr Wallet',
             onPress: () => {
                 router.push('/(home)/(settings)/nwc');
             },
         });
 
+        if (primalSupported) {
+            options.push({
+                id: 'primal',
+                title: 'Connect Primal Wallet',
+                leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                subTitle: 'Connect to a Nostr Wallet',
+                onPress: () => {
+                    Linking.openURL('nostrnwc+primal://connect?appicon=https://olas.app/logo.png&appname=Olas&callback=olas://nwc');
+                },
+            });
+        }
+
         return options;
-    }, [searchText, loadedWallets, 3]);
+    }, [searchText, loadedWallets, primalSupported]);
 
     function save() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));

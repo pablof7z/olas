@@ -16,7 +16,7 @@ interface EventContentProps {
 
 function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtagPress?: false | ((hashtag: string) => void) }) {
     if (onHashtagPress !== false) {
-        onHashtagPress ??= () => router.push(`/search?q=${encodeURIComponent('#' + hashtag)}`);
+        onHashtagPress ??= () => router.replace(`/search?q=${encodeURIComponent('#' + hashtag)}`);
     }
 
     if (onHashtagPress) {

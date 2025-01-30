@@ -10,6 +10,7 @@ import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
 import { useNewPost } from '@/hooks/useNewPost';
+import { Linking } from 'react-native';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -74,19 +75,15 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            router.push('/publish');
-                            // if (postTypeSelectorSheetRef.current) {
-                            //     postTypeSelectorSheetRef.current.present();
-                            // } else {
                             newPost({ types: ['images', 'videos'] });
-                            // }
+                            router.push('/(publish)');
                         }
                     },
                 }}
                 options={{
                     title: 'Publish',
                     tabBarIcon: ({ color, focused }) => (
-                        <NewIcon width={24} height={24} strokeWidth={2.5} style={{ color: color }} />
+                        <NewIcon width={24} height={24} strokeWidth={2.5} style={{ color }} />
                     ),
                 }}
             />
@@ -97,7 +94,7 @@ export default function TabsLayout() {
                     title: 'Wallets',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={color} />
+                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={"transparent"}  stroke={color} />
                     ),
                 }}
             />

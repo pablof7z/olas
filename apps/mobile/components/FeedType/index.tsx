@@ -1,4 +1,4 @@
-import { useFollows, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { useFollows, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import { Button } from "../nativewindui/Button";
@@ -221,21 +221,26 @@ function Hashtags({ value, onSelect }: { value: FeedType, onSelect: (value?: Fee
 
 function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
     const { colors } = useColorScheme();
+    const currentUser = useNDKCurrentUser();
 
     const data = useMemo(() => {
         const v = [];
 
-        v.push(...[{
-            title: 'Follows', subTitle: 'Posts from people you follow', onPress: () => onSelect({ kind: 'discover', value: 'follows' }),
-            leftView: <IconView className="bg-yellow-500" size={35}>
-                    <Follows stroke={colors.foreground} size={24} />
+        if (currentUser) {
+            v.push({
+                title: 'Follows', subTitle: 'Posts from people you follow', onPress: () => onSelect({ kind: 'discover', value: 'follows' }),
+                leftView: <IconView className="bg-purple-500" size={35}>
+                    <Follows stroke={"white"} size={24} />
                 </IconView>,
                 value: 'follows'
-            },
+            })
+        }
+
+        v.push(...[
             {
                 title: 'For You', subTitle: 'Posts from people your network', onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
                 leftView: <IconView className="bg-blue-500" size={35}>
-                    <ForYou stroke={colors.foreground} size={24} />
+                    <ForYou stroke={"white"} size={24} />
                 </IconView>,
                 value: 'for-you'
             },
@@ -268,8 +273,8 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
         ]);
 
         return v;
-    }, []);
-    
+    }, [currentUser?.pubkey]);
+
     return (<List
         variant="full-width"
         data={data}

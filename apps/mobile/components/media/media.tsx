@@ -8,10 +8,14 @@ import { useMemo } from 'react';
 export default function MediaComponent({
     imeta,
     className,
+    forceProxy,
     maxWidth,
     maxHeight,
     priority,
     onPress,
+    width,
+    contentFit,
+    height,
     onLongPress,
     muted,
     style,
@@ -22,7 +26,11 @@ export default function MediaComponent({
     maxHeight?: number;
     priority?: 'low' | 'normal' | 'high',
     onPress?: () => void;
+    forceProxy?: boolean;
     onLongPress?: () => void;
+    width?: number;
+    height?: number;
+    contentFit?: 'contain' | 'cover';
     muted?: boolean;
     className?: string;
     style?: StyleProp<ViewStyle>;
@@ -59,6 +67,8 @@ export default function MediaComponent({
         );
     }
 
+    const forceDimensions= width && height ? { width, height } : undefined;
+
     return (
         <ImageComponent
             url={url}
@@ -66,7 +76,10 @@ export default function MediaComponent({
             dimensions={dimensions}
             maxDimensions={{ width: maxWidth, height: maxHeight }}
             priority={priority}
+            forceDimensions={forceDimensions}
+            forceProxy={forceProxy}
             onPress={onPress}
+            contentFit={contentFit}
             onLongPress={onLongPress}
             className={className}
             style={style}

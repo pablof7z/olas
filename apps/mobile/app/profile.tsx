@@ -16,7 +16,6 @@ import { useSetAtom } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
 import EventContent from '@/components/ui/event/content';
 import { Check, Copy } from 'lucide-react-native';
-import { toast } from '@backpackapp-io/react-native-toast';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {

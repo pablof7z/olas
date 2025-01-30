@@ -13,6 +13,7 @@ import Bookmark from './Bookmark';
 import EventContent from '@/components/ui/event/content';
 import { DEFAULT_STATS, useReactionsStore } from '@/stores/reactions';
 import { useObserver } from '@/hooks/observer';
+import Repost from '../Repost';
 
 export function Reactions({
     event,
@@ -30,6 +31,8 @@ export function Reactions({
         reactedByUser,
         commentCount,
         commentedByUser,
+        repostCount,
+        repostedByUser,
         zappedAmount,
         zappedByUser,
         bookmarkedByUser
@@ -46,6 +49,7 @@ export function Reactions({
                     inactiveColor={inactiveColor}
                     reactedByUser={reactedByUser}
                     reactionCount={reactionCount}
+                    iconSize={28}
                 />
 
                 <Comment
@@ -54,6 +58,16 @@ export function Reactions({
                     foregroundColor={foregroundColor}
                     commentedByUser={commentedByUser}
                     commentCount={commentCount}
+                    iconSize={28}
+                />
+            
+                <Repost
+                    event={event}
+                    inactiveColor={inactiveColor}
+                    activeColor={foregroundColor}
+                    repostedByUser={repostedByUser}
+                    repostCount={repostCount}
+                    iconSize={28}
                 />
 
                 <Zaps
@@ -61,6 +75,7 @@ export function Reactions({
                     inactiveColor={inactiveColor}
                     zappedAmount={zappedAmount}
                     zappedByUser={zappedByUser}
+                    iconSize={28}
                 />
             </View>
 

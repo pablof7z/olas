@@ -1,8 +1,6 @@
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { ComponentProps, useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, View, ViewStyle } from 'react-native';
-import ViewShot from 'react-native-view-shot';
-import * as FileSystem from 'expo-file-system';
 import { Image } from 'react-native';
 import { Location, selectedMediaAtom } from './store';
 import { ImageStyle } from 'expo-image';
@@ -11,13 +9,17 @@ import { router } from 'expo-router';
 import { Text } from '../nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { editImageAtom, editCallbackAtom } from '@/app/edit';
-import { useSetAtom } from 'jotai';
-import { Edit2 } from 'lucide-react-native';
+import { Edit2, Undo } from 'lucide-react-native';
+import useEditImage from '../edit/hook';
+import { useAtom } from 'jotai';
+import { useEditImageStore } from '../edit/store';
+import EditImageTool from '../edit/screen';
+import { editIndexAtom } from '@/app/(publish)';
 
-export type MediaLibraryItem = {
+export type PostMedia = {
     id: string;
-    uri: string;
+    originalUri: string;
+    editedUri?: string;
     mediaType: 'photo' | 'video';
     mimeType?: string;
     sha256?: string;
@@ -45,15 +47,15 @@ export function MediaPreview({
     maxWidth,
     maxHeight
 }: {
-    assets: MediaLibraryItem[];
+    assets: PostMedia[];
     style?: ImageStyle;
     withEdit?: boolean;
     maxWidth?: number;
     maxHeight?: number;
 }) {
     const multiple = assets.length > 1;
-    const size = maxWidth ?? Dimensions.get('screen').width;
-    const setSelectedMedia = useSetAtom(selectedMediaAtom);
+    const size = Dimensions.get('screen').width * 1.5;
+    // const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
 
     const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => (
         multiple ? (
@@ -61,61 +63,85 @@ export function MediaPreview({
                 {children}
             </ScrollView>
         ) : (
-            <View className="w-full flex-1 flex-col">
+            <View style={{ width: '100%', maxHeight: size }} className="flex-1 flex-col bg-black">
                 {children}
             </View>
         )
     );
-
-    const onImageChange = useCallback((newUri: string, index: number) => {
-        console.log('onImageChange', index, newUri);
-        // replace the uri at the index
-        const updatedAssets = [...assets];
-        updatedAssets[index] = { ...updatedAssets[index], uri: newUri };
-        setSelectedMedia(updatedAssets);
-    }, [assets, setSelectedMedia]);
 
     const insets = useSafeAreaInsets();
     maxHeight ??= (Dimensions.get('screen').height - insets.top - insets.bottom) / 2
     maxWidth ??= Dimensions.get('screen').width
 
     const containerStyle = useMemo<ViewStyle>(() => {
-        if (multiple) return { flex: 1, width: size - 50, overflow: 'hidden', borderRadius: 20, marginRight: 20, marginTop: 20 };
-        return { flex: 1, width: size, overflow: 'hidden' };
+        if (multiple) return { flex: 1, width: size - 25, overflow: 'hidden', borderRadius: 20, marginLeft: 5, marginRight: 5, marginVertical: 2 };
+        return { flex: 1, width: size, height: '100%', overflow: 'hidden' };
     }, [multiple, size]);
 
-    const setEditImage = useSetAtom(editImageAtom);
-    const setEditCallback = useSetAtom(editCallbackAtom);
+    const { editImage } = useEditImage();
+    const resetEditImageStore = useEditImageStore(s => s.reset);
+    const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
 
-    const handlePress = useCallback((uri: string, index: number) => {
-        setEditImage(uri);
-        setEditCallback((newUri) => onImageChange(newUri, index));
-        router.push('/edit');
-    }, [onImageChange]);
+    // const handleRevertPress = useCallback((index: number) => {
+    //     const newState = [...selectedMedia];
+    //     newState[index] = { ...newState[index], uri: newState[index].uploadedUri };
+    //     setSelectedMedia(newState);
+    // }, [selectedMedia, setSelectedMedia]);
+
+    const [editIndex, setEditIndex] = useAtom(editIndexAtom);
+    
+    const handlePress = useCallback((index: number) => {
+        const asset = assets[index];
+        
+        editImage(asset.originalUri, (newUri: string) => {
+            const newState = [...selectedMedia];
+            newState[index] = { ...newState[index], editedUri: newUri };
+
+            setSelectedMedia(newState);
+            resetEditImageStore();
+        });
+
+        setEditIndex(index);
+    }, [assets, selectedMedia, setSelectedMedia]);
+
+    const completeEdit = useCallback(() => {
+        setEditIndex(null);
+    }, [setEditIndex]);
 
     return (
         <Container>
+            <Modal visible={true} transparent={false} animationType="fade">
+                <EditImageTool onComplete={completeEdit} />
+            </Modal>
             {assets.map((asset, index) => (
                 <View key={asset.id} className="flex-1 flex-row items-stretch justify-stretch" style={{ width: maxWidth, height: maxHeight }}>
                     {asset.mediaType === 'video' ? (
-                        <VideoAlbumItem key={asset.id} uri={asset.uri} style={style} />
+                        <VideoAlbumItem key={asset.id} uri={asset.editedUri ?? asset.originalUri} style={style} />
                     ) : (
                         <View style={{...containerStyle, position: 'relative'}}>
                             <PhotoAlbumItem
                                 key={asset.id}
-                                uri={asset.uri}
+                                uri={asset.editedUri ?? asset.originalUri}
                                 style={containerStyle}
-                                onImageChange={(newUri) => onImageChange(newUri, index)}
+                                resizeMode="contain"
                             />
                             
                             {withEdit && (
-                                <Pressable  
-                                    onPress={() => handlePress(asset.uri, index)}
-                                    className="bg-black/50 px-4 py-2 rounded-full items-center absolute left-2 bottom-2 flex-row gap-4"
-                                >
-                                    <Edit2 size={18} color="white" />
-                                    <Text className="text-white font-bold">Edit</Text>
-                                </Pressable>
+                                <View className="bg-black/50 rounded-full items-center absolute left-2 bottom-2 flex-row">
+                                    {/* <Pressable  
+                                        onPress={() => handleRevertPress(index)}
+                                        className="px-4 py-2 rounded-full items-center flex-row gap-4"
+                                    >
+                                        <Undo size={18} color="white" />
+                                    </Pressable> */}
+                                    <Pressable  
+                                        onPress={() => handlePress(index)}
+                                        className="px-4 py-2 rounded-full items-center flex-row gap-4"
+                                    >
+                                        <Edit2 size={18} color="white" />
+                                        <Text className="text-white font-bold">Edit</Text>
+                                    </Pressable>
+                                </View>
                             )}
                         </View>
                     )}
@@ -133,7 +159,7 @@ export function PhotoAlbumItem({
     uri: string;
     style: ViewStyle;
 } & ComponentProps<typeof Image>) {
-    return <Image source={{ uri }} style={style} {...props} />;
+    return <Image source={{ uri }} style={{ width: '100%', height: '100%' }} {...props} />;
 }
 
 export function VideoAlbumItem({ uri, style, ...props }: { uri: string; style: ViewStyle } & ComponentProps<typeof View>) {

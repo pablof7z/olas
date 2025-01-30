@@ -1,14 +1,14 @@
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 import NDK from '@nostr-dev-kit/ndk-mobile';
 import { Uploader } from '@/utils/uploader';
 import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
 import { BlobDescriptor } from '@/utils';
 
 export async function uploadMedia(
-    media: MediaLibraryItem[],
+    media: PostMedia[],
     ndk: NDK,
     blossomServer: string = DEFAULT_BLOSSOM_SERVER
-): Promise<MediaLibraryItem[]> {
+): Promise<PostMedia[]> {
     const mediaItems = [...media];
 
     for (const m of mediaItems) {

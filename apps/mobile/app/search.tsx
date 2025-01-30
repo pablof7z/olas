@@ -1,17 +1,19 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { Search } from 'lucide-react-native';
+import { ArrowLeft, Search } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKKind, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { EventMediaGridContainer } from '@/components/media/event';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { usePostBottomSheet } from '@/hooks/post-bottom-sheet';
 import { activeEventAtom } from '@/stores/event';
+import { BackButton } from '@/components/BackButton';
+import Feed from '@/components/Feed';
 
 const inputAtom = atom('#photography');
 
@@ -23,52 +25,58 @@ export default function SearchScreen() {
 
     const hashtagFromQuery = useLocalSearchParams().q;
 
-    useEffect(() => {
-        console.log('hashtagFromQuery', hashtagFromQuery);
-        if (hashtagFromQuery && input !== hashtagFromQuery) {
-            setInput(hashtagFromQuery as string);
-        }
-    }, [hashtagFromQuery, setInput]);
-
-    const { events } = useSubscribe([
-        { kinds: [NDKKind.Image, NDKKind.HorizontalVideo, NDKKind.VerticalVideo], '#t': [input] },
-        { kinds: [NDKKind.Text], '#t': [input] }
-    ], { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL, closeOnEose: true, relays: [...relays] }, [ input ]);
-
     const onSearch = useCallback((value) => {
         setInput(value.replace('#', '').trim());
     }, []);
 
-    const setActiveEvent = useSetAtom(activeEventAtom);
-    const openPostBottomSheet = usePostBottomSheet();
+    useEffect(() => {
+        if (hashtagFromQuery && input !== hashtagFromQuery) {
+            onSearch(hashtagFromQuery as string);
+        }
+    }, [hashtagFromQuery, setInput]);
+
+    const filters = useMemo(() => {
+        return [
+            { kinds: [NDKKind.Image], '#t': [input] },
+        ]
+    }, [input]);
+
+    const insets = useSafeAreaInsets();
+    const containerStyle = useMemo(() => {
+        return {
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+        }
+    }, [insets])
+    const { colors } = useColorScheme();
 
     return (
-        <KeyboardAvoidingView className="flex-1 bg-card">
-            <View className="border-b border-border">
-                <Input onSearch={onSearch} />
-            </View>
+        <>
+            <Stack.Screen
+                options={{
+                    headerShown: false,
+                }}
+            />
+
+            <KeyboardAvoidingView className="flex-1 bg-card" style={containerStyle}>
+                <View style={styles.headerContainer}>
+                    <Pressable onPress={() => router.replace("/")}>
+                        <ArrowLeft size={24} color={colors.foreground} />
+                    </Pressable>
+                    <View className="border-b border-border flex-1">
+                        <Input onSearch={onSearch} />
+                    </View>
+                </View>
 
             <View style={{ flex: 1 }}>
-                <MasonryFlashList
-                    data={events}
+                <Feed
+                    filters={filters}
+                    filterKey={input}
                     numColumns={3}
-                    estimatedItemSize={100}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={{ paddingBottom: 60 }}
-                    renderItem={({ item, index }) => (
-                        <EventMediaGridContainer
-                            event={item}
-                            index={index}
-                            onPress={() => {
-                                setActiveEvent(item);
-                                router.push('/view');
-                            }}
-                            onLongPress={() => openPostBottomSheet(item)}
-                        />
-                    )}
                 />
             </View>
-        </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+            </>
     );
 }
 
@@ -96,6 +104,9 @@ function Input({ onSearch }: { onSearch: (input: string) => void }) {
                 }}
                 onSubmitEditing={handleSearch}
                 returnKeyType="search"
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
                 style={{
                   flex: 1,
                   color: colors.foreground,
@@ -109,3 +120,13 @@ function Input({ onSearch }: { onSearch: (input: string) => void }) {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    headerContainer: {
+        paddingTop: 10,
+        paddingBottom: 10,
+        paddingHorizontal: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    }
+})

@@ -1,5 +1,5 @@
 import { Blurhash } from 'react-native-blurhash';
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 import * as FileSystem from 'expo-file-system';
 import { Location } from './store';
 import { Image as CompressedImage } from 'react-native-compressor';
@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { determineMimeType } from './AlbumsView';
 import * as RNFS from 'react-native-fs';
 
-export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibraryItem[]> {
+export async function prepareMedia(media: PostMedia[]): Promise<PostMedia[]> {
     const res = [];
 
     for (const m of media) {
@@ -19,10 +19,10 @@ export async function prepareMedia(media: MediaLibraryItem[]): Promise<MediaLibr
     return res;
 }
 
-export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLibraryItem> {
+export async function prepareMediaItem(media: PostMedia): Promise<PostMedia> {
     let { mimeType, blurhash, width, height } = media;
 
-    if (!mimeType) mimeType = await determineMimeType(media.uri);
+    if (!mimeType) mimeType = await determineMimeType(media.originalUri);
 
     let location: Location | undefined;
     let newUri: string;
@@ -31,7 +31,7 @@ export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLi
         const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         newUri = FileSystem.cacheDirectory + randomId + '.jpg';
 
-        await FileSystem.copyAsync({ from: media.uri, to: newUri });
+        await FileSystem.copyAsync({ from: media.originalUri, to: newUri });
 
         const exif = await Exify.readAsync(newUri);
         const hasLocation = exif.GPSLatitude !== undefined && exif.GPSLongitude !== undefined;
@@ -58,7 +58,7 @@ export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLi
         // zero-out the gps data
         await Exify.writeAsync(compressedUri, zeroedGpsData);
     } else {
-        newUri = media.uri;
+        newUri = media.originalUri;
     }
 
     // getting sha256
@@ -74,7 +74,7 @@ export async function prepareMediaItem(media: MediaLibraryItem): Promise<MediaLi
 
     return {
         ...media,
-        uri: newUri,
+        originalUri: newUri,
         sha256,
         blurhash,
         width,
@@ -126,12 +126,7 @@ async function generateBlurhash(uri: string) {
         maxHeight: 50,
         quality: 0.1,
         progressDivider: 10,
-        downloadProgress: (progress) => {
-            console.log('downloadProgress: ', progress);
-        },
     });
-    const end = performance.now();
-
     
     try {
         return await Blurhash.encode(compressedUri, 7, 5);

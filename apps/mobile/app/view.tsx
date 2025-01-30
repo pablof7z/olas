@@ -1,8 +1,8 @@
+import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
-import { Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import RelativeTime from './components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import EventMediaContainer from '@/components/media/event';
@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
-import { useObserver } from '@/hooks/observer';
 import { router } from 'expo-router';
 
 function getUrlFromEvent(event: NDKEvent) {
@@ -30,11 +29,11 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 export default function ViewScreen() {
-    const activeEvent = useAtomValue(activeEventAtom);
+    const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
     const { userProfile } = useUserProfile(activeEvent.pubkey);
 
     if (!activeEvent) {
-        return <Text>No active event</Text>;
+        return <Text style={styles.noActiveEvent}>No active event</Text>;
     }
 
     const url = getUrlFromEvent(activeEvent);
@@ -53,7 +52,8 @@ export default function ViewScreen() {
                 paddingTop: insets.top,
             }
         }
-    }, [Platform.OS])
+        return {};
+    }, [insets.top]);
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${activeEvent.pubkey}`);
@@ -62,14 +62,13 @@ export default function ViewScreen() {
     const maxHeight = Math.floor(Dimensions.get('window').height * 0.7);
 
     return (
-        <ScrollView className="flex-1 bg-black" style={style}>
-            <View className="flex-1">
-                {/* Header with user info */}
-                <TouchableOpacity onPress={viewProfile} className="flex-row items-center border-b border-border p-4">
-                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={24} />
-                    <View className="ml-3">
-                        <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} className="font-bold text-white" />
-                        <Text className="text-sm text-gray-400">
+        <ScrollView style={[styles.scrollView, style]}>
+            <View style={styles.container}>
+                <TouchableOpacity onPress={viewProfile} style={styles.header}>
+                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={32} />
+                    <View style={styles.userInfo}>
+                        <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} style={styles.userName} />
+                        <Text style={styles.timestamp}>
                             <RelativeTime timestamp={activeEvent.created_at} />
                         </Text>
                     </View>
@@ -78,6 +77,7 @@ export default function ViewScreen() {
                 <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
                     <EventMediaContainer
                         event={activeEvent}
+                        contentFit="contain"
                         maxWidth={Dimensions.get('window').width}
                         maxHeight={maxHeight}
                         muted={false}
@@ -85,12 +85,55 @@ export default function ViewScreen() {
                 </ScrollView>
 
                 {/* Content */}
-                <View className="p-4 flex-col gap-4" style={{ paddingBottom: insets.bottom * 4 }}>
-                    <EventContent event={activeEvent} content={content} className="text-sm text-white" />
-                    <Reactions event={activeEvent} foregroundColor='white' mutedColor='white' />
+                <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 4 }]}>
+                    <EventContent event={activeEvent} content={content} style={styles.eventContent} />
+                    <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' />
                 </View>
 
             </View>
         </ScrollView>
     );
 }
+
+const styles = StyleSheet.create({
+    scrollView: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderColor: '#ffffff33',
+        padding: 16,
+    },
+    userInfo: {
+        marginLeft: 12,
+    },
+    userName: {
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    timestamp: {
+        fontSize: 12,
+        color: '#9CA3AF', // Tailwind 'text-gray-400'
+    },
+    contentContainer: {
+        padding: 16,
+        flexDirection: 'column',
+        gap: 16,
+    },
+    eventContent: {
+        fontSize: 12,
+        color: '#FFFFFF',
+    },
+    noActiveEvent: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 20,
+    },
+});

@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { router, Stack } from 'expo-router';
 
 import { X } from 'lucide-react-native';
@@ -8,15 +8,13 @@ import { Text } from '@/components/nativewindui/Text';
 import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadingAtom, } from '@/components/NewPost/store';
 import ChooseContentStep from '@/components/NewPost/ChooseContentStep';
 import { PostMetadataStep } from '@/components/NewPost/MetadataStep';
-import { prepareMedia } from '@/components/NewPost/prepare';
-import { uploadMedia } from '@/components/NewPost/upload';
 import { Button } from '@/components/nativewindui/Button';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mountTagSelectorAtom } from '@/components/TagSelectorBottomSheet';
-import { useEffect, useState } from 'react';
-import { BlurView } from 'expo-blur';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNewPost } from '@/hooks/useNewPost';
+import { useEditImageStore } from '@/components/edit/store';
 
 export default function NewPostScreen() {
     const activeBlossomServer = useActiveBlossomServer();
@@ -28,7 +26,6 @@ export default function NewPostScreen() {
 
     useEffect(() => {
         if (!mountTagSelector) setMountTagSelector(true);
-        console.log('setting mountTagSelector to true');
     }, [mountTagSelector]);
 
     const step = 1;
@@ -44,7 +41,6 @@ export default function NewPostScreen() {
     // };
 
     const { imagePicker: newPost } = useNewPost();
-
     
     const setStep = useSetAtom(stepAtom);
 
@@ -64,12 +60,28 @@ export default function NewPostScreen() {
         router.back();
     }
 
+    function addMoreMedia() {
+        console.log('addMoreMedia');
+        newPost({ types: ['images', 'videos'] });
+    }
+
+
+    const resetEditImageStore = useEditImageStore(s => s.reset);
+    
+    const onEditComplete = useCallback(() => {
+        console.log('running onEditComplete');
+        resetEditImageStore();
+    }, []);
+    
+    const imageUri = useEditImageStore(s => s.imageUri);
+    const editOpen = useMemo(() => !!imageUri, [imageUri]);
+
     return (
         <>
             <Stack.Screen
                 options={{
                     headerTransparent: false,
-                    headerShown: true,
+                    headerShown: editOpen ? false : true,
                     title: 'New Post',
                     headerLeft: () => {
                         if (step === 0) {
@@ -83,7 +95,11 @@ export default function NewPostScreen() {
                         );
                     },
                     headerRight: () => {
-                        if (step === 1) return null;
+                        if (step === 1) return (
+                            <Button variant="primary" size="sm" onPress={addMoreMedia} disabled={selectedMedia.length === 0}>
+                                <Text>Add</Text>
+                            </Button>
+                        )
                         return (
                             <Button variant="plain" onPress={next} disabled={selectedMedia.length === 0}>
                                 <Text className="text-lg text-accent">Next</Text>
@@ -92,10 +108,11 @@ export default function NewPostScreen() {
                     },
                 }}
             />
-            <View className="flex-1 flex-row bg-card !p-0">
+            {/* <View className="flex-1 flex-row bg-card !p-0"> */}
                 {/* {step === 0 && <ChooseContentStep />} */}
-                {step === 1 && <PostMetadataStep />}
-            </View>
+                <PostMetadataStep />
+            {/* </View> */}
+
         </>
     );
 }

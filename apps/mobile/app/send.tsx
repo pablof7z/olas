@@ -148,7 +148,7 @@ function FollowItem({ index, target, item, onPress }: { index: number, target: L
             title: ""
         }}
         leftView={<View className="flex-row items-center py-2">
-            <User.Avatar userProfile={userProfile} size={16} className="w-10 h-10 mr-2" />
+            <User.Avatar pubkey={item} imageSize={16} userProfile={userProfile} className="w-10 h-10 mr-2" />
             <User.Name userProfile={userProfile} pubkey={item} className="text-lg text-foreground" />
         </View>}
         onPress={onPress}

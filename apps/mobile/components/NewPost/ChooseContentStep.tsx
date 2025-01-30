@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import * as MediaLibrary from 'expo-media-library';
 import { selectedMediaAtom, stepAtom, uploadingAtom } from './store';
-import AlbumsView, { mapAssetToMediaLibraryItem } from './AlbumsView';
+import AlbumsView, { mapAssetToPostMedia } from './AlbumsView';
 import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '../nativewindui/Button';
@@ -49,7 +49,7 @@ export default function ChooseContentStep() {
             selectionLimit: 10,
         }).then((result) => {
             if (result.assets) {
-                const sel = result.assets.map(mapAssetToMediaLibraryItem);
+                const sel = result.assets.map(mapAssetToPostMedia);
                 setSelectedMedia(sel);
 
                 setStep(step + 1);

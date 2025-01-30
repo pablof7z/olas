@@ -2,19 +2,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Toggle } from '~/components/nativewindui/Toggle';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Switch, TouchableOpacity, View } from 'react-native';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { router, useFocusEffect } from 'expo-router';
-import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadErrorAtom, uploadingAtom } from './store';
-import { Fullscreen, Group, MapPin, Tag, Timer, Type, Users2, UsersIcon } from 'lucide-react-native';
+import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadErrorAtom, uploadingAtom, wantsToPublishAtom } from './store';
+import { Fullscreen, Group, MapPin, Repeat, Tag, Timer, TimerIcon, Type, Users2, UsersIcon } from 'lucide-react-native';
 import { SelectedMediaPreview } from './AlbumsView';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { communityBottomSheetRefAtom } from './CommunityBottomSheet';
-import { tagSelectorBottomSheetRefAtom } from '../TagSelectorBottomSheet';
 import { NDKEvent, NDKKind, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { generateEvent } from './event';
 import { boostSheetRefAtom } from './BoostBottomSheet';
@@ -23,10 +22,9 @@ import Community from '@/components/icons/community';
 import { prepareMedia } from './prepare';
 import { uploadMedia } from './upload';
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 import { useGroup } from '@/lib/groups/store';
-import { Image } from 'expo-image';
-import { useNewPost } from '@/hooks/useNewPost';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export function PostMetadataStep() {
     const { ndk } = useNDK();
@@ -36,75 +34,47 @@ export function PostMetadataStep() {
     const setUploadError = useSetAtom(uploadErrorAtom);
     const setStep = useSetAtom(stepAtom);
     const [uploading, setUploading] = useAtom(uploadingAtom);
-    const [wantsToPublish, setWantsToPublish] = useState(true);
+    const [wantsToPublish, setWantsToPublish] = useAtom(wantsToPublishAtom);
     const publishing = useRef(false);
-    const { imagePicker: newPost } = useNewPost();
-    const openedImagePicker = useRef(false);
 
-    // when the component is visible:
-    // useFocusEffect(() => {
-    //     console.log('focus running', selectedMedia.length, openedImagePicker.current);
-    //     if (selectedMedia.length === 0 && !openedImagePicker.current) {
-    //         console.log('opening image picker');
-    //         openedImagePicker.current = true;
-    //         setTimeout(() => {
-    //             newPost({ types: ['images', 'videos'] });
-    //         }, 300);
-    //         setTimeout(() => {
-    //             openedImagePicker.current = false;
-    //         }, 6000);
-    //     }
-
-    //     return () => {
-    //         console.log('focus ended');
-    //     };
-    // });
-
-    async function realPublish(uploadedMedia: MediaLibraryItem[] = selectedMedia) {
+    async function realPublish(uploadedMedia: PostMedia[] = selectedMedia) {
         const {event, relaySet} = await generateEvent(ndk, metadata, uploadedMedia);
 
         await event.sign();
 
-        event.publish(relaySet).then(() => {
+        console.log("event generated", JSON.stringify(event.rawEvent(), null, 4));
+
+        // event.publish(relaySet).then(() => {
             setSelectedMedia([]);
             setMetadata({ caption: '', expiration: 0 });
             setStep(0);
             publishing.current = false;
             setWantsToPublish(false);
 
-            if (metadata.boost) {
-                const boost = new NDKEvent(ndk);
-                boost.kind = NDKKind.Text;
-                boost.content = "nostr:" + event.encode();
-                boost.tag(event, "mention", false, "q");
-                boost.publish().then(() => console.log('boost', boost.encode()));
-            }
-        }).catch((e) => {
-            console.error('error publishing event', e);
-            setUploadError(e.message);
-            toast.error('Error publishing event: ' + e.message);
-        });
+            // if (metadata.boost) {
+            //     const boost = new NDKEvent(ndk);
+            //     boost.kind = NDKKind.Text;
+            //     boost.content = "nostr:" + event.encode();
+            //     boost.tag(event, "mention", false, "q");
+            //     boost.publish().then(() => console.log('boost', boost.encode()));
+            // }
+        // }).catch((e) => {
+        //     console.error('error publishing event', e);
+        //     setUploadError(e.message);
+        //     toast.error('Error publishing event: ' + e.message);
+        // });
     }
-
-    // useEffect(() => {
-    //     if (!uploading && wantsToPublish && !publishing.current) {
-    //         publishing.current = true;
-    //         realPublish();
-    //     }
-    // }, [uploading, wantsToPublish, publishing]);
 
     const activeBlossomServer = useActiveBlossomServer();
 
     const publish = useCallback(async () => {
-        router.back();  
+        router.replace("/(home)");  
+        setWantsToPublish(true);
 
         try {
             setUploading(true);
-            const start = performance.now();
             const preparedMedia = await prepareMedia(selectedMedia);
-            console.log('preparedMedia', preparedMedia, performance.now() - start);
             const uploadedMedia = await uploadMedia(preparedMedia, ndk, activeBlossomServer);
-            console.log('uploadedMedia', uploadedMedia, performance.now() - start);
             setUploading(false);
             setSelectedMedia(uploadedMedia);
             await realPublish(uploadedMedia);
@@ -119,14 +89,12 @@ export function PostMetadataStep() {
     const selecting = useAtomValue(selectingMediaAtom);
 
     return (
-        <View className="flex-1 grow" style={{ marginBottom: inset.bottom }}>
+        <View className="flex-1" style={{ marginBottom: inset.bottom }}>
             <SelectedMediaPreview>
                 {selecting && <ActivityIndicator />}
             </SelectedMediaPreview>
 
-            <View className="grow flex-col justify-between px-4">
-                <PostOptions />
-            </View>
+            <PostOptions />
 
             <View className="flex-col justify-between px-4">
                 <Button variant="accent" onPress={publish} disabled={busy}>
@@ -147,8 +115,8 @@ function PostOptions() {
     const selectedMedia = useAtomValue(selectedMediaAtom);
     const boostSheetRef = useAtomValue(boostSheetRefAtom);
 
-    const openCaption = () => router.push('/publish/caption');
-    const openExpiration = () => router.push('/publish/expiration');
+    const openCaption = () => router.push('/(publish)/caption');
+    const openExpiration = () => router.push('/(publish)/expiration');
     const openType = () => {
         boostSheetRef?.current?.present();
         boostSheetRef?.current?.expand();
@@ -183,7 +151,7 @@ function PostOptions() {
         if (metadata.location && metadata.removeLocation === undefined) openLocation();
     }, [metadata.location]);
 
-    const group = useGroup(metadata.group?.groupId, metadata.group?.relays?.[0]);
+    // const group = useGroup(metadata.group?.groupId, metadata.group?.relays?.[0]);
 
     const data = useMemo(() => {
         const data = [
@@ -275,10 +243,41 @@ function PostOptions() {
     }, [metadata]);
 
     return (
-        <View className="flex-1 bg-card">
-            <TouchableOpacity onPress={openCaption} className="dark:border-border/80 mt-4 min-h-24 rounded-lg border border-border p-2">
+        <View className="bg-card p-4">
+            <TouchableOpacity onPress={openCaption} className="dark:border-border/80 min-h-24 rounded-lg border border-border p-2">
                 <Text className="text-sm text-foreground">{metadata.caption.trim().length > 0 ? metadata.caption : 'Add a caption'}</Text>
             </TouchableOpacity>
+
+            <View className="flex-row items-center gap-4">
+                <Timer size={30} color={colors.foreground} />
+
+                <TouchableOpacity className="flex-1 flex-col items-start" onPress={openExpiration}>
+                    <Text className="text-base font-semibold text-foreground">Expiration</Text>
+                    <Text className="text-sm text-muted-foreground">Delete post after some time</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View className="flex-row items-center gap-4">
+                <Repeat size={30} color={colors.foreground} />
+
+                <TouchableOpacity className="flex-1 flex-col items-start" onPress={openType}>
+                    <Text className="text-base font-semibold text-foreground">Boost</Text>
+                    <Text className="text-sm text-muted-foreground">Make your post visible in incompatible nostr apps</Text>
+                </TouchableOpacity>
+
+                <Switch value={metadata.boost} onValueChange={(value) => setMetadata({ ...metadata, boost: value })} />
+            </View>
+
+            {metadata.location && (
+                <View className="flex-row items-center gap-4">
+                    <MapPin size={24} color={colors.foreground} />
+
+                    <TouchableOpacity className="flex-1 flex-col items-start" onPress={openLocation}>
+                        <Text className="text-base font-semibold text-foreground">Location</Text>
+                        <Text className="text-sm text-muted-foreground">Photo coordinates</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <List
                 data={data}

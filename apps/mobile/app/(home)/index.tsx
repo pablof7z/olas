@@ -34,7 +34,7 @@ import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
 import { LinearGradient } from 'expo-linear-gradient';
-import { metadataAtom, selectedMediaAtom, uploadErrorAtom, uploadingAtom } from '@/components/NewPost/store';
+import { metadataAtom, selectedMediaAtom, uploadErrorAtom, uploadingAtom, wantsToPublishAtom } from '@/components/NewPost/store';
 import { MediaPreview } from '@/components/NewPost/MediaPreview';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
@@ -86,6 +86,7 @@ export default function HomeScreen() {
 
 function UploadingIndicator() {
     const selectedMedia = useAtomValue(selectedMediaAtom);
+    const [wantsToPublish, setWantsToPublish] = useAtom(wantsToPublishAtom);
     const { colors } = useColorScheme();
     const metadata = useAtomValue(metadataAtom);
     const [uploading, setUploading] = useAtom(uploadingAtom);
@@ -96,9 +97,10 @@ function UploadingIndicator() {
         setUploading(false);
         setUploadError(null);
         setSelectedMedia([]);
+        setWantsToPublish(false);
     }, [setUploading, setUploadError, setSelectedMedia]);
     
-    if (!selectedMedia.length) return null;
+    if (!wantsToPublish) return null;
     
     return (
         <Pressable

@@ -33,7 +33,7 @@ export default function Caption() {
                         <Button
                             title="OK"
                             onPress={() => {
-                                setExpiration(date.getTime() / 1000);
+                                setExpiration(date.getTime());
                                 router.back();
                             }}
                         />

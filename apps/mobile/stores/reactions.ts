@@ -7,6 +7,9 @@ export type ReactionStats = {
     commentCount: number;
     commentedByUser: boolean;
     comments: NDKEvent[];
+    repostCount: number;
+    repostedByUser: boolean;
+    reposts: NDKEvent[];
     zapEvents: NDKEvent[];
     zappedAmount: number;
     zappedByUser: boolean;
@@ -32,6 +35,9 @@ export const DEFAULT_STATS: ReactionStats = {
     commentCount: 0,
     commentedByUser: false,
     comments: [],
+    repostCount: 0,
+    repostedByUser: false,
+    reposts: [],
     zapEvents: [],
     zappedAmount: 0,
     zappedByUser: false,
@@ -62,6 +68,14 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
                     if (event.pubkey === currentPubkey || currentPubkey === true) {
                         stats.reactedByUser = true;
                     }
+                    break;
+                case NDKKind.GenericRepost:
+                case NDKKind.Repost:
+                    stats.repostCount++;
+                    if (event.pubkey === currentPubkey || currentPubkey === true) {
+                        stats.repostedByUser = true;
+                    }
+                    stats.reposts.push(event);
                     break;
                 case NDKKind.Text:
                 case NDKKind.GenericReply:

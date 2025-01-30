@@ -35,7 +35,7 @@ const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent,
     }
 }
 
-export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser }) {
+export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser, iconSize = 24}) {
     const { activeWallet } = useNDKWallet();
     const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
     const allPending = usePaymentStore(s => s.pendingPayments);
@@ -59,7 +59,7 @@ export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser 
             <Pressable
                 onPress={() => sendZapWithAmount(defaultZap.message, defaultZap.amount)}
                 style={styles.touchable}>
-                <Lightning size={24} stroke={color} />
+                <Lightning size={iconSize} stroke={color} strokeWidth={2} fill={(zappedByUser || pendingZapAmount > 0) ? color : 'none'} />
             </Pressable>
             <Text style={[styles.text, { color: inactiveColor }]}>{nicelyFormattedMilliSatNumber(zappedAmount + pendingZapAmount)}</Text>
         </View>

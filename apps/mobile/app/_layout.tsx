@@ -37,13 +37,13 @@ import { Platform } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { mainKinds } from '@/utils/const';
-import { mountTagSelectorAtom, TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import { db, initialize } from "@/stores/db";
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
 import { CommunityBottomSheet } from '@/components/NewPost/CommunityBottomSheet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
+import { useReactionsStore } from '@/stores/reactions';
 
 initialize()
 
@@ -136,6 +136,8 @@ export default function RootLayout() {
         if (ndk) ndk.connect();
     }, [ndk])
 
+    const addReactionEvent = useReactionsStore((state) => state.addEvent);
+
     useEffect(() => {
         if (!ndk || !currentUser?.pubkey) return;
         if (ndk && timeoutRef.current) return;
@@ -147,16 +149,18 @@ export default function RootLayout() {
 
         const appSub = ndk.subscribe([
             { kinds: [NDKKind.Text], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.GenericReply], "#K": kindString, '#P': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.GenericReply], "#K": kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [currentUser.pubkey], ...sinceFilter },
                 // { authors: [user.pubkey], limit: 100 },
-        ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' }, undefined);
+        ], { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['since', '#p'] }, undefined);
         let receivedEvents = 0;
-        appSub.on('event', (event) => receivedEvents++);
+        appSub.on('event', (event) => {
+            receivedEvents++;
+            addReactionEvent(event);
+        });
         appSub.on('eose', () => {
             const time = Date.now()/1000;
             console.log('appSub eose, setting timeSinceLastAppSync to', time, {receivedEvents});
@@ -218,7 +222,7 @@ export default function RootLayout() {
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            netDebug,
+            // netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,
@@ -244,12 +248,9 @@ export default function RootLayout() {
         });
     }, [ndk]);
 
-    const mountTagSelector = useAtomValue(mountTagSelectorAtom);
-
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
     useEffect(() => {
-        console.log('initAppSettings');
         initAppSettings();
         
         // Configure push notifications
@@ -302,9 +303,10 @@ export default function RootLayout() {
 
                                     <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="publish/index" options={{ headerShown: true, title: 'Publish' }} />
-                                    <Stack.Screen name="publish/caption" options={{ headerShown: true, presentation: 'modal' }} />
-                                    <Stack.Screen name="publish/expiration" options={{ headerShown: true, presentation: 'modal' }} />
+                                    <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
+
+                                    <Stack.Screen name="(publish)" options={{ headerShown: false }} />
+
                                     <Stack.Screen
                                         name="(home)"
                                         options={{
@@ -339,8 +341,6 @@ export default function RootLayout() {
                                         }}
                                     />
 
-                                    <Stack.Screen name="edit" options={{ headerShown: false, presentation: 'modal' }} />
-
                                     <Stack.Screen name="live" options={{
                                             contentStyle: { backgroundColor: 'black' },
                                         }}
@@ -348,8 +348,8 @@ export default function RootLayout() {
                                     
                                     <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
                                     <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
-                                </Stack>
-
+                                    </Stack>
+                                    
                                 <PostOptionsMenu />
                                 <BoostBottomSheet />
                                 <LocationBottomSheet />

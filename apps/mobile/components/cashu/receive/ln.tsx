@@ -2,7 +2,8 @@ import { Picker } from '@react-native-picker/picker';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import QRCode from 'react-native-qrcode-svg';
-import { useEffect, useRef, useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleSheet } from 'react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
@@ -10,10 +11,11 @@ import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { Button } from '@/components/nativewindui/Button';
 
 export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
-    const { activeWallet, balance } = useNDKWallet();
-    const [qrCode, setQrCode] = useState<string | null>(null);
+    const { activeWallet } = useNDKWallet();
+    const [bolt11, setBolt11] = useState<string | null>(null);
     const [selectedMint, setSelectedMint] = useState<string | null>(null);
     const inputRef = useRef<TextInput | null>(null);
     const [amount, setAmount] = useState(1000);
@@ -48,14 +50,21 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
         });
 
         try {
-            const qr = await deposit.start();
-            console.log('qr', qr);
-            setQrCode(qr);
+            const pr = await deposit.start();
+            console.log('pr', pr);
+            setBolt11(pr);
         } catch (e) {
             toast.error(e.message);
         }
     };
 
+    const [copied, setCopied] = useState(false);
+    const copyToClipboard = useCallback(async () => {
+        await Clipboard.setStringAsync(bolt11);
+        setCopied(true);
+        setTimeout(() => { setCopied(false); }, 2000);
+    }, [bolt11]);
+    
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
             <TextInput
@@ -67,17 +76,19 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                 onChangeText={(text) => setAmount(Number(text))}
             />
 
-            <WalletBalance amount={amount} unit={(activeWallet as NDKCashuWallet).unit} onPress={() => inputRef.current?.focus()} />
-
-            {qrCode ? ( // Conditionally render QR code
-                <View>
-                    <Text>Your QR Code:</Text>
+            {bolt11 ? ( // Conditionally render QR code
+                <View className="px-4 flex-col gap-4 w-full items-stretch justify-center">
                     <View style={styles.qrCodeContainer}>
-                        <QRCode value={qrCode} size={350} />
+                        <QRCode value={bolt11} size={350} />
                     </View>
+
+                    <Button size="lg" variant="primary" onPress={copyToClipboard}>
+                        <Text>{copied ? 'Copied' : 'Copy'}</Text>
+                    </Button>
                 </View>
             ) : (
                 <>
+                    <WalletBalance amount={amount} unit={(activeWallet as NDKCashuWallet).unit} onPress={() => inputRef.current?.focus()} />
                     <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                         <Text style={styles.continueButtonText}>Continue</Text>
                     </TouchableOpacity>

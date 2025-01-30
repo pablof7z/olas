@@ -1,9 +1,9 @@
-import NDK, { NDKEvent, NDKKind, NDKRelay, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKEvent, NDKKind, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { PostMetadata } from './store';
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 import { encodeBase32 } from 'geohashing';
 
-export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: MediaLibraryItem[]) {
+export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]) {
     if (media.length === 0) return;
 
     const event = new NDKEvent(ndk, {
@@ -56,7 +56,7 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Med
     };
 }
 
-function getKind(metadata: PostMetadata, media: MediaLibraryItem) {
+function getKind(metadata: PostMetadata, media: PostMedia) {
     // if (metadata.boost) return NDKKind.Text;
 
     if (media.mediaType === 'photo') return NDKKind.Image;
@@ -66,7 +66,7 @@ function getKind(metadata: PostMetadata, media: MediaLibraryItem) {
     return NDKKind.HorizontalVideo;
 }
 
-function generateImeta(media: MediaLibraryItem): NDKTag[] {
+function generateImeta(media: PostMedia): NDKTag[] {
     const tags: NDKTag[] = [];
     const imetaTag: NDKTag = ['imeta'];
 

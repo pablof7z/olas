@@ -1,12 +1,14 @@
 import { atom } from 'jotai';
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 
 export const stepAtom = atom(0);
+
+export const wantsToPublishAtom = atom(false);
 
 /**
  * Selected media
  */
-export const selectedMediaAtom = atom<MediaLibraryItem[], [MediaLibraryItem[]], void>([], (get, set, media: MediaLibraryItem[]) =>
+export const selectedMediaAtom = atom<PostMedia[], [PostMedia[]], void>([], (get, set, media: PostMedia[]) =>
     set(selectedMediaAtom, media)
 );
 

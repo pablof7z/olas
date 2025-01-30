@@ -1,6 +1,6 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { multiImageModeAtom } from './store';
-import { MediaLibraryItem } from './MediaPreview';
+import { PostMedia } from './MediaPreview';
 import { Dimensions, Pressable, View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { selectedMediaAtom } from './store';
@@ -14,7 +14,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { albumsAtom, selectedAlbumAtom } from '../albums/store';
 import AlbumSelectorHandler from '../albums/AlbumSelectorHandler';
-import { mapAssetToMediaLibraryItem } from '@/utils/media';
+import { mapAssetToPostMedia } from '@/utils/media';
 
 export default function AlbumsView() {
     return (
@@ -49,9 +49,9 @@ export async function determineMimeType(uri: string) {
 export function AlbumContent() {
     const selectedAlbum = useAtomValue(selectedAlbumAtom);
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
-    const [currentAlbumAssets, setCurrentAlbumAssets] = useState<MediaLibraryItem[]>([]);
+    const [currentAlbumAssets, setCurrentAlbumAssets] = useState<PostMedia[]>([]);
     const endCursor = useRef<Record<string, string | false>>({});
-    const albumAssets = useRef<Record<string, MediaLibraryItem[]>>({});
+    const albumAssets = useRef<Record<string, PostMedia[]>>({});
 
     const getAlbumAssets = useCallback(async () => {
         try {
@@ -79,7 +79,7 @@ export function AlbumContent() {
                     console.log('asset was already loaded in index', index);
                     continue;
                 }
-                albumAssets.current[albumId].push(await mapAssetToMediaLibraryItem(asset));
+                albumAssets.current[albumId].push(await mapAssetToPostMedia(asset));
             }
 
             setCurrentAlbumAssets([...albumAssets.current[albumId]]);
@@ -96,7 +96,7 @@ export function AlbumContent() {
             endCursor.current[albumId] = albumLoadedPage.hasNextPage ? albumLoadedPage.endCursor : false;
 
             if (selectedMedia.length === 0 && albumLoadedPage.assets.length > 0) {
-                setSelectedMedia([await mapAssetToMediaLibraryItem(albumLoadedPage.assets[0])]);
+                setSelectedMedia([await mapAssetToPostMedia(albumLoadedPage.assets[0])]);
             }
         } catch (error) {
             console.error('error getting album assets', error);
@@ -120,7 +120,7 @@ export function AlbumContent() {
         [size]
     );
 
-    const setImage = (item: MediaLibraryItem, selectedMedia: MediaLibraryItem[], mode: boolean) => {
+    const setImage = (item: PostMedia, selectedMedia: PostMedia[], mode: boolean) => {
         if (mode) {
             const index = selectedMedia.findIndex((media) => media.uri === item.uri);
             const selectedMediaCopy = [...selectedMedia];
@@ -162,9 +162,9 @@ function GridItem({
     setImage,
     style,
 }: {
-    item: MediaLibraryItem;
+    item: PostMedia;
     index: number;
-    setImage: (item: MediaLibraryItem, selectedMedia: MediaLibraryItem[], mode: boolean) => void;
+    setImage: (item: PostMedia, selectedMedia: PostMedia[], mode: boolean) => void;
     style: any;
 }) {
     const multiImageMode = useAtomValue(multiImageModeAtom);
@@ -208,7 +208,7 @@ export function SelectedMediaPreview({ children }: { children?: React.ReactNode 
     const selectedMedia = useAtomValue(selectedMediaAtom);
 
     return (
-        <View className="flex-1 flex-col items-center justify-center !bg-gray-500/10">
+        <View className="flex-1 bg-white">
             {children}
             {selectedMedia.length > 0 && <MediaPreview assets={selectedMedia} style={{ width: '100%', height: '100%' }} />}
         </View>

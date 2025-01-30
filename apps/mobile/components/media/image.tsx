@@ -15,13 +15,15 @@ export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Parti
     const { width: maxWidth, height: maxHeight } = maxDimensions;
 
     const aspectRatio = width / height;
+    
+    const isOverPortraitThreshold = height / width > 1.5;
 
-    width = maxWidth;
-    height = Math.round(maxWidth / aspectRatio);
-
-    // Adjust height if it exceeds maxHeight
-    if (maxHeight && height > maxHeight) {
+    if (isOverPortraitThreshold) {
+        width = maxWidth;
+        height = Math.min(maxHeight, Math.round(maxWidth / aspectRatio));
+    } else {
         height = maxHeight;
+        width = maxWidth;
     }
 
     return { width, height };
@@ -32,7 +34,10 @@ export default function ImageComponent({
     blurhash,
     dimensions,
     maxDimensions,
+    forceDimensions,
+    forceProxy,
     priority,
+    contentFit,
     onPress,
     onLongPress,
     className,
@@ -43,17 +48,22 @@ export default function ImageComponent({
     blurhash?: string;
     dimensions?: MediaDimensions;
     priority?: 'low' | 'normal' | 'high',
+    contentFit?: 'contain' | 'cover',
     maxDimensions?: Partial<MediaDimensions>;
+    forceDimensions?: Partial<MediaDimensions>;
+    forceProxy?: boolean;
     onPress: () => void;
     onLongPress: () => void;
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
-    const useImgProxy = !dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000);
+    const useImgProxy = !dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000) || forceProxy;
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
 
-    const pUri = useImgProxy ? getProxiedImageUrl(url, maxDimensions?.width) : url;
-    const renderDimensions = knownImageDimensions[url];
+    const sizeForProxy = forceDimensions?.width || maxDimensions?.width;
+
+    const pUri = useImgProxy ? getProxiedImageUrl(url, sizeForProxy) : url;
+    const renderDimensions = forceDimensions || knownImageDimensions[url];
 
     // if we know the image dimensions but not the render, calculate
     if (dimensions && !renderDimensions) {
@@ -69,8 +79,8 @@ export default function ImageComponent({
     }, [dimensions, renderDimensions, maxDimensions]);
 
     const cacheKey = useMemo(
-        () => [url, maxDimensions?.width??"", maxDimensions?.height??""].join('-'),
-        [url, maxDimensions?.width, maxDimensions?.height]
+        () => [url, sizeForProxy??""].join('-'),
+        [url, sizeForProxy]
     );
     const imageSource = useImage({
         uri: pUri,
@@ -93,10 +103,10 @@ export default function ImageComponent({
         >
             <Image
                 placeholder={blurhashObj}
-                placeholderContentFit="cover"
+                placeholderContentFit={contentFit}
                 priority={priority}
                 source={imageSource}
-                contentFit="cover"
+                contentFit={contentFit}
                 recyclingKey={url}
                 // onLoadStart={() => {
                 //     console.log('onLoadStart', cacheKey)
@@ -113,9 +123,14 @@ export default function ImageComponent({
                 }}
                 style={{
                     width: finalDimensions?.width,
-                    height: finalDimensions?.height
+                    height: finalDimensions?.height,
                 }}
             />
+            {/* <Text className="text-red-500">{forceDimensions?.width}x{forceDimensions?.height}</Text>
+            <Text className="text-red-500">{finalDimensions?.width}x{finalDimensions?.height}</Text>
+            <Text className="text-red-500">{dimensions?.width}x{dimensions?.height}</Text>
+            <Text className="text-red-500">{imageSource?.width}x{imageSource?.height}</Text>
+            <Text className="text-red-500">{renderDimensions?.width}x{renderDimensions?.height}</Text> */}
         </Pressable>
     );
 }

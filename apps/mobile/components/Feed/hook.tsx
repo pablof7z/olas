@@ -92,7 +92,7 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
+        // console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
         let newEntries = Array.from(feedEntriesRef.current.values())
             .filter((entry) => !!entry.event)
             .filter((entry: FeedEntry) => ( !isMutedEvent(entry.event) && !pubkeyBlacklist.has(entry.event?.pubkey) ))
@@ -105,7 +105,7 @@ export function useFeedEvents(
         setEntries(newEntries);
         if (newEntries.length > 0) setNewEntries([]);
         
-        console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
+        // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
     }, [setEntries, setNewEntries, isMutedEvent, filterFn]);
 
     useEffect(() => {
@@ -329,12 +329,11 @@ type Slice = {
 }
 export function useFeedMonitor(
     events: NDKEvent[],
-    sliceSize = 10
+    sliceSize = 5
 ) {
     const { ndk } = useNDK();
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const activeSlices = useRef<Slice[]>([]);
-    const eventsRef = useRef<Map<NDKEventId, NDKEvent>>(new Map());
     const currentUser = useNDKCurrentUser();
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
 
@@ -356,14 +355,17 @@ export function useFeedMonitor(
     // }
 
     const addSlice = (slice: Slice) => {
+        if (slice.end - slice.start < sliceSize) {
+            return;
+        }
+        
         const filters = sliceToFilter(slice);
-        console.log('adding slice', slice.start, slice.end, filters);
         slice.sub = ndk.subscribe(filters, {
             cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
             closeOnEose: false,
             groupable: false,
             skipVerification: true,
-            subId: `feed-${slice.start}2${slice.end}`
+            subId: `feedmonitor-${slice.start}:${slice.end}`
         }, undefined, {
             onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey)
         });
@@ -400,9 +402,8 @@ export function useFeedMonitor(
             const exists = activeSlices.current.find(slice => slice.start === neededSlice.start);
 
             if (!exists) addSlice(neededSlice)
-            else console.log('slice already exists', neededSlice.start)
         }
-    }, [activeIndex]);
+    }, [activeIndex, events.length < sliceSize]);
     
     return {
         setActiveIndex

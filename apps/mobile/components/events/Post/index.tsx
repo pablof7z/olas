@@ -28,6 +28,7 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
     return <EventMediaContainer
         event={event}
         onPress={onPress}
+        muted={true}
         maxHeight={maxHeight}
         priority={priority}
     />;
@@ -55,7 +56,7 @@ export default function Post({ event, reposts, timestamp, onPress, index }: { in
 
     const headerHeight = useHeaderHeight();
     const screen = Dimensions.get('window');
-    const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width : ((screen.height * 0.8) - headerHeight));
+    const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width * 1.1 : ((screen.height * 0.8) - headerHeight));
 
     return (
         <View className="overflow-hidden border-b border-border py-2">

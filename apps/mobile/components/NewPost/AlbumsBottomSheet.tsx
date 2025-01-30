@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, Pressable, View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 
-import { MediaLibraryItem, MediaPreview } from './MediaPreview';
+import { PostMedia, MediaPreview } from './MediaPreview';
 import { ArrowRight } from 'lucide-react-native';
 import { MasonryFlashList } from '@shopify/flash-list';
 import AlbumsGrid from '../albums/grid';
