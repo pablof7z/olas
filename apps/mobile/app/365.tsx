@@ -9,7 +9,6 @@ import { useColorScheme } from "@/lib/useColorScheme";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
-import { useObserver } from "@/hooks/observer";
 let cellWidth = 0;
 let cellHeight = 0;
 
@@ -65,7 +64,7 @@ export default function ThreeSixtyFivePage() {
     const minimumCellWidth = 50;
     const currentUser = useNDKCurrentUser();
     const filters = currentUser ? [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey] }] : false;
-    const events = useObserver(filters);
+    const {events} = useSubscribe(filters, { closeOnEose: true });
 
     cellWidth = Math.max(minimumCellWidth, viewableScreenWidth / COLUMNS);
     cellHeight = cellWidth;

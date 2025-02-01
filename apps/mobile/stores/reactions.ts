@@ -70,7 +70,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
             if (!targetRootEventId) return state;
 
             // Get or create stats for this event
-            let stats = newReactions.get(targetRootEventId) || {...DEFAULT_STATS};
+            let stats = {...(newReactions.get(targetRootEventId) || DEFAULT_STATS)};
             
             switch (event.kind) {
                 case NDKKind.Reaction:

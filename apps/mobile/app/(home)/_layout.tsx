@@ -1,4 +1,4 @@
-import { router, Tabs } from 'expo-router';
+import { router, Tabs, usePathname } from 'expo-router';
 import Lightning from '@/components/icons/lightning';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Home, Search, UserCircle2, WalletIcon } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
 import { usePostEditorStore } from '@/lib/post-editor/store';
+import { useMemo } from 'react';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -21,13 +22,30 @@ export default function TabsLayout() {
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
 
+    const isReels = usePathname() === '/reels';
+    const screenOptions = useMemo(() => {
+        if (isReels) {
+            return {
+                tabBarActiveTintColor: 'white',
+                tabBarInactiveTintColor: 'white',
+                tabBarStyle: {
+                    backgroundColor: 'black',
+                }
+            }
+        } else {
+            return {
+                tabBarActiveTintColor: colors.foreground,
+                tabBarInactiveTintColor: colors.muted,
+            }
+        }
+    }, [isReels, colors]);
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: true,
                 tabBarShowLabel: false,
-                tabBarActiveTintColor: colors.foreground,
-                tabBarInactiveTintColor: colors.muted,
+                ...screenOptions
             }}>
             <Tabs.Screen
                 name="index"

@@ -1,14 +1,14 @@
 import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useMemo, useRef, useState, memo } from 'react';
+import { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
 import { ActivityIndicator, Dimensions, Pressable, StatusBar, View, ViewToken } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
 import { Reactions } from '@/components/events/Post/Reactions';
@@ -16,9 +16,11 @@ import { getImetas } from '@/components/media/event';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import RelativeTime from '../components/relative-time';
 import { getClientName } from '@/utils/event';
-import { useIsFocused } from '@react-navigation/native';
+import { useObserver } from '@/hooks/observer';
 
-const visibleItemAtom = atom<string>("");
+const visibleItemAtom = atom<string | null, [string | null], void>(null, (get, set, update) => {
+    set(visibleItemAtom, update);
+});
 
 const Reel = memo(
     ({ event }: { event: NDKEvent }) => {
@@ -29,6 +31,7 @@ const Reel = memo(
         const { userProfile } = useUserProfile(event.pubkey);
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
+        const pathname = usePathname()
 
         const url = getImetas(event)[0]?.url;
         const videoSource = { uri: url };
@@ -43,13 +46,15 @@ const Reel = memo(
             });
         });
 
+        console.log({pathname, isVisible, visibleItem})
+
         useEffect(() => {
-            if (isVisible) {
+            if (isVisible && pathname === '/reels') {
                 player.play();
             } else {
                 player.pause();
             }
-        }, [player, isVisible]);
+        }, [player, isVisible, pathname]);
 
         const clientName = getClientName(event);
 
@@ -148,41 +153,24 @@ const Reel = memo(
     },
     (prevProps, nextProps) => {
         return (
-            prevProps.isVisible === nextProps.isVisible &&
             prevProps.event.id === nextProps.event.id
         );
     }
 );
 
 export default function ReelsScreen() {
-    const { events } = useSubscribe(
+    const events = useObserver(
         [{ kinds: [NDKKind.VerticalVideo] }],
-        {
-            groupable: false,
-            closeOnEose: false,
-            wrap: true,
-        }
     );
     const safeAreaInsets = useSafeAreaInsets();
     const setVisibleItem = useSetAtom(visibleItemAtom);
-    const isFocused = useIsFocused();
 
-    // Clear the visible item when the screen is not focused so that all video players pause.
-    useEffect(() => {
-        if (!isFocused) {
-            setVisibleItem('');
-        }
-    }, [isFocused, setVisibleItem]);
-
-    const onViewableItemsChanged = useRef(
-        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-            const newVisibleItem =
-                viewableItems.length > 0 ? viewableItems[0].item.id : null;
-            setVisibleItem((prev) =>
-                prev !== newVisibleItem ? newVisibleItem : prev
-            );
-        }
-    ).current;
+    const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        if (viewableItems.length === 0) return;
+        const newVisibleItem =
+            viewableItems.length > 0 ? viewableItems[0].item.id : null;
+        setVisibleItem(newVisibleItem);
+    }, [setVisibleItem]);
 
     const sortedEvents = useMemo(() => {
         return events
@@ -200,6 +188,8 @@ export default function ReelsScreen() {
             });
     }, [events]);
 
+    const height = Dimensions.get('window').height - safeAreaInsets.bottom;
+
     return (
         <>
             <StatusBar hidden={true} />
@@ -208,13 +198,9 @@ export default function ReelsScreen() {
                     data={sortedEvents}
                     keyExtractor={(i) => i.id}
                     renderItem={({ item }) => <Reel event={item} />}
-                    estimatedItemSize={
-                        Dimensions.get('window').height - safeAreaInsets.bottom
-                    }
+                    estimatedItemSize={height}
                     snapToAlignment="start"
-                    snapToInterval={
-                        Dimensions.get('window').height - safeAreaInsets.bottom
-                    }
+                    snapToInterval={height}
                     decelerationRate="fast"
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={{

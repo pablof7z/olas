@@ -346,15 +346,15 @@ export function useFeedMonitor(
     const currentUser = useNDKCurrentUser();
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
 
-    const sliceToFilter = (slice: Slice): NDKFilter => {
-        const filters: Record<string, string[]> = {};
+    const sliceToFilter = (slice: Slice): NDKFilter[] => {
+        const filterValues: Record<string, string[]> = {};
         events.slice(slice.start, slice.end)
             .flatMap(event => Object.entries(event.filter()))
             .forEach(([key, value]) => {
-                filters[key] ??= [];
-                filters[key].push(value[0]);
+                filterValues[key] ??= [];
+                filterValues[key].push(value[0]);
             });
-        return filters;
+        return Object.entries(filterValues).map(([key, value]) => ({ [key]: value }));
     }
 
     // useEffect(() => {

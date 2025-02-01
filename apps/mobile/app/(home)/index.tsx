@@ -33,9 +33,7 @@ import { FeedEntry } from '@/components/Feed/hook';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
-import { LinearGradient } from 'expo-linear-gradient';
 import { usePostEditorStore } from '@/lib/post-editor/store';
-import { BlurView } from 'expo-blur';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 

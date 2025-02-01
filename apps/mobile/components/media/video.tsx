@@ -31,7 +31,6 @@ export default function VideoComponent({
 
     if (dimensions && !renderDimensions) {
         renderDimensions = calcDimensions(dimensions, maxDimensions);
-        console.log('video renderDimensions', renderDimensions, { dimensions, maxDimensions });
     }
     
     const videoSource = { uri: url };
@@ -61,7 +60,7 @@ export default function VideoComponent({
     return (
         <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
             <VideoView
-                style={{ width: _style.width, height: _style.height }}
+                style={{ width: _style.width, height: _style.height, flex: 1 }}
                 contentFit="cover"
                 player={player}
                 allowsFullscreen

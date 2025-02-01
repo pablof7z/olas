@@ -163,7 +163,7 @@ export default function RootLayout() {
             undefined,
             {
                 onEvent: (event) => {
-                    addReactionEvent(event);
+                    addReactionEvent(event, currentUser.pubkey);
                 },
                 onEose: () => {
                     const time = Date.now()/1000;
