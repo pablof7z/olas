@@ -16,9 +16,10 @@ export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Parti
 
     const aspectRatio = width / height;
     
+    const isLandscape = width > height;
     const isOverPortraitThreshold = height / width > 1.5;
 
-    if (isOverPortraitThreshold) {
+    if (isOverPortraitThreshold || isLandscape) {
         width = maxWidth;
         height = Math.min(maxHeight, Math.round(maxWidth / aspectRatio));
     } else {
@@ -111,6 +112,9 @@ export default function ImageComponent({
                 // onLoadStart={() => {
                 //     console.log('onLoadStart', cacheKey)
                 // }}
+                onError={(e) => {
+                    console.log('Image loading error', cacheKey, e)
+                }}
                 onLoadEnd={() => {
                     // console.log('onLoadEnd', cacheKey)
                     try {
@@ -130,7 +134,8 @@ export default function ImageComponent({
             <Text className="text-red-500">{finalDimensions?.width}x{finalDimensions?.height}</Text>
             <Text className="text-red-500">{dimensions?.width}x{dimensions?.height}</Text>
             <Text className="text-red-500">{imageSource?.width}x{imageSource?.height}</Text>
-            <Text className="text-red-500">{renderDimensions?.width}x{renderDimensions?.height}</Text> */}
+            <Text className="text-red-500">{renderDimensions?.width}x{renderDimensions?.height}</Text>
+            <Text className="text-red-500">{contentFit}</Text> */}
         </Pressable>
     );
 }

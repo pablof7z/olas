@@ -3,7 +3,6 @@ import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { selectedMediaAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, Pressable, View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';

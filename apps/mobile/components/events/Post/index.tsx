@@ -23,6 +23,7 @@ import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { getClientName } from '@/utils/event';
 import { useAppSettingsStore } from '@/stores/app';
+import { timeZero } from '@/app/_layout';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     return <EventMediaContainer
@@ -35,6 +36,7 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
 };
 
 export default function Post({ event, reposts, timestamp, onPress, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number; onPress?: () => void }) {
+    // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     let content = event.content.trim();
 
     if (event.kind === NDKKind.Text) {

@@ -97,10 +97,10 @@ const Reel = memo(
                 />
 
                 <SafeAreaView className="absolute bottom-0 pb-10 left-4 flex-col items-start gap-2">
-                    <Reactions event={event} foregroundColor="white" mutedColor="white" />
+                    <Reactions event={event} foregroundColor="white" inactiveColor="white" />
                     
                     <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={24} />
+                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} />
                         <Text className="flex-col text-base font-semibold text-white">
                             <User.Name userProfile={userProfile} pubkey={event.pubkey} />
                             <Text>
@@ -153,8 +153,6 @@ export default function ReelsScreen() {
                 })
         );
     }, [events]);
-
-    console.log('reel count', events.length, sortedEvents.length)
 
     return (
         <View className="flex-1 bg-card">

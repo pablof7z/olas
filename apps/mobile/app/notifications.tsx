@@ -122,6 +122,7 @@ export default function Notifications() {
             case 'all': return 0;
             case 'replies': return 1;
             case 'reactions': return 2;
+            case 'zaps': return 3;
         }
     }, [settingsTab]);
 
@@ -131,6 +132,8 @@ export default function Notifications() {
             return (event: NDKEvent) => excludeOwn(event);
         } else if (settingsTab === 'replies') {
             return (event: NDKEvent) => replyFilter(event) && excludeOwn(event);
+        } else if (settingsTab === 'zaps') {
+            return (event: NDKEvent) => [NDKKind.Nutzap, NDKKind.Zap].includes(event.kind) && excludeOwn(event);
         } else {
             return (event: NDKEvent) => reactionFilter(event) && excludeOwn(event);
         }
@@ -158,10 +161,15 @@ export default function Notifications() {
             <View style={styles.container} className="bg-card">
                 <NotificationPrompt />
                 <SegmentedControl
-                    values={['All', 'Replies', 'Reactions']}
+                    values={['All', 'Replies', 'Reactions', 'Zaps']}
                     selectedIndex={selectedIndex}
                     onIndexChange={(index) => {
-                        setSettingsTab(index === 0 ? 'all' : index === 1 ? 'replies' : 'reactions');
+                        switch (index) {
+                            case 0: setSettingsTab('all'); break;
+                            case 1: setSettingsTab('replies'); break;
+                            case 2: setSettingsTab('reactions'); break;
+                            case 3: setSettingsTab('zaps'); break;
+                        }
                     }}
             />
                 <FlashList

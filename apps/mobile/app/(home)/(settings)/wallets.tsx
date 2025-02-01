@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { createNip60Wallet } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
-import Primal from './primal';
+import { DEV_BUILD } from '@/utils/const';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
@@ -56,6 +56,9 @@ export default function WalletsScreen() {
     useEffect(() => {
         Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
             setPrimalSupported(supported);
+        }).catch((e) => {
+            // alert(e.message);
+            setPrimalSupported(false);
         });
     }, []);
 
@@ -84,7 +87,7 @@ export default function WalletsScreen() {
         options.push({
             id: 'nip60',
             title: 'Nostr-Native Wallet',
-            leftView: <IconView name="lightning-bolt" className="bg-orange-500 w-11 h-11 rounded-lg" />,
+            leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
             subTitle: 'Create a new NIP-60 wallet',
             disabled: true,
             onPress: () => {
@@ -97,23 +100,27 @@ export default function WalletsScreen() {
         options.push({
             id: 'nwc',
             title: 'Nostr Wallet Connect',
-            leftView: <IconView name="link" className="bg-gray-500 w-11 h-11 rounded-lg" />,
+            leftView: <IconView name="link" className="bg-gray-500 rounded-lg" />,
             subTitle: 'Connect to a Nostr Wallet',
             onPress: () => {
                 router.push('/(home)/(settings)/nwc');
             },
         });
 
-        if (primalSupported) {
-            options.push({
-                id: 'primal',
-                title: 'Connect Primal Wallet',
-                leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
-                subTitle: 'Connect to a Nostr Wallet',
-                onPress: () => {
-                    Linking.openURL('nostrnwc+primal://connect?appicon=https://olas.app/logo.png&appname=Olas&callback=olas://nwc');
-                },
-            });
+        if (DEV_BUILD) {
+            if (primalSupported) {
+                options.push('Wallet Apps')
+                
+                options.push({
+                    id: 'primal',
+                    title: 'Connect Primal Wallet',
+                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                    subTitle: `Primal Wallet`,
+                    onPress: () => {
+                        Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                    },
+                });
+            }
         }
 
         return options;

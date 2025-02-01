@@ -6,3 +6,9 @@ export const blacklistPubkeys = new Set([
 
 export const videoKinds = new Set([NDKKind.HorizontalVideo, NDKKind.VerticalVideo]);
 export const mainKinds = new Set([NDKKind.Image, ...videoKinds]);
+
+export const DEV_BUILD = false;
+
+export const PUBLISH_ENABLED = !DEV_BUILD || true;
+
+export const COMMUNITIES_ENABLED = DEV_BUILD && false;

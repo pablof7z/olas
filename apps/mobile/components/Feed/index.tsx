@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import { EventMediaGridContainer } from "../media/event";
 import { usePostBottomSheet } from "@/hooks/post-bottom-sheet";
+import { timeZero } from "@/app/_layout";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;

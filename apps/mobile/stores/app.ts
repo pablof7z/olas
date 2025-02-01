@@ -63,6 +63,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     defaultZap: defaultZapSetting,
     videosInFeed: 'from-follows',
     forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
+    editingPosts: [],
 
     init: async () => {
         const state: Partial<AppSettingsStoreState> = {
@@ -77,7 +78,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         if (removeLocation) state.removeLocation = removeLocation === 'true';
 
         const boost = SecureStore.getItem('boost');
-        if (boost) state.boost = boost;
+        if (boost) state.boost = boost === 'true';
 
         const seenNotificationsAt = SecureStore.getItem('seenNotificationsAt');
         if (seenNotificationsAt) state.seenNotificationsAt = parseInt(seenNotificationsAt);
@@ -96,8 +97,6 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const videosInFeed = SecureStore.getItem('videosInFeed');
         if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
-
-        console.log('setting init state', state);
 
         set({ ...state });
     },

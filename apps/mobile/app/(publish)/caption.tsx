@@ -1,11 +1,11 @@
 import { router, Stack } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, NativeSyntheticEvent, TextInputKeyPressEventData, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import { useAtom, useAtomValue } from 'jotai';
-import { metadataAtom, PostMetadata } from '@/components/NewPost/store';
 import { generateHashtags } from '@nostr-dev-kit/ndk-mobile';
-import { TagSelector, tagSelectorBottomSheetRefAtom } from '@/components/TagSelectorBottomSheet';
+import { mountTagSelectorAtom, TagSelector } from '@/components/TagSelectorBottomSheet';
+import { usePostEditorStore } from '@/lib/post-editor/store';
+import { useAtom } from 'jotai';
 
 function modifyTagsFromCaptionChange(
     tags: string[],
@@ -22,15 +22,19 @@ function modifyTagsFromCaptionChange(
     const newTags = generateHashtags(newCaption);
     newTags.forEach(tag => tagSet.add(tag));
 
-    console.log('tags', { previousTags, newTags });
-
     return Array.from(tagSet);
 }
 
 export default function Caption() {
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const metadata = usePostEditorStore(s => s.metadata);
+    const setMetadata = usePostEditorStore(s => s.setMetadata);
     const [description, setDescription] = useState(metadata?.caption ?? '');
     const [showTagSelector, setShowTagSelector] = useState(false);
+    const [mountTagSelector, setMountTagSelector] = useAtom(mountTagSelectorAtom);
+
+    useEffect(() => {
+        if (!mountTagSelector) setMountTagSelector(true);
+    }, [mountTagSelector, setMountTagSelector]);
 
     const setCaption = useCallback((caption: string) => {
         const tags = modifyTagsFromCaptionChange(metadata?.tags??[], metadata?.caption??'', caption);

@@ -3,13 +3,13 @@ import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo } from 'react';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { metadataAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, View } from 'react-native';
 import { MapPin, MapPinMinus, Type } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Button } from '@/components/nativewindui/Button';
 import { useAppSettingsStore } from '@/stores/app';
+import { usePostEditorStore } from '../store';
 
 type LocationBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 export const locationBottomSheetRefAtom = atom<LocationBottomSheetRefAtomType, [LocationBottomSheetRefAtomType], null>(
@@ -21,7 +21,8 @@ export function LocationBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(locationBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const metadata = usePostEditorStore(state => state.metadata);
+    const setMetadata = usePostEditorStore(state => state.setMetadata);
     const { colors } = useColorScheme();
     const setAppSettingRemoveLocation = useAppSettingsStore((state) => state.setRemoveLocation);
 

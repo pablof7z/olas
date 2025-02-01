@@ -17,6 +17,7 @@ import { activeEventAtom } from '@/stores/event';
 import EventContent from '@/components/ui/event/content';
 import { Check, Copy } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
+import Feed from '@/components/Feed';
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
     const { colors } = useColorScheme();
@@ -101,7 +102,6 @@ export default function Profile() {
     }
 
     const setActiveEvent = useSetAtom(activeEventAtom);
-    const { colors } = useColorScheme();
 
     const insets = useSafeAreaInsets();
     return (
@@ -187,25 +187,34 @@ export default function Profile() {
                         )}
                     </View>
                 ) : (
-                    <View style={{ flex: 1, marginTop: 10 }}>
-                        <MasonryFlashList
-                            data={sortedContent}
-                            numColumns={3}
-                            estimatedItemSize={100}
-                            keyExtractor={(item) => item.id}
-                            contentContainerStyle={{ paddingBottom: 60 }}
-                            renderItem={({ item, index }) => (
-                                <EventMediaGridContainer
-                                    event={item}
-                                    index={index}
-                                    onPress={() => {
-                                        setActiveEvent(item);
-                                        router.push('/view');
-                                    }}
-                                />
-                            )}
-                        />
-                    </View>
+                    <Feed
+                        filters={filters}
+                        filterKey="1"
+                        numColumns={3}
+                    />
+
+                    // <View style={{ flex: 1, marginTop: 10 }}>
+                    //     <MasonryFlashList
+                    //         data={sortedContent}
+                    //         numColumns={3}
+                    //         estimatedItemSize={100}
+                    //         keyExtractor={(item) => item.id}
+                    //         contentContainerStyle={{ paddingBottom: 60 }}
+                    //         renderItem={({ item, index }) => (
+                    //             <EventMediaGridContainer
+                    //                 event={item}
+                    //                 index={index}
+                    //                 onPress={() => {
+                    //                     setActiveEvent(item);
+                    //                     router.push('/view');
+                    //                 }}
+                    //                 onLongPress={() => {
+                    //                     Clipboard.setStringAsync(item.encode());
+                    //                 }}
+                    //             />
+                    //         )}
+                    //     />
+                    // </View>
                 )}
             </Animated.ScrollView>
         </View>

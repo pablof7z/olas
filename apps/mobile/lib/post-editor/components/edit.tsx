@@ -1,17 +1,44 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { create } from "zustand";
 import { useEffect, useMemo, useRef, useState, useCallback, RefObject, act } from "react";
 import { Dimensions, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import ViewShot from "react-native-view-shot";
-import { Button } from "../nativewindui/Button";
-import { Text } from "../nativewindui/Text";
+import { Button } from "@/components/nativewindui/Button";
+import { Text } from "@/components/nativewindui/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as FileSystem from "expo-file-system";
 import { Image, ImageRef, ImageStyle, useImage } from "expo-image";
-import { availableFilters, FilterSetting } from "./const";
-import { AppliedFilter, useEditImageStore } from "./store";
-import { Slider } from "../nativewindui/Slider";
+import { availableFilters, FilterSetting } from "@/lib/post-editor/const";
+import { Slider } from "@/components/nativewindui/Slider";
 import { Fullscreen, SquareDashed } from "lucide-react-native";
 import ImageCropPicker from "react-native-image-crop-picker";
+import { PostEditorStore, usePostEditorStore } from "@/components/NewPost/store";
+
+type AppliedFilter = {
+    name: string;
+    amount: number;
+}
+
+type EditImageStore = {
+    imageUri: string | null;
+    editedImageUri: string | null;
+    activeFilters: AppliedFilter[];
+    setImageUri: (uri: string) => void;
+    setEditedImageUri: (uri: string) => void;
+    setActiveFilters: (filters: AppliedFilter[]) => void;
+    reset: () => void;
+}
+
+export const useEditImageStore = create<EditImageStore>((set, get) => ({
+    imageUri: null,
+    editedImageUri: null,
+    activeFilters: [],
+    
+    setImageUri: (uri) => set({ imageUri: uri }),
+    setEditedImageUri: (uri) => set({ editedImageUri: uri }),
+    setActiveFilters: (filters) => set({ activeFilters: filters }),
+    reset: () => set({ imageUri: null, editedImageUri: null, activeFilters: [] }),
+}));
 
 const viewShotRefAtom = atom<RefObject<ViewShot> | null, [RefObject<ViewShot> | null], void>(null, (get, set, viewShot) => {
     set(viewShotRefAtom, viewShot);
@@ -21,38 +48,50 @@ const activeFilterAtom = atom<AppliedFilter | null, [AppliedFilter | null], void
     set(activeFilterAtom, filter);
 });
 
-export default function EditImageTool({ onComplete } : { onComplete: () => void}) {
-    const insets = useSafeAreaInsets();
+export default function EditImageTool() {
     const imageUri = useEditImageStore(s => s.imageUri);
-    const resetStore = useEditImageStore(s => s.reset);
     
-    const areaStyle = useMemo(() => ({
-        paddingBottom: 50,
-    }), [insets]);
-
     // useEffect(() => {
     //     return resetStore;
     // }, [])
 
+    console.log('EditImageTool imageUri', imageUri);
+
+    const originalImageUri = useEditImageStore(s => s.imageUri);
+    const editedImageUri = useEditImageStore(s => s.editedImageUri);
+
+    const effectiveUri = editedImageUri || originalImageUri;
+
+    const image = useImage({ uri: effectiveUri });
+    
     if (!imageUri) return null;
 
     return (
-        <SafeAreaView className="flex-1 items-stretch justify-between bg-black flex-col w-full gap-4">
-            <ImageWithAppliedFilters />
-
-            <View className="flex-col gap-2 w-fill absolute bottom-0 left-0 right-0">
-                <Filters style={styles.filtersContainer} />
-                
-                <Actions onComplete={onComplete} />
+        <>
+        <View className="flex-1 bg-black flex-col w-full gap-4" style={{ height: '100%' }}>
+            <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                <PreviewWithFilters image={image} />
             </View>
-        </SafeAreaView>
+
+            <View className="flex-col gap-2">
+                <Filters />
+                <Actions />
+            </View>
+        </View>
+        <ImageWithAppliedFilters image={image} />
+        </>
     )
 }
 
-export function Actions({ onComplete }: { onComplete: () => void}) {
+export function Actions() {
     const viewShotRef = useAtomValue(viewShotRefAtom);
     const editImageState = useEditImageStore();
+    const setEditedImageUri = useEditImageStore(s => s.setEditedImageUri);
     const activeFilter = useAtomValue(activeFilterAtom);
+    const editingIndex = usePostEditorStore(s => s.editingIndex);
+    const media = usePostEditorStore(s => s.media);
+    const setMedia = usePostEditorStore(s => s.setMedia);
+    const [imageUri, setEditImageUri] = useEditImageStore(s => [s.imageUri, s.setImageUri]);
 
     const filtersApplied = useMemo(() => {
         if (activeFilter || editImageState.activeFilters.length > 0) return true;
@@ -63,40 +102,54 @@ export function Actions({ onComplete }: { onComplete: () => void}) {
         return !!editImageState.editedImageUri;
     }, [ editImageState.editedImageUri ])
 
-    useEffect(() => {
-        console.log('does actions have a ref?', !!viewShotRef, !!viewShotRef?.current)
-    }, [ viewShotRef?.current ])
+    const resetStore = useEditImageStore(s => s.reset);
+    const setEditingIndex = usePostEditorStore(s => s.setEditingIndex);
+    
+    const onComplete = useCallback(() => {
+        resetStore();
+    }, [resetStore])
 
     const handleContinue = useCallback(async () => {
         if (!cropped && !filtersApplied) { 
-            if (editImageState.cb)
-                editImageState.cb(editImageState.imageUri);
+            const newState = [...media];
+            newState[editingIndex].uris.unshift(imageUri);
+            setMedia(newState);
+            setEditImageUri(null);
         } else {
-            if (!viewShotRef.current) {
-                alert("You've discovered an Olas bug. Congrats! Can you tell Pablo?")
-                return;
-            }
+            if (!filtersApplied) {
+                const newState = [...media];
+                newState[editingIndex].uris.unshift(editImageState.editedImageUri);
+                editImageState.setEditedImageUri(null);
+                setMedia(newState);
+            } else {
+                if (!viewShotRef.current) {
+                    alert("You've discovered an Olas bug. Congrats! Can you tell Pablo?")
+                    return;
+                }
 
-            try {
-                const uri = await viewShotRef.current.capture();
-                const filename = `${FileSystem.cacheDirectory}filtered-${Date.now()}.jpg`;
-                await FileSystem.copyAsync({
-                    from: uri,
-                    to: filename
-                });
+                try {
+                    const uri = await viewShotRef.current.capture();
+                    const filename = `${FileSystem.cacheDirectory}filtered-${Date.now()}.jpg`;
+                    await FileSystem.copyAsync({
+                        from: uri,
+                        to: filename
+                    });
 
-                editImageState.setEditedImageUri(uri);
-
-                if (editImageState.cb)
-                    editImageState.cb(uri)
-            } catch (error) {
-                console.error('Error saving filtered image:', error);
+                    // editImageState.setEditedImageUri(uri);
+                    const newState = [...media];
+                    newState[editingIndex].uris.unshift(uri);
+                    setMedia(newState);
+                } catch (error) {
+                    console.error('Error saving filtered image:', error);
+                }
             }
         }
 
+        setEditingIndex(null);
+        setEditedImageUri(null);
         onComplete();
-    }, [editImageState, filtersApplied, onComplete, viewShotRef?.current])
-    
+    }, [cropped, filtersApplied, media, setMedia, editImageState, onComplete, viewShotRef?.current])
+
     return (
         <View className="flex-col w-full pt-0 p-4">
             <Button 
@@ -123,34 +176,51 @@ export function Actions({ onComplete }: { onComplete: () => void}) {
     );
 }
 
-export function ImageWithAppliedFilters() {
-    const originalImageUri = useEditImageStore(s => s.imageUri);
-    const editedImageUri = useEditImageStore(s => s.editedImageUri);
+export function PreviewWithFilters({ image }: { image: ImageRef }) {
+    const activeFilters = useEditImageStore(s => s.activeFilters);
 
-    const effectiveUri = editedImageUri || originalImageUri;
+    const activeFilter = useAtomValue(activeFilterAtom);
 
-    const image = useImage({ uri: effectiveUri });
+    console.log('active filter in preview', activeFilter?.name);
+
+    const imageWidth = Dimensions.get('screen').width;
+    const imageHeight = image?.height ? imageWidth * (image?.height / image?.width) : 0;
+    const aspectRatio = image?.width / image?.height;
+
+    const style = { flex: 1, width: imageWidth, aspectRatio };
     
+    if (!image || !imageHeight) {
+        return null;
+    }
+
+    console.log('preview with size', imageWidth, imageHeight);
+
+    const activeFilterSetting = activeFilter ? availableFilters[activeFilter.name] : null;
+    const ActiveFilterComponent = activeFilterSetting?.component;
+
+    return (
+        <View style={{ width: imageWidth, aspectRatio }}>
+            {ActiveFilterComponent ? (
+                <ActiveFilterComponent amount={activeFilter?.amount} style={style}>
+                    <RecursiveFilters index={0} filters={activeFilters} image={image} style={style} />
+                </ActiveFilterComponent>
+            ) : (
+                <RecursiveFilters index={0} filters={activeFilters} image={image} style={style} />
+            )}
+        </View>
+    )
+}
+
+export function ImageWithAppliedFilters({ image }: { image: ImageRef }) {
     const ref = useRef<ViewShot>(null);
     const activeFilters = useEditImageStore(s => s.activeFilters);
     const setViewShotRef = useSetAtom(viewShotRefAtom);
 
     useEffect(() => {
-        console.log('ref', !!ref)
-        
-        if (ref.current) {
-            console.log('setting setViewShotRef')
-            setViewShotRef(ref);
-        } else {
-            console.log('we dont have a ref', effectiveUri)
-        }
+        if (ref.current) setViewShotRef(ref);
     }, [ref.current])
 
     const activeFilter = useAtomValue(activeFilterAtom);
-
-    if (!effectiveUri) {
-        return null;
-    }
 
     const imageWidth = Dimensions.get('screen').width;
     const imageHeight = image?.height ? imageWidth * (image?.height / image?.width) : 0;
@@ -158,7 +228,6 @@ export function ImageWithAppliedFilters() {
     const style = { width: imageWidth, height: imageHeight };
     
     if (!image || !imageHeight) {
-        console.log('no image or image height', effectiveUri, !!image, !!imageHeight)
         return null;
     }
 
@@ -166,30 +235,22 @@ export function ImageWithAppliedFilters() {
     const ActiveFilterComponent = activeFilterSetting?.component;
 
     return (
-        <ViewShot ref={ref} options={{ format: 'jpg', quality: 1.0 }} style={{ width: imageWidth, height: imageHeight, backgroundColor: 'transparent' }}>
+        <ViewShot ref={ref} options={{ format: 'jpg', quality: 1.0 }} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: -1, width: imageWidth, height: imageHeight, backgroundColor: 'transparent' }}>
             {ActiveFilterComponent ? (
-                <ActiveFilterComponent amount={activeFilter?.amount}>
+                <ActiveFilterComponent amount={activeFilter?.amount} style={style}>
                     <RecursiveFilters index={0} filters={activeFilters} image={image} style={style} />
                 </ActiveFilterComponent>
             ) : (
-                <RecursiveFilters index={0} filters={activeFilters} image={image} style={style} />
+                <Text>No filter</Text>
             )}
         </ViewShot>
     )
-
-    // {activeFilter ? (
-            //     <ImageWithFilter filter={activeFilter.component} amount={activeFilter.hasAmount ? filterAmount : undefined}>
-            //         <Image source={image} style={{ width: imageWidth, height: imageHeight }} contentFit="contain" />
-            //     </ImageWithFilter>
-            // ) : (
-            //     <Image source={image} style={{ width: imageWidth, height: imageHeight }} contentFit="contain" />
-            // )}
 }
 
 function RecursiveFilters({ index, filters, image, style }: { index: number, filters: AppliedFilter[], image: ImageRef, style: ImageStyle }) {
     const filter = filters[index];
 
-    if (!filter) return <Image source={image} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+    if (!filter) return <Image source={image} style={style} contentFit="contain" />
     
     const filterSetting = availableFilters[filter.name];
     
@@ -261,9 +322,8 @@ function FilterButton({
     );
 }
 
-export function Filters({ style }: { activeFilter?: string, style: ImageStyle }) {
+export function Filters() {
     const originalImageUri = useEditImageStore(s => s.imageUri);
-    const editedImageUri = useEditImageStore(s => s.editedImageUri);
     const buttonStyle = useMemo(() => ({ width: 80, height: 70, borderRadius: 10 }), []);
     const [activeFilter, setActiveFilter] = useAtom(activeFilterAtom);
     const setEditedImageUri = useEditImageStore(s => s.setEditedImageUri);
@@ -286,8 +346,11 @@ export function Filters({ style }: { activeFilter?: string, style: ImageStyle })
         }, 50);
     }, [activeFilter, setActiveFilter]);
 
-    const activeImagePath = editedImageUri || originalImageUri;
-
+    const editingIndex = usePostEditorStore(s => s.editingIndex);
+    const media = usePostEditorStore(s => s.media);
+    console.log('media has length', !!media, media?.length, editingIndex);
+    const activeImagePath = media[editingIndex].uris?.[0];
+    
     const crop = useCallback(async (options: any) => {
         try {
             const croppedImage = await ImageCropPicker.openCropper({
@@ -376,7 +439,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     filtersContainer: {
-        height: 120,
+        height: 100,
         width: '100%',
     },
     applyButton: {
@@ -384,20 +447,20 @@ const styles = StyleSheet.create({
     },
 
     filterButtonContainer: {
-        width: 100,
-        height: 120,
+        width: 80,
+        height: 100,
         padding: 5,
-        margin: 10,
+        marginHorizontal: 10,
         borderRadius: 18,
     },
     
     cropButton: {
-        width: 90,
-        height: 80,
-        borderRadius: 18,
+        width: 140,
+        height: 40,
+        borderRadius: 10,
         padding: 5,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        flexDirection: 'column',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,

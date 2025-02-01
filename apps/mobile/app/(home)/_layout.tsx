@@ -9,18 +9,17 @@ import { useAtomValue } from 'jotai';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { useNewPost } from '@/hooks/useNewPost';
-import { Linking } from 'react-native';
+import { usePostEditorStore } from '@/lib/post-editor/store';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
 
+    const openPickerIfEmpty = usePostEditorStore(s => s.openPickerIfEmpty);
+
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
-
-    const { imagePicker: newPost } = useNewPost();
 
     return (
         <Tabs
@@ -75,7 +74,7 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            newPost({ types: ['images', 'videos'] });
+                            openPickerIfEmpty();
                             router.push('/(publish)');
                         }
                     },

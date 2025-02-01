@@ -6,6 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { toast, Toasts } from '@backpackapp-io/react-native-toast';
+import { StyleSheet } from 'react-native';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCurrentUser, useNDKNutzapMonitor, useNDKCacheInitialized } from '@nostr-dev-kit/ndk-mobile';
@@ -27,25 +28,26 @@ import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
 import { useAppSettingsStore } from '@/stores/app';
-import { AlbumsBottomSheet } from '@/components/NewPost/AlbumsBottomSheet';
-import { BoostBottomSheet } from '@/components/NewPost/BoostBottomSheet';
-import { LocationBottomSheet } from '@/components/NewPost/LocationBottomSheet';
 import { PromptForNotifications } from './notification-prompt';
-import PostTypeSelectorBottomSheet from '@/components/NewPost/TypeSelectorBottomSheet';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
-import { mainKinds } from '@/utils/const';
+import { DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import { db, initialize } from "@/stores/db";
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
-import { CommunityBottomSheet } from '@/components/NewPost/CommunityBottomSheet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { useReactionsStore } from '@/stores/reactions';
+import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
+import { CommunityBottomSheet } from '@/lib/post-editor/sheets/CommunityBottomSheet';
+
+export const timeZero = Date.now();
 
 initialize()
+
+const cacheAdapter = new NDKCacheAdapterSqlite('olas')
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
@@ -63,7 +65,7 @@ const settingsStore = {
 
 const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
     const url = new URL(relay.url);
-    if (direction === 'send' && relay.url.match(/olas/)) console.log('👉', url.hostname, msg.slice(0, 400));
+    if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 400));
     // if (direction === 'recv' && relay.url.match(/olas/i)) console.log('👈', url.hostname, msg.slice(0, 400));
 };
 
@@ -100,7 +102,7 @@ export default function RootLayout() {
         relays.unshift('wss://purplepag.es/');
     }
     
-    const { ndk, init: initializeNDK } = useNDK() as { ndk: NDK, init: (opts: any) => void };
+    const { ndk, init: initializeNDK } = useNDK();
     const initializeSession = useNDKSessionInit();
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const currentUser = useNDKCurrentUser();
@@ -139,41 +141,45 @@ export default function RootLayout() {
     const addReactionEvent = useReactionsStore((state) => state.addEvent);
 
     useEffect(() => {
-        if (!ndk || !currentUser?.pubkey) return;
-        if (ndk && timeoutRef.current) return;
+        if (!ndk || !currentUser?.pubkey || !appReady) return;
 
         const timeSinceLastAppSync = SecureStore.getItem('timeSinceLastAppSync');
         const sinceFilter = timeSinceLastAppSync ? { since: parseInt(timeSinceLastAppSync) } : {};
 
         const kindString = Array.from(mainKinds).map((k) => k.toString());
 
-        const appSub = ndk.subscribe([
+        const filters = [
             { kinds: [NDKKind.Text], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.GenericReply], "#K": kindString, '#p': [currentUser.pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericReply], "#K": kindString, '#p': [currentUser.pubkey]},
             { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [currentUser.pubkey], ...sinceFilter },
                 // { authors: [user.pubkey], limit: 100 },
-        ], { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['since', '#p'] }, undefined);
-        let receivedEvents = 0;
-        appSub.on('event', (event) => {
-            receivedEvents++;
-            addReactionEvent(event);
-        });
-        appSub.on('eose', () => {
-            const time = Date.now()/1000;
-            console.log('appSub eose, setting timeSinceLastAppSync to', time, {receivedEvents});
-            SecureStore.setItem('timeSinceLastAppSync', time.toString());
-        })
-    }, [ndk, currentUser?.pubkey])
+        ]
+
+        ndk.subscribe(filters,
+            { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['#p'] },
+            undefined,
+            {
+                onEvent: (event) => {
+                    addReactionEvent(event);
+                },
+                onEose: () => {
+                    const time = Date.now()/1000;
+                    SecureStore.setItem('timeSinceLastAppSync', time.toString());
+                }
+            }
+        );
+    }, [ndk, currentUser?.pubkey, appReady])
 
     useEffect(() => {
         if (!ndk) return;
         if (!appReady) {
-                        setAppReady(true);
-                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                    }
+            console.log('setting app ready');
+            setAppReady(true);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        }
     }, [ndk])
 
     useEffect(() => {
@@ -204,6 +210,7 @@ export default function RootLayout() {
             {
                 onReady: () => {
                     if (!appReady) {
+                        console.log('setting app ready in onReady');
                         setAppReady(true);
                         if (timeoutRef.current) clearTimeout(timeoutRef.current);
                     }
@@ -216,16 +223,19 @@ export default function RootLayout() {
     useEffect(() => {
         const currentUserInSettings = SecureStore.getItem('currentUser');
 
+        const opts: any = {};
+        if (DEV_BUILD) opts.netDebug = netDebug;
+
         initializeNDK({
             explicitRelayUrls: relays,
-            cacheAdapter: new NDKCacheAdapterSqlite('olas'),
+            cacheAdapter,
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
             lowestValidationRatio: 0.0,
-            // netDebug,
             clientName: 'olas',
             clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
             settingsStore,
+            ...opts,
         });
 
         if (!currentUserInSettings) {
@@ -254,23 +264,23 @@ export default function RootLayout() {
         initAppSettings();
         
         // Configure push notifications
-        configurePushNotifications();
+        // configurePushNotifications();
         
         // Notification received while app is running
-        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-            console.log('Notification received:', notification);
-        });
+        // const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+        //     console.log('Notification received:', notification);
+        // });
 
-        // Notification tapped by user
-        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-            console.log('Notification response:', response);
-            // Here you can handle notification taps
-        });
+        // // Notification tapped by user
+        // const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+        //     console.log('Notification response:', response);
+        //     // Here you can handle notification taps
+        // });
 
-        return () => {
-            Notifications.removeNotificationSubscription(notificationListener);
-            Notifications.removeNotificationSubscription(responseListener);
-        };
+        // return () => {
+        //     Notifications.removeNotificationSubscription(notificationListener);
+        //     Notifications.removeNotificationSubscription(responseListener);
+        // };
     }, []);
 
     if (!timeSinceFirstRender) timeSinceFirstRender = Date.now();
@@ -284,8 +294,6 @@ export default function RootLayout() {
     }, [])
 
     useWalletMonitor();
-
-    // useEffect(() => { console.log('modalPresentation changed', !!modalPresentation, Date.now() - timeSinceFirstRender); }, [modalPresentation])
 
     return (
         <>
@@ -351,17 +359,17 @@ export default function RootLayout() {
                                     </Stack>
                                     
                                 <PostOptionsMenu />
-                                <BoostBottomSheet />
                                 <LocationBottomSheet />
-                                <CommunityBottomSheet />
-                                <AlbumsBottomSheet />
-                                <PostTypeSelectorBottomSheet />
+                                {/* <CommunityBottomSheet /> */}
+                                {/* <AlbumsBottomSheet /> */}
+                                {/* <PostTypeSelectorBottomSheet /> */}
                                 <FeedTypeBottomSheet />
                                 {/* <HandleNotificationPrompt /> */}
                                 <TagSelectorBottomSheet />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />
+                            <DevelopmentStatus />
                         </KeyboardProvider>
                     </LoaderScreen>
                 </BottomSheetModalProvider>
@@ -369,6 +377,31 @@ export default function RootLayout() {
         </>
     );
 }
+
+function DevelopmentStatus() {
+    if (!DEV_BUILD) return null;
+    
+    return (
+        <View style={styles.developmentStatus}>
+            <View style={styles.developmentStatusIndicator} />
+        </View>
+    )
+}
+
+const styles = StyleSheet.create({
+    developmentStatus: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+    },
+    developmentStatusIndicator: {
+        width: 6,
+        height: 6,
+        backgroundColor: PUBLISH_ENABLED ? 'green' : 'red',
+        borderRadius: 100,
+        zIndex: 1000,
+    }
+});
 
 function HandleNotificationPrompt() {
     const promptedForNotifications = useAppSettingsStore(state => state.promptedForNotifications);

@@ -1,9 +1,7 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { multiImageModeAtom } from './store';
 import { PostMedia } from './MediaPreview';
 import { Dimensions, Pressable, View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
-import { selectedMediaAtom } from './store';
 import { MediaPreview } from './MediaPreview';
 import { MasonryFlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,14 +31,6 @@ export default function AlbumsView() {
 
 
 
-export async function determineMimeType(uri: string) {
-    // read the file and get the mime type
-    const fileContent = await fetch(uri).then((response) => response.blob());
-    const mimeType = fileContent.type;
-    console.log('mimeType', mimeType);
-
-    return mimeType;
-}
 
 
 

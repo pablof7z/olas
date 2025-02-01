@@ -56,11 +56,21 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
             const newReactions = new Map(state.reactions);
 
             // Get the event being reacted to
-            const targetEventId = event.tagValue('e');
-            if (!targetEventId) return state;
+            let targetRootEventId: string | undefined;
+            let targetEventId: string | undefined;
+            for (const tag of event.tags) {
+                if (tag[0] === 'E') {
+                    targetRootEventId = tag[1];
+                    break;
+                } else if (tag[0] === 'e' && !targetEventId) {
+                    targetEventId = tag[1];
+                }
+            }
+            targetRootEventId ??= targetEventId;
+            if (!targetRootEventId) return state;
 
             // Get or create stats for this event
-            let stats = newReactions.get(targetEventId) || {...DEFAULT_STATS};
+            let stats = newReactions.get(targetRootEventId) || {...DEFAULT_STATS};
             
             switch (event.kind) {
                 case NDKKind.Reaction:
@@ -107,7 +117,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
                         stats.bookmarkedByUser = true;
                     }
             }
-            newReactions.set(targetEventId, stats);
+            newReactions.set(targetRootEventId, stats);
 
             return { reactions: newReactions };
         });

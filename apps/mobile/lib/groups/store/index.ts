@@ -2,15 +2,9 @@ import NDK, { Hexpubkey, NDKUser, useNDK, useNDKCurrentUser } from "@nostr-dev-k
 import { create } from "zustand";
 import { loadGroups, loadMyGroups } from "./load";
 import { useEffect } from "react";
+import { GroupEntry } from "../types";
 
-export type GroupEntry = {
-    groupId: string;
-    relayUrls?: string[];
-    name?: string;
-    about?: string;
-    picture?: string;
-    members: Set<Hexpubkey>;
-}
+
 
 export type GroupStoreState = {
     groups: Map<string, GroupEntry>;

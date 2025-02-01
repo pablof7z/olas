@@ -48,10 +48,7 @@ export default function React({
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
     
     const react = useCallback(async () => {
-        if (reactedByUser) {
-            console.log('already reacted');
-            return;
-        }
+        if (reactedByUser) return;
         
         const r = await event.react('+', false);
         r.tags.push(['k', event.kind.toString()]);
@@ -61,7 +58,6 @@ export default function React({
         
         r.publish()
             .then((relays) => {
-                console.log('reacted', Array.from(relays).map(r => r.url).join(', '));
             })
             .catch(e => {
                 console.error(e);

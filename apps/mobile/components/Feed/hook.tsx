@@ -1,3 +1,4 @@
+import { timeZero } from "@/app/_layout";
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
 import { useReactionsStore } from "@/stores/reactions";
 import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
@@ -92,7 +93,7 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        // console.log(`[FEED HOOK ${time}ms] updating entries, we start with`, { reason });
+        // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, entries.length, { reason });
         let newEntries = Array.from(feedEntriesRef.current.values())
             .filter((entry) => !!entry.event)
             .filter((entry: FeedEntry) => ( !isMutedEvent(entry.event) && !pubkeyBlacklist.has(entry.event?.pubkey) ))
@@ -100,22 +101,29 @@ export function useFeedEvents(
         if (filterFn)
             newEntries = newEntries.filter(filterFn);
         
+        if (newEntries.length === 0 && entries.length === 0) return;
+
         newEntries = newEntries.sort((a, b) => b.timestamp - a.timestamp);
 
-        setEntries(newEntries);
-        if (newEntries.length > 0) setNewEntries([]);
+        // console.log(`[${Date.now() - timeZero}ms]`, 'setting entries', newEntries.length)
+        setEntries(newEntries.slice(0, 300));
+        if (newEntries.length > 0) {
+            // console.log(`[${Date.now() - timeZero}ms]`, 'emptying new entries', newEntries.length)
+            setNewEntries([]);
+        }
         
-        // console.log(`[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
+        // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
     }, [setEntries, setNewEntries, isMutedEvent, filterFn]);
 
     useEffect(() => {
+        if (feedEntriesRef.current.size === 0) return;
         updateEntries('update entries changed');
     }, [updateEntries]);
 
-    useEffect(() => console.log('set entries changed'), [setEntries])
-    useEffect(() => console.log('set new entries changed'), [setNewEntries])
-    useEffect(() => console.log('is muted event changed'), [isMutedEvent])
-    useEffect(() => console.log('filter fn changed'), [filterFn])
+    // useEffect(() => console.log('set entries changed'), [setEntries])
+    // useEffect(() => console.log('set new entries changed'), [setNewEntries])
+    // useEffect(() => console.log('is muted event changed'), [isMutedEvent])
+    // useEffect(() => console.log('filter fn changed'), [filterFn])
 
     const highestTimestamp = useRef(-1);
 
@@ -234,7 +242,8 @@ export function useFeedEvents(
      * we are not connected to relays and there won't be an EOSE coming any time soon.
      */
     const handleCacheEose = useCallback(() => {
-        // updateEntries('cache-eose');
+        console.log('cache eose')
+        updateEntries('cache-eose');
     }, [updateEntries]);
 
     const filterExistingEvents = useCallback(() => {
@@ -276,9 +285,9 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
+        // console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
         
-        const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId }, relaySet, false);
+        const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] }, relaySet, false);
 
         sub.on("event", handleEvent);
         sub.once('eose', handleEose);
@@ -347,6 +356,10 @@ export function useFeedMonitor(
             });
         return filters;
     }
+
+    // useEffect(() => {
+    //     if
+    // }, [events[0]?.id, ])
 
     // const handleEvent = (event: NDKEvent) => {
     //     const id = event.tagId();

@@ -14,8 +14,6 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { NDKNip55Signer } from '@nostr-dev-kit/ndk-mobile';
 import { toast } from '@backpackapp-io/react-native-toast';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { prepareMedia } from '@/components/NewPost/prepare';
-import { uploadMedia } from '@/components/NewPost/upload';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
@@ -259,7 +257,7 @@ export default function LoginScreen() {
                             <ArrowRight size={24} color="white" />
                         </Button>
 
-                        <LoginWithNip55Button />
+                        {/* <LoginWithNip55Button /> */}
                         
                         {/* {Platform.OS === 'android' && (
                             <Button variant="accent" onPress={loginWithAmber}>

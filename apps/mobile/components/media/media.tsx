@@ -1,7 +1,7 @@
 import { urlIsVideo } from '@/utils/media';
 import ImageComponent from './image';
 import VideoComponent from './video';
-import { StyleProp, ViewStyle } from 'react-native';
+import { Dimensions, StyleProp, ViewStyle } from 'react-native';
 import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
 
@@ -35,6 +35,7 @@ export default function MediaComponent({
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
+    const forceDimensions= width && height ? { width, height } : undefined;
     const {
         url,
         blurhash,
@@ -57,6 +58,7 @@ export default function MediaComponent({
         return (
             <VideoComponent
                 url={url}
+                forceDimensions={forceDimensions}
                 dimensions={dimensions}
                 maxDimensions={{ width: maxWidth, height: maxHeight }}
                 onPress={onPress}
@@ -66,8 +68,6 @@ export default function MediaComponent({
             />
         );
     }
-
-    const forceDimensions= width && height ? { width, height } : undefined;
 
     return (
         <ImageComponent

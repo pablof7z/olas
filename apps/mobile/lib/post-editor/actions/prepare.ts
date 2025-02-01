@@ -1,12 +1,12 @@
 import { Blurhash } from 'react-native-blurhash';
-import { PostMedia } from './MediaPreview';
 import * as FileSystem from 'expo-file-system';
-import { Location } from './store';
 import { Image as CompressedImage } from 'react-native-compressor';
 import * as Exify from '@lodev09/react-native-exify';
 import { Image } from 'expo-image';
-import { determineMimeType } from './AlbumsView';
+import { determineMimeType } from '@/utils/url';
 import * as RNFS from 'react-native-fs';
+import { PostMedia } from '../types';
+import { Location } from '@/lib/post/types';
 
 export async function prepareMedia(media: PostMedia[]): Promise<PostMedia[]> {
     const res = [];
@@ -22,16 +22,16 @@ export async function prepareMedia(media: PostMedia[]): Promise<PostMedia[]> {
 export async function prepareMediaItem(media: PostMedia): Promise<PostMedia> {
     let { mimeType, blurhash, width, height } = media;
 
-    if (!mimeType) mimeType = await determineMimeType(media.originalUri);
+    if (!mimeType) mimeType = await determineMimeType(media.uris[0]);
 
     let location: Location | undefined;
     let newUri: string;
 
-    if (media.mediaType === 'photo') {
+    if (media.mediaType === 'image') {
         const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         newUri = FileSystem.cacheDirectory + randomId + '.jpg';
 
-        await FileSystem.copyAsync({ from: media.originalUri, to: newUri });
+        await FileSystem.copyAsync({ from: media.uris[0], to: newUri });
 
         const exif = await Exify.readAsync(newUri);
         const hasLocation = exif.GPSLatitude !== undefined && exif.GPSLongitude !== undefined;
@@ -58,13 +58,13 @@ export async function prepareMediaItem(media: PostMedia): Promise<PostMedia> {
         // zero-out the gps data
         await Exify.writeAsync(compressedUri, zeroedGpsData);
     } else {
-        newUri = media.originalUri;
+        newUri = media.uris[0];
     }
 
     // getting sha256
     const sha256 = await RNFS.hash(newUri, 'sha256');
 
-    if (!blurhash && media.mediaType === 'photo') {
+    if (!blurhash && media.mediaType === 'image') {
         try {
             blurhash = await generateBlurhash(newUri);
         } catch (error) {
@@ -72,10 +72,12 @@ export async function prepareMediaItem(media: PostMedia): Promise<PostMedia> {
         }
     }
 
+    const copy = { ...media };
+    copy.uris.unshift(newUri);
+    copy.sha256 = sha256;
+
     return {
-        ...media,
-        originalUri: newUri,
-        sha256,
+        ...copy,
         blurhash,
         width,
         height,

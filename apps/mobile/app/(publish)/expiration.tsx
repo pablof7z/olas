@@ -5,10 +5,11 @@ import { Button as ButtonComponent } from '@/components/nativewindui/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Text } from '@/components/nativewindui/Text';
 import { useAtom } from 'jotai';
-import { metadataAtom } from '@/components/NewPost/store';
+import { usePostEditorStore } from '@/lib/post-editor/store';
 
-export default function Caption() {
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+export default function ExpirationScreen() {
+    const metadata = usePostEditorStore(s => s.metadata);
+    const setMetadata = usePostEditorStore(s => s.setMetadata);
     const [date, setDate] = useState(new Date(metadata?.expiration ?? new Date().getTime() + 1000 * 60 * 60 * 24));
 
     const setExpiration = (expiration?: number) => {
@@ -18,7 +19,6 @@ export default function Caption() {
     const onChange = (event, selectedDate) => {
         // if it's in the past, set it to now
         const currentDate = selectedDate;
-        console.log('selectedDate', selectedDate);
         setDate(currentDate);
         setExpiration(currentDate.getTime());
     };

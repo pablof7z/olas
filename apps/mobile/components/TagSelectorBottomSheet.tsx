@@ -3,7 +3,6 @@ import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { metadataAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, FlatList, TextInput, View } from 'react-native';
 import { getPostsByUser } from '@/utils/db';
@@ -12,6 +11,9 @@ import { List, ListItem } from './nativewindui/List';
 import { cn } from '@/lib/cn';
 import { myFollows } from '@/utils/myfollows';
 import { Button } from './nativewindui/Button';
+import { usePostEditorStore } from '@/lib/post-editor/store';
+import { Hash } from 'lucide-react-native';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export const mountTagSelectorAtom = atom<boolean, [boolean], null>(false, (get, set, value) =>
     set(mountTagSelectorAtom, value)
@@ -28,19 +30,27 @@ type TagEntry = {
     count: number;
 }
 
-type TagSelectorSheetRefAtomType = RefObject<BottomSheetModal> | null;
+export type TagSelectorSheetRefAtomType = RefObject<BottomSheetModal> | null;
 
 export const tagSelectorBottomSheetRefAtom = atom<TagSelectorSheetRefAtomType, [TagSelectorSheetRefAtomType], null>(null, (get, set, value) =>
     set(tagSelectorBottomSheetRefAtom, value)
+);
+
+export type TagSelectorBottomSheetCbType = (tags: string[]) => void;
+
+export const tagSelectorBottomSheetCbAtom = atom<TagSelectorBottomSheetCbType, [TagSelectorBottomSheetCbType], null>(null, (get, set, value) =>
+    set(tagSelectorBottomSheetCbAtom, value)
 );
 
 export function TagSelectorBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const metadata = usePostEditorStore(s => s.metadata);
+    const setMetadata = usePostEditorStore(s => s.setMetadata);
     const selectedTags = useRef<Set<string>>(new Set());
     const [selectedCount, setSelectedCount] = useState(0);
+    const tagSelectorCb = useAtomValue<TagSelectorBottomSheetCbType>(tagSelectorBottomSheetCbAtom);
 
     useEffect(() => {
         selectedTags.current.clear();
@@ -69,8 +79,18 @@ export function TagSelectorBottomSheet() {
     }, [metadata, setMetadata]);
 
     return (
-        <Sheet ref={ref} onDismiss={updateCaption}>
-            <BottomSheetView style={{ paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
+        <Sheet ref={ref}>
+            <BottomSheetView style={{ flexDirection: 'column', paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
+                <View className="px-4 py-2 flex-col gap-2 w-full">
+                    <View className="flex-row items-center justify-between w-full">
+                        <Text variant="title1" className="text-foreground">Tag your post</Text>
+                        <Button size="sm" variant="primary" onPress={() => tagSelectorCb?.(Array.from(selectedTags.current))}>
+                            <Text>Done</Text>
+                        </Button>
+                    </View>
+                    <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
+                </View>
+                
                 <TagSelector />
             </BottomSheetView>
         </Sheet>
@@ -78,8 +98,8 @@ export function TagSelectorBottomSheet() {
 }
 
 export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void }) {
-    const inset = useSafeAreaInsets();
-    const [metadata, setMetadata] = useAtom(metadataAtom);
+    const metadata = usePostEditorStore(s => s.metadata);
+    const setMetadata = usePostEditorStore(s => s.setMetadata);
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
@@ -155,6 +175,8 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         setSearch('');
     }, [setTagsInMetadata, setSelectedCount, setSearch, onSelected]);
 
+    const {colors} = useColorScheme();
+    
     const keyExtractor = (item: TagEntry) => item.tag;
     const renderItem = useCallback(({ item, index }: { item: TagEntry, index: number, target }) => {
         const isSelected = selectedTags.current.has(item.tag);
@@ -162,12 +184,13 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
             <ListItem
                 className={cn(
                     'ios:pl-0 pl-2',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
                 )}
                 titleClassName={cn(
                     isSelected && '!text-primary !font-bold',
                 )}
-                leftView={<Text className={cn("text-muted-foreground pl-4", isSelected && '!text-primary !font-bold')}>#</Text>}
+                leftView={
+                    <Hash size={24} color={isSelected ? colors.primary : colors.muted } style={{ marginHorizontal: 10 }} />
+                }
                 item={{
                     title: item.tag,
                 }}

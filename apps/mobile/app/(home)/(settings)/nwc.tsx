@@ -2,7 +2,7 @@ import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-ki
 import { useMemo, useState } from 'react';
 import { Text } from '~/components/nativewindui/Text';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useGlobalSearchParams, usePathname } from 'expo-router';
 import { TextField } from '@/components/nativewindui/TextField';
 import { View } from 'react-native';
 import { NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -12,6 +12,9 @@ export default function NwcScreen() {
     const { ndk } = useNDK();
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const [status, setStatus] = useState<string | null>(null);
+    const pathname = usePathname();
+    const result = useGlobalSearchParams();
+    const value = result?.value;
 
     async function save() {
         setStatus("Connecting");
@@ -58,7 +61,6 @@ export default function NwcScreen() {
         }} />
         <View className="flex-1 flex-col justify-center">
             <Text className="text-center text-muted-foreground">Enter your nostr wallet connect url.</Text>
-
             <View className="px-4">
                 {status && (
                     <Text>{status}</Text>

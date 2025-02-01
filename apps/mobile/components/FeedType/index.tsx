@@ -234,17 +234,16 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
                 </IconView>,
                 value: 'follows'
             })
-        }
 
-        v.push(...[
-            {
-                title: 'For You', subTitle: 'Posts from people your network', onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
+            v.push({
+                title: 'For You', subTitle: 'Posts from people in your network', onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
                 leftView: <IconView className="bg-blue-500" size={35}>
                     <ForYou stroke={"white"} size={24} />
                 </IconView>,
                 value: 'for-you'
-            },
-            {
+            })
+
+            v.push({
                 title: 'Bookmarks', subTitle: 'Posts you have bookmarked',
                 leftView: <IconView name="bookmark" className="bg-red-500" size={35} />,
                 value: 'bookmarks',
@@ -252,13 +251,16 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
                     router.push('/bookmarks');
                     onSelect();
                 }
-            },
-            // {
-            //     title: 'Network Bookmarks', subTitle: 'Posts your network has bookmarked', onPress: () => onSelect({ kind: 'discover', value: 'bookmark-feed' }),
-            //     leftView: <IconView name="bookmark-outline" className="bg-orange-500" size={35} />,
-            //     value: 'bookmark-feed'
-            // }
-        ]);
+            })
+        } else {
+            v.push({
+                title: 'Home', subTitle: 'Random posts', onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
+                leftView: <IconView className="bg-blue-500" size={35}>
+                    <ForYou stroke={"white"} size={24} />
+                </IconView>,
+                value: 'for-you'
+            })  
+        }
 
         v.push(...[
             { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365', onPress: () => onSelect({ kind: 'hashtag', value: '#olas365' }) },

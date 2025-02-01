@@ -12,6 +12,7 @@ export default function VideoComponent({
     muted,
     dimensions,
     maxDimensions,
+    forceDimensions,
     onPress,
     onLongPress,
     onFinished,
@@ -21,14 +22,16 @@ export default function VideoComponent({
     muted?: boolean;
     dimensions?: MediaDimensions;
     maxDimensions?: Partial<MediaDimensions>;
+    forceDimensions?: Partial<MediaDimensions>;
     onPress?: (player: VideoPlayer) => void;
     onLongPress: () => void;
     onFinished?: () => void;
 }) {
-    let renderDimensions = knownVideoDimensions[url];
+    let renderDimensions = forceDimensions || knownVideoDimensions[url];
 
     if (dimensions && !renderDimensions) {
         renderDimensions = calcDimensions(dimensions, maxDimensions);
+        console.log('video renderDimensions', renderDimensions, { dimensions, maxDimensions });
     }
     
     const videoSource = { uri: url };
@@ -47,16 +50,18 @@ export default function VideoComponent({
     });
 
     const _style = useMemo(() => {
-        let width = renderDimensions?.width ?? maxDimensions?.width;
-        let height = renderDimensions?.height ?? maxDimensions?.height;
+        let width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
+        let height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
         return { width, height };
     }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
+    
 
+    console.log('video style', _style);
 
     return (
         <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
             <VideoView
-                style={{ height: _style.height, width: _style.width }}
+                style={{ width: _style.width, height: _style.height }}
                 contentFit="cover"
                 player={player}
                 allowsFullscreen

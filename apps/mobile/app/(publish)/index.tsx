@@ -1,119 +1,75 @@
 import { View, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { router, Stack } from 'expo-router';
 
 import { X } from 'lucide-react-native';
-import { useActiveBlossomServer } from '@/hooks/blossom';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Text } from '@/components/nativewindui/Text';
-import { metadataAtom, selectedMediaAtom, selectingMediaAtom, stepAtom, uploadingAtom, } from '@/components/NewPost/store';
-import ChooseContentStep from '@/components/NewPost/ChooseContentStep';
-import { PostMetadataStep } from '@/components/NewPost/MetadataStep';
-import { Button } from '@/components/nativewindui/Button';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { mountTagSelectorAtom } from '@/components/TagSelectorBottomSheet';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNewPost } from '@/hooks/useNewPost';
-import EditImageTool from '@/components/edit/screen';
-import { useEditImageStore } from '@/components/edit/store';
-
-export const editIndexAtom = atom(0);
+import { usePostEditorStore } from '@/lib/post-editor/store';
+import EditImageTool, { useEditImageStore } from '@/lib/post-editor/components/edit';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PostEditorMainScreen from '@/lib/post-editor/components/screen';
+import { useEffect, useMemo } from 'react';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 export default function NewPostScreen() {
-    const activeBlossomServer = useActiveBlossomServer();
-    const { ndk } = useNDK();
     const { colors } = useColorScheme();
-    const [editIndex, setEditIndex] = useAtom(editIndexAtom);
 
-    const [ mountTagSelector, setMountTagSelector ] = useAtom(mountTagSelectorAtom);
-    const setMetadata = useSetAtom(metadataAtom);
+    const addMoreMedia = usePostEditorStore(s => s.newMediaFromSelector);
+    const isEditing = usePostEditorStore(s => s.editingIndex !== null);
+    const hasEditUri = useEditImageStore(s => s.imageUri !== null);
+    const reset = usePostEditorStore(s => s.reset);
+
+    const insets = useSafeAreaInsets();
+    function abort() {
+        router.back();
+        reset();
+    }
+
+    const media = usePostEditorStore(s => s.media);
+    const editingIndex = usePostEditorStore(s => s.editingIndex);
+    const setImageUri = useEditImageStore(s => s.setImageUri);
 
     useEffect(() => {
-        if (!mountTagSelector) setMountTagSelector(true);
-    }, [mountTagSelector]);
-
-    const step = 1;
-
-    // const next = async () => {
-    //     if (step === 0 && selectedMedia.length === 0) return;
-    //     if (step === 0) {
-    //         const preparedMedia = await prepareMedia(selectedMedia);
-    //         setSelectedMedia(await uploadMedia(preparedMedia, ndk, activeBlossomServer));
-    //     }
-
-    //     setStep(step + 1);
-    // };
-
-    const { imagePicker: newPost } = useNewPost();
-    
-    const setStep = useSetAtom(stepAtom);
-
-    const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);
-    const setSelectingMedia = useSetAtom(selectingMediaAtom);
-    const [uploading, setUploading] = useAtom(uploadingAtom);
-
-    function abort() {
-        if (!uploading) {
-            setStep(0);
-            setSelectedMedia([]);
-            setSelectingMedia(false);
-            setUploading(false);
-            setMetadata({ caption: '', expiration: 0 });
+        if (!media || editingIndex === null) return;
+        const mediaItem = media?.[editingIndex];
+        if (mediaItem?.mediaType === 'image') {
+            setImageUri(mediaItem.uris[0]);
         }
-        
-        router.back();
-    }
+    }, [media, editingIndex])
 
-    function addMoreMedia() {
-        console.log('addMoreMedia');
-        newPost({ types: ['images', 'videos'] });
-    }
-
-
-    const resetEditImageStore = useEditImageStore(s => s.reset);
-
-    const [editOpen, setEditOpen] = useState(false);
-    
-    const onEditComplete = useCallback(() => {
-        console.log('running onEditComplete');
-        resetEditImageStore();
-        setEditOpen(false);
-    }, []);
-    
-    const imageUri = useEditImageStore(s => s.imageUri);
+    const showEdit = useMemo(() => isEditing && hasEditUri, [isEditing, hasEditUri]);
 
     return (
         <>
+            <StatusBar hidden={showEdit}/>
             <Stack.Screen
                 options={{
                     headerTransparent: false,
-                    headerShown: editOpen ? false : true,
+                    headerShown: !showEdit,
                     title: 'New Post',
                     headerLeft: () => {
-                        if (step === 0) {
-                            return null;
-                        }
-
                         return (
                             <TouchableOpacity onPress={abort}>
                                 <X size={24} color={colors.foreground} />
                             </TouchableOpacity>
                         );
                     },
-                    headerRight: () => {
-                        if (step === 1) return (
-                            <Pressable onPress={addMoreMedia} disabled={selectedMedia.length === 0}>
-                                <Text className="text-lg text-primary">Add</Text>
-                            </Pressable>
-                        )
-                    },
+                    headerRight: () => (
+                        <Pressable onPress={() => addMoreMedia()}>
+                            <Text className="text-lg text-primary">Add</Text>
+                        </Pressable>
+                    ),
                 }}
             />
-            {/* <View className="flex-1 flex-row bg-card !p-0"> */}
-                {/* {step === 0 && <ChooseContentStep />} */}
-                <PostMetadataStep />
-            {/* </View> */}
 
+            {showEdit ? (
+                <EditImageTool />
+            ) : (
+                <View className="flex-1" style={{ marginBottom: insets.bottom }}>
+                    <PostEditorMainScreen />
+                </View>
+            )}
         </>
     );
 }

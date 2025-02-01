@@ -111,6 +111,12 @@
       "appleTeamId": "456SHKPP26",
       "supportsTablet": false,
       "bundleIdentifier": "com.pablof7z.snapstr",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "nostrnwc",
+          "nostrnwc+primal"
+        ]
+      },
       "config": {
         "usesNonExemptEncryption": false
       }

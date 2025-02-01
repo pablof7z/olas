@@ -7,7 +7,7 @@ import {
 import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Dimensions, Modal, Pressable, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Dimensions, Modal, Pressable, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { router, Stack, useNavigation } from 'expo-router';
@@ -22,7 +22,7 @@ import NotificationsButton from '@/components/NotificationsButton';
 import Feed from '@/components/Feed';
 import { FlashList } from '@shopify/flash-list';
 import { useObserver } from '@/hooks/observer';
-
+import { MediaPreview as PostEditorMediaPreview} from '@/lib/post-editor/components/MediaPreview';
 
 import EventMediaContainer from '@/components/media/event';
 import EventContent from '@/components/ui/event/content';
@@ -34,22 +34,28 @@ import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
 import { LinearGradient } from 'expo-linear-gradient';
-import { metadataAtom, selectedMediaAtom, uploadErrorAtom, uploadingAtom, wantsToPublishAtom } from '@/components/NewPost/store';
-import { MediaPreview } from '@/components/NewPost/MediaPreview';
+import { usePostEditorStore } from '@/lib/post-editor/store';
+import { BlurView } from 'expo-blur';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 function HeaderBackground() {
+    const { colors } = useColorScheme();
+    
     return (
-        <LinearGradient
-            colors={[
-                '#00000099',
-                'transparent'
-            ]}
-            style={{ flex: 1 }}
-        />
+        <View style={{ flex: 1, backgroundColor: colors.card }} />
+        // <LinearGradient
+        //     colors={[
+        //         '#00000099',
+        //         'transparent'
+        //     ]}
+        //     style={{ flex: 1 }}
+        // />
     )
 }
+
+
+const searchQueryAtom = atom<string>('');
 
 export default function HomeScreen() {
     return (
@@ -59,7 +65,7 @@ export default function HomeScreen() {
                     headerShown: true,
                     headerTransparent: false,
                     headerLeft: () => <HomeTitle />,
-                    // headerBackground: () => <HeaderBackground />,
+                    headerBackground: () => <HeaderBackground />,
                     // headerBackground: () => <BlurView intensity={150} style={{ flex: 1 }} />,
                     title: '',
                     headerRight: () => <View className="flex-row items-center gap-2">
@@ -85,31 +91,22 @@ export default function HomeScreen() {
 }
 
 function UploadingIndicator() {
-    const selectedMedia = useAtomValue(selectedMediaAtom);
-    const [wantsToPublish, setWantsToPublish] = useAtom(wantsToPublishAtom);
+    const readyToPublish = usePostEditorStore(s => s.readyToPublish);
+    const uploading = usePostEditorStore(s => s.state === 'uploading');
+    const metadata = usePostEditorStore(s => s.metadata);
+    const uploadError = usePostEditorStore(s => s.error);
+    const resetPostEditor = usePostEditorStore(s => s.reset);
     const { colors } = useColorScheme();
-    const metadata = useAtomValue(metadataAtom);
-    const [uploading, setUploading] = useAtom(uploadingAtom);
-    const setSelectedMedia = useSetAtom(selectedMediaAtom);
-    const [ uploadError, setUploadError ] = useAtom(uploadErrorAtom);
-
-    const cancel = useCallback(() => {
-        setUploading(false);
-        setUploadError(null);
-        setSelectedMedia([]);
-        setWantsToPublish(false);
-    }, [setUploading, setUploadError, setSelectedMedia]);
     
-    if (!wantsToPublish) return null;
+    if (!readyToPublish) return null;
     
     return (
         <Pressable
-            onPress={() => router.push('/publish')}
             className="border-b border-border"
             style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, backgroundColor: colors.card, flexDirection: 'row', gap: 10, alignItems: 'center' }}
         >
             <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden'}}>
-                <MediaPreview assets={selectedMedia} withEdit={false} maxWidth={60} maxHeight={60} />
+                <PostEditorMediaPreview limit={1} withEdit={false} maxWidth={60} maxHeight={60} />
             </View>
 
             <View className="flex-col items-start flex-1">
@@ -124,7 +121,7 @@ function UploadingIndicator() {
             </View>
 
 
-            <Button variant="plain" onPress={cancel}>
+            <Button variant="plain" onPress={resetPostEditor}>
                 <X size={24} color={colors.foreground} />
             </Button>
         </Pressable>
@@ -346,6 +343,46 @@ function hashtagFeedToTags(feedType: FeedType) {
     }
 }
 
+// how many posts does the time window take into account when deciding whether to show repeated unfollowed pubkeys
+const FOR_YOU_ROLLING_POST_WINDOW_LENGTH = 10;
+
+// how many times does an unfollowed pubkey need to be shown in the time window for extra posts to be hidden
+const FOR_YOU_UNFOLLOWED_POST_THRESHOLD = 2;
+
+function forYouFilter(followSet: Set<string>) {
+    let run = 0;
+    let unfollowedPubkeysRecentlyShown = [];
+    
+    return (feedEntry: FeedEntry, index: number) => {
+        if (index === 0) {
+            unfollowedPubkeysRecentlyShown = [];
+            run++;
+        }
+
+        if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
+        if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
+
+        const isFollowed = followSet.has(feedEntry.event?.pubkey);
+        if (!isFollowed) {
+            // this is an unfollowed pubkey, check if they were recently shown
+            const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter(p => p === feedEntry.event?.pubkey).length;
+            
+            if (recentTimesThisPubkeyWasShown >= FOR_YOU_UNFOLLOWED_POST_THRESHOLD) {
+                return false;
+            }
+            
+            unfollowedPubkeysRecentlyShown.push(feedEntry.event?.pubkey);
+
+            // trim the time
+            if (unfollowedPubkeysRecentlyShown.length > FOR_YOU_ROLLING_POST_WINDOW_LENGTH) {
+                unfollowedPubkeysRecentlyShown.shift();
+            }
+        }
+        
+        return true;
+    }
+}
+
 function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
@@ -366,7 +403,17 @@ function DataList() {
         return set;
     }, [currentUser?.pubkey, follows?.length])
 
+    const searchQuery = useAtomValue(searchQueryAtom);
     const { filters, key, filterFn, relayUrls } = useMemo(() => {
+        if (searchQuery.trim().length > 0) {
+            return {
+                filters: [{ kinds: [NDKKind.Image], "#t": [searchQuery] }],
+                key: 'search-' + searchQuery,
+                filterFn: null,
+                relayUrls: []
+            }
+        }
+        
         if (feedType.kind === 'group') {
             return {
                 filters: [
@@ -389,8 +436,8 @@ function DataList() {
 
         const filters: NDKFilter[] = [];
     
-        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter });
-        filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter });
+        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter, limit: 500 });
+        filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter, limit: 50 });
 
         // if (withTweets) {
         //     filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
@@ -398,17 +445,17 @@ function DataList() {
 
         let filterFn = null;
 
-        if (feedType.kind !== 'hashtag') {
+        if (feedType.kind === 'discover' && feedType.value === 'follows') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
-                // if it's a kind 1, make sure we have a URL of an image or video
-                if (feedEntry.event?.kind === 1) {
-                    const imeta = feedEntry.event?.tagValue("imeta");
-                    if (imeta) return true;
-                    // parse the content for a URL that has .jpg, .jpeg, .png, .gif, .mp4, .mov, .avi, .mkv
-                    const imageOrVideoRegex = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
-                    const matches = feedEntry.event?.content.match(imageOrVideoRegex);
-                    return matches !== null;
-                } 
+                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
+                return followSet.has(feedEntry.event?.pubkey)
+            };
+        } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
+            filterFn = forYouFilter(followSet);
+        } else if (feedType.kind !== 'hashtag') {
+            filterFn = (feedEntry: FeedEntry, index: number) => {
+                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
+                if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
                 
                 const isFollowed = followSet.has(feedEntry.event?.pubkey)
                 if (isFollowed) return true;
@@ -421,7 +468,7 @@ function DataList() {
         }
 
         return {filters, key: keyParts.join(), filterFn};
-    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length]);
+    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, searchQuery]);
 
     // useEffect(() => {
     //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
@@ -454,40 +501,108 @@ function DataList() {
     );
 }
 
+const kind1MustHaveMedia = (feedEntry: FeedEntry) => {
+    // if it's a kind 1, make sure we have a URL of an image or video
+    if (feedEntry.event?.kind === 1) {
+        const imeta = feedEntry.event?.tagValue("imeta");
+        if (imeta) return true;
+        // parse the content for a URL that has .jpg, .jpeg, .png, .gif, .mp4, .mov, .avi, .mkv
+        const imageOrVideoRegex = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
+        const matches = feedEntry.event?.content.match(imageOrVideoRegex);
+        return matches !== null;
+    } 
+}
+
+const videosMustBeFromFollows = (feedEntry: FeedEntry, index: number, followSet: Set<string>) => {
+    if (videoKinds.has(feedEntry.event?.kind)) {
+        return followSet.has(feedEntry.event?.pubkey);
+    }
+    return true;
+}
+
+type FeedFilterFn = (feedEntry: FeedEntry, index: number, followSet: Set<string>) => boolean;
+
+const feedFilters: Record<string, FeedFilterFn> = {
+    kind1MustHaveMedia,
+    videosMustBeFromFollows,
+}
+
+function SearchInput() {
+    const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
+    const [input, setInput] = useState(searchQuery);
+    const { colors } = useColorScheme();
+
+    return (
+        <View className="flex-1 flex-row items-center gap-2">
+            <TextInput
+                placeholder="Search"
+                onChangeText={setInput}
+                value={input}
+                autoFocus={true}
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                onSubmitEditing={() => setSearchQuery(input)}
+            />
+
+            <Button variant="plain" onPress={() => setSearchQuery(input)}>
+                <Search size={24} color={colors.foreground} />  
+            </Button>
+        </View>
+    )
+}
+
 function HomeTitle() {
     const feedType = useAtomValue(feedTypeAtom);
     const { colors } = useColorScheme();
     const { show: showSheet } = useFeedTypeBottomSheet();
     const group = useGroup(feedType.kind === 'group' ? feedType.value : undefined, feedType.kind === 'group' ? feedType.relayUrls[0] : undefined);
+    const currentUser = useNDKCurrentUser();
 
     const feedTypeTitle = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'follows') return 'Follows';
-        if (feedType.kind === 'discover' && feedType.value === 'for-you') return 'For You';
+        if (feedType.kind === 'discover' && feedType.value === 'for-you') {
+            if (!currentUser) return 'Home';
+            return 'For You';
+        }
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return 'Bookmarks';
         return feedType.value;
-    }, [feedType]);
+    }, [feedType, currentUser?.pubkey]);
+
+    const [showSearch, setShowSearch] = useState(false);
 
     const search = useCallback(() => {
-        router.push('/search')
+        router.push('/search');
+        // setShowSearch(true);
     }, [])
 
     return (
         <View style={headerStyle.container}>
-            <Pressable style={headerStyle.searchButton} onPress={search}>
-                <Search size={24} color={colors.foreground} />
-            </Pressable>
-            
-            <Pressable style={headerStyle.button} onPress={showSheet}>
-                {group ? (
-                    <>
-                        <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
-                        <Text className="text-xl font-semibold text-foreground truncate">{group.name}</Text>
-                    </>) : (<>
-                        <Text className="text-xl font-semibold text-foreground truncate">{feedTypeTitle}</Text>
-                    </>)
-                }
-                <ChevronDown size={16} color={colors.foreground} />
-            </Pressable>
+            {showSearch ? (
+                <>
+                    <Pressable style={headerStyle.searchButton} onPress={() => setShowSearch(false)}>
+                        <X size={24} color={colors.foreground} />
+                    </Pressable>
+                    <SearchInput />
+                </>
+            ) : (
+                <>
+                    <Pressable style={headerStyle.searchButton} onPress={search}>
+                        <Search size={24} color={colors.foreground} />
+                    </Pressable>
+                    <Pressable style={headerStyle.button} onPress={showSheet}>
+                        {group ? (
+                            <>
+                                <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
+                                <Text className="text-xl font-semibold text-foreground truncate">{group.name}</Text>
+                            </>) : (<>
+                                <Text className="text-xl font-semibold text-foreground truncate">{feedTypeTitle}</Text>
+                            </>)
+                        }
+                        <ChevronDown size={16} color={colors.foreground} />
+                    </Pressable>
+                </>
+            )}
         </View>
     );  
 }

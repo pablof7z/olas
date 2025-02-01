@@ -1,10 +1,10 @@
-import { PostMedia } from '@/components/NewPost/MediaPreview';
 import * as MediaLibrary from 'expo-media-library';
 
 import * as FileSystem from 'expo-file-system';
 import { ImagePickerAsset } from 'expo-image-picker';
+import { PostMedia, PostMediaType } from '@/lib/post-editor/types';
 
-export const urlIsVideo = (url: string) => /\.(mp4|webm|ogg|m4v|mov|m3u8|ts|)$/i.test(url);
+export const urlIsVideo = (url: string) => /\.(mp4|webm|ogg|m4v|mov|m3u8|ts|qt|)$/i.test(url);
 
 export function isPortrait(width: number, height: number) {
     return width < height;
@@ -17,14 +17,13 @@ export function isPortrait(width: number, height: number) {
  * @returns A PostMedia representation of the asset.
  */
 export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<PostMedia> {
-    let mediaType: 'photo' | 'video' = 'photo';
-    if (asset.type === 'video') mediaType = 'video';
-    else if (asset.type === 'photo') mediaType = 'photo';
+    let mediaType: PostMediaType = 'image';
+    if (asset.mediaType === 'video') mediaType = 'video';
     
     console.log('asset', asset.mediaType, asset);
 
     if (!mediaType) {
-        mediaType = 'photo';
+        mediaType = 'image';
     }
 
     // get the size of the file
@@ -35,7 +34,7 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
 
     return {
         id: asset.id ?? asset.uri,
-        uri: asset.uri,
+        uris: [asset.uri],
         mediaType,
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
@@ -46,16 +45,6 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
 }
 
 export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): Promise<PostMedia> {
-    let mediaType: 'photo' | 'video' = 'photo';
-    if (asset.type === 'video') mediaType = 'video';
-    else if (asset.type === 'image') mediaType = 'photo';
-    
-    console.log('asset', asset.type, asset);
-
-    if (!mediaType) {
-        mediaType = 'photo';
-    }
-
     // get the size of the file
     const file = (await FileSystem.getInfoAsync(asset.uri));
     let size: number | undefined;
@@ -64,12 +53,28 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
 
     return {
         id: asset.uri,
-        originalUri: asset.uri,
-        mediaType,
+        uris: [asset.uri],
+        mediaType: imagePickerAssetTypeToPostType(asset.type),
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
         duration: asset.duration,
         width: asset.width,
         height: asset.height,
     };
+}
+
+export function imagePickerAssetTypeToPostType(type: ImagePickerAsset['type']) {
+    if (type === 'image') {
+        return 'image'
+    } else if (type === 'video') {
+        return 'video'
+    } else return 'image'
+}
+
+export function postTypeToImagePickerType(type: PostMediaType) {
+    if (type === 'image') {
+        return 'images'
+    } else if (type === 'video') {
+        return 'videos'
+    }
 }

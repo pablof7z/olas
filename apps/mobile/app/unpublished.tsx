@@ -4,7 +4,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { TouchableOpacity, View } from 'react-native';
 import { RenderTarget } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import NDK, { useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKPublishError, useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
 import { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile/src/stores/ndk';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { useMemo } from 'react';
@@ -28,9 +28,14 @@ const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, targe
                     entry.event.ndk = ndk;
                     await entry.event.publish();
                     toast.success('Event published');
-                } catch (e) {
-                    console.error('error publishing', entry.event.id, e);
-                    toast.error('Error publishing event: ' + e.message);
+                } catch (e: unknown) {
+                    const error = e as NDKPublishError;
+                    console.error('error publishing', entry.event.id, error);
+                    toast.error('Error publishing event: ' + error.message);
+                    error.errors.forEach((message, relay) => {
+                        toast.error('Error publishing event to ' + relay.url + ': ' + message);
+                        console.error('error publishing', message, relay.url);
+                    });
                 }
             }}
             onLongPress={() => {

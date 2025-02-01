@@ -1,7 +1,6 @@
 import NDK, { NDKEvent, NDKKind, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { PostMetadata } from './store';
-import { PostMedia } from './MediaPreview';
 import { encodeBase32 } from 'geohashing';
+import { PostMedia, PostMetadata } from './types';
 
 export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]) {
     if (media.length === 0) return;
@@ -14,7 +13,7 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
     if (event.kind === NDKKind.Text) {
         let kind: NDKKind;
 
-        if (media[0].mediaType === 'photo') kind = NDKKind.Image;
+        if (media[0].mediaType === 'image') kind = NDKKind.Image;
         else if (media[0].contentMode === 'portrait') kind = NDKKind.VerticalVideo;
         else kind = NDKKind.HorizontalVideo;
 
@@ -24,9 +23,9 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
 
     let relaySet: NDKRelaySet | undefined;
     
-    if (metadata.group) {
-        event.tags.push(['h', metadata.group.groupId, ...metadata.group.relays])
-        relaySet = NDKRelaySet.fromRelayUrls(metadata.group.relays, ndk);
+    if (metadata.groups) {
+        event.tags.push(['h', metadata.groups[0].groupId, ...metadata.groups[0].relayUrls])
+        relaySet = NDKRelaySet.fromRelayUrls(metadata.groups[0].relayUrls, ndk);
     }
 
     event.tags.push(...media.flatMap(generateImeta));
@@ -59,7 +58,7 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
 function getKind(metadata: PostMetadata, media: PostMedia) {
     // if (metadata.boost) return NDKKind.Text;
 
-    if (media.mediaType === 'photo') return NDKKind.Image;
+    if (media.mediaType === 'image') return NDKKind.Image;
 
     if (media.contentMode === 'portrait') return NDKKind.VerticalVideo;
 

@@ -4,13 +4,13 @@ import { RefObject, useCallback, useEffect, useMemo } from 'react';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Image } from 'expo-image';
-import { metadataAtom } from '@/components/NewPost/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, View } from 'react-native';
-import { List, ListItem } from '../nativewindui/List';
 import { NDKKind, NDKList, NDKRelay, NDKTag, useNDK, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 import { cn } from '@/lib/cn';
-import { GroupEntry, useMyGroups } from '@/lib/groups/store';
+import { useMyGroups } from '@/lib/groups/store';
+import { GroupEntry } from '@/lib/groups/types';
+import { COMMUNITIES_ENABLED } from '@/utils/const';
 
 type CommunityBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 export const communityBottomSheetRefAtom = atom<CommunityBottomSheetRefAtomType, [CommunityBottomSheetRefAtomType], null>(
@@ -19,10 +19,11 @@ export const communityBottomSheetRefAtom = atom<CommunityBottomSheetRefAtomType,
 );
 
 export function CommunityBottomSheet() {
+    if (!COMMUNITIES_ENABLED) return null;
+
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(communityBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const [metadata, setMetadata] = useAtom(metadataAtom);
 
     const myGroups = useMyGroups();
 

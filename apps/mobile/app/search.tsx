@@ -7,12 +7,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { MasonryFlashList } from '@shopify/flash-list';
-import { EventMediaGridContainer } from '@/components/media/event';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { usePostBottomSheet } from '@/hooks/post-bottom-sheet';
-import { activeEventAtom } from '@/stores/event';
-import { BackButton } from '@/components/BackButton';
 import Feed from '@/components/Feed';
 
 const inputAtom = atom('#photography');
@@ -20,7 +15,6 @@ const inputAtom = atom('#photography');
 const relays = ['wss://relay.olas.app'] as const;
 
 export default function SearchScreen() {
-    const inset = useSafeAreaInsets();
     const [input, setInput] = useAtom(inputAtom);
 
     const hashtagFromQuery = useLocalSearchParams().q;
@@ -37,7 +31,7 @@ export default function SearchScreen() {
 
     const filters = useMemo(() => {
         return [
-            { kinds: [NDKKind.Image], '#t': [input] },
+            { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [input.trim().replace('#', '')] },
         ]
     }, [input]);
 
@@ -60,7 +54,7 @@ export default function SearchScreen() {
 
             <KeyboardAvoidingView className="flex-1 bg-card" style={containerStyle}>
                 <View style={styles.headerContainer}>
-                    <Pressable onPress={() => router.replace("/")}>
+                    <Pressable onPress={() => router.replace('/(home)')}>
                         <ArrowLeft size={24} color={colors.foreground} />
                     </Pressable>
                     <View className="border-b border-border flex-1">

@@ -2,8 +2,6 @@ import { useAtomValue, useAtom } from "jotai";
 import { ChevronDown, Images } from "lucide-react-native";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { albumBottomSheetRefAtom } from "../NewPost/AlbumsBottomSheet";
-import { multiImageModeAtom, selectedMediaAtom } from "../NewPost/store";
 import { albumsAtom, selectedAlbumAtom } from "./store";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Button } from "../nativewindui/Button";

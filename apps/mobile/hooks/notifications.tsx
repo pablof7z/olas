@@ -15,12 +15,21 @@ export function useNotifications(onlyNew = false) {
     const currentUser = useNDKCurrentUser();
 
     const events = useObserver(currentUser ? [
-        { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
-        { kinds: [NDKKind.GenericReply ], '#K': kindString, '#P': [currentUser.pubkey] },
+        // { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
+        { kinds: [NDKKind.GenericReply ], '#K': kindString, '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
         { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] },
     ] : false);
+
+    const relays = useMemo(() => {
+        const relaySet = new Set<string>();
+        events.forEach(e => {
+            if (e.relay) relaySet.add(e.relay.url);
+            e.onRelays?.forEach(r => relaySet.add(r.url));
+        });
+        return relaySet;
+    }, [events.length])
 
     const filteredNotifications = useMemo(() => {
         if (onlyNew && seenNotificationsAt > 0) {

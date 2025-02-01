@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import * as MediaLibrary from 'expo-media-library';
-import { selectedMediaAtom, stepAtom, uploadingAtom } from './store';
+import { selectedMediaAtom, stepAtom, uploadingAtom } from '@/lib/post-editor/store';
 import AlbumsView, { mapAssetToPostMedia } from './AlbumsView';
 import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/nativewindui/Text';

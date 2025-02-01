@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { NDKEvent, NDKUser, useNDKCurrentUser, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
@@ -112,6 +112,12 @@ export default function CommentScreen() {
     const insets = useSafeAreaInsets();
 
     const currentUser = useNDKCurrentUser();
+    
+    // clean up reply event when the screen is unmounted
+    const setReplyEvent = useSetAtom(replyEventAtom);
+    useEffect(() => {
+        return () => { setReplyEvent(null); }
+    }, [setReplyEvent]);
 
     const style = useMemo(() => {
         const isAndroid = Platform.OS === 'android';
@@ -160,7 +166,7 @@ function NewComment({ event, currentUser }: { event: NDKEvent, currentUser: NDKU
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();
-    const replyEvent = useAtomValue<NDKEvent>(replyEventAtom);
+    const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
 
     const handleSend = useCallback(async () => {
         const commentEvent = (replyEvent || event).reply();
@@ -168,7 +174,7 @@ function NewComment({ event, currentUser }: { event: NDKEvent, currentUser: NDKU
         await commentEvent.sign();
         commentEvent.publish();
         setComment('');
-        console.log('comment sent', JSON.stringify(commentEvent.rawEvent(), null, 2));
+        setReplyEvent(null);
     }, [event.id, comment, replyEvent]);
 
     return (
