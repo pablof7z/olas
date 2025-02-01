@@ -1,8 +1,8 @@
 import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, Pressable, View, ViewToken } from 'react-native';
+import { useEffect, useMemo, useRef, useState, memo } from 'react';
+import { ActivityIndicator, Dimensions, Pressable, StatusBar, View, ViewToken } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,12 +11,12 @@ import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import EventContent from '@/components/ui/event/content';
 import { Image } from 'expo-image';
-import { memo } from 'react';
 import { Reactions } from '@/components/events/Post/Reactions';
 import { getImetas } from '@/components/media/event';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import RelativeTime from '../components/relative-time';
 import { getClientName } from '@/utils/event';
+import { useIsFocused } from '@react-navigation/native';
 
 const visibleItemAtom = atom<string>("");
 
@@ -31,7 +31,6 @@ const Reel = memo(
         const thumb = event.tagValue('thumb');
 
         const url = getImetas(event)[0]?.url;
-
         const videoSource = { uri: url };
 
         const player = useVideoPlayer(videoSource, (player) => {
@@ -39,7 +38,6 @@ const Reel = memo(
             player.muted = false;
             player.addListener('statusChange', (status) => {
                 if (player.status === 'readyToPlay') {
-                    // player.play();
                     setIsLoading(false);
                 }
             });
@@ -64,30 +62,42 @@ const Reel = memo(
                     backgroundColor: 'black',
                     borderWidth: 1,
                 }}>
-                    {isLoading && (
-                        <View
+                {isLoading && (
+                    <View
+                        style={{
+                            flex: 1,
+                            width: '100%',
+                            height: Dimensions.get('window').height - safeAreaInsets.bottom,
+                        }}>
+                        <Image
+                            source={{ uri: thumb }}
+                            style={{ flex: 1, width: '100%', height: '100%' }}
+                        />
+                        <ActivityIndicator
+                            size="large"
+                            color="gray"
                             style={{
-                                flex: 1,
-                                width: '100%',
-                                height: Dimensions.get('window').height - safeAreaInsets.bottom,
-                            }}>
-                            <Image source={{ uri: thumb }} style={{ flex: 1, width: '100%', height: '100%' }} />
-                            <ActivityIndicator
-                                size="large"
-                                color="gray"
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                }}
-                            />
-                        </View>
-                    )}
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                            }}
+                        />
+                    </View>
+                )}
 
                 <VideoView
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flex: 1, width: '100%', height: Dimensions.get('window').height - safeAreaInsets.bottom }}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        flex: 1,
+                        width: '100%',
+                        height: Dimensions.get('window').height - safeAreaInsets.bottom,
+                    }}
                     contentFit="cover"
                     player={player}
                     allowsFullscreen
@@ -97,16 +107,34 @@ const Reel = memo(
                 />
 
                 <SafeAreaView className="absolute bottom-0 pb-10 left-4 flex-col items-start gap-2">
-                    <Reactions event={event} foregroundColor="white" inactiveColor="white" />
-                    
-                    <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} />
+                    <Reactions
+                        event={event}
+                        foregroundColor="white"
+                        inactiveColor="white"
+                    />
+
+                    <Pressable
+                        className="flex-row items-center gap-2"
+                        onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
+                        <User.Avatar
+                            pubkey={event.pubkey}
+                            userProfile={userProfile}
+                            imageSize={48}
+                        />
                         <Text className="flex-col text-base font-semibold text-white">
-                            <User.Name userProfile={userProfile} pubkey={event.pubkey} />
+                            <User.Name
+                                userProfile={userProfile}
+                                pubkey={event.pubkey}
+                            />
                             <Text>
-                                <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                                <RelativeTime
+                                    timestamp={event.created_at}
+                                    className="text-xs text-muted-foreground"
+                                />
                                 {clientName && (
-                                    <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
+                                    <Text
+                                        className="truncate text-xs text-muted-foreground"
+                                        numberOfLines={1}>
                                         {` via ${clientName}`}
                                     </Text>
                                 )}
@@ -119,56 +147,81 @@ const Reel = memo(
         );
     },
     (prevProps, nextProps) => {
-        return prevProps.isVisible === nextProps.isVisible && prevProps.event.id === nextProps.event.id;
+        return (
+            prevProps.isVisible === nextProps.isVisible &&
+            prevProps.event.id === nextProps.event.id
+        );
     }
 );
 
 export default function ReelsScreen() {
-    const { events } = useSubscribe([
-        { kinds: [NDKKind.VerticalVideo] }
-    ], { groupable: false, closeOnEose: false, wrap: true });
+    const { events } = useSubscribe(
+        [{ kinds: [NDKKind.VerticalVideo] }],
+        {
+            groupable: false,
+            closeOnEose: false,
+            wrap: true,
+        }
+    );
     const safeAreaInsets = useSafeAreaInsets();
-
     const setVisibleItem = useSetAtom(visibleItemAtom);
+    const isFocused = useIsFocused();
 
-    const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-        const newVisibleItem = viewableItems.length > 0 ? viewableItems[0].item.id : null;
-        setVisibleItem((prev) => (prev !== newVisibleItem ? newVisibleItem : prev));
-    }).current;
+    // Clear the visible item when the screen is not focused so that all video players pause.
+    useEffect(() => {
+        if (!isFocused) {
+            setVisibleItem('');
+        }
+    }, [isFocused, setVisibleItem]);
+
+    const onViewableItemsChanged = useRef(
+        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+            const newVisibleItem =
+                viewableItems.length > 0 ? viewableItems[0].item.id : null;
+            setVisibleItem((prev) =>
+                prev !== newVisibleItem ? newVisibleItem : prev
+            );
+        }
+    ).current;
 
     const sortedEvents = useMemo(() => {
-        return (
-            events
-                .sort((a, b) => {
-                    return b.created_at! - a.created_at!;
-                })
-                // make sure no other events are from the same pubkey
-                .filter((event, index, self) => {
-                    return self.findIndex((e) => e.pubkey === event.pubkey) === index;
-                })
-                .filter((event: NDKVideo) => {
-                    const url = event.imetas?.[0]?.url || event.tagValue('url')
-                    if (!url) console.log('imetas', event.imetas, 'tags', event.tags)
-                    return !!url;
-                })
-        );
+        return events
+            .sort((a, b) => b.created_at! - a.created_at!)
+            // ensure one event per pubkey
+            .filter((event, index, self) => {
+                return (
+                    self.findIndex((e) => e.pubkey === event.pubkey) === index
+                );
+            })
+            .filter((event: NDKVideo) => {
+                const url = event.imetas?.[0]?.url || event.tagValue('url');
+                if (!url) console.log('imetas', event.imetas, 'tags', event.tags);
+                return !!url;
+            });
     }, [events]);
 
     return (
-        <View className="flex-1 bg-card">
-            <FlashList
-                data={sortedEvents}
-                keyExtractor={(i) => i.id}
-                renderItem={({ item }) => <Reel event={item} />}
-                estimatedItemSize={Dimensions.get('window').height - safeAreaInsets.bottom}
-                snapToAlignment="start"
-                snapToInterval={Dimensions.get('window').height - safeAreaInsets.bottom}
-                decelerationRate="fast"
-                onViewableItemsChanged={onViewableItemsChanged}
-                viewabilityConfig={{
-                    itemVisiblePercentThreshold: 50,
-                }}
-            />
-        </View>
+        <>
+            <StatusBar hidden={true} />
+            <View className="flex-1 bg-card">
+                <FlashList
+                    data={sortedEvents}
+                    keyExtractor={(i) => i.id}
+                    renderItem={({ item }) => <Reel event={item} />}
+                    estimatedItemSize={
+                        Dimensions.get('window').height - safeAreaInsets.bottom
+                    }
+                    snapToAlignment="start"
+                    snapToInterval={
+                        Dimensions.get('window').height - safeAreaInsets.bottom
+                    }
+                    decelerationRate="fast"
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={{
+                        itemVisiblePercentThreshold: 50,
+                    }}
+                />
+            </View>
+        </>
     );
 }
