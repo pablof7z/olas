@@ -20,7 +20,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string; ndk: NDK }) {
 
     const rows: Row[] = [];
 
-    if (!relayUrl) return rows;
+    if (!relayUrl || !relay.connected) return rows;
 
     for (const [id, subscriptions] of subManager.subscriptions) {
         const row = {
