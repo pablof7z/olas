@@ -9,7 +9,14 @@ import { toast, Toasts } from '@backpackapp-io/react-native-toast';
 import { StyleSheet } from 'react-native';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import NDK, { NDKCacheAdapterSqlite, NDKEventWithFrom, NDKNutzap, useNDKCurrentUser, useNDKNutzapMonitor, useNDKCacheInitialized } from '@nostr-dev-kit/ndk-mobile';
+import NDK, {
+    NDKCacheAdapterSqlite,
+    NDKEventWithFrom,
+    NDKNutzap,
+    useNDKCurrentUser,
+    useNDKNutzapMonitor,
+    useNDKCacheInitialized,
+} from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -17,7 +24,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKEvent, NDKKind, NDKList, NDKRelay, } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { configurePushNotifications } from '~/lib/notifications';
@@ -35,7 +42,7 @@ import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import { db, initialize } from "@/stores/db";
+import { db, initialize } from '@/stores/db';
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
@@ -45,9 +52,9 @@ import { CommunityBottomSheet } from '@/lib/post-editor/sheets/CommunityBottomSh
 
 export const timeZero = Date.now();
 
-initialize()
+initialize();
 
-const cacheAdapter = new NDKCacheAdapterSqlite('olas')
+const cacheAdapter = new NDKCacheAdapterSqlite('olas');
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
@@ -108,7 +115,7 @@ export default function RootLayout() {
     // if (!relays.find((r) => r.match(/^purplepag\.es/))) {
     //     relays.unshift('wss://purplepag.es/');
     // }
-    
+
     const { ndk, init: initializeNDK } = useNDK();
     const initializeSession = useNDKSessionInit();
     const setRelayNotices = useSetAtom(relayNoticesAtom);
@@ -119,7 +126,7 @@ export default function RootLayout() {
     // useEffect(() => { console.log('ndk changed', !!ndk, Date.now() - timeSinceFirstRender); }, [ndk])
     // useEffect(() => { console.log('initializeSession changed', !!initializeSession, Date.now() - timeSinceFirstRender); }, [initializeSession])
     // useEffect(() => { console.log('currentUser changed', !!currentUser, Date.now() - timeSinceFirstRender); }, [currentUser])
-    
+
     useEffect(() => {
         const storedFeed = SettingsStore.getItem('feed');
         let feedType: FeedType | null = null;
@@ -139,11 +146,11 @@ export default function RootLayout() {
         }
 
         setFeedType(feedType);
-    }, [])
+    }, []);
 
     useEffect(() => {
         if (ndk) ndk.connect();
-    }, [ndk])
+    }, [ndk]);
 
     const addReactionEvent = useReactionsStore((state) => state.addEvent);
 
@@ -157,28 +164,24 @@ export default function RootLayout() {
 
         const filters = [
             { kinds: [NDKKind.Text], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.GenericReply], "#K": kindString, '#p': [currentUser.pubkey]},
+            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentUser.pubkey] },
             { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
             { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [currentUser.pubkey], ...sinceFilter },
-                // { authors: [user.pubkey], limit: 100 },
-        ]
+            // { authors: [user.pubkey], limit: 100 },
+        ];
 
-        ndk.subscribe(filters,
-            { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['#p'] },
-            undefined,
-            {
-                onEvent: (event) => {
-                    addReactionEvent(event, currentUser.pubkey);
-                },
-                onEose: () => {
-                    const time = Date.now()/1000;
-                    SecureStore.setItem('timeSinceLastAppSync', time.toString());
-                }
-            }
-        );
-    }, [ndk, currentUser?.pubkey, appReady])
+        ndk.subscribe(filters, { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['#p'] }, undefined, {
+            onEvent: (event) => {
+                addReactionEvent(event, currentUser.pubkey);
+            },
+            onEose: () => {
+                const time = Date.now() / 1000;
+                SecureStore.setItem('timeSinceLastAppSync', time.toString());
+            },
+        });
+    }, [ndk, currentUser?.pubkey, appReady]);
 
     useEffect(() => {
         if (!ndk) return;
@@ -187,12 +190,12 @@ export default function RootLayout() {
             setAppReady(true);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         }
-    }, [ndk])
+    }, [ndk]);
 
     useEffect(() => {
         if (appReady) return;
 
-        if (!timeoutRef.current) {  
+        if (!timeoutRef.current) {
             timeoutRef.current = setTimeout(() => {
                 if (!appReady) {
                     console.log("app wasn't ready, so timing out");
@@ -212,7 +215,7 @@ export default function RootLayout() {
                 muteList: true,
                 wot: false,
                 kinds: sessionKinds,
-                subOpts: { skipVerification: true }
+                subOpts: { skipVerification: true },
             },
             {
                 onReady: () => {
@@ -221,11 +224,11 @@ export default function RootLayout() {
                         setAppReady(true);
                         if (timeoutRef.current) clearTimeout(timeoutRef.current);
                     }
-                }
+                },
                 // onWotReady: () => setWotReady(true),
             }
         );
-    }, [ndk, currentUser?.pubkey, cacheInitialized, appReady])
+    }, [ndk, currentUser?.pubkey, cacheInitialized, appReady]);
 
     useEffect(() => {
         const currentUserInSettings = SecureStore.getItem('currentUser');
@@ -269,10 +272,10 @@ export default function RootLayout() {
     const initAppSettings = useAppSettingsStore((state) => state.init);
     useEffect(() => {
         initAppSettings();
-        
+
         // Configure push notifications
         // configurePushNotifications();
-        
+
         // Notification received while app is running
         // const notificationListener = Notifications.addNotificationReceivedListener(notification => {
         //     console.log('Notification received:', notification);
@@ -293,12 +296,15 @@ export default function RootLayout() {
     if (!timeSinceFirstRender) timeSinceFirstRender = Date.now();
     // console.log('app layout rerender', Date.now() - timeSinceFirstRender);
 
-    const modalPresentation = useCallback((opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
-        const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
-        const headerShown = Platform.OS !== 'ios';
+    const modalPresentation = useCallback(
+        (opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
+            const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
+            const headerShown = Platform.OS !== 'ios';
 
-        return { presentation, headerShown, ...opts }
-    }, [])
+            return { presentation, headerShown, ...opts };
+        },
+        []
+    );
 
     useWalletMonitor();
 
@@ -314,66 +320,73 @@ export default function RootLayout() {
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                     <PortalHost />
                                     <Stack>
-                                    <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="(publish)" options={{ headerShown: false }} />
+                                        <Stack.Screen name="(publish)" options={{ headerShown: false }} />
 
-                                    <Stack.Screen
-                                        name="(home)"
-                                        options={{
-                                            headerShown: false,
-                                            title: 'Home',
-                                        }}
-                                    />
+                                        <Stack.Screen
+                                            name="(home)"
+                                            options={{
+                                                headerShown: false,
+                                                title: 'Home',
+                                            }}
+                                        />
 
-                                    <Stack.Screen
-                                        name="search"
-                                        options={{
-                                            headerShown: true,
-                                            title: 'Search',
-                                        }}
-                                    />
-                                    
-                                    <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen
+                                            name="search"
+                                            options={{
+                                                headerShown: true,
+                                                title: 'Search',
+                                            }}
+                                        />
 
-                                    <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
-                                    <Stack.Screen name="notifications" options={{ headerShown: false }} />
-                                    {/* <Stack.Screen name="communities" options={{ headerShown: false }} /> */}
-                                    <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
-                                    <Stack.Screen name="comments" options={modalPresentation({ title: 'Comments' })} />
-                                    <Stack.Screen name="365" options={{ headerShown: true, title: '#olas365' }} />
+                                        <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
+                                        <Stack.Screen name="notifications" options={{ headerShown: false }} />
+                                        {/* <Stack.Screen name="communities" options={{ headerShown: false }} /> */}
+                                        <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                    <Stack.Screen name="view" options={{
-                                            contentStyle: { backgroundColor: 'black' },
-                                            presentation: 'modal',
-                                            headerShown: false,
-                                        }}
-                                    />
+                                        <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
+                                        <Stack.Screen name="comments" options={modalPresentation({ title: 'Comments' })} />
+                                        <Stack.Screen name="365" options={{ headerShown: true, title: '#olas365' }} />
 
-                                    <Stack.Screen name="live" options={{
-                                            contentStyle: { backgroundColor: 'black' },
-                                        }}
-                                    />
-                                    
-                                    <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
-                                    <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
+                                        <Stack.Screen
+                                            name="view"
+                                            options={{
+                                                contentStyle: { backgroundColor: 'black' },
+                                                presentation: 'modal',
+                                                headerShown: false,
+                                            }}
+                                        />
+
+                                        <Stack.Screen
+                                            name="live"
+                                            options={{
+                                                contentStyle: { backgroundColor: 'black' },
+                                            }}
+                                        />
+
+                                        <Stack.Screen
+                                            name="receive"
+                                            options={{ headerShown: true, presentation: 'modal', title: 'Receive' }}
+                                        />
+                                        <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
                                     </Stack>
-                                    
-                                <PostOptionsMenu />
-                                <LocationBottomSheet />
-                                {/* <CommunityBottomSheet /> */}
-                                {/* <AlbumsBottomSheet /> */}
-                                {/* <PostTypeSelectorBottomSheet /> */}
-                                <FeedTypeBottomSheet />
-                                {/* <HandleNotificationPrompt /> */}
-                                <TagSelectorBottomSheet />
-                            </NavThemeProvider>
+
+                                    <PostOptionsMenu />
+                                    <LocationBottomSheet />
+                                    {/* <CommunityBottomSheet /> */}
+                                    {/* <AlbumsBottomSheet /> */}
+                                    {/* <PostTypeSelectorBottomSheet /> */}
+                                    <FeedTypeBottomSheet />
+                                    {/* <HandleNotificationPrompt /> */}
+                                    <TagSelectorBottomSheet />
+                                </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />
                             <DevelopmentStatus />
@@ -387,12 +400,12 @@ export default function RootLayout() {
 
 function DevelopmentStatus() {
     if (!DEV_BUILD) return null;
-    
+
     return (
         <View style={styles.developmentStatus}>
             <View style={styles.developmentStatusIndicator} />
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -407,11 +420,11 @@ const styles = StyleSheet.create({
         backgroundColor: PUBLISH_ENABLED ? 'green' : 'red',
         borderRadius: 100,
         zIndex: 1000,
-    }
+    },
 });
 
 function HandleNotificationPrompt() {
-    const promptedForNotifications = useAppSettingsStore(state => state.promptedForNotifications);
-    
+    const promptedForNotifications = useAppSettingsStore((state) => state.promptedForNotifications);
+
     if (!promptedForNotifications) return <PromptForNotifications />;
 }
