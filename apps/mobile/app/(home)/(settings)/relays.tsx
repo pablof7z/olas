@@ -1,6 +1,6 @@
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKList, useNDK, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
@@ -34,7 +34,8 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
         <Pressable
             onPress={() => {
                 console.log('connect to', relay.url);
-                relay.connect()
+                relay
+                    .connect()
                     .then(() => {
                         console.log('connected');
                     })
@@ -55,6 +56,9 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
 export default function RelaysScreen() {
     const { ndk } = useNDK();
     const [searchText, setSearchText] = useState<string | null>(null);
+
+    const relayList = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.RelayList, { create: true });
+
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
     const [url, setUrl] = useState('');
 
@@ -74,47 +78,41 @@ export default function RelaysScreen() {
         }
     };
 
-    
-    // const removeRelay = useCallback(relay: NDKRelay) => {
-        
-    //     setRelays(relays.filter((r) => r.url !== relay.url));
-    // }, [relays]);
+    const removeRelay = useCallback(
+        (relay: NDKRelay) => {
+            // Compute the new relays list
+            const updatedRelays = relays.filter((r) => r.url !== relay.url);
+            const updatedRelayUrls = updatedRelays.map((r) => r.url).join(',');
 
-    const data = useMemo(() => {
-        if (!ndk) return [];
-        const data: ListDataItem[] = [];
+            // Update the state with the new relays list
+            setRelays(updatedRelays);
+        },
+        [relays]
+    );
 
-        for (const pool of ndk.pools) {
-            data.push(pool.name);
-
-            for (const relay of pool.relays.values()) {
-                data.push({
-                    id: `${pool.name}-${relay.url}`,
-                    title: relay.url,
-                    rightView: (
-                        <View className="flex-1 items-center px-4 py-2">
-                            <RelayConnectivityIndicator relay={relay} />
-                        </View>
-                    ),
-                });
-            }
-        }
-
+    useEffect(() => {
         const allRelays = new Map<string, NDKRelay>();
         ndk.pool.relays.forEach((r) => allRelays.set(r.url, r));
         relays.forEach((r) => {
             if (!allRelays.has(r.url)) allRelays.set(r.url, r);
         });
 
-        return Array.from(allRelays.values())
+        setRelays(relays);
+    }, [ndk?.pool.relays]);
+
+    const data = useMemo(() => {
+        if (!ndk) return [];
+        const data: ListDataItem[] = [];
+
+        return Array.from(relays.values())
             .map((relay: NDKRelay) => ({
                 id: relay.url,
                 title: relay.url,
                 rightView: (
-                    <View className="flex-1 items-center px-4 py-2 flex-row gap-4">
-                        {/* <Button variant="secondary" size="sm" onPress={() => removeRelay(relay)}>
-                                <Text>Remove</Text>
-                            </Button> */}
+                    <View className="flex-1 flex-row items-center gap-4 px-4 py-2">
+                        <Button variant="secondary" size="sm" onPress={() => removeRelay(relay)}>
+                            <Text>Remove</Text>
+                        </Button>
                         <RelayConnectivityIndicator relay={relay} />
                     </View>
                 ),
@@ -123,11 +121,26 @@ export default function RelaysScreen() {
                 },
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
-    }, [ndk?.pool.relays, searchText, relays]);
+    }, [searchText, relays]);
 
     function save() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
-        router.back();
+
+        // sync our updated relays using NIP 65
+        relayList.ndk = ndk;
+        relayList.kind = NDKKind.RelayList;
+        relayList.tags = relays.map((r) => r.referenceTags()).flat();
+
+        relayList
+            .sign()
+            .then(() => {
+                console.log('event', relayList.rawEvent());
+                relayList.publishReplaceable();
+                router.back();
+            })
+            .catch((e) => {
+                console.log('error', e);
+            });
     }
 
     const [relayNotices] = useAtom(relayNoticesAtom);

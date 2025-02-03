@@ -89,18 +89,25 @@ export default function RootLayout() {
         }
     });
 
+    // if there are no relays... we add a few defaults. Otherwise we don't
     if (relays.length === 0) {
+        relays.push('wss://relay.olas.app/');
+        relays.push('wss://purplepag.es/');
         relays.push('wss://relay.primal.net/');
     }
 
-    // check if we have relay.olas.app, if not, add it
-    if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
-        relays.unshift('wss://relay.olas.app/');
-    }
+    // if (relays.length === 0) {
+    //     relays.push('wss://relay.primal.net/');
+    // }
 
-    if (!relays.find((r) => r.match(/^purplepag\.es/))) {
-        relays.unshift('wss://purplepag.es/');
-    }
+    // // check if we have relay.olas.app, if not, add it
+    // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
+    //     relays.unshift('wss://relay.olas.app/');
+    // }
+
+    // if (!relays.find((r) => r.match(/^purplepag\.es/))) {
+    //     relays.unshift('wss://purplepag.es/');
+    // }
     
     const { ndk, init: initializeNDK } = useNDK();
     const initializeSession = useNDKSessionInit();
