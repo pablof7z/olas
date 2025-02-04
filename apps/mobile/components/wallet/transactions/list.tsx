@@ -41,14 +41,6 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
     const listening = useRef(new Set<string>());
     const completedPendingZaps = useRef(new Map<string, string>());
 
-    const keyExtractor = (item: NDKEvent | NDKCashuDeposit | ZapperWithId) => {
-        return item.id;
-        if (item instanceof NDKCashuDeposit) return item.quoteId;
-        const id = item instanceof NDKEvent ? item.id : item.internalId;
-        const res = completedPendingZaps.current.get(id) ?? id
-        return res;
-    }
-
     useEffect(() => {
         for (const payment of pendingPayments) {
             if (listening.current.has(payment.internalId)) continue;

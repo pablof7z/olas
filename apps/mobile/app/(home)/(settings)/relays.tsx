@@ -8,12 +8,19 @@ import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import * as SecureStore from 'expo-secure-store';
-import { useAtom } from 'jotai';
-import { relayNoticesAtom } from '@/stores/relays';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { Button } from '@/components/nativewindui/Button';
+import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
+import { getRelays, RelayEntry, setRelays } from '@/stores/db/relays';
+import { DotSquare, DotSquareIcon, MoreHorizontal, Settings } from 'lucide-react-native';
+import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import { atom, useAtom } from 'jotai';
+
+const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(new Map(), (get, set, value) => {
+    set(relaySettingAtom, value);
+});
 
 const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
     [NDKRelayStatus.RECONNECTING]: '#f1c40f',
@@ -56,11 +63,46 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
 export default function RelaysScreen() {
     const { ndk } = useNDK();
     const [searchText, setSearchText] = useState<string | null>(null);
-
-    const relayList = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.RelayList, { create: true });
-
-    const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
     const [url, setUrl] = useState('');
+    const [selectedPoolIndex, setSelectedPoolIndex] = useState(0);
+    const [lastActionAt, setLastActionAt] = useState(0);
+    const [relaySetting, setRelaySetting] = useAtom(relaySettingAtom);
+    const pathname = usePathname();
+
+    useEffect(() => {
+        console.log('setting relay setting', pathname, getRelays());
+        const map = new Map<string, boolean>();
+        for (const relayEntry of getRelays()) {
+            if (relayEntry.connect) {
+                map.set(relayEntry.url, true);
+            } else {
+                map.set(relayEntry.url, false);
+            }
+        }
+        console.log('map', map);
+        setRelaySetting(map);
+    }, [ pathname === '/(home)/(settings)/relays' ]);
+    
+    const autoConnectRelays = useMemo(() => {
+        return new Set(Array.from(relaySetting.entries()).filter(([_, connect]) => connect).map(([url]) => url));
+    }, [relaySetting]);
+
+    const blacklistedRelays = useMemo(() => {
+        return new Set(Array.from(relaySetting.entries()).filter(([_, connect]) => !connect).map(([url]) => url));
+    }, [relaySetting]);
+
+    const pools = ndk.pools;
+
+    const relays = useMemo(() => {
+        const pool = pools[selectedPoolIndex];
+        return Array.from(pool.relays.values());
+    }, [selectedPoolIndex, lastActionAt])
+
+    useEffect(() => {
+        ndk.pool.on('relay:connect', () => setLastActionAt(Date.now()));
+        ndk.pool.on('relay:disconnect', () => setLastActionAt(Date.now()));
+        ndk.pool.on('relay:connecting', () => setLastActionAt(Date.now()));
+    }, []);
 
     const addFn = () => {
         console.log({ url });
@@ -71,94 +113,74 @@ export default function RelaysScreen() {
                 return;
             }
             const relay = ndk?.addExplicitRelay(url);
-            if (relay) setRelays([...relays, relay]);
+            if (relay) {
+                const state = new Map(relaySetting);
+                state.set(relay.url, true);
+                setRelaySetting(state);
+            }
             setUrl('');
         } catch (e) {
             alert('Invalid URL');
         }
     };
 
-    const removeRelay = useCallback(
-        (relay: NDKRelay) => {
-            // Compute the new relays list
-            const updatedRelays = relays.filter((r) => r.url !== relay.url);
-            const updatedRelayUrls = updatedRelays.map((r) => r.url).join(',');
-
-            // Update the state with the new relays list
-            setRelays(updatedRelays);
-        },
-        [relays]
-    );
-
     useEffect(() => {
         const allRelays = new Map<string, NDKRelay>();
-        ndk.pool.relays.forEach((r) => allRelays.set(r.url, r));
+        const pool = pools[selectedPoolIndex];
+        pool.relays.forEach((r) => allRelays.set(r.url, r));
         relays.forEach((r) => {
             if (!allRelays.has(r.url)) allRelays.set(r.url, r);
         });
-
-        setRelays(relays);
-    }, [ndk?.pool.relays]);
+    }, [ndk?.pool.relays, selectedPoolIndex]);
 
     const data = useMemo(() => {
         if (!ndk) return [];
-        const data: ListDataItem[] = [];
-
-        return Array.from(relays.values())
+        const ret = [];
+        
+        ret.push(...Array.from(relays.values())
             .map((relay: NDKRelay) => ({
                 id: relay.url,
                 title: relay.url,
+                isAutoConnect: relaySetting.get(relay.url) === true,
+                isBlacklisted: relaySetting.get(relay.url) === false,
                 rightView: (
-                    <View className="flex-1 flex-row items-center gap-4 px-4 py-2">
-                        <Button variant="secondary" size="sm" onPress={() => removeRelay(relay)}>
-                            <Text>Remove</Text>
-                        </Button>
-                        <RelayConnectivityIndicator relay={relay} />
-                    </View>
+                    <RightView relay={relay} relayUrl={relay.url} />
                 ),
                 onPress: () => {
                     router.push(`/(home)/(settings)/relay?relayUrl=${relay.url}`);
                 },
             }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
-    }, [searchText, relays]);
+            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!)));
+        
+        for (const url of blacklistedRelays) {
+            if (!relays.find((r) => r.url === url)) {
+                ret.push({
+                    id: url,
+                    title: url,
+                    isBlacklisted: true,
+                    rightView: (
+                        <RightView relayUrl={url} />
+                    ),
+                });
+            }
+        }
 
-    function save() {
-        SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));
+        return ret;
+    }, [searchText, relays, selectedPoolIndex, autoConnectRelays, blacklistedRelays]);
 
-        // sync our updated relays using NIP 65
-        relayList.ndk = ndk;
-        relayList.kind = NDKKind.RelayList;
-        relayList.tags = relays.map((r) => r.referenceTags()).flat();
-
-        relayList
-            .sign()
-            .then(() => {
-                console.log('event', relayList.rawEvent());
-                relayList.publishReplaceable();
-                router.back();
-            })
-            .catch((e) => {
-                console.log('error', e);
-            });
-    }
-
-    const [relayNotices] = useAtom(relayNoticesAtom);
-
-    const noticesAsData = useMemo(() => {
-        return Object.entries(relayNotices).map(([relayUrl, notices]) => ({
-            id: relayUrl,
-            title: relayUrl,
-            badge: notices.length,
-            rightView: <Text>{notices.length}</Text>,
-            onPress: () => {
-                router.push(`/(home)/(settings)/relay?relayUrl=${relayUrl}`);
-            },
-        }));
-    }, [relayNotices]);
+    const save = useCallback(() => {
+        const autoConnect = new Set<string>();
+        const blacklist = new Set<string>();
+        for (const [url, connect] of relaySetting.entries()) {
+            if (connect) autoConnect.add(url);
+            else blacklist.add(url);
+        }
+        setRelays(autoConnect, blacklist);
+        router.back();
+    }, [relaySetting]);
 
     return (
-        <>
+        <View className="flex-1 flex-col">
             <LargeTitleHeader
                 title="Relays"
                 searchBar={{
@@ -171,16 +193,77 @@ export default function RelaysScreen() {
                     </TouchableOpacity>
                 )}
             />
+
+<View className="flex-1 flex-col">
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={[...data, { id: 'add', fn: addFn, set: setUrl }, 'Notices', ...noticesAsData]}
+                data={[...data, { id: 'add', fn: addFn, set: setUrl }]}
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
                 renderItem={renderItem}
-                keyExtractor={keyExtractor}
+                    keyExtractor={keyExtractor}
+                />
+                <SegmentedControl
+                values={pools.map((p) => p.name)}
+                selectedIndex={selectedPoolIndex}
+                onIndexChange={(index) => {
+                    setSelectedPoolIndex(index);
+                }}
             />
-        </>
+            </View>
+        </View>
+    );
+}
+
+function RightView({
+    relay,
+    relayUrl,
+}: { relay?: NDKRelay, relayUrl: string }) {
+    const { colors } = useColorScheme();
+    const { showActionSheetWithOptions } = useActionSheet();
+    const [relaySetting, setRelaySetting] = useAtom(relaySettingAtom);
+
+    const openActionSheet = useCallback(() => {
+        const options = [];
+        let destructiveButtonIndex: number | undefined;
+
+        console.log(relaySetting.get(relayUrl), relayUrl, relaySetting);
+
+        if (relaySetting.get(relayUrl) === true) {
+            options.push(["Don't auto-connect", null]);
+        } else if (relaySetting.get(relayUrl) === false) {
+            options.push(["Unblock", null]);
+        } else {
+            options.push(["Auto-connect", true]);
+            options.push(["Block", false]);
+            destructiveButtonIndex = 1;
+        }
+
+        options.push(["Cancel", undefined]);
+        
+        showActionSheetWithOptions({
+            title: relayUrl,
+            options: options.map((o) => o[0]),
+            cancelButtonIndex: options.length-1,
+            destructiveButtonIndex,
+        }, (buttonIndex) => {
+            const state = new Map(relaySetting);
+            const val = options[buttonIndex][1];
+            if (val === undefined) return;
+            if (val === null) state.delete(relayUrl);
+            else state.set(relayUrl, val);
+            setRelaySetting(state);
+        })
+    }, [showActionSheetWithOptions, relayUrl, relaySetting])
+
+    return (
+        <View className="flex-1 flex-row items-center gap-4 px-4 py-2">
+            <Button variant="plain" size="icon" onPress={openActionSheet}>
+                <Settings size={16} color={colors.muted} />
+            </Button>
+            {relay && <RelayConnectivityIndicator relay={relay} />}
+        </View>
     );
 }
 
@@ -236,7 +319,13 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
             }
             {...info}
             onPress={info.item.onPress}
-        />
+        >
+            {info.item.isAutoConnect && <Text className="text-muted-foreground text-xs">Auto-connect</Text>}
+            {info.item.isBlacklisted && <Text className="text-muted-foreground text-xs">Won't connect</Text>}
+            {!info.item.isBlacklisted && !info.item.isAutoConnect && <Text className="text-muted-foreground text-xs">
+                Used when needed
+            </Text>}
+        </ListItem>
     );
 }
 

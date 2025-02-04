@@ -53,6 +53,9 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 12
             recyclingKey={pubkey}
             style={{ width: imageSize, height: imageSize }}
             className="flex-1"
+            onError={() => {
+                console.log('error loading image', pubkey);
+            }}
         />
     </View>
     );

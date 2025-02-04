@@ -15,8 +15,7 @@ export default function NutzapMonitor() {
         // don't start if already started
         if (start) return;
 
-        // wait 5 seconds before starting
-        setTimeout(() => setStart(true), 5000);
+        setTimeout(() => setStart(true), 15000);
     }, [currentUser?.pubkey, start])
 
     if (!nutzapMonitor) return null;

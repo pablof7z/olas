@@ -16,10 +16,12 @@ import { router } from "expo-router";
 import GroupsIcon from '@/components/icons/groups';
 import { FeedKind, FeedType } from "./store";
 import { useMyGroups } from "@/lib/groups/store";
+import { useAppSettingsStore } from "@/stores/app";
+import { X } from "lucide-react-native";
 
 function kindToSelectionIndex(kind: FeedKind) {
     if (kind === 'discover') return 0;
-    if (kind === 'hashtag') return 1;
+    if (kind === 'search') return 1;
     if (kind === 'group') return 2;
     return 0;
 }
@@ -172,56 +174,49 @@ function Groups({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedT
     }
 }
 
-function Hashtags({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
-    const data = useMemo(() => {
-        const v = [
-            { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365' },
-            { title: '#photography', subTitle: 'Photography posts', value: '#photography' },
-            { title: '#food', subTitle: 'Food posts', value: '#food' },
-            { title: '#family', subTitle: 'Family posts', value: '#family' },
-            { title: '#art', subTitle: 'Art posts', value: '#art' },
-            { title: '#music', subTitle: 'Music posts', value: '#music' },
-            { title: '#nature', subTitle: 'Nature posts', value: '#nature' },
-            { title: '#travel', subTitle: 'Travel posts', value: '#travel' },
-            { title: '#memes', subTitle: 'Memes posts', value: '#memes' },
-        ];
+// function Hashtags({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
+//     const data = useMemo(() => {
+//         const v = [
+            
+//         ];
 
-        return v;
-    }, []);
+//         return v;
+//     }, []);
     
-    return (<List
-        variant="full-width"
-        data={data}
-        estimatedItemSize={50}
-        sectionHeaderAsGap={false}
-        renderItem={({ item, target, index }) => (
-            <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                    index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-                )}
-                titleClassName={cn('text-lg', item.value === value.value && '!font-extrabold')}
-                item={item}
-                index={index}
-                target={target}
-                subTitleNumberOfLines={1}
-                leftView={
-                    item.icon ? (
-                        <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
-                    ) : item.leftView ? item.leftView : null
-                }
-                onPress={() => {
-                    if (item.onPress) item.onPress();
-                    else onSelect({ kind: 'hashtag', value: item.value })
-                }}
-            />
-        )}
-    />)
-}
+//     return (<List
+//         variant="full-width"
+//         data={data}
+//         estimatedItemSize={50}
+//         sectionHeaderAsGap={false}
+//         renderItem={({ item, target, index }) => (
+//             <ListItem
+//                 className={cn(
+//                     'ios:pl-0 pl-2',
+//                     index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+//                 )}
+//                 titleClassName={cn('text-lg', item.value === value.value && '!font-extrabold')}
+//                 item={item}
+//                 index={index}
+//                 target={target}
+//                 subTitleNumberOfLines={1}
+//                 leftView={
+//                     item.icon ? (
+//                         <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
+//                     ) : item.leftView ? item.leftView : null
+//                 }
+//                 onPress={() => {
+//                     if (item.onPress) item.onPress();
+//                     else onSelect({ kind: 'hashtag', value: item.value })
+//                 }}
+//             />
+//         )}
+//     />)
+// }
 
 function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
+    const savedSearches = useAppSettingsStore(s => s.savedSearches);
 
     const data = useMemo(() => {
         const v = [];
@@ -262,20 +257,20 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
             })  
         }
 
-        v.push(...[
-            { title: '#olas365', subTitle: '#olas365 challenge posts', value: '#olas365', onPress: () => onSelect({ kind: 'hashtag', value: '#olas365' }) },
-            { title: '#photography', subTitle: 'Photography posts', value: '#photography', onPress: () => onSelect({ kind: 'hashtag', value: '#photography' }) },
-            { title: '#food', subTitle: 'Food posts', value: '#food', onPress: () => onSelect({ kind: 'hashtag', value: '#food' }) },
-            { title: '#family', subTitle: 'Family posts', value: '#family', onPress: () => onSelect({ kind: 'hashtag', value: '#family' }) },
-            { title: '#art', subTitle: 'Art posts', value: '#art', onPress: () => onSelect({ kind: 'hashtag', value: '#art' }) },
-            { title: '#music', subTitle: 'Music posts', value: '#music', onPress: () => onSelect({ kind: 'hashtag', value: '#music' }) },
-            { title: '#nature', subTitle: 'Nature posts', value: '#nature', onPress: () => onSelect({ kind: 'hashtag', value: '#nature' }) },
-            { title: '#travel', subTitle: 'Travel posts', value: '#travel', onPress: () => onSelect({ kind: 'hashtag', value: '#travel' }) },
-            { title: '#memes', subTitle: 'Memes posts', value: '#memes', onPress: () => onSelect({ kind: 'hashtag', value: '#memes' }) },
-        ]);
+        v.push(...savedSearches
+            .sort((a, b) => b.lastUsedAt - a.lastUsedAt)
+            .map(s => ({
+            title: s.title,
+            subTitle: s.subtitle,
+                value: s.title,
+                type: 'search',
+            onPress: () => onSelect({ kind: 'search', value: s.title, hashtags: s.hashtags })
+        })));
 
         return v;
-    }, [currentUser?.pubkey]);
+    }, [currentUser?.pubkey, savedSearches.length]);
+
+    const removeSavedSearch = useAppSettingsStore(s => s.removeSavedSearch);
 
     return (<List
         variant="full-width"
@@ -297,6 +292,13 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
                     item.icon ? (
                         <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
                     ) : item.leftView ? item.leftView : null
+                }
+                rightView={
+                    item.type === 'search' ? (
+                        <Button variant="plain" size="sm" onPress={() => removeSavedSearch(item.title)}>
+                            <X size={24} color={colors.muted} />
+                        </Button>
+                    ) : null
                 }
                 onPress={() => {
                     if (item.onPress) item.onPress();

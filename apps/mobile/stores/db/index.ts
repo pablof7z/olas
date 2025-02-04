@@ -1,8 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { migrations } from './migrations';
 
-const start = performance.now();
-console.log('[APP DB] starting')
 export const db = SQLite.openDatabaseSync('snap.db');
 
 export function initialize() {
@@ -15,6 +13,4 @@ export function initialize() {
         }
         db.execSync(`PRAGMA user_version = ${migrations.length}`);
     }
-
-    console.log('[APP DB] done', db.databasePath, performance.now() - start);
 }

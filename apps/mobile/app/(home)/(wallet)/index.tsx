@@ -1,27 +1,42 @@
 import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Pressable } from "react-native";
-import { NDKPrivateKeySigner, NDKCashuMintList, NDKEvent, NDKKind, NDKNutzap, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit, useNDK, useNDKCurrentUser, useNDKSession, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { NDKPrivateKeySigner, NDKCashuMintList, NDKNWCGetInfoResult, NDKKind, NDKNutzap, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletBalance, NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, Stack, Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Button } from "@/components/nativewindui/Button";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bolt, BookDown, ChevronDown, Cog, Eye, QrCode, Settings, Settings2, SettingsIcon, User2, ZoomIn } from "lucide-react-native";
+import { QrCode, Settings, Settings2, SettingsIcon, User2, ZoomIn } from "lucide-react-native";
 import * as User from '@/components/ui/user';
 import { useColorScheme } from "@/lib/useColorScheme";
 import TransactionHistory from "@/components/wallet/transactions/list";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePaymentStore } from "@/stores/payments";
+import NWCListTansactions from "@/components/wallet/nwc/list-transactions";
+import { atom, useAtom } from "jotai";
+
+const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) => set(nwcInfoAtom, value));
 
 function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
-    const [info, setInfo] = useState<Record<string, any> | null>(null);
-    wallet.getInfo().then((info) => {
-        console.log('info', info);
-        setInfo(info)
-    });
+    const [info, setInfo] = useAtom(nwcInfoAtom);
+    const [hasListTransactions, setHasListTransactions] = useState(false);
 
-    return <View>
-        <Text>{JSON.stringify(info)}</Text>
+    useEffect(() => {
+        console.log('updating balance', wallet.walletId);
+        wallet.updateBalance();
+    }, [wallet?.walletId])
+    
+    useEffect(() => {
+        wallet.getInfo().then((info) => {
+            console.log('info', info);
+            setInfo(info)
+            console.log('info.methods', info.methods);
+            setHasListTransactions(info.methods.includes('list_transactions'));
+        });
+    }, [wallet?.walletId])
+    
+    return <View className="flex-1">
+        {hasListTransactions && <NWCListTansactions />}
     </View>;
 }
 
@@ -90,18 +105,6 @@ export default function WalletScreen() {
         })), null, 2));
         console.log("Journal");
         console.log(JSON.stringify(activeWallet.state.journal, null, 2));
-        // const signer = NDKPrivateKeySigner.generate();
-        // const pablo = ndk.getUser({ npub: "npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft" });
-        // [dump.balances, dump.proofs, dump.tokens, activeWallet.state.journal].forEach(async (data) => {
-        //     const message = new NDKEvent(ndk);
-        //     message.kind = 4;
-        //     message.content = JSON.stringify(data);
-        //     await message.encrypt(pablo);
-        //     message.tags.push(['p', pablo.pubkey]);
-        //     await message.sign(signer);
-        //     await message.publish();
-        //     console.log('message', message.rawEvent());
-        // });
     }, [activeWallet?.walletId]);
 
     const { colors } = useColorScheme();
@@ -146,9 +149,13 @@ export default function WalletScreen() {
                             </View>
                         )}
 
-                        <Footer activeWallet={activeWallet} currentUser={currentUser} />
+                        {/* {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />} */}
+                        {activeWallet instanceof NDKCashuWallet && (<>
+                            <Footer activeWallet={activeWallet} currentUser={currentUser} />
+                            <WalletNip60 wallet={activeWallet} />
+                        </>)}
+
                         {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />}
-                        {activeWallet instanceof NDKCashuWallet && <WalletNip60 wallet={activeWallet} />}
                     </View>
                 </View>
             </SafeAreaView>

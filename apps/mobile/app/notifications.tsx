@@ -197,9 +197,9 @@ function NotificationPrompt() {
 
     return (<TouchableOpacity className='bg-muted-200 p-4' onPress={enable}>
         <Text className='text-muted-foreground'>Want to know when people follow you in Olas or comments on your posts?</Text>
-        <Button variant="plain">
+        <View className='flex-col gap-2 items-center'>
             <Text className="text-primary">Enable</Text>
-        </Button>
+        </View>
     </TouchableOpacity>)
 }
 

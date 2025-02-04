@@ -111,7 +111,7 @@ export default function TabsLayout() {
                     title: 'Wallets',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={"transparent"}  stroke={color} />
+                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={focused ? color : "transparent"}  stroke={color} />
                     ),
                 }}
             />

@@ -17,7 +17,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
-const modeAtom = atom<'login' | 'signup'>('signup');
+const modeAtom = atom<'login' | 'signup'>('login');
 
 export function LoginWithNip55Button() {
     const {apps} = useNip55();
@@ -136,7 +136,6 @@ function SignUp() {
 
             <TextInput
                 className="w-full rounded-md border border-border p-2 text-xl text-foreground"
-                autoFocus={true}
                 autoCapitalize="none"
                 autoComplete={undefined}
                 placeholder="Enter your username"

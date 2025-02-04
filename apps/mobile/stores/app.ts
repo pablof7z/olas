@@ -1,8 +1,16 @@
 import { create } from "zustand";
 import * as SecureStore from 'expo-secure-store';
 import { ZapOption } from "@/app/(home)/(settings)/zaps";
+import { db } from "./db";
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
+
+export type SavedSearch = {
+    title: string;
+    subtitle: string;
+    hashtags: string[];
+    lastUsedAt: number;
+}
 
 export type AppSettingsStoreState = {
     removeLocation?: boolean;
@@ -31,6 +39,11 @@ export type AppSettingsStoreState = {
      * Force square-aspect ratio in feed.
      */
     forceSquareAspectRatio: boolean;
+
+    /**
+     * Saved searches.
+     */
+    savedSearches: SavedSearch[];
 };
 
 export type AppSettingsStoreActions = {
@@ -48,6 +61,10 @@ export type AppSettingsStoreActions = {
 
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
 
+    addSavedSearch: (search: SavedSearch) => void;
+    removeSavedSearch: (search: SavedSearch) => void;
+    updateSavedSearch: (search: SavedSearch) => void;
+
     reset: () => void;
 };
 
@@ -64,6 +81,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     videosInFeed: 'from-follows',
     forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
     editingPosts: [],
+    savedSearches: [],
 
     init: async () => {
         const state: Partial<AppSettingsStoreState> = {
@@ -97,6 +115,14 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const videosInFeed = SecureStore.getItem('videosInFeed');
         if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
+
+        const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as { title: string, subtitle: string, hashtags: string, last_used_at: number }[];
+        state.savedSearches = savedSearches.map(search => ({
+            title: search.title,
+            subtitle: search.subtitle,
+            hashtags: search.hashtags.split(' '),
+            lastUsedAt: search.last_used_at
+        })).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
 
         set({ ...state });
     },
@@ -143,6 +169,21 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
         console.log('setForceSquareAspectRatio', forceSquareAspectRatio);
         set({ forceSquareAspectRatio });
+    },
+
+    addSavedSearch: (search: SavedSearch) => {
+        db.runSync('INSERT INTO saved_searches (title, subtitle, hashtags, last_used_at) VALUES (?, ?, ?, ?);', [search.title, search.subtitle, search.hashtags.join(' '), search.lastUsedAt]);
+        set({ savedSearches: [...get().savedSearches, search] });
+    },
+
+    removeSavedSearch: (title: string) => {
+        db.runSync('DELETE FROM saved_searches WHERE title = ?;', [title]);
+        set({ savedSearches: get().savedSearches.filter(s => s.title !== title) });
+    },
+
+    updateSavedSearch: (search: SavedSearch) => {
+        db.runSync('UPDATE saved_searches SET subtitle = ?, hashtags = ?, last_used_at = ? WHERE title = ?;', [search.subtitle, search.hashtags.join(' '), search.lastUsedAt, search.title]);
+        set({ savedSearches: get().savedSearches.map(s => s.title === search.title ? search : s) });
     },
 
     reset: () => {

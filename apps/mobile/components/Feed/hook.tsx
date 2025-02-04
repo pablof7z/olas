@@ -242,7 +242,6 @@ export function useFeedEvents(
      * we are not connected to relays and there won't be an EOSE coming any time soon.
      */
     const handleCacheEose = useCallback(() => {
-        console.log('cache eose')
         updateEntries('cache-eose');
     }, [updateEntries]);
 
@@ -403,6 +402,7 @@ export function useFeedMonitor(
             const keep = neededSlices.find(slice => slice.start === activeSlice.start);
 
             if (!keep) {
+                console.log('removing slice', activeSlice.start, 'to', activeSlice.end)
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
             } else if (activeSlice.removeTimeout) {
                 clearTimeout(activeSlice.removeTimeout)
@@ -415,6 +415,11 @@ export function useFeedMonitor(
             const exists = activeSlices.current.find(slice => slice.start === neededSlice.start);
 
             if (!exists) addSlice(neededSlice)
+        }
+        
+        // clean up active subs on unmount
+        return () => {
+            activeSlices.current.forEach(slice => slice.sub.stop());
         }
     }, [activeIndex, events.length < sliceSize]);
     

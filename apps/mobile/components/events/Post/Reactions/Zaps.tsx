@@ -7,7 +7,6 @@ import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { usePaymentStore } from '@/stores/payments';
 import { useAppSettingsStore } from '@/stores/app';
-import { Zap } from 'lucide-react-native';
 import Lightning from '@/components/icons/lightning';
 
 const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
@@ -22,13 +21,14 @@ const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent,
     try {
         const zapper = new NDKZapper(event, Math.round(sats) * 1000, 'msat', {
             comment: message,
-            // tags: [['k', event.kind.toString()]],
             nutzapAsFallback: withFallbackZap,
         });
 
         addPendingPayment(zapper);
 
-        await zapper.zap();
+        const res = await zapper.zap();
+
+        console.log('zap result', res);
     } catch (error: any) {
         console.error('Error while zapping:', error);
         toast.error(error.message);

@@ -12,9 +12,7 @@ import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import NDK, {
     NDKCacheAdapterSqlite,
     NDKEventWithFrom,
-    NDKNutzap,
     useNDKCurrentUser,
-    useNDKNutzapMonitor,
     useNDKCacheInitialized,
 } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
@@ -24,13 +22,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKEvent, NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import * as Notifications from 'expo-notifications';
-import { configurePushNotifications } from '~/lib/notifications';
+import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNDK, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
@@ -42,15 +38,17 @@ import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import { db, initialize } from '@/stores/db';
+import { initialize } from '@/stores/db';
+import { getRelays } from '@/stores/db/relays';
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
-import { useReactionsStore } from '@/stores/reactions';
 import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
-import { CommunityBottomSheet } from '@/lib/post-editor/sheets/CommunityBottomSheet';
+import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
+import { useReactionsStore } from '@/stores/reactions';
 
 export const timeZero = Date.now();
+
 
 initialize();
 
@@ -72,8 +70,8 @@ const settingsStore = {
 
 const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
     const url = new URL(relay.url);
-    if (direction === 'send') console.log('👉', url.hostname, msg.slice(0, 400));
-    // if (direction === 'recv' && relay.url.match(/olas/i)) console.log('👈', url.hostname, msg.slice(0, 400));
+    if (direction === 'send' && relay.url.match(/nwc/i)) console.log('👉', url.hostname, msg.slice(0, 400));
+    if (direction === 'recv' && relay.url.match(/nwc/i)) console.log('👈', url.hostname, msg.slice(0, 400));
 };
 
 let timeSinceFirstRender = undefined;
@@ -86,26 +84,24 @@ export default function RootLayout() {
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
 
-    let relays = (SecureStore.getItem('relays') || '').split(',');
-
-    relays = relays.filter((r) => {
+    const relays = getRelays();
+    const filteredRelays = relays.filter((r) => {
         try {
-            return new URL(r).protocol.startsWith('ws');
+            return new URL(r.url).protocol.startsWith('ws');
         } catch (e) {
             return false;
         }
     });
 
     // if there are no relays... we add a few defaults. Otherwise we don't
-    if (relays.length === 0) {
-        relays.push('wss://relay.olas.app/');
-        relays.push('wss://purplepag.es/');
-        relays.push('wss://relay.primal.net/');
+    if (filteredRelays.length === 0) {
+        filteredRelays.push({ url: 'wss://relay.olas.app/', connect: true });
+        filteredRelays.push({ url: 'wss://purplepag.es/', connect: true });
+        filteredRelays.push({ url: 'wss://relay.primal.net/', connect: true });
     }
 
-    // if (relays.length === 0) {
-    //     relays.push('wss://relay.primal.net/');
-    // }
+    const connectRelays = filteredRelays.filter((r) => r.connect);
+    const blacklistedRelays = filteredRelays.filter((r) => !r.connect);
 
     // // check if we have relay.olas.app, if not, add it
     // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
@@ -136,9 +132,13 @@ export default function RootLayout() {
                 feedType = payload;
             } catch (e) {
                 if (storedFeed.startsWith('#')) {
-                    feedType = { kind: 'hashtag', value: storedFeed };
+                    feedType = { kind: 'search', value: storedFeed };
                 } else {
                     feedType = { kind: 'discover', value: storedFeed };
+                }
+
+                if (feedType.kind as string === 'hashtag') {
+                    feedType.hashtags = [feedType.value.slice(1, 999)];
                 }
             }
         } else {
@@ -183,14 +183,14 @@ export default function RootLayout() {
         });
     }, [ndk, currentUser?.pubkey, appReady]);
 
-    useEffect(() => {
-        if (!ndk) return;
-        if (!appReady) {
-            console.log('setting app ready');
-            setAppReady(true);
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        }
-    }, [ndk]);
+    // useEffect(() => {
+    //     if (!ndk) return;
+    //     if (!appReady) {
+    //         console.log('setting app ready');
+    //         setAppReady(true);
+    //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    //     }
+    // }, [ndk])
 
     useEffect(() => {
         if (appReady) return;
@@ -237,7 +237,8 @@ export default function RootLayout() {
         if (DEV_BUILD) opts.netDebug = netDebug;
 
         initializeNDK({
-            explicitRelayUrls: relays,
+            explicitRelayUrls: connectRelays.map((r) => r.url),
+            blacklistRelayUrls: blacklistedRelays.map((r) => r.url),
             cacheAdapter,
             enableOutboxModel: true,
             initialValidationRatio: 0.0,
@@ -377,16 +378,17 @@ export default function RootLayout() {
                                         />
                                         <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
                                     </Stack>
-
-                                    <PostOptionsMenu />
-                                    <LocationBottomSheet />
-                                    {/* <CommunityBottomSheet /> */}
-                                    {/* <AlbumsBottomSheet /> */}
-                                    {/* <PostTypeSelectorBottomSheet /> */}
-                                    <FeedTypeBottomSheet />
-                                    {/* <HandleNotificationPrompt /> */}
-                                    <TagSelectorBottomSheet />
-                                </NavThemeProvider>
+                                    
+                                <PostOptionsMenu />
+                                <LocationBottomSheet />
+                                {/* <CommunityBottomSheet /> */}
+                                {/* <AlbumsBottomSheet /> */}
+                                {/* <PostTypeSelectorBottomSheet /> */}
+                                <FeedTypeBottomSheet />
+                                {/* <HandleNotificationPrompt /> */}
+                                <TagSelectorBottomSheet />
+                                <FeedEditorBottomSheet />
+                            </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />
                             <DevelopmentStatus />

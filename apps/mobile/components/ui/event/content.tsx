@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, Pressable, Text, Linking } from 'react-native';
 import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '../user';
 import { Image } from 'expo-image';
 import { nip19 } from 'nostr-tools';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
+import { useSetAtom } from 'jotai';
+import { feedTypeAtom } from '@/components/FeedType/store';
+import { useSearchQuery } from '@/components/Headers/Home/store';
 
 interface EventContentProps {
     event?: NDKEvent;
@@ -16,12 +19,14 @@ interface EventContentProps {
 
 function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtagPress?: false | ((hashtag: string) => void) }) {
     if (onHashtagPress !== false) {
-        onHashtagPress ??= () => router.replace(`/search?q=${encodeURIComponent('#' + hashtag)}`);
+        onHashtagPress ??= () => {
+            router.replace(`/search?q=${encodeURIComponent('#' + hashtag)}`);
+        }
     }
 
     if (onHashtagPress) {
         return (
-            <Text onPress={() => onHashtagPress(hashtag)} className="font-bold text-primary">#{hashtag}</Text>
+            <Text onPress={() => onHashtagPress(`#${hashtag}`)} className="font-bold text-primary">#{hashtag}</Text>
         );
     }
 
@@ -107,6 +112,12 @@ function RenderPart({
 }: { part: string; onMentionPress?: (pubkey: string) => void; onHashtagPress?: (hashtag: string) => void } & React.ComponentProps<
     typeof Text
 >) {
+    const setSearchQuery = useSearchQuery();
+    const defaultHashtagPress = useCallback((tag: string) => {
+        console.log('defaultHashtagPress', tag);
+        setSearchQuery(tag);
+    }, [setSearchQuery])
+    
     if (part.startsWith('https://') && part.match(/\.(jpg|jpeg|png|gif)/)) {
         return (
             <Pressable>
@@ -136,7 +147,7 @@ function RenderPart({
 
     const hashtagMatch = part.match(/^#(\w+)/);
     if (hashtagMatch) {
-        return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress} />;
+        return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress || defaultHashtagPress} />;
     }
 
     return <Text {...props}>{part}</Text>;

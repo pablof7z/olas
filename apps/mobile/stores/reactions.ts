@@ -42,7 +42,7 @@ export const DEFAULT_STATS: ReactionStats = {
     zappedAmount: 0,
     zappedByUser: false,
     bookmarkedByUser: false,
-};
+} as const;
 
 export const useReactionsStore = create<ReactionsStore>((set, get) => ({
     seenEventIds: new Set(),
@@ -56,6 +56,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
             const newReactions = new Map(state.reactions);
 
             // Get the event being reacted to
+            // we prefer using the E tag, but if there is no E tag, we use the e tag
             let targetRootEventId: string | undefined;
             let targetEventId: string | undefined;
             for (const tag of event.tags) {
@@ -70,7 +71,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
             if (!targetRootEventId) return state;
 
             // Get or create stats for this event
-            let stats = {...(newReactions.get(targetRootEventId) || DEFAULT_STATS)};
+            const stats = {...(newReactions.get(targetRootEventId) || DEFAULT_STATS)};
             
             switch (event.kind) {
                 case NDKKind.Reaction:

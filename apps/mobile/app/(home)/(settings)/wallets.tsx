@@ -91,9 +91,10 @@ export default function WalletsScreen() {
             subTitle: 'Create a new NIP-60 wallet',
             disabled: true,
             onPress: () => {
-                newWallet().then(() => {
-                    router.back();
-                });
+                router.push('/dlnwc');
+                // newWallet().then(() => {
+                //     router.back();
+                // });
             },
         });
 

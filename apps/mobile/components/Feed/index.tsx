@@ -12,7 +12,6 @@ import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import { EventMediaGridContainer } from "../media/event";
 import { usePostBottomSheet } from "@/hooks/post-bottom-sheet";
-import { timeZero } from "@/app/_layout";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -43,8 +42,9 @@ export default function Feed({
 
     useScrollToTop(ref);
 
+    const sliceIndex = numColumns * 7;
     const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls }, [filterKey + refreshCount]);
-    const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event))
+    const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event), sliceIndex)
 
     // useEffect(() => {
     //     console.log('rendering feed', entries?.length, newEntries?.length)
@@ -160,7 +160,7 @@ export default function Feed({
                 scrollEventThrottle={100}
                 numColumns={numColumns}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
-                getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
+                getItemType={item => item.id === 'prepend' ? 'prepend' : numColumns === 1 ? 'post' : 'grid'}
                 renderItem={renderItem}
                 disableIntervalMomentum={true}
             />

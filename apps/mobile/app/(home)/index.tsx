@@ -5,7 +5,7 @@ import {
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Image } from 'expo-image';
+
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Dimensions, Modal, Pressable, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
@@ -18,7 +18,7 @@ import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import NotificationsButton from '@/components/NotificationsButton';
+import NotificationsButton from '@/components/Headers/Home/NotificationsButton';
 import Feed from '@/components/Feed';
 import { FlashList } from '@shopify/flash-list';
 import { useObserver } from '@/hooks/observer';
@@ -34,6 +34,9 @@ import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
 import { useGroup } from '@/lib/groups/store';
 import { usePostEditorStore } from '@/lib/post-editor/store';
+import HomeHeader from '@/components/Headers/Home';
+import { useIsSavedSearch } from '@/hooks/saved-search';
+import { searchQueryAtom } from '@/components/Headers/Home/store';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
@@ -52,9 +55,6 @@ function HeaderBackground() {
     )
 }
 
-
-const searchQueryAtom = atom<string>('');
-
 export default function HomeScreen() {
     return (
         <>
@@ -62,22 +62,7 @@ export default function HomeScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: false,
-                    headerLeft: () => <HomeTitle />,
-                    headerBackground: () => <HeaderBackground />,
-                    // headerBackground: () => <BlurView intensity={150} style={{ flex: 1 }} />,
-                    title: '',
-                    headerRight: () => <View className="flex-row items-center gap-2">
-                        {/* <Pressable
-                            className="flex-row items-center w-10"
-                            onPress={() => router.push('/communities')}
-                        >
-                            <House />
-                        </Pressable> */}
-                        
-                        <CalendarButton />
-
-                        <NotificationsButton />
-                    </View>,
+                    header: () => <HomeHeader />,
                 }}
             />
 
@@ -126,25 +111,7 @@ function UploadingIndicator() {
     )
 }
 
-function CalendarButton() {
-    const { colors } = useColorScheme();
-    const currentUser = useNDKCurrentUser();
-    const observer = useObserver(currentUser ? [
-        { kinds: [NDKKind.Image], authors: [ currentUser.pubkey ], "#t": ["olas365"] }
-    ] : false, [currentUser?.pubkey])
 
-    const press = useCallback(() => {
-        router.push('/365')
-    }, [])
-
-    const hasEvents = useMemo(() => observer.length > 0, [observer.length])
-
-    if (!hasEvents) return null;
-    
-    return <Pressable onPress={press} className="px-2">
-        <Calendar size={24} color={colors.foreground} />
-    </Pressable>
-}
 
 function StoryEntry({ events }: { events: NDKEvent[] }) {
     const pTag = events[0].tagValue('p') ?? events[0].pubkey;
@@ -325,22 +292,6 @@ function useBookmarkIds() {
     return ret;
 }
 
-function hashtagFeedToTags(feedType: FeedType) {
-    switch (feedType.value) {
-        case '#photography': return ['photography', 'photo', 'circunvagar'];
-        case '#introductions': return ['introductions'];
-        case '#family': return ['family', 'kids', 'parenting'];
-        case '#travel': return ['travel', 'explore'];
-        case '#nature': return ['nature', 'beach', 'mountains', 'forest', 'animals', 'wildlife'];
-        case '#memes': return ['memes'];
-        case '#art': return ['art', 'artstr', 'aiart', 'circunvagar'];
-        case '#music': return ['music', 'jitterbug'];
-        case '#food': return ['food', 'foodstr'];
-        default:
-            return [feedType.value.slice(1, 99)];
-    }
-}
-
 // how many posts does the time window take into account when deciding whether to show repeated unfollowed pubkeys
 const FOR_YOU_ROLLING_POST_WINDOW_LENGTH = 10;
 
@@ -381,6 +332,28 @@ function forYouFilter(followSet: Set<string>) {
     }
 }
 
+const nip50Relays = ['wss://relay.nostr.band'];
+
+function hashtagSearch(hashtag: string) {
+    const hashtagWithoutHash = hashtag.replace(/^#/, '');
+    
+    return {
+        filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], "#t": [hashtagWithoutHash] }],
+        key: 'hashtag-' + hashtag,
+        filterFn: null,
+        relayUrls: undefined,
+    }
+}
+
+function textSearch(text: string) {
+    return {
+        filters: [{ kinds: [NDKKind.Image], "search": text }],
+        key: 'search-' + text,
+        filterFn: null,
+        relayUrls: nip50Relays,
+    }
+}
+
 function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
@@ -388,7 +361,8 @@ function DataList() {
     const bookmarkIds = useBookmarkIds();
     const insets = useSafeAreaInsets();
 
-    const withTweets = useMemo(() => feedType.kind === 'hashtag', [feedType.kind])
+    const withTweets = useMemo(() => feedType.kind === 'search', [feedType.kind])
+    const isSavedSearch = useIsSavedSearch();
 
     const bookmarkIdsForFilter = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
@@ -402,17 +376,15 @@ function DataList() {
     }, [currentUser?.pubkey, follows?.length])
 
     const searchQuery = useAtomValue(searchQueryAtom);
+
     const { filters, key, filterFn, relayUrls } = useMemo(() => {
-        if (searchQuery.trim().length > 0) {
-            return {
-                filters: [{ kinds: [NDKKind.Image], "#t": [searchQuery] }],
-                key: 'search-' + searchQuery,
-                filterFn: null,
-                relayUrls: []
-            }
-        }
-        
-        if (feedType.kind === 'group') {
+        let numColumns = 1;
+        if (searchQuery) {
+            console.log('searchQuery', searchQuery);
+            // is a single word?
+            if (!searchQuery.includes(' ')) return hashtagSearch(searchQuery);
+            else return textSearch(searchQuery);
+        }  else if (feedType.kind === 'group') {
             return {
                 filters: [
                     { kinds: [NDKKind.Image, NDKKind.VerticalVideo], "#h": [feedType.value] },
@@ -428,9 +400,15 @@ function DataList() {
             };
         }
         
-        const keyParts = [currentUser?.pubkey ?? "", feedType.kind === 'hashtag' ? feedType.value : ''];
+        const keyParts = [currentUser?.pubkey ?? ""];
+        if (feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
         
-        const hashtagFilter = feedType.kind === 'hashtag' ? { "#t": hashtagFeedToTags(feedType) } : {};
+        let hashtagFilter: NDKFilter = {};
+        
+        if (feedType.kind === 'search') {
+            hashtagFilter = { "#t": feedType.hashtags };
+            if (!isSavedSearch) numColumns = 3;
+        }
 
         const filters: NDKFilter[] = [];
     
@@ -450,7 +428,7 @@ function DataList() {
             };
         } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
             filterFn = forYouFilter(followSet);
-        } else if (feedType.kind !== 'hashtag') {
+        } else if (feedType.kind !== 'search') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
                 if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
                 if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
@@ -465,8 +443,8 @@ function DataList() {
             };
         }
 
-        return {filters, key: keyParts.join(), filterFn};
-    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, searchQuery]);
+        return {filters, key: keyParts.join(), filterFn, numColumns};
+    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
     // useEffect(() => {
     //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
@@ -484,6 +462,7 @@ function DataList() {
     const headerHeight = useHeaderHeight();
     const { colors } = useColorScheme();
     const firstItemStyle = useMemo(() => ({ paddingTop: headerHeight, backgroundColor: colors.card }), [insets.top, headerHeight])
+    console.log('filters', filters, key, relayUrls);
 
     return (
         <View className="flex-1 bg-card">
@@ -494,6 +473,7 @@ function DataList() {
                 relayUrls={relayUrls}
                 filterKey={key}
                 filterFn={filterFn}
+                numColumns={1}
             />
         </View>
     );
@@ -525,97 +505,3 @@ const feedFilters: Record<string, FeedFilterFn> = {
     videosMustBeFromFollows,
 }
 
-function SearchInput() {
-    const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
-    const [input, setInput] = useState(searchQuery);
-    const { colors } = useColorScheme();
-
-    return (
-        <View className="flex-1 flex-row items-center gap-2">
-            <TextInput
-                placeholder="Search"
-                onChangeText={setInput}
-                value={input}
-                autoFocus={true}
-                autoCapitalize="none"
-                autoComplete="off"
-                autoCorrect={false}
-                onSubmitEditing={() => setSearchQuery(input)}
-            />
-
-            <Button variant="plain" onPress={() => setSearchQuery(input)}>
-                <Search size={24} color={colors.foreground} />  
-            </Button>
-        </View>
-    )
-}
-
-function HomeTitle() {
-    const feedType = useAtomValue(feedTypeAtom);
-    const { colors } = useColorScheme();
-    const { show: showSheet } = useFeedTypeBottomSheet();
-    const group = useGroup(feedType.kind === 'group' ? feedType.value : undefined, feedType.kind === 'group' ? feedType.relayUrls[0] : undefined);
-    const currentUser = useNDKCurrentUser();
-
-    const feedTypeTitle = useMemo(() => {
-        if (feedType.kind === 'discover' && feedType.value === 'follows') return 'Follows';
-        if (feedType.kind === 'discover' && feedType.value === 'for-you') {
-            if (!currentUser) return 'Home';
-            return 'For You';
-        }
-        if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return 'Bookmarks';
-        return feedType.value;
-    }, [feedType, currentUser?.pubkey]);
-
-    const [showSearch, setShowSearch] = useState(false);
-
-    const search = useCallback(() => {
-        router.push('/search');
-        // setShowSearch(true);
-    }, [])
-
-    return (
-        <View style={headerStyle.container}>
-            {showSearch ? (
-                <>
-                    <Pressable style={headerStyle.searchButton} onPress={() => setShowSearch(false)}>
-                        <X size={24} color={colors.foreground} />
-                    </Pressable>
-                    <SearchInput />
-                </>
-            ) : (
-                <>
-                    <Pressable style={headerStyle.searchButton} onPress={search}>
-                        <Search size={24} color={colors.foreground} />
-                    </Pressable>
-                    <Pressable style={headerStyle.button} onPress={showSheet}>
-                        {group ? (
-                            <>
-                                <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
-                                <Text className="text-xl font-semibold text-foreground truncate">{group.name}</Text>
-                            </>) : (<>
-                                <Text className="text-xl font-semibold text-foreground truncate">{feedTypeTitle}</Text>
-                            </>)
-                        }
-                        <ChevronDown size={16} color={colors.foreground} />
-                    </Pressable>
-                </>
-            )}
-        </View>
-    );  
-}
-
-const headerStyle = StyleSheet.create({
-    container: {
-        flexDirection: 'row', alignItems: 'center', gap: 4,
-    },
-    searchButton: {
-        paddingHorizontal: 5,
-    },
-    button: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        maxWidth: 150,
-        paddingHorizontal: 10,
-        justifyContent: 'space-between',
-    }
-})
