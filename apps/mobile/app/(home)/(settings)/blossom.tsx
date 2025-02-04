@@ -9,6 +9,8 @@ import { NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
+import { Button } from '@/components/nativewindui/Button';
+import { View } from 'react-native';
 
 export default function BlossomScreen() {
     const { ndk } = useNDK();
@@ -50,6 +52,9 @@ export default function BlossomScreen() {
                 makeDefault: () => {
                     // move this to the top of the list
                     setBlossoms([url, ...blossoms.filter((u) => u !== url)]);
+                },
+                removeServer: () => {
+                    setBlossoms([...blossoms.filter((u) => u !== url)]);
                 },
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
@@ -138,10 +143,16 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
-                info.index > 0 && (
+                info.index > 0 ? (
                     <TouchableOpacity onPress={info.item.makeDefault}>
                         <Text className="mt-2 pr-4 text-xs text-primary">Make default</Text>
                     </TouchableOpacity>
+                ) : (
+                    <View className="flex-1 flex-row items-center gap-4 px-4 py-2">
+                        <Button variant="secondary" size="sm" onPress={info.item.removeServer}>
+                            <Text>Remove</Text>
+                        </Button>
+                    </View>
                 )
             }
             {...info}
