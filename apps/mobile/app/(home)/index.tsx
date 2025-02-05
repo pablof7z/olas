@@ -461,8 +461,6 @@ function DataList() {
     // get the height of the navigation bar using expo-navigation   
     const headerHeight = useHeaderHeight();
     const { colors } = useColorScheme();
-    const firstItemStyle = useMemo(() => ({ paddingTop: headerHeight, backgroundColor: colors.card }), [insets.top, headerHeight])
-    console.log('filters', filters, key, relayUrls);
 
     return (
         <View className="flex-1 bg-card">
