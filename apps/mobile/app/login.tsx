@@ -200,17 +200,6 @@ export default function LoginScreen() {
         }
     }
 
-    const loginWithAmber = useCallback(async () => {
-        try {
-            const signer = new NDKNip55Signer();
-            const user = await signer.blockUntilReady();
-            if (user) login(signer);
-        } catch (e) {
-            console.error(e);
-            toast.error(e.message);
-        }
-    }, [ login ])
-
     return (
         <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -256,7 +245,7 @@ export default function LoginScreen() {
                             <ArrowRight size={24} color="white" />
                         </Button>
 
-                        {/* <LoginWithNip55Button /> */}
+                        <LoginWithNip55Button />
                         
                         {/* {Platform.OS === 'android' && (
                             <Button variant="accent" onPress={loginWithAmber}>

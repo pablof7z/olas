@@ -6,6 +6,15 @@ import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
+ * This threshold determines how old a new entry can be to be considered
+ * to be put at the top of the stack AFTER we have EOSEd.
+ * 
+ * This is to prevent us from showing old events at the top of the feed
+ * after an EOSE when new events are received from other subscriptions.
+ */
+const NEW_ENTRY_THRESHOLD = 60 * 5;
+
+/**
  * An entry in the feed. It ultimately resolves to an event,
  * but it includes reposts and the effective timestamp to use for
  * sorting.
@@ -51,14 +60,32 @@ export function useFeedEvents(
     const { ndk } = useNDK();
 
     /**
-     * This reference keeps all the events that have been received
-     * and that might be rendered (after filtering)
+     * The lifecycle of this hook is:
+     * 
+     * - events are received -> handleEvent
+     * - the entry is added to allEntriesRef
+     * - 
      */
-    const feedEntriesRef = useRef(new Map<NDKEventId, FeedEntry>());
+
+
+    const allEntriesRef = useRef(new Map<NDKEventId, FeedEntry>());
+    
+    /**
+     * This reference keeps all the events that have been received
+     * but not yet rendered.
+     */
+    const newEntriesRef = useRef(new Set<NDKEventId>());
+
+    /**
+     * All event ids that are currently rendered.
+     */
+    const renderedEntryIdsRef = useRef(new Set<NDKEventId>());
+
+    const renderedIdsRef = useRef<Set<NDKEventId>>(new Set());
     
     /**
      * Tracks the event Ids we have already processed, note that this includes
-     * IDs that don't are not feed entries (like reposts), that's why we need
+     * IDs that are not feed entries (like reposts), that's why we need
      * to keep track of them separately.
      */
     const addedEventIds = useRef(new Set());
@@ -81,11 +108,9 @@ export function useFeedEvents(
     const pubkeyBlacklist = usePubkeyBlacklist();
     const isMutedEvent = useMuteFilter();
 
-    // const followSet = useMemo(() => {
-    //     const set = new Set(follows);
-    //     if (currentUser) set.add(currentUser.pubkey)
-    //     return set;
-    // }, [currentUser?.pubkey, follows?.length])
+    const entriesFromIds = (ids: Set<NDKEventId>) => Array.from(ids.values())
+        .map(id => allEntriesRef.current.get(id))
+        .filter(entry => !!entry);
 
     /**
      * This modifies entries in a way that the user of the hook will receive the
@@ -93,71 +118,116 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, entries.length, { reason });
-        let newEntries = Array.from(feedEntriesRef.current.values())
-            .filter((entry) => !!entry.event)
-            .filter((entry: FeedEntry) => ( !isMutedEvent(entry.event) && !pubkeyBlacklist.has(entry.event?.pubkey) ))
-        
-        if (filterFn)
-            newEntries = newEntries.filter(filterFn);
-        
-        if (newEntries.length === 0 && entries.length === 0) return;
+        console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
-        newEntries = newEntries.sort((a, b) => b.timestamp - a.timestamp);
+        const newSliceIds = Array.from(newEntriesRef.current.values());
+        let newSlice = entriesFromIds(new Set(newSliceIds));
 
-        // console.log(`[${Date.now() - timeZero}ms]`, 'setting entries', newEntries.length)
-        setEntries(newEntries.slice(0, 300));
-        if (newEntries.length > 0) {
-            // console.log(`[${Date.now() - timeZero}ms]`, 'emptying new entries', newEntries.length)
-            setNewEntries([]);
+        if (filterFn) newSlice = newSlice.filter(filterFn);
+
+        // we only sort the slice, so that we don't mix events we just happened to see after
+        // newer events -- this prevents us from adding new entries below posts we have already
+        // rendered
+        if (newSlice.length > 0) {
+            console.log(`[FEED HOOK] we have a new slice of ${newSlice.length} entries, rendered entries are ${renderedEntryIdsRef.current.size}`)
+
+            let renderedEntries = entriesFromIds(renderedEntryIdsRef.current);
+
+            // update the renderedIdsRef
+            newSlice.forEach(entry => renderedIdsRef.current.add(entry.id));
+
+            // if we have eosed, sort the new slice and add it to the beginning of the entries
+            if (eosed.current) {
+                newSlice = newSlice.sort((a, b) => b.timestamp - a.timestamp);
+                renderedEntries = [...newSlice, ...renderedEntries];
+            } else {
+                // otherwise, merge with the currently rendered entries and sort everything
+                renderedEntries = [...newSlice, ...renderedEntries]
+                    .sort((a, b) => b.timestamp - a.timestamp);
+            }
+
+            // renderedEntries.forEach(entry => console.log('rendered entry', entry.id, entry.timestamp))
+
+            // update the renderedIdsRef
+            renderedEntryIdsRef.current = new Set(renderedEntries.map(entry => entry.id));
+            console.log('setting entries', { newSliceLength: newSlice.length, renderedEntriesLength: renderedEntries.length })
+            setEntries(renderedEntries);
+        } else {
+            console.log('no new entries to add, the slice is empty', newEntriesRef.current.size)
         }
-        
-        // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updated entries, finished with`, newEntries.length)
-    }, [setEntries, setNewEntries, isMutedEvent, filterFn]);
 
-    useEffect(() => {
-        if (feedEntriesRef.current.size === 0) return;
-        updateEntries('update entries changed');
-    }, [updateEntries]);
+        setNewEntries([]);
+        newEntriesRef.current.clear();
+    }, [isMutedEvent, filterFn]);
 
-    // useEffect(() => console.log('set entries changed'), [setEntries])
-    // useEffect(() => console.log('set new entries changed'), [setNewEntries])
-    // useEffect(() => console.log('is muted event changed'), [isMutedEvent])
-    // useEffect(() => console.log('filter fn changed'), [filterFn])
+    const shouldIncludeRenderedEntry = useCallback((entry: FeedEntry) => {
+        if (!entry.event) return false;
+        if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) return false;
+        if (filterFn && !filterFn(entry, 0)) return false;
+        return true;
+    }, [isMutedEvent, pubkeyBlacklist, filterFn]);
 
     const highestTimestamp = useRef(-1);
 
-    const addEntry = useCallback((id: string, cb: (currentEntry: FeedEntry) => FeedEntry) => {
-        let entry: FeedEntry = feedEntriesRef.current.get(id);
+    /**
+     * This is invoked when something for an entry has changed.
+     */
+    const updateEntry = useCallback((id: string, cb: (currentEntry: FeedEntry) => FeedEntry) => {
+        let entry: FeedEntry = allEntriesRef.current.get(id);
         if (!entry) entry = { id, reposts: [], timestamp: -1 };
         const ret = cb(entry);
         if (!!ret) {
-            ret.timestamp = ret.event?.created_at ?? -1;
-            feedEntriesRef.current.set(id, ret)
+            // check this isn't muted or blacklisted
+            if (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event?.pubkey)) return;
+            
+            if (!ret.timestamp) ret.timestamp = ret.event?.created_at ?? -1;
 
-            // if this is the newest timestamp, we haven't timestamped
-            // show the new entry
-            if (ret.timestamp > highestTimestamp.current) {
+            // always add it to the allEntriesRef
+            allEntriesRef.current.set(id, ret)
+
+            // if we are not already rendering this event and it passes the user filter
+            // add it to the new entries ref
+            const isNotAlreadyRendered = !renderedEntryIdsRef.current.has(id);
+            const isNotAlreadyMarkedAsNew = !newEntriesRef.current.has(id);
+            const passesFilters = filterFn ? filterFn(ret, 0) : true;
+
+            const isEosed = eosed.current;
+
+            const isNotTooOld = !(isEosed && ret.timestamp < (Date.now() / 1000) - NEW_ENTRY_THRESHOLD);
+
+            if (
+                isNotAlreadyRendered &&
+                isNotAlreadyMarkedAsNew &&
+                passesFilters &&
+                isNotTooOld
+            ) {
+                newEntriesRef.current.add(id);
+
+                // if we have already eosed, we update the new entries state
+                if (isEosed) {
+                    console.log('we received a new entry after eose so we are updating the new entries state', newEntriesRef.current.size)
+                    setNewEntries(entriesFromIds(newEntriesRef.current));
+                }
+            }
+
+            const isNewerTimestamp = ret.timestamp > highestTimestamp.current;
+
+            // we want to update the entries when we haven't EOSEd and the timestamp is newer
+            // than the highest timestamp we have seen so far
+            if (!isEosed && isNewerTimestamp) {
                 highestTimestamp.current = ret.timestamp;
-                updateEntries('new entry');
+                updateEntries('new entry ');
             }
         }
-        return entry;
-    }, [updateEntries]);
+        return ret;
+    }, [updateEntries, setNewEntries]);
 
     const handleContentEvent = useCallback((eventId: string, event: NDKEvent) => {
-        const entry = addEntry(eventId, (entry: FeedEntry) => {
+        updateEntry(eventId, (entry: FeedEntry) => {
             const wrappedEvent = wrapEvent(event);
-            const ret = { ...entry, event: wrappedEvent };
-            ret.timestamp = event.created_at;
-            return ret;
+            return { ...entry, event: wrappedEvent, timestamp: event.created_at };
         });
-
-        // if we have already EOSEd, we add to newEntries too
-        if (eosed.current) {
-            setNewEntries([ entry, ...newEntries ])
-        }
-    }, [setNewEntries, newEntries, addEntry]);
+    }, [setNewEntries, updateEntry]);
 
     /**
      * Adds the repost to the right feed item, whether the item has been
@@ -167,7 +237,7 @@ export function useFeedEvents(
         const repostedId = event.tagValue("e");
         if (!repostedId) return;
 
-        addEntry(repostedId, (entry: FeedEntry) => {
+        updateEntry(repostedId, (entry: FeedEntry) => {
             entry.reposts.push(event);
         
             if (!entry.event) {
@@ -184,6 +254,10 @@ export function useFeedEvents(
                 }
             }
 
+            if (!entry.timestamp || event.created_at > entry.timestamp) {
+                entry.timestamp = event.created_at;
+            }
+
             return entry;
         });
     }, []);
@@ -192,18 +266,18 @@ export function useFeedEvents(
         const bookmarkedId = event.tagValue("e");
         if (!bookmarkedId) return;
 
-        addEntry(bookmarkedId, (entry: FeedEntry) => {
+        updateEntry(bookmarkedId, (entry: FeedEntry) => {
             if (!entry || entry.timestamp < event.created_at) {
                 entry ??= { id: bookmarkedId, reposts: [], timestamp: -1 };
                 entry.timestamp = event.created_at;
             }
             return entry;
         });
-    }, [addEntry]);
+    }, [updateEntry]);
 
     const handleDeletion = useCallback((event: NDKEvent) => {
         for (const deletedId of event.getMatchingTags("e")) {
-            const entry = feedEntriesRef.current.get(deletedId[0]);
+            const entry = allEntriesRef.current.get(deletedId[0]);
             if (entry?.event) {
                 // check if the pubkey matches
                 if (entry.event.pubkey === event.pubkey) {
@@ -211,10 +285,10 @@ export function useFeedEvents(
                 }
             } else {
                 // we don't have the event, let's just record the deletion
-                addEntry(deletedId[0], (entry) => ({ ...entry, deletedBy: [...(entry.deletedBy||[]), event.pubkey ] }));
+                updateEntry(deletedId[0], (entry) => ({ ...entry, deletedBy: [...(entry.deletedBy||[]), event.pubkey ] }));
             }
         }
-    }, [addEntry]);
+    }, [updateEntry]);
 
     const handleEvent = useCallback((event: NDKEvent) => {
         const eventId = event.tagId();
@@ -224,6 +298,8 @@ export function useFeedEvents(
         switch (event.kind) {
             case NDKKind.VerticalVideo:
             case NDKKind.HorizontalVideo:
+            case 30018:
+            case 30402:
             case NDKKind.Text:
             case NDKKind.Image: return handleContentEvent(eventId, event);
             case NDKKind.GenericRepost: return handleRepost(event);
@@ -233,8 +309,8 @@ export function useFeedEvents(
     }, [handleContentEvent, handleRepost, handleBookmark, handleDeletion]);
 
     const handleEose = useCallback(() => {
-        eosed.current = true;
         updateEntries('eose');
+        eosed.current = true;
     }, [updateEntries])
 
     /**
@@ -248,14 +324,38 @@ export function useFeedEvents(
     const filterExistingEvents = useCallback(() => {
         let changed = false;
 
-        for (const [id, feedEntry] of feedEntriesRef.current) {
-            if (!feedEntry.event) continue;
-            const keep = feedEntry.event && matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent)
-            if (!keep) {
-                // console.log('filtering out', id)
-                feedEntriesRef.current.delete(id)
-                addedEventIds.current.delete(id);
+        const passesFilter = (entry: FeedEntry) => !filterFn || filterFn(entry, 0);
+
+        const newRenderEntries = [];
+
+        // Go through the currently-rendered entries and see if we need to change them
+        for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
+            const keep = entry.event && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent)
+            if (!keep || !passesFilter(entry)) {
                 changed = true;
+                renderedIdsRef.current.delete(entry.id);
+            } else {
+                newRenderEntries.push(entry);
+            }
+        }
+
+        if (changed) {
+            renderedEntryIdsRef.current = new Set(newRenderEntries.map(entry => entry.id));
+            setEntries(newRenderEntries);
+        }
+
+        if (!changed) {
+            for (const id of newEntriesRef.current) {
+                const feedEntry = allEntriesRef.current.get(id);
+                if (!feedEntry.event || addedEventIds.current.has(id)) continue;
+                if (!passesFilter(feedEntry)) continue;
+
+                const keep = feedEntry.event && matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent)
+                if (!keep || !passesFilter(feedEntry)) {
+                    newEntriesRef.current.delete(id)
+                    // addedEventIds.current.add(id);
+                    changed = true;
+                }
             }
         }
 
@@ -402,7 +502,6 @@ export function useFeedMonitor(
             const keep = neededSlices.find(slice => slice.start === activeSlice.start);
 
             if (!keep) {
-                console.log('removing slice', activeSlice.start, 'to', activeSlice.end)
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
             } else if (activeSlice.removeTimeout) {
                 clearTimeout(activeSlice.removeTimeout)

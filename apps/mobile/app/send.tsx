@@ -11,12 +11,11 @@ import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import { router, Stack } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { useAppStateStore } from "@/components/wallet/store";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
-
+import { usePaymentStore } from "@/stores/payments";
 export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {
     const { userProfile } = useUserProfile(pubkey);
     return (
@@ -41,7 +40,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
     }), [pubkey, amount]);
     const [methods, setMethods] = useState<NDKZapMethodInfo[]>([]);
     const [buttonState, setButtonState] = useState<ButtonState>('idle');
-    const { addPendingPayment } = useAppStateStore();
+    const { addPendingPayment } = usePaymentStore();
 
     useEffect(() => {
         zap.amount = amount * 1000;

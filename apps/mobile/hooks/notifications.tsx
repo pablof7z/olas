@@ -15,7 +15,7 @@ export function useNotifications(onlyNew = false) {
     const currentUser = useNDKCurrentUser();
 
     const events = useObserver(currentUser ? [
-        // { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
+        { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.GenericReply ], '#K': kindString, '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
         { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },

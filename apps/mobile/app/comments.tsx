@@ -85,7 +85,7 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
                 event={item}
                 inactiveColor={colors.foreground}
                 reactionCount={reactions.length}
-                reactedByUser={reactions.some(r => r.pubkey === currentUser?.pubkey)}
+                reactedByUser={reactions.find(r => r.pubkey === currentUser?.pubkey)}
                 iconSize={18}
                 showReactionCount={false}
             />

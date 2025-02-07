@@ -6,11 +6,12 @@ import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, View } from 'react-native';
-import { NDKKind, NDKList, NDKRelay, NDKTag, useNDK, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
 import { cn } from '@/lib/cn';
 import { useMyGroups } from '@/lib/groups/store';
 import { GroupEntry } from '@/lib/groups/types';
 import { COMMUNITIES_ENABLED } from '@/utils/const';
+import { ListItem } from '@/components/nativewindui/List';
+import { List } from '@/components/nativewindui/List';
 
 type CommunityBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 export const communityBottomSheetRefAtom = atom<CommunityBottomSheetRefAtomType, [CommunityBottomSheetRefAtomType], null>(
@@ -36,12 +37,8 @@ export function CommunityBottomSheet() {
     }, [ref, setBottomSheetRef]);
 
     const setGroup = useCallback((group: GroupEntry) => {
-        setMetadata({ ...metadata, group: {
-            groupId: group.groupId,
-            relays: group.relayUrls
-        } });
         ref.current?.dismiss();
-    }, [metadata, setMetadata, ref]);
+    }, [ref]);
 
     return (
         <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>

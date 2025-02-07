@@ -1,6 +1,7 @@
 import {
     NDKEvent,
     NDKKind,
+    useNDKWallet,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
@@ -9,33 +10,160 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
 import RelativeTime from '@/app/components/relative-time';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Gesture, TouchableOpacity, GestureDetector } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useMemo, useCallback, useEffect } from 'react';
+import { memo, useMemo, useCallback, useEffect, useState } from 'react';
 import { InlinedComments, Reactions } from './Reactions';
 import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
-import { MoreHorizontal, Repeat } from 'lucide-react-native';
+import { Heart, MoreHorizontal, Repeat } from 'lucide-react-native';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import EventMediaContainer from '@/components/media/event';
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { getClientName } from '@/utils/event';
 import { useAppSettingsStore } from '@/stores/app';
-import { timeZero } from '@/app/_layout';
+import { activeEventAtom } from '@/stores/event';
+import Lightning from "@/components/icons/lightning"
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import Animated, { 
+    useSharedValue, 
+    useAnimatedStyle, 
+    withSequence, 
+    withTiming, 
+    Easing 
+} from 'react-native-reanimated';
+import { useReactEvent } from '../React';
+import { sendZap } from './Reactions/Zaps';
+import { usePaymentStore } from '@/stores/payments';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
-    return <EventMediaContainer
-        event={event}
-        onPress={onPress}
-        muted={true}
-        maxHeight={maxHeight}
-        priority={priority}
-    />;
-};
+    const {ndk} = useNDK();
+    const scale = useSharedValue(0);
+    const opacity = useSharedValue(0);
+    const [showHeart, setShowHeart] = useState(false);
+    const [showZap, setShowZap] = useState(false);
+    const zapScale = useSharedValue(0);
+    const zapOpacity = useSharedValue(0);
 
-export default function Post({ event, reposts, timestamp, onPress, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number; onPress?: () => void }) {
+    const animatedHeartStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+        opacity: opacity.value
+    }));
+
+    const animatedZapStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: zapScale.value }],
+        opacity: zapOpacity.value
+    }));
+
+    const triggerHeartAnimation = () => {
+        scale.value = withSequence(
+            withTiming(1.2, { duration: 100, easing: Easing.linear }),
+            withTiming(0.9, { duration: 50 }),
+            withTiming(1.1, { duration: 50 })
+        );
+        opacity.value = withSequence(
+            withTiming(1, { duration: 50 }),      // Appear in 50ms
+            withTiming(1, { duration: 250 }),     // Stay visible for 250ms
+            withTiming(0, { duration: 200 })      // Fade out in 200ms
+        );
+    };
+
+    const triggerZapAnimation = () => {
+        zapScale.value = withSequence(
+            withTiming(1.5, { duration: 50 }),
+            withTiming(0.8, { duration: 50 }),
+            withTiming(1.2, { duration: 50 })
+        );
+        zapOpacity.value = withSequence(
+            withTiming(1, { duration: 50 }),
+            withTiming(1, { duration: 250 }),
+            withTiming(0, { duration: 200 })
+        );
+    };
+
+    const { react } = useReactEvent();
+    
+    const handleDoubleTap = useCallback(() => {
+        'worklet';
+        setShowHeart(true);
+        triggerHeartAnimation();
+        react(event);
+        setTimeout(() => setShowHeart(false), 500); // Total animation duration 50+250+200=500ms
+    }, [event.id]);
+
+    const { activeWallet } = useNDKWallet();
+    const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
+
+    // default zap
+    const defaultZap = useAppSettingsStore(s => s.defaultZap);
+
+    const setActiveEvent = useSetAtom(activeEventAtom);
+    
+    const handlePinch = useCallback(() => {
+        'worklet';
+        setActiveEvent(event);
+        router.push('/view');
+    }, [event.id]);
+
+    const doubleTapGesture = Gesture.Tap()
+        .numberOfTaps(2)
+        .runOnJS(true)
+        .onEnd(handleDoubleTap);
+
+    const endSendZap = () => {
+        'worklet';
+        setShowZap(true);
+        triggerZapAnimation();
+        sendZap(defaultZap.message, defaultZap.amount, event, activeWallet, addPendingPayment, true);
+        setTimeout(() => setShowZap(false), 500);
+    }
+        
+    const tripleTapGesture = Gesture.LongPress()
+        .runOnJS(true)
+        .onStart(endSendZap);
+    
+    const pinchGesture = Gesture.Pinch()
+        .runOnJS(true)
+        .onEnd(handlePinch);
+    
+    const combinedGesture = Gesture.Race(doubleTapGesture, tripleTapGesture, pinchGesture);
+
+    return (
+        <GestureDetector gesture={combinedGesture}>
+            <View style={{ flex: 1 }}>
+                <EventMediaContainer
+                    event={event}
+                    onPress={onPress}
+                    muted={true}
+                    maxHeight={maxHeight}
+                    priority={priority}
+                />
+                {showHeart && (
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                                  flex: 1, justifyContent: 'center', alignItems: 'center', 
+                                  backgroundColor: '#00000044' }}>
+                        <Animated.View style={animatedHeartStyle}>
+                            <Heart size={96} color={'white'} fill={'white'} />
+                        </Animated.View>
+                    </View>
+                )}
+                {showZap && (
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                                  flex: 1, justifyContent: 'center', alignItems: 'center', 
+                                  backgroundColor: '#00000044' }}>
+                        <Animated.View style={animatedZapStyle}>
+                            <Lightning size={96} color={'yellow'} fill={'orange'} />
+                        </Animated.View>
+                    </View>
+                )}
+            </View>
+        </GestureDetector>
+    );
+}
+
+export default function Post({ event, reposts, timestamp, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     let content = event.content.trim();
 
@@ -64,7 +192,7 @@ export default function Post({ event, reposts, timestamp, onPress, index }: { in
         <View className="overflow-hidden border-b border-border py-2">
             <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
-            <MediaSection event={event} onPress={onPress} priority={priority} maxHeight={maxHeight} />
+            <MediaSection event={event} priority={priority} maxHeight={maxHeight} />
 
             <PostBottom event={event} trimmedContent={content} />
         </View>
@@ -150,18 +278,27 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
     //     });
     //     return tags;
     // }, [event.id]);
+
+    const setActiveEvent = useSetAtom(activeEventAtom);
+
+    const showComment = useCallback(() => {
+        setActiveEvent(event);
+        router.push(`/comments`);
+    }, [event, setActiveEvent]);
     
     return (
         <View style={styles.postBottom}>
             <Reactions event={event} />
 
             {trimmedContent.length > 0 && (
-                <EventContent
-                    event={event}
-                    content={trimmedContent}
-                    className="text-sm text-foreground"
-                    onMentionPress={onMentionPress}
-                />
+                <Pressable onPress={showComment}>
+                    <EventContent
+                        event={event}
+                        content={trimmedContent}
+                        className="text-sm text-foreground"
+                        onMentionPress={onMentionPress}
+                    />
+                </Pressable>
             )}
 
             {/* {tagsToRender.size > 0 && (
@@ -189,5 +326,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         padding: 2,
-    },
+    }
 });

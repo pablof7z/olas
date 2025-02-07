@@ -110,6 +110,48 @@ export const migrations = [
                 );`
             );
         }
+    },
+
+    {
+        version: 7,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(
+                `CREATE TABLE IF NOT EXISTS private_follows (
+                    pubkey TEXT PRIMARY KEY,
+                    created_at INTEGER
+                );`
+            );
+        }
+    },
+
+    {
+        version: 8,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync( `ALTER TABLE nwc_zaps RENAME COLUMN preimage TO pr;` );
+            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN preimage TEXT;` );
+        }
+    },
+
+    {
+        version: 9,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN amount INTEGER;` );
+            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN unit TEXT;` );
+        }
+    },
+
+    {
+        version: 10,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN pending_payment_id TEXT;` );
+        }
+    },
+
+    {
+        version: 11,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync( `CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);` );
+        }
     }
 ];
 

@@ -46,10 +46,6 @@ export default function Feed({
     const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls }, [filterKey + refreshCount]);
     const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event), sliceIndex)
 
-    // useEffect(() => {
-    //     console.log('rendering feed', entries?.length, newEntries?.length)
-    // }, [entries?.length])
-
     const onViewableItemsChanged = useCallback(({ viewableItems }) => {
         visibleIndex.current = viewableItems[0]?.index ?? null;
         if (visibleIndex.current === 0 && showNewEntriesPrompt) setShowNewEntriesPrompt(false)
@@ -76,14 +72,18 @@ export default function Feed({
 
     useEffect(() => {
         if (newEntries.length === 0) return;
-        const firstVisibleEntryTimestamp = entries[0]?.timestamp;
-        if (!firstVisibleEntryTimestamp) updateEntries('no visible entries');
-        const firstNewEntryTimestamp = newEntries[0].timestamp;
-        if (firstVisibleEntryTimestamp < firstNewEntryTimestamp) {
-            if (visibleIndex?.current === 0) updateEntries('visible index is 0');
-            else setShowNewEntriesPrompt(true)
+        if (entries.length === 0) {
+            updateEntries('no visible entries');
+            return;
         }
-    }, [newEntries?.length])
+        if (visibleIndex?.current === 0) {
+            updateEntries('visible index is 0');
+            return;
+        }
+
+        console.log('👉 FEED INDEX newEntries', newEntries?.length);
+        if (visibleIndex?.current > 0 && !showNewEntriesPrompt) setShowNewEntriesPrompt(true)
+    }, [newEntries?.length, showNewEntriesPrompt])
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 
@@ -139,16 +139,15 @@ export default function Feed({
                     setActiveEvent(item.event);
                     router.push('/view');
                 }}
-                onLongPress={() => openPostBottomSheet(item.event)}
+                onLongPress={() => { }}
             />
     }, [numColumns, _onPress])
 
     return (
         <>
             {showNewEntriesPrompt && (
-                <Pressable className="absolute flex flex-row gap-2 z-50 top-0 left-1/2 -translate-x-1/2 bg-accent px-4 py-2 rounded-full" onPress={update}>
-                    <ArrowUp color="white" />
-                    <Text className="text-white">New posts</Text>
+                <Pressable className="absolute flex flex-row gap-2 z-50 top-0 left-1/2 -translate-x-1/2 bg-primary/80 px-4 py-2 rounded-full" onPress={update}>
+                    <Text className="text-white text-sm">{newEntries.length} new posts</Text>
                 </Pressable>
             )}
             <FlashList

@@ -37,6 +37,8 @@ import { usePostEditorStore } from '@/lib/post-editor/store';
 import HomeHeader from '@/components/Headers/Home';
 import { useIsSavedSearch } from '@/hooks/saved-search';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
+import { useAllFollows } from '@/hooks/follows';
+import { imageOrVideoUrlRegexp } from '@/utils/media';
 
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
@@ -180,10 +182,10 @@ function LiveViewEntry({ event }: { event: NDKEvent }) {
 function Stories() {
     const currentUser = useNDKCurrentUser();
     const twentyFourHoursAgo = (Date.now() - 600 * 60 * 60 * 1000) / 1000;
-    const follows = useFollows();
+    const follows = useAllFollows();
     const storiesFilters: NDKFilter[] | false = currentUser ? [
-        { kinds: [30311 as NDKKind], authors: follows, since: twentyFourHoursAgo },
-        { kinds: [30311 as NDKKind], "#p": follows, since: twentyFourHoursAgo }
+        { kinds: [30311 as NDKKind], authors: Array.from(follows), since: twentyFourHoursAgo },
+        { kinds: [30311 as NDKKind], "#p": Array.from(follows), since: twentyFourHoursAgo }
     ] : false;
 
     // const storiesFilters: NDKFilter[] = useMemo(() => ([
@@ -357,9 +359,8 @@ function textSearch(text: string) {
 function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
     const currentUser = useNDKCurrentUser();
-    const follows = useFollows();
+    const follows = useAllFollows();
     const bookmarkIds = useBookmarkIds();
-    const insets = useSafeAreaInsets();
 
     const withTweets = useMemo(() => feedType.kind === 'search', [feedType.kind])
     const isSavedSearch = useIsSavedSearch();
@@ -373,14 +374,13 @@ function DataList() {
         const set = new Set(follows);
         if (currentUser) set.add(currentUser.pubkey)
         return set;
-    }, [currentUser?.pubkey, follows?.length])
+    }, [currentUser?.pubkey, follows.size])
 
     const searchQuery = useAtomValue(searchQueryAtom);
 
     const { filters, key, filterFn, relayUrls } = useMemo(() => {
         let numColumns = 1;
         if (searchQuery) {
-            console.log('searchQuery', searchQuery);
             // is a single word?
             if (!searchQuery.includes(' ')) return hashtagSearch(searchQuery);
             else return textSearch(searchQuery);
@@ -402,7 +402,8 @@ function DataList() {
         
         const keyParts = [currentUser?.pubkey ?? ""];
         if (feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
-        
+        else keyParts.push(feedType.value);
+
         let hashtagFilter: NDKFilter = {};
         
         if (feedType.kind === 'search') {
@@ -412,12 +413,13 @@ function DataList() {
 
         const filters: NDKFilter[] = [];
     
+        // filters.push({ kinds: [1] });
         filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter, limit: 500 });
         filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter, limit: 50 });
 
-        // if (withTweets) {
-        //     filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
-        // }
+        if (withTweets) {
+            filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
+        }
 
         let filterFn = null;
 
@@ -446,6 +448,8 @@ function DataList() {
         return {filters, key: keyParts.join(), filterFn, numColumns};
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
+    console.log('filters key', key)
+
     // useEffect(() => {
     //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
     //     // if there is no author tag, add 0
@@ -459,8 +463,6 @@ function DataList() {
     // }, [filters, key])
 
     // get the height of the navigation bar using expo-navigation   
-    const headerHeight = useHeaderHeight();
-    const { colors } = useColorScheme();
 
     return (
         <View className="flex-1 bg-card">
@@ -482,9 +484,7 @@ const kind1MustHaveMedia = (feedEntry: FeedEntry) => {
     if (feedEntry.event?.kind === 1) {
         const imeta = feedEntry.event?.tagValue("imeta");
         if (imeta) return true;
-        // parse the content for a URL that has .jpg, .jpeg, .png, .gif, .mp4, .mov, .avi, .mkv
-        const imageOrVideoRegex = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
-        const matches = feedEntry.event?.content.match(imageOrVideoRegex);
+        const matches = feedEntry.event?.content.match(imageOrVideoUrlRegexp);
         return matches !== null;
     } 
 }

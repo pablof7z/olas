@@ -91,10 +91,9 @@ export default function WalletsScreen() {
             subTitle: 'Create a new NIP-60 wallet',
             disabled: true,
             onPress: () => {
-                router.push('/dlnwc');
-                // newWallet().then(() => {
-                //     router.back();
-                // });
+                newWallet().then(() => {
+                    router.back();
+                });
             },
         });
 
@@ -108,20 +107,18 @@ export default function WalletsScreen() {
             },
         });
 
-        if (DEV_BUILD) {
-            if (primalSupported) {
-                options.push('Wallet Apps')
-                
-                options.push({
-                    id: 'primal',
-                    title: 'Connect Primal Wallet',
-                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
-                    subTitle: `Primal Wallet`,
-                    onPress: () => {
-                        Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
-                    },
-                });
-            }
+        if (primalSupported || true) {
+            options.push('Wallet Apps')
+            
+            options.push({
+                id: 'primal',
+                title: 'Connect Primal Wallet',
+                leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                subTitle: `Primal Wallet`,
+                onPress: () => {
+                    Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                },
+            });
         }
 
         return options;

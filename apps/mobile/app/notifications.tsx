@@ -1,7 +1,7 @@
 import { NDKEvent, NDKKind, NDKUser, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router, Stack } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
 import * as User from '~/components/ui/user';
 import RelativeTime from './components/relative-time';
@@ -155,6 +155,15 @@ export default function Notifications() {
         markNotificationsAsSeen();
     }, []);
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => {
+            setRefreshing(false);
+        }, 1250);
+    }, [notifications]);
+
     return (
         <>
             <Stack.Screen options={{ headerShown: true, title: 'Notifications'}} />
@@ -176,6 +185,7 @@ export default function Notifications() {
                     data={sortedEvents}
                     renderItem={({ item }) => <NotificationItem event={item} currentUser={currentUser} />}
                     keyExtractor={(item) => item.id}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 />
             </View>
         </>

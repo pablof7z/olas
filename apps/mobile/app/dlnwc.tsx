@@ -22,7 +22,8 @@ export default function NWCDeepLinkScreen() {
     const { ndk } = useNDK();
 
     useEffect(() => {
-        const wallet = new NDKNWCWallet(ndk);
+        console.log('nwcUri', nwcUri);
+        const wallet = new NDKNWCWallet(ndk, { pairingCode: nwcUri });
 
         wallet.pool.on('relay:connect', (r: NDKRelay) => console.log('connected to', r.url))
 
@@ -40,21 +41,6 @@ export default function NWCDeepLinkScreen() {
                 setState('error');
             }
         });
-        
-        wallet.initWithPairingCode(nwcUri)
-            .then(() => {
-                console.log('NWC wallet initialized')
-                wallet.updateBalance()
-                    .then(() => {
-                        console.log('NWC wallet balance updated', wallet.balance)
-                    })
-                    .catch((err) => {
-                        console.error('NWC wallet balance update error', err)
-                    })
-            })
-            .catch((err) => {
-                console.error('NWC wallet initialization error', err)
-            })
     }, [nwcUri])
     
     return (
@@ -70,7 +56,7 @@ export default function NWCDeepLinkScreen() {
             <Button className="w-full bg-foreground mt-16" size="lg" variant="primary" onPress={() => {
                 router.replace('/');
             }}>
-                <Text className="text-lg font-bold py-2">
+                <Text className="text-lg font-bold py-2 text-background">
                     {state === 'loading' ? 'Loading...' : state === 'error' ? 'Retry' : 'Continue'}
                 </Text>
             </Button>

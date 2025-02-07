@@ -31,7 +31,7 @@ export default function Feed() {
         if (feedType.kind === 'discover' && feedType.value === 'follows') return 'Follows';
         if (feedType.kind === 'discover' && feedType.value === 'for-you') {
             if (!currentUser) return 'Home';
-            return 'For You';
+            return 'For you';
         }
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return 'Bookmarks';
         return feedType.value;
@@ -65,8 +65,8 @@ export default function Feed() {
     }, [searchQuery, feedType?.value]);
 
     return (
-        <View style={headerStyle.container}>
-            <Pressable style={headerStyle.searchButton} onPress={toggleSearch}>
+        <View style={styles.container}>
+            <Pressable style={styles.searchButton} onPress={toggleSearch}>
                 {showSearchInput ? (
                     <X size={24} color={colors.foreground} />
                 ) : (
@@ -74,7 +74,7 @@ export default function Feed() {
                 )}
             </Pressable>
             <Animated.View style={[
-                headerStyle.animatedContainer,
+                styles.animatedContainer,
                 { 
                     transform: [{ translateX: slideAnim.interpolate({
                         inputRange: [0, 1],
@@ -91,7 +91,7 @@ export default function Feed() {
                 <SaveSearchButton />
             </Animated.View>
             <Animated.View style={[
-                headerStyle.animatedContainer,
+                styles.animatedContainer,
                 { 
                     transform: [{ translateX: slideAnim.interpolate({
                         inputRange: [0, 1],
@@ -109,13 +109,13 @@ export default function Feed() {
                     paddingRight: 40,
                 }
             ]}>
-                <Pressable style={headerStyle.button} onPress={showSheet}>
+                <Pressable style={styles.button} onPress={showSheet}>
                     {group ? (
                         <>
                             <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
                             <Text className="text-xl font-semibold text-foreground truncate">{group.name}</Text>
                         </>) : (<>
-                            <Text numberOfLines={1} className="text-xl font-semibold text-foreground whitespace-nowrap">{feedTypeTitle}</Text>
+                            <Text numberOfLines={1} className="text-2xl font-bold text-foreground whitespace-nowrap">{feedTypeTitle}</Text>
                         </>)
                     }
 
@@ -158,9 +158,10 @@ function SaveSearchButton() {
     </Button>);
 }
 
-const headerStyle = StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 4,
+        paddingTop: 5,
         paddingBottom: 5,
         flex: 1,
     },

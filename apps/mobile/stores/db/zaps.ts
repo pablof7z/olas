@@ -8,15 +8,22 @@ type NWCZap = {
     zap_type: string;
     created_at: number;
     updated_at: number;
+    pending_payment_id: string;
+    amount: number;
 }
 
-export function addNWCZap(event: NDKEvent, recipientPubkey: string, zapType: string) {
+export function addNWCZap({ event, recipientPubkey, pr, preimage, zapType, pendingPaymentId }: { event: NDKEvent, recipientPubkey: string, pr: string, preimage?: string, zapType: string, pendingPaymentId?: string }) {
+    console.log('👉 adding zap', pr);
     db.runSync(
-        `INSERT INTO nwc_zaps (preimage, recipient_pubkey, recipient_event_id, zap_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);`,
-        [event.id, recipientPubkey, event.id, zapType, new Date().getTime(), new Date().getTime()]
+        `INSERT INTO nwc_zaps (pr, preimage, recipient_pubkey, recipient_event_id, zap_type, created_at, updated_at, pending_payment_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+        [pr, preimage ?? "", recipientPubkey, event.tagId(), zapType, new Date().getTime() / 1000, new Date().getTime() / 1000, pendingPaymentId ?? ""]
     )
 }
 
-export function getNWCZap(preimage: string): NWCZap | undefined {
-    return db.getFirstSync<NWCZap>(`SELECT * FROM nwc_zaps WHERE preimage = ?;`, [preimage]);
+export function getNWCZap(pr: string): NWCZap | undefined {
+    return db.getFirstSync<NWCZap>(`SELECT * FROM nwc_zaps WHERE pr = ?;`, [pr]);
+}
+
+export function getNWCZapsByPendingPaymentId(pendingPaymentId: string): NWCZap | undefined {
+    return db.getFirstSync<NWCZap>(`SELECT * FROM nwc_zaps WHERE pending_payment_id = ?;`, [pendingPaymentId]);
 }

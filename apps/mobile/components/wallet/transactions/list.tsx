@@ -1,4 +1,4 @@
-import { useActiveEventStore, useAppStateStore, ZapperWithId } from "@/components/wallet/store";
+import { useActiveEventStore, useAppStateStore } from "@/components/wallet/store";
 import { useNDKWallet, NDKKind, useSubscribe, NDKEvent, NDKZapSplit, NDKPaymentConfirmation, NDKNutzap, useNDKCurrentUser, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuDeposit, NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import HistoryItem from "./item";
@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import React, { useMemo, useRef, useEffect } from "react";
 import { FlatList, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
-
+import { usePaymentStore } from "@/stores/payments";
 export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet }) {
     const { activeWallet } = useNDKWallet();
     const currentUser = useNDKCurrentUser();
@@ -27,7 +27,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         [currentUser?.pubkey, activeWallet?.walletId]
     );
     const { setActiveEvent } = useActiveEventStore();
-    const { pendingPayments } = useAppStateStore();
+    const { pendingPayments } = usePaymentStore();
 
     /**
      * This two variables provide a way to generate a stable id when a pending zap completes;
@@ -42,32 +42,32 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
     const completedPendingZaps = useRef(new Map<string, string>());
 
     useEffect(() => {
-        for (const payment of pendingPayments) {
-            if (listening.current.has(payment.internalId)) continue;
-            listening.current.add(payment.internalId);
+        for (const pendingPayment of Array.from(pendingPayments.values()).flat()) {
+            if (listening.current.has(pendingPayment.internalId)) continue;
+            listening.current.add(pendingPayment.internalId);
 
             // listen for completion of the pending zap
             // THIS DOESN'T WORK BECAUSE THE EVENT I'M RECEIVING IS THE NUTZAP, NOT THE WALLET CHANGE EVENT
-            payment.zapper.once('split:complete', (split: NDKZapSplit, result: NDKPaymentConfirmation) => {
+            pendingPayment.zapper.once('split:complete', (split: NDKZapSplit, result: NDKPaymentConfirmation) => {
                 console.log('received a split:complete event', {
-                    temporaryId: payment.internalId,
+                    temporaryId: pendingPayment.internalId,
                     result
                 })
 
                 if (result instanceof NDKNutzap) {
                     console.log('marking permanent ID so it is mapped to temporary ID', {
                         permanentId: result.id,
-                        temporaryId: payment.internalId
+                        temporaryId: pendingPayment.internalId
                     })
-                    completedPendingZaps.current.set(result.id, payment.internalId);
+                    completedPendingZaps.current.set(result.id, pendingPayment.internalId);
                 } else if (result instanceof Error) {
                     toast.error(result.message);
                 }
             });
 
-            listening.current.delete(payment.internalId);
+            listening.current.delete(pendingPayment.internalId);
         }
-    }, [pendingPayments.length]);
+    }, [pendingPayments.size]);
 
     const onItemPress = (item: NDKEvent) => {
         setActiveEvent(item);

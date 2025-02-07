@@ -88,10 +88,6 @@ export default function ImageComponent({
         cacheKey,
     })
 
-    useEffect(() => {
-        // Image.
-    }, [cacheKey])
-
     const blurhashObj = { blurhash };
 
     return (

@@ -3,7 +3,7 @@ import { searchQueryAtom, useSearchQuery } from "./store";
 import { TextInput, View } from "react-native";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { feedTypeAtom, searchInputRefAtom } from "@/components/FeedType/store";
-import { NDKCacheAdapterSqlite, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { NDKCacheAdapterSqlite, NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 
 export default function SearchInput() {
@@ -31,6 +31,14 @@ export default function SearchInput() {
     const { ndk } = useNDK();
 
     const search = useCallback(async (input: string) => {
+        if (input.startsWith('npub1')) {
+            try {
+                const user = new NDKUser({npub: input});
+                router.push(`/profile?pubkey=${user.pubkey}`);
+                return;
+            } catch {}
+        }
+        
         if (input.match(/@/)) {
             const user = await ndk.getUserFromNip05(input);
             if (user) {

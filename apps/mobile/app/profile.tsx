@@ -49,6 +49,7 @@ export default function Profile() {
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
+            // { kinds: [30018, 30402], authors: [pubkey!] },
             { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image], authors: [pubkey!] },
             { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey!] },
             { kinds: [NDKKind.Contacts], authors: [pubkey!] },
@@ -176,6 +177,7 @@ export default function Profile() {
                         <FollowButton variant="primary" pubkey={pubkey} size="sm" className="mx-4" />
                     </View>
                 )}
+
                 {events.length === 0 ? (
                     <View style={styles.noEventsContainer}>
                         <Text style={styles.noEventsText}>No posts yet</Text>
@@ -192,34 +194,23 @@ export default function Profile() {
                         filterKey="1"
                         numColumns={3}
                     />
-
-                    // <View style={{ flex: 1, marginTop: 10 }}>
-                    //     <MasonryFlashList
-                    //         data={sortedContent}
-                    //         numColumns={3}
-                    //         estimatedItemSize={100}
-                    //         keyExtractor={(item) => item.id}
-                    //         contentContainerStyle={{ paddingBottom: 60 }}
-                    //         renderItem={({ item, index }) => (
-                    //             <EventMediaGridContainer
-                    //                 event={item}
-                    //                 index={index}
-                    //                 onPress={() => {
-                    //                     setActiveEvent(item);
-                    //                     router.push('/view');
-                    //                 }}
-                    //                 onLongPress={() => {
-                    //                     Clipboard.setStringAsync(item.encode());
-                    //                 }}
-                    //             />
-                    //         )}
-                    //     />
-                    // </View>
                 )}
             </Animated.ScrollView>
         </View>
     );
 }
+
+// function Products({ pubkey }: { pubkey: string }) {
+//     const { ndk } = useNDK();
+//     const { events } = useSubscribe([{ kinds: [30402], authors: [pubkey] }], { groupable: false, cacheUsage: NDKSubscriptionCacheUsage.PARALLEL }, [pubkey]);
+
+//     const firstProduct = useMemo(() => { return events[0]; }, [events?.[0]?.id]);
+
+//     return <View>
+//         <Text>Products {events.length}</Text>
+//         <Text>{firstProduct?.content}</Text>
+//     </View>
+// }
 
 const styles = StyleSheet.create({
     container: {

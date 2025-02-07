@@ -1,22 +1,33 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
 import { NDKKind, NDKNutzap, NDKZapper, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { usePaymentStore } from '@/stores/payments';
 import { useAppSettingsStore } from '@/stores/app';
 import Lightning from '@/components/icons/lightning';
+import { addNWCZap } from '@/stores/db/zaps';
 
-const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
+export const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent, wallet: NDKWallet, addPendingPayment, withFallbackZap: boolean) => {
     if (!wallet) {
         alert("You don't have a wallet connected yet.");
         router.push('/wallets');
         return;
     }
 
+    const balance = wallet.balance();
+    const balanceInSats = balance.unit.startsWith('msat') ? balance.amount / 1000 : balance.amount;
+    if (balanceInSats < sats) {
+        toast.error("You don't have enough balance to zap.");
+        return;
+    }
+    
     sats = Math.min(sats, 5000);
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     try {
         const zapper = new NDKZapper(event, Math.round(sats) * 1000, 'msat', {
@@ -24,11 +35,20 @@ const sendZap = async (message = 'Zap from Olas', sats: number, event: NDKEvent,
             nutzapAsFallback: withFallbackZap,
         });
 
-        addPendingPayment(zapper);
+        const pendingPayment = addPendingPayment(zapper);
 
-        const res = await zapper.zap();
+        console.log('👉 zap pending payment', pendingPayment);
 
-        console.log('zap result', res);
+        if (wallet instanceof NDKNWCWallet) {
+            zapper.on('ln_invoice', ({ recipientPubkey, type, pr }) => {
+                console.log('👉 zap invoice', pr, recipientPubkey, type);
+                addNWCZap({ event, recipientPubkey, pr, zapType: type, pendingPaymentId: pendingPayment.internalId });
+            })
+        }
+
+        await zapper.zap();
+
+        // console.log('zap result', res);
     } catch (error: any) {
         console.error('Error while zapping:', error);
         toast.error(error.message);
@@ -48,8 +68,8 @@ export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser,
 
     const pendingZapAmount = useMemo(() => pendingZaps.reduce((acc, zap) => zap.zapper.amount + acc, 0), [pendingZaps.length]);
 
-    const sendZapWithAmount = useCallback((message: string, amount: number) => {
-        sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
+    const sendZapWithAmount = useCallback(async (message: string, amount: number) => {
+        await sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
     }, [event?.id, activeWallet?.walletId, withFallbackZap]);
 
     const color = zappedByUser || pendingZapAmount > 0 ? 'orange' : inactiveColor;

@@ -170,6 +170,16 @@ export function isEventVideo(event: NDKEvent) {
 }
 
 export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
+    if (event.kind === 30018) {
+        try {
+            const parsed = JSON.parse(event.content);
+            console.log('getImetas', JSON.stringify(parsed, null, 2));
+            const imetas = parsed.images.map((image: string) => ({ url: image }));
+            return imetas;
+        } catch { return []; }
+        // const imetas = event.getMatchingTags("images")
+    }
+    
     if (event instanceof NDKImage || event instanceof NDKVideo) {
         return event.imetas;
     }
@@ -180,7 +190,7 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
     
     try {
         if (event.kind === NDKKind.Text) {
-            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/gi);
+            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi);
             if (urls?.length) return urls.map((url) => ({ url }));
         }
 

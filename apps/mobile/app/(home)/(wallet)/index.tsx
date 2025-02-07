@@ -1,11 +1,11 @@
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Pressable } from "react-native";
-import { NDKPrivateKeySigner, NDKCashuMintList, NDKNWCGetInfoResult, NDKKind, NDKNutzap, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletBalance, NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
+import { View, Text, SafeAreaView, TouchableOpacity, Pressable } from "react-native";
+import { NDKCashuMintList, NDKKind, NDKUser, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from "@nostr-dev-kit/ndk-wallet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, Stack, Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Button } from "@/components/nativewindui/Button";
-import { QrCode, Settings, Settings2, SettingsIcon, User2, ZoomIn } from "lucide-react-native";
+import { QrCode, Settings, SettingsIcon } from "lucide-react-native";
 import * as User from '@/components/ui/user';
 import { useColorScheme } from "@/lib/useColorScheme";
 import TransactionHistory from "@/components/wallet/transactions/list";
@@ -13,13 +13,17 @@ import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePaymentStore } from "@/stores/payments";
 import NWCListTansactions from "@/components/wallet/nwc/list-transactions";
-import { atom, useAtom } from "jotai";
-
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { ActivityIndicator } from "@/components/nativewindui/ActivityIndicator";
 const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) => set(nwcInfoAtom, value));
+const walletTitleAtom = atom<string | null, [string | null], void>(null, (get, set, value) => set(walletTitleAtom, value));
 
 function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
     const [info, setInfo] = useAtom(nwcInfoAtom);
-    const [hasListTransactions, setHasListTransactions] = useState(false);
+    const setWalletTitle = useSetAtom(walletTitleAtom);
+    const [showTimeoutError, setShowTimeoutError] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
+    const timeout = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         console.log('updating balance', wallet.walletId);
@@ -27,16 +31,48 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
     }, [wallet?.walletId])
     
     useEffect(() => {
+        console.log('updating info', wallet.walletId);
+        timeout.current = setTimeout(() => {
+            setShowTimeoutError(true);
+        }, 10000);
+        
         wallet.getInfo().then((info) => {
-            console.log('info', info);
+            console.log('NWC info', info);
             setInfo(info)
-            console.log('info.methods', info.methods);
-            setHasListTransactions(info.methods.includes('list_transactions'));
-        });
-    }, [wallet?.walletId])
-    
+            setWalletTitle(info.alias);
+            if (timeout.current) {
+                clearTimeout(timeout.current);
+                timeout.current = null;
+            }
+        })
+
+        return () => {
+            if (timeout.current) {
+                clearTimeout(timeout.current);
+                timeout.current = null;
+            }
+        }
+    }, [wallet?.walletId, retryCount])
+
+    if (!info) {
+        return <ActivityIndicator />
+    }
+
+    if (showTimeoutError) {
+        return <View className="flex-1 bg-red-500 text-white p-3 absolute top-0 left-0 right-0">
+            <Text className="text-white">Timeout error</Text>
+            <Pressable onPress={() => {
+                setShowTimeoutError(false);
+                setRetryCount(retryCount + 1);
+                wallet.getInfo();
+            }}>
+                <Text className="text-white font-bold">Retry</Text>
+            </Pressable>
+        </View>
+    }
+
     return <View className="flex-1">
-        {hasListTransactions && <NWCListTansactions />}
+        <NWCListTansactions />
     </View>;
 }
 
@@ -108,6 +144,7 @@ export default function WalletScreen() {
     }, [activeWallet?.walletId]);
 
     const { colors } = useColorScheme();
+    const walletTitle = useAtomValue(walletTitleAtom);
 
     return (
         <>
@@ -115,7 +152,7 @@ export default function WalletScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    title: null,
+                    title: walletTitle,
                     headerBackground: () => <BlurView intensity={100} tint="light" />,  
                     headerRight: () => <TouchableOpacity onPress={() => router.push('/(home)/(wallet)/(walletSettings)')}>
                         <SettingsIcon size={24} color={colors.foreground} />
@@ -141,13 +178,6 @@ export default function WalletScreen() {
                         )} */}
                         
                         {balance && <WalletBalance amount={balance.amount} unit={balance.unit} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>}
-                        {pendingPayments.size > 0 && (
-                            <View className="flex-row items-center justify-center bg-foreground/10 rounded-md p-2">
-                                <Text className="text-muted-foreground text-sm">
-                                    {pendingPayments.size} pending zaps
-                                </Text>
-                            </View>
-                        )}
 
                         {/* {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />} */}
                         {activeWallet instanceof NDKCashuWallet && (<>

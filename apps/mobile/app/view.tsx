@@ -12,6 +12,7 @@ import { useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
 import { router } from 'expo-router';
+import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -38,6 +39,17 @@ export default function ViewScreen() {
 
     const url = getUrlFromEvent(activeEvent);
     let content = activeEvent.content;
+    let title = null;
+    let price = null;
+    let currency = null;
+
+    if (activeEvent.kind === 30018) {
+        const parsed = JSON.parse(activeEvent.content);
+        title = parsed.name;
+        content = parsed.description;
+        price = parsed.price;
+        currency = parsed.currency;
+    }
 
     // remove url from content
     if (url) {
@@ -86,6 +98,8 @@ export default function ViewScreen() {
 
                 {/* Content */}
                 <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 4 }]}>
+                    {price && <Text numberOfLines={1} variant="title1" className="text-white">{nicelyFormattedSatNumber(price)} {currency.toLowerCase()}</Text>}
+                    {title && <Text numberOfLines={1} variant="title1" className="text-white">{title}</Text>}
                     <EventContent event={activeEvent} content={content} style={styles.eventContent} />
                     <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' />
                 </View>

@@ -1,9 +1,10 @@
-import { NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { Heart } from "lucide-react-native";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useReactionsStore } from "@/stores/reactions";
+import { useReactionPicker } from "@/lib/reaction-picker/hook";
 
 type ReactProps = {
     /**
@@ -19,7 +20,7 @@ type ReactProps = {
     /**
      * Whether the user has reacted to the event
      */
-    reactedByUser: boolean;
+    reactedByUser: NDKEvent | undefined;
 
     /**
      * Show reaction count
@@ -37,20 +38,11 @@ type ReactProps = {
     iconSize?: number;
 }
 
-export default function React({
-    event,
-    inactiveColor,
-    iconSize = 24,
-    reactionCount,
-    reactedByUser,
-    showReactionCount = true,
-}: ReactProps) {
+export function useReactEvent() {
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
-    
-    const react = useCallback(async () => {
-        if (reactedByUser) return;
-        
-        const r = await event.react('+', false);
+
+    const react = useCallback(async (event: NDKEvent, reaction: string = "+") => {
+        const r = await event.react(reaction, false);
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
 
@@ -62,16 +54,51 @@ export default function React({
             .catch(e => {
                 console.error(e);
             });
-    }, [event.id, reactedByUser]);
+    }, [addRelatedEvent]);
+
+    return { react };
+}
+
+export default function React({
+    event,
+    inactiveColor,
+    iconSize = 24,
+    reactionCount,
+    reactedByUser,
+    showReactionCount = true,
+}: ReactProps) {
+    const { react } = useReactEvent();
+
+    const handlePress = useCallback(() => {
+        if (reactedByUser) return;
+        
+        react(event);
+    }, [react, event?.id, reactedByUser]);
+
+    const openReactionPicker = useReactionPicker();
+
+    const handleLongPress = useCallback(() => {
+        openReactionPicker()
+            .then(reaction => react(event, reaction));
+    }, [react, event?.id, reactedByUser]);
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={react}>
-                <Heart
-                    size={iconSize}
-                    fill={reactedByUser ? 'red' : 'transparent'}
-                    color={reactedByUser ? 'red' : inactiveColor}
-                />
+            <TouchableOpacity
+                onPress={handlePress}
+                onLongPress={handleLongPress}
+            >
+                {!reactedByUser || reactedByUser.content === '+' ? (
+                    <Heart
+                        size={iconSize}
+                        fill={reactedByUser ? 'red' : 'transparent'}
+                        color={reactedByUser ? 'red' : inactiveColor}
+                    />
+                ) : (
+                    <Text style={[styles.text, { fontSize: iconSize, lineHeight: iconSize, color: inactiveColor }]}>
+                        {reactedByUser.content}
+                    </Text>
+                )}
             </TouchableOpacity>
             {showReactionCount && reactionCount > 0 && (
                 <Text style={[styles.text, { color: inactiveColor }]}>

@@ -13,6 +13,7 @@ import { ArrowUp, ArrowDown, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import RelativeTime from "@/app/components/relative-time";
+import { PendingZap } from "@/stores/payments";
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
@@ -45,7 +46,7 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: str
     )
 }
 
-const Zapper = ({ pubkey, timestamp }: { pubkey: string, timestamp: number }) => {
+export const Zapper = ({ pubkey, timestamp }: { pubkey: string, timestamp: number }) => {
     const { userProfile } = useUserProfile(pubkey);
     return (
         <View className="flex-col gap-0">
@@ -72,18 +73,16 @@ export default function HistoryItem({ wallet, item, index, target, onPress }: {
 }
 
 
-function HistoryItemPendingZap({ item, index, target }: { item: ZapperWithId, index: number, target: any }) {
+function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, index: number, target: any }) {
     const [ state, setState ] = useState<'pending' | 'sending' | 'complete' | 'failed'>('sending');
     const timer = useRef<NodeJS.Timeout | null>(null);
     const [ error, setError ] = useState<Error | null>(null);
-    const { pendingPayments, removePendingPayment } = useAppStateStore();
 
     const { amount } = item.zapper;
 
     const onPress = () => {
         if (state === 'failed') {
             // remove it from the store
-            removePendingPayment(item.internalId);
         }
     }
 
@@ -94,10 +93,6 @@ function HistoryItemPendingZap({ item, index, target }: { item: ZapperWithId, in
     }
 
     item.zapper.once('split:complete', (split: NDKZapSplit, result: NDKPaymentConfirmation) => {
-        console.log('received a split:complete event', {
-            temporaryId: item.internalId,
-            result
-        })
         if (result instanceof Error) {
             setError(result);
         }

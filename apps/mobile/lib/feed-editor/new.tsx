@@ -4,6 +4,10 @@ import { useCallback, useState } from "react";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Text } from "@/components/nativewindui/Text";
 import { Button } from "@/components/nativewindui/Button";
+import Tabs from "@/components/tabs";
+import { atom } from "jotai";
+
+const tabAtom = atom<string>('New');
 
 export default function New() {
     const store = useFeedEditorStore();

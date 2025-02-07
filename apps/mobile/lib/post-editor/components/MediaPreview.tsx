@@ -56,7 +56,6 @@ export function MediaPreview({
     const setMedia = usePostEditorStore(s => s.setMedia);
 
     const handleRevertPress = useCallback((index: number) => {
-        const item = media[index];
         const newState = [...media];
         newState[index].uris.shift();
         setMedia(newState);

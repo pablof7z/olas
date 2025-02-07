@@ -5,8 +5,9 @@ import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
-import { toast, Toasts } from '@backpackapp-io/react-native-toast';
+import { Toasts } from '@backpackapp-io/react-native-toast';
 import { StyleSheet } from 'react-native';
+import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import NDK, {
@@ -36,7 +37,7 @@ import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import { Platform, View } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
-import { DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
+import { COMMUNITIES_ENABLED, DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import { initialize } from '@/stores/db';
 import { getRelays } from '@/stores/db/relays';
@@ -46,6 +47,8 @@ import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
 import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import { useReactionsStore } from '@/stores/reactions';
+import {CommunityBottomSheet} from '@/lib/post-editor/sheets/CommunityBottomSheet';
+import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
 
 export const timeZero = Date.now();
 
@@ -349,7 +352,7 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
                                         <Stack.Screen name="notifications" options={{ headerShown: false }} />
-                                        {/* <Stack.Screen name="communities" options={{ headerShown: false }} /> */}
+                                        <Stack.Screen name="communities" options={{ headerShown: false }} />
                                         <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
 
                                         <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
@@ -381,13 +384,15 @@ export default function RootLayout() {
                                     
                                 <PostOptionsMenu />
                                 <LocationBottomSheet />
-                                {/* <CommunityBottomSheet /> */}
+                                {COMMUNITIES_ENABLED && <CommunityBottomSheet />}
                                 {/* <AlbumsBottomSheet /> */}
                                 {/* <PostTypeSelectorBottomSheet /> */}
                                 <FeedTypeBottomSheet />
                                 {/* <HandleNotificationPrompt /> */}
                                 <TagSelectorBottomSheet />
                                 <FeedEditorBottomSheet />
+                                <UserBottomSheet />
+                                <ReactionPickerBottomSheet />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />

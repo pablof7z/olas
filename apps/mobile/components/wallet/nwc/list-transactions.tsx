@@ -1,16 +1,19 @@
 import { useNDK, useNDKWallet, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { NDKNWCTransaction, NDKNWCWallet } from "@nostr-dev-kit/ndk-wallet";
-import { RefreshControl, View } from "react-native";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { RefreshControl, StyleSheet, View } from "react-native";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { Text } from "@/components/nativewindui/Text";
 import { ListItem } from "@/components/nativewindui/List";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/utils/bitcoin";
-import { ArrowDown, ArrowUp } from "lucide-react-native";
+import { ArrowDown, ArrowUp, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import RelativeTime from "@/app/components/relative-time";
+import { getNWCZap, getNWCZapsByPendingPaymentId } from "@/stores/db/zaps";
+import { Zapper } from "../transactions/item";
+import { PendingZap, usePaymentStore } from "@/stores/payments";
 
 export default function NWCListTansactions() {
     const { activeWallet } = useNDKWallet();
@@ -19,12 +22,10 @@ export default function NWCListTansactions() {
 
     const fetchTransactions = useCallback(() => {
         if (!(activeWallet instanceof NDKNWCWallet)) return;
-        console.log('fetching transactions', activeWallet.walletId);
         if (fetchRef.current) clearTimeout(fetchRef.current);
         fetchRef.current = setTimeout(() => {
-            console.log('fetching transactions', activeWallet.walletId);
             activeWallet.listTransactions().then(({transactions}) => {
-                console.log('transactions', transactions);
+                console.log('list transactions returned ', transactions.length, 'txs');
                 setTxs(transactions);
             });
         }, 500);
@@ -43,7 +44,6 @@ export default function NWCListTansactions() {
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-        console.log('refreshing', activeWallet?.walletId);
         const timeout = setTimeout(() => setRefreshing(false), 6000);
         activeWallet?.updateBalance()
             .then(() => {
@@ -58,30 +58,75 @@ export default function NWCListTansactions() {
                 clearTimeout(timeout);
             })
     }, [activeWallet?.walletId])
-    
-    
+
+    const pendingPayments = usePaymentStore(s => s.pendingPayments);
+
+    const txsWithPendingPayments = useMemo(() => {
+        // go through the pending payments and see if we find a 
+        const notFoundPendingPayments = [];
+        for (const pendingPayment of Array.from(pendingPayments.values()).flat()) {
+            const nwcZap = getNWCZapsByPendingPaymentId(pendingPayment.internalId);
+            if (!nwcZap) {
+                notFoundPendingPayments.push(pendingPayment);
+            }
+        }
+        
+        return [
+            ...notFoundPendingPayments,
+            ...txs.sort((a, b) => b.created_at - a.created_at)
+        ]
+    }, [txs, pendingPayments.size]);
+
     return <FlashList
-        data={txs}
-        renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} onPress={() => {}} />}
+        data={txsWithPendingPayments}
+        renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} onPress={() => { }} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     />
 }
 
-function Item({ item, index, target, onPress }: { item: NDKNWCTransaction, index: number, target: any, onPress: () => void }) {
+function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTransaction, index: number, target: any, onPress: () => void }) {
+    const { recipientPubkey, amount, type, createdAt } = useMemo(() => {
+        let recipientPubkey = null; 
+        let amount = null;
+        let createdAt = null;
+        let type: 'incoming' | 'outgoing' = "outgoing";
+        
+        if ((item as NDKNWCTransaction).invoice) {
+            const tx = item as NDKNWCTransaction;
+            const zapInfo = getNWCZap(tx.invoice);
+            if (zapInfo) {
+                recipientPubkey = zapInfo.recipient_pubkey;
+            } else {
+            }
+            createdAt = tx.created_at;
+            amount = tx.amount;
+        } else {
+            const { zapper, internalId } = item as PendingZap;
+            recipientPubkey = zapper.target.pubkey;
+            amount = zapper.amount;
+            createdAt = Date.now()/1000;
+        }
+
+        return { recipientPubkey, amount, createdAt, type };
+    }, [item])
+
+    const isPending = !!(item as PendingZap).internalId;
+    
     return (
         <ListItem
             className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
-            item={{
-                id: item.amount,
-                title: item.description,
-            }}
-            leftView={<LeftView direction={item.type} />}
-            rightView={<RightView amount={item.amount} unit={"msats"} createdAt={item.created_at} />}
+            leftView={<LeftView direction={type} pubkey={recipientPubkey} />}
+            rightView={<RightView amount={amount} unit={"msats"} createdAt={createdAt} isPending={isPending} />}
             index={index}
             onPress={onPress}
+            item={{}}
         >
-            <RelativeTime className="text-xs text-muted-foreground" timestamp={item.created_at} />
+            {recipientPubkey ? (
+                <Zapper pubkey={recipientPubkey} timestamp={createdAt} />
+            ) : (
+                <RelativeTime className="text-xs text-muted-foreground" timestamp={createdAt} />
+            )}
         </ListItem>  
     )
 }
@@ -118,16 +163,36 @@ const LeftView = ({ direction, pubkey }: { direction: 'incoming' | 'outgoing', p
 }
 
 
-function RightView({ amount, unit, createdAt }: { amount: number, unit: string, createdAt: number }) {
-    if (!amount) return null;
-
+function RightView({ amount, unit, createdAt, isPending }: { amount: number, unit: string, createdAt: number, isPending: boolean }) {
+    
+    const { colors } = useColorScheme();
     const niceAmount = formatMoney({ amount, unit, hideUnit: true });
     const niceUnit = formatMoney({ amount, unit, hideAmount: true });
 
+    if (!amount) return null;
+
     return (
-        <View className="flex-col items-end -gap-1">
-            <Text className="text-lg font-bold text-foreground font-mono">{niceAmount}</Text>
-            <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
+        <View style={rightViewStyles.container}>
+            {isPending && <Timer size={24} color={colors.muted} />}
+            <View style={rightViewStyles.column}>
+                <Text className="text-xl font-bold text-foreground">{niceAmount}</Text>
+                <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
+            </View>
         </View>
     )
 }
+
+const rightViewStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 4,
+        marginRight: 10,
+    },
+    column: {
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: -10,
+    }
+}) 

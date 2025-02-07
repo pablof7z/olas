@@ -10,6 +10,16 @@ import { useDebounce } from "@/utils/debounce";
 export function useWalletMonitor() {
     const { activeWallet } = useNDKWallet();
 
+    // useEffect(() => {
+    //     if (!activeWallet) return;
+
+    //     console.log('[WALLET MONITOR] wallet became active', activeWallet.walletId, activeWallet.balance());
+    //     activeWallet.updateBalance?.().then(() => {
+    //         console.log('[WALLET MONITOR] wallet balance updated', activeWallet.walletId, activeWallet.balance());
+    //     })
+        
+    // }, [activeWallet?.walletId]);
+
     const updateStorage = useCallback(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
 

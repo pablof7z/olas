@@ -1,6 +1,6 @@
 import { useFollows, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, Pressable } from "react-native";
 import { Button } from "../nativewindui/Button";
 import { Text } from "../nativewindui/Text";
 import { List, ListItem, ListSectionHeader } from "../nativewindui/List";
@@ -18,51 +18,34 @@ import { FeedKind, FeedType } from "./store";
 import { useMyGroups } from "@/lib/groups/store";
 import { useAppSettingsStore } from "@/stores/app";
 import { X } from "lucide-react-native";
+import { PrimitiveAtom, useAtomValue } from "jotai";
+import { atom } from "jotai";
+import { COMMUNITIES_ENABLED } from "@/utils/const";
+import Tabs from "@/components/tabs";
 
-function kindToSelectionIndex(kind: FeedKind) {
-    if (kind === 'discover') return 0;
-    if (kind === 'search') return 1;
-    if (kind === 'group') return 2;
-    return 0;
-}
+const tabAtom = atom<string>('Feeds');
 
 export default function FeedTypeList({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedType) => void }) {
-    const { ndk } = useNDK();
-    const [relays, setRelays] = useState<string[]>([]);
+    const selectedTab = useAtomValue(tabAtom);
 
-    useEffect(() => {
-        if (!ndk) return;
-        const connectedRelays = ndk.pool.connectedRelays();
-        const connectedRelaysNames = connectedRelays.map((r) => r.url);
+    const options = ['Feeds'];
 
-        setRelays(connectedRelaysNames);
-    }, [ndk]);
+    if (COMMUNITIES_ENABLED) {
+        options.push('Groups');
+    }
 
-    const [selectedIndex, setSelectedIndex] = useState(kindToSelectionIndex(value.kind));
-    const { colors } = useColorScheme();
+    // options.push('Relays')
 
     return (
         <View style={styles.container}>
             <View className="flex-row items-center justify-between w-full gap-6">
                 <View className="flex-1 px-4">
-
-                    <Text variant="title1">Feed</Text>
-                {/* <SegmentedControl
-                    values={['Feeds', 'Groups']}
-                    selectedIndex={selectedIndex}
-                    onIndexChange={(index) => {
-                        if (index === 2) {
-                            router.push('/search');
-                            onSelect();
-                        } else {
-                            setSelectedIndex(index);
-                        }
-                    }}
-                    /> */}
+                    <Tabs options={options} atom={tabAtom} />
                 </View>
             </View>
 
-            <Feeds value={value} onSelect={onSelect} />
+            {selectedTab === 'Feeds' && <Feeds value={value} onSelect={onSelect} />}
+            {selectedTab === 'Groups' && <Groups value={value} onSelect={onSelect} />}
             {/* {selectedIndex === 0 && <Feeds value={value} onSelect={onSelect} />} */}
             {/* {selectedIndex === 1 && <Hashtags value={value} onSelect={onSelect} />} */}
             {/* {selectedIndex === 1 && <Groups value={value} onSelect={onSelect} />} */}
@@ -220,7 +203,7 @@ function Feeds({ value, onSelect }: { value: FeedType, onSelect: (value?: FeedTy
 
     const data = useMemo(() => {
         const v = [];
-
+        
         if (currentUser) {
             v.push({
                 title: 'Follows', subTitle: 'Posts from people you follow', onPress: () => onSelect({ kind: 'discover', value: 'follows' }),

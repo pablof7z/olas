@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from "react-native";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from "./store";
 import { Sheet, useSheetRef } from "@/components/nativewindui/Sheet";
 import { useEffect, useState  } from "react";
@@ -9,12 +9,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/nativewindui/Text";
 import New from "./new";
 import Confirm from "./confirm";
+import Tabs from "@/components/tabs";
+import { atom } from "jotai";
+
+const tabAtom = atom<string>('New');
 
 export default function FeedEditorBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(feedEditorBottomSheetRefAtom);
     const insets = useSafeAreaInsets();
-    const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
+    const [activeTab, setActiveTab] = useAtom(tabAtom);
 
     useEffect(() => {
         setBottomSheetRef(ref);
@@ -31,16 +35,14 @@ export default function FeedEditorBottomSheet() {
                     <Confirm />
                 ) : (
                     <>
-                    <View style={styles.optionsContainer}>
-                        <Pressable style={styles.option} onPress={() => setActiveTab('new')}>
-                            <Text variant={activeTab === 'new' ? 'title1' : 'body'}>New</Text>
-                        </Pressable>
-                        <Pressable style={styles.option} onPress={() => setActiveTab('existing')}>
-                            <Text variant={activeTab === 'existing' ? 'title1' : 'body'}>Existing</Text>
-                        </Pressable>
-                    </View>
+                    {/* <Text className="text-lg py-10">
+                        Feeds allow you to create a list of posts from specific users
+                        and topics.
+                    </Text> */}
+                    
+                        <Tabs options={['New', 'Existing']} atom={tabAtom} />
 
-                        {activeTab === 'new' && <New />}
+                        {activeTab === 'New' && <New />}
                     </>
                 )}
             </BottomSheetView>

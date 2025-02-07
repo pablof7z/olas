@@ -2,14 +2,14 @@ import { toast } from '@backpackapp-io/react-native-toast';
 import { NDKEvent, NDKFilter, NDKKind, NDKPaymentConfirmation, NDKUser, NDKZapper, NDKZapSplit } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
 
-type PendingZap = { zapper: NDKZapper, internalId: string }
+export type PendingZap = { zapper: NDKZapper, internalId: string }
 
 type PaymentStore = {
     pendingPayments: Map<string, PendingZap[]>;
 }
 
 type PaymentActions = {
-    addPendingPayment: (zapper: NDKZapper) => void;
+    addPendingPayment: (zapper: NDKZapper) => PendingZap;
 }
 
 /**
@@ -18,8 +18,8 @@ type PaymentActions = {
  */
 export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) => ({
     pendingPayments: new Map(),
-    addPendingPayment(zapper: NDKZapper): void {
-        const zapperWithId: PendingZap = {
+    addPendingPayment(zapper: NDKZapper): PendingZap {
+        const pendingZap: PendingZap = {
             zapper,
             internalId: Math.random().toString(),
         }
@@ -29,7 +29,7 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                 const val = new Map(state.pendingPayments);
                 const id = getZapperTargetId(zapper);
                 let curr = val.get(id) || [];
-                curr = curr.filter(p => p.internalId !== zapperWithId.internalId);
+                curr = curr.filter(p => p.internalId !== pendingZap.internalId);
                 if (curr.length > 0) val.set(id, curr)
                 else val.delete(id);
                 return { pendingPayments: val };
@@ -50,13 +50,15 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
             const copy = new Map(state.pendingPayments);
             const id = getZapperTargetId(zapper);
             const pending = copy.get(id) || [];
-            pending.push(zapperWithId);
+            pending.push(pendingZap);
             copy.set(id, pending);
             return { pendingPayments: copy }
         });
 
         waitForZap(zapper)
             .then(() => removeZap());
+
+        return pendingZap;
     }
 }));
 

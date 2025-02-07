@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 export type ReactionStats = {
     reactionCount: number;
-    reactedByUser: boolean;
+    reactedByUser: NDKEvent | null;
     commentCount: number;
     commentedByUser: boolean;
     comments: NDKEvent[];
@@ -31,7 +31,7 @@ type ReactionsStore = {
 
 export const DEFAULT_STATS: ReactionStats = {
     reactionCount: 0,
-    reactedByUser: false,
+    reactedByUser: null,
     commentCount: 0,
     commentedByUser: false,
     comments: [],
@@ -75,9 +75,15 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
             
             switch (event.kind) {
                 case NDKKind.Reaction:
-                    stats.reactionCount++;
                     if (event.pubkey === currentPubkey || currentPubkey === true) {
-                        stats.reactedByUser = true;
+                        if (!stats.reactedByUser) {
+                            stats.reactionCount++;
+                            stats.reactedByUser = event;
+                        } else if (event.created_at > stats.reactedByUser.created_at) {
+                            stats.reactedByUser = event;
+                        }
+                    } else {
+                        stats.reactionCount++;
                     }
                     break;
                 case NDKKind.GenericRepost:
