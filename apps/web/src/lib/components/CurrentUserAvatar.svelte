@@ -4,7 +4,7 @@
 	import { getProxiedImageUrl } from "../../utils/imgproxy";
 
     const currentUser = $derived(getCurrentUser());
-    const currentUserProfile = $derived.by(() => currentUser?.user ? ndk.cacheAdapter?.fetchProfileSync(currentUser?.user?.pubkey) : null);
+    const currentUserProfile = $derived.by(() => currentUser?.user ? ndk.cacheAdapter?.fetchProfileSync?.(currentUser?.user?.pubkey) : null);
 
     const proxiedUrl = $derived.by(() => currentUserProfile?.image ? getProxiedImageUrl(currentUserProfile.image, 24) : null);
 </script>
