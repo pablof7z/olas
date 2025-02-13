@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { CircleUser, Menu, ActivitySquare, Bookmark, Sun, Moon, DoorClosed, AppleIcon, Apple, Phone, PhoneIcon, Smartphone, Command } from 'lucide-svelte';
+	import {
+		CircleUser,
+		Menu,
+		ActivitySquare,
+		Bookmark,
+		Sun,
+		Moon,
+		DoorClosed,
+		Smartphone,
+		Command
+	} from 'lucide-svelte';
 	import Logo from './icons/Logo.svelte';
 	import Home from './icons/Home.svelte';
 	import NewPost from './icons/NewPost.svelte';
@@ -18,8 +28,18 @@
 	import { getCurrentUser, setCurrentUser } from '$lib/stores/currentUser.svelte';
 	import { onMount } from 'svelte';
 	import CurrentUserAvatar from './CurrentUserAvatar.svelte';
+	import { page } from '$app/state';
+
+	type SidebarItem = {
+		text: string;
+		icon?: any;
+		href?: string;
+		disabled?: boolean;
+		onclick?: () => void;
+	};
 
 	const currentUser = $derived(getCurrentUser());
+	const currentRoute = $derived(page.url.pathname);
 
 	function login() {
 		if (window.nostr) {
@@ -30,12 +50,12 @@
 			});
 		}
 	}
-	
+
 	onMount(() => {
 		if (window.nostr) login();
-	})
+	});
 
-	const defaultSidebarItems = [
+	let defaultSidebarItems: SidebarItem[] = $derived([
 		{
 			text: 'home',
 			icon: Home,
@@ -54,33 +74,35 @@
 		{
 			text: 'create',
 			icon: NewPost,
-		},
-		
-	];
+			disabled: true
+		}
+	]);
 
-	const currentUserProfile = $derived.by(() => currentUser?.user ? ndk.cacheAdapter?.fetchProfileSync(currentUser?.user?.pubkey) : null);
+	const currentUserProfile = $derived.by(() =>
+		currentUser?.user ? ndk.cacheAdapter?.fetchProfileSync?.(currentUser?.user?.pubkey) : null
+	);
 
 	const sidebarItems = $derived.by(() => {
 		const items = [...defaultSidebarItems];
 
 		if (currentUserProfile) {
 			items.push({
-				text: currentUserProfile.name,
+				text: currentUserProfile.name ?? 'Unknown User',
 				icon: CurrentUserAvatar,
-				href: `/${currentUserProfile.nip05 ?? currentUser?.user?.npub }`
+				href: `/${currentUserProfile.nip05 ?? currentUser?.user?.npub}`
 			});
 		} else if (!currentUser) {
 			items.push({
 				text: 'login',
 				icon: CircleUser,
 				onclick: login
-			})
+			});
 		} else {
 			items.push({
 				text: 'Profile',
 				icon: CurrentUserAvatar,
 				href: `/${currentUser?.user?.npub}`
-			})
+			});
 		}
 
 		return items;
@@ -90,20 +112,23 @@
 </script>
 
 <aside
-	class="bg-background fixed bottom-0 left-0 right-0 flex flex-row md:flex-col md:fixed md:top-0 md:left-0 md:right-auto md:h-full md:w-[244px] border-t md:border-r p-1 md:p-3 w-full z-50"
+	class="fixed bottom-0 left-0 right-0 z-50 flex w-full flex-row border-t bg-background p-1 md:fixed md:left-0 md:right-auto md:top-0 md:h-full md:w-[244px] md:flex-col md:border-r md:p-3"
 >
-	<div class="my-4 pl-3 md:my-8 md:pl-3 hidden md:block">
+	<div class="my-4 hidden pl-3 md:my-8 md:block md:pl-3">
 		<div class="hidden md:inline-block">
 			<Logo />
 		</div>
 	</div>
-	<div class="flex flex-1 flex-row md:flex-col md:gap-2">
+	<div class="flex flex-1 flex-row gap-1 md:flex-col md:gap-2">
 		{#each sidebarItems as { text, icon, href, disabled, onclick }}
 			<svelte:element
 				this={href ? 'a' : text === 'create' ? 'button' : 'div'}
 				{href}
 				role="none"
-				class="hover:bg-muted flex flex-1 md:flex-none justify-center md:justify-start items-center gap-1 rounded-md p-2 md:p-3 text-sm capitalize {disabled && 'opacity-50 pointer-events-none cursor-not-allowed'}"
+				class="flex flex-1 items-center justify-center rounded-md p-2 text-sm capitalize hover:bg-muted md:flex-none md:justify-start md:p-3 {disabled &&
+					'pointer-events-none cursor-not-allowed opacity-50'}{cn({
+					'cursor-default bg-muted font-bold': currentRoute === href
+				})}"
 				onclick={() => {
 					if (text === 'create') {
 						openModal = true;
@@ -112,71 +137,80 @@
 				}}
 			>
 				<svelte:component this={icon} />
-				<div
-					class={cn('ml-0 md:ml-4 hidden md:inline-flex', {
-						'font-bold': text === 'home'
-					})}
-				>
+				<div class="ml-0 hidden md:ml-4 md:inline-flex">
 					{text}
 				</div>
 			</svelte:element>
 		{/each}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger
+				class="flex flex-1 items-center justify-center rounded-md p-2 text-sm capitalize hover:bg-muted md:mt-auto md:flex-none md:justify-start md:p-3"
+			>
+				<Menu />
+				<div class="ml-0 hidden md:ml-4 md:inline-block">More</div>
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content class="w-full rounded-xl p-3 shadow-lg md:w-[300px]">
+				<DropdownMenu.Group>
+					<DropdownMenu.Item
+						href="/"
+						class="pointer-events-none flex cursor-not-allowed cursor-pointer items-center gap-2 p-3 opacity-50"
+					>
+						<Settings />
+						Settings
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						href="/"
+						class="pointer-events-none flex cursor-not-allowed cursor-pointer items-center gap-2 p-3 opacity-50"
+					>
+						<ActivitySquare />
+						Your Activity
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						href="/"
+						class="pointer-events-none flex cursor-not-allowed cursor-pointer items-center gap-2 p-3 opacity-50"
+					>
+						<Bookmark />
+						Saved
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						onclick={toggleMode}
+						class="flex cursor-pointer items-center gap-2 p-3"
+					>
+						{#if $mode === 'dark'}
+							<Sun />
+							light mode
+						{:else if $mode === 'light'}
+							<Moon />
+							dark mode
+						{/if}
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						href="/"
+						class="pointer-events-none flex cursor-not-allowed cursor-pointer items-center gap-2 p-3 opacity-50"
+					>
+						<DoorClosed />
+						Logout
+					</DropdownMenu.Item>
+
+					<DropdownMenu.Item
+						href="https://testflight.apple.com/join/2FMVX2yM"
+						class="flex cursor-pointer items-center gap-2 p-3"
+					>
+						<Command />
+						Download on Apple Store
+					</DropdownMenu.Item>
+
+					<DropdownMenu.Item
+						href="https://github.com/pablof7z/olas/releases"
+						class="flex cursor-pointer items-center gap-2 p-3"
+					>
+						<Smartphone />
+						Download Android APK
+					</DropdownMenu.Item>
+				</DropdownMenu.Group>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 	</div>
-
-	{#if !currentUser}
-		<Button variant="default" class="w-full md:hidden" onclick={login}>
-			Login
-		</Button>
-	{/if}
-
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger
-			class="hover:bg-muted flex justify-center md:justify-start cursor-pointer items-center gap-1 rounded-md p-2 md:p-3 text-sm capitalize"
-		>
-			<Menu />
-			<div class="ml-0 md:ml-4 hidden md:inline-block">More</div>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="w-full md:w-[300px] rounded-xl p-3 shadow-lg">
-			<DropdownMenu.Group>
-				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
-					<Settings />
-					Settings
-				</DropdownMenu.Item>
-				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
-					<ActivitySquare />
-					Your Activity
-				</DropdownMenu.Item>
-				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
-					<Bookmark />
-					Saved
-				</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={toggleMode} class="flex cursor-pointer items-center gap-2 p-3">
-					{#if $mode === 'dark'}
-						<Sun />
-						light mode
-					{:else if $mode === 'light'}
-						<Moon />
-						dark mode
-					{/if}
-				</DropdownMenu.Item>
-				<DropdownMenu.Item href="/" class="flex cursor-pointer items-center gap-2 p-3">
-					<DoorClosed />
-					Logout
-				</DropdownMenu.Item>
-
-				<DropdownMenu.Item href="https://testflight.apple.com/join/2FMVX2yM" class="flex cursor-pointer items-center gap-2 p-3">
-					<Command />
-					Download on Apple Store
-				</DropdownMenu.Item>
-
-				<DropdownMenu.Item href="https://github.com/pablof7z/olas/releases" class="flex cursor-pointer items-center gap-2 p-3">
-					<Smartphone />
-					Download Android APK
-				</DropdownMenu.Item>
-				
-			</DropdownMenu.Group>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
 </aside>
 
 <Dialog.Root bind:open={openModal}>
