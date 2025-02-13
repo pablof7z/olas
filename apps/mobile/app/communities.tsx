@@ -7,10 +7,9 @@ import { useImage, Image } from "expo-image";
 import { Button } from "@/components/nativewindui/Button";
 import { Text } from "@/components/nativewindui/Text";
 import AvatarGroup from "@/components/ui/user/AvatarGroup";
-import { GroupEntry, useAllGroups, useGroups } from "@/lib/groups/store";
+import { GroupEntry, useAllGroups } from "@/lib/groups/store";
 import { View } from "react-native";
 import { useDebounce, useThrottle } from "@/utils/debounce";
-import Swipeable from "@/components/ui/Swipable";
 
 const relays = [
     'wss://groups.0xchat.com'

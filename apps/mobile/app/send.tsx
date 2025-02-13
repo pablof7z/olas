@@ -1,7 +1,6 @@
-import { LargeTitleHeader } from "@/components/nativewindui/LargeTitleHeader";
 import { List, ListItem } from "@/components/nativewindui/List";
 import { Platform, StyleSheet } from "react-native";
-import { CashuPaymentInfo, Hexpubkey, NDKKind, NDKLnUrlData, NDKUser, NDKUserProfile, NDKZapMethodInfo, NDKZapper, useFollows, useNDK, useNDKSession, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { CashuPaymentInfo, Hexpubkey, NDKKind, NDKLnLudData, NDKLnUrlData, NDKUser, NDKUserProfile, NDKZapMethod, NDKZapMethodInfo, NDKZapper, useFollows, useNDK, useNDKSession, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { TextInput, TouchableOpacity, View, KeyboardAvoidingView } from "react-native";
 import * as User from "@/components/ui/user"
 import { Text } from "@/components/nativewindui/Text";
@@ -34,11 +33,14 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
     const inputRef = useRef<TextInput | null>(null);
     const [amount, setAmount] = useState(21);
     const user = useMemo(() => ndk.getUser({ pubkey }), [pubkey]);
+
+    const [note, setNote] = useState('');
+    
     const zap = useMemo(() => new NDKZapper(user, 0, 'msat', {
         comment: note ?? "Sending from Olas",
         nutzapAsFallback: true,
-    }), [pubkey, amount]);
-    const [methods, setMethods] = useState<NDKZapMethodInfo[]>([]);
+    }), [pubkey, amount, note]);
+    const [methods, setMethods] = useState<Map<NDKZapMethod, NDKZapMethodInfo>>(new Map());
     const [buttonState, setButtonState] = useState<ButtonState>('idle');
     const { addPendingPayment } = usePaymentStore();
 
@@ -50,7 +52,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
     async function send() {
         setButtonState('loading');
         zap.amount = amount * 1000;
-        zap.once("complete", (split, info) => {
+        zap.once("complete", (results) => {
             setButtonState('success');
         });
         zap.zap();
@@ -62,8 +64,6 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
 
     const inset = useSafeAreaInsets();
 
-    const [note, setNote] = useState('');
-    
     return (
         <KeyboardAwareScrollView>
             <View className="flex-1 flex-col items-center gap-2 pt-5 w-full" style={{ marginTop: Platform.OS === 'android' ? inset.top : 0 }}>
@@ -110,21 +110,21 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey, onCancel: () => v
             </View>
 
             <View className="flex flex-col gap-2 w-full">
-                {methods.map((method) => (
-                    <View key={method.type} className="mx-4">
-                        <Text className="text-xl font-bold py-2">{method.type.toUpperCase()}</Text>
+                {Array.from(methods.entries()).map(([method, info]) => (
+                    <View key={method} className="mx-4">
+                        <Text className="text-xl font-bold py-2">{method.toUpperCase()}</Text>
 
-                        {method.type === 'nip61' && (
+                        {method === 'nip61' && (
                             <View className="flex flex-col gap-2">
-                                {(method.data as CashuPaymentInfo).mints.map((mint) => {
+                                {(info as CashuPaymentInfo).mints.map((mint) => {
                                     return <Text key={mint} className="text-sm text-muted-foreground">{mint}</Text>
                                 })}
                             </View>
                         )}
 
-                        {method.type === 'nip57' && (
+                        {method === 'nip57' && (
                             <View className="flex flex-col gap-2">
-                                <Text className="text-base font-medium py-2">{(method.data as NDKLnUrlData).callback}</Text>
+                                <Text className="text-base font-medium py-2">{(info as NDKLnLudData).lud06 ?? (info as NDKLnLudData).lud16}</Text>
                             </View>
                         )}
                     </View>

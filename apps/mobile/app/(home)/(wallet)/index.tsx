@@ -85,7 +85,6 @@ function WalletNip60({ wallet }: { wallet: NDKCashuWallet }) {
 }
 
 export default function WalletScreen() {
-    const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const { activeWallet, balance } = useNDKWallet();
     const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList, NDKKind.CashuMintList, { create: true });
@@ -98,32 +97,6 @@ export default function WalletScreen() {
             setIsTestnutWallet(true);
         }
     }, [ mintList?.id ])
-
-    const isNutzapWallet = useMemo(() => {
-        if (!(activeWallet instanceof NDKCashuWallet)) return false;
-        if (!mintList) return false;
-        return mintList.p2pk === activeWallet.p2pk;
-    }, [activeWallet, mintList]);
-
-    const setNutzapWallet = async () => {
-        try {
-            if (!mintList || !(activeWallet instanceof NDKCashuWallet)) return;
-            mintList.ndk = ndk;
-            console.log('setNutzapWallet', activeWallet.event.rawEvent(), mintList.rawEvent());
-            mintList.p2pk = activeWallet.p2pk;
-            mintList.mints = activeWallet.mints;
-            mintList.relays = activeWallet.relays;
-            await mintList.sign();
-            mintList.publishReplaceable();
-            console.log('mintList', JSON.stringify(mintList.rawEvent(), null, 2));
-        } catch (e) {
-            console.error('error', e);
-        }
-    }
-
-    const inset = useSafeAreaInsets();
-
-    const pendingPayments = usePaymentStore(s => s.pendingPayments);
 
     const onLongPress = useCallback(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
@@ -177,7 +150,7 @@ export default function WalletScreen() {
                             </Button>
                         )} */}
                         
-                        {balance && <WalletBalance amount={balance.amount} unit={balance.unit} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>}
+                        {balance && <WalletBalance amount={balance.amount} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>}
 
                         {/* {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />} */}
                         {activeWallet instanceof NDKCashuWallet && (<>

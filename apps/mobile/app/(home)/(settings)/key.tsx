@@ -10,6 +10,7 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { toast } from '@backpackapp-io/react-native-toast';
+import * as SecureStore from 'expo-secure-store';
 
 export default function SettingsIosStyleScreen() {
     const { ndk } = useNDK();
@@ -21,6 +22,9 @@ export default function SettingsIosStyleScreen() {
     }, [privateKey]);
 
     const copyNsec = useCallback(() => {
+        // const key = SecureStore.getItem('currentUser', { requireAuthentication: true, keychainService: 'olas' });
+        // if (!key) return;
+        
         Clipboard.setStringAsync(nsec);
 
         if (nsec) {

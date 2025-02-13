@@ -69,3 +69,8 @@ export function formatMoney({
 
     return `${number} ${displayUnit}`;
 }
+
+export function amountInSats({ amount, unit = 'msat' }: { amount: number, unit?: string }) {
+    if (unit?.startsWith('msat')) return amount / 1000;
+    return amount;
+}

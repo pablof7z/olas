@@ -1,6 +1,5 @@
 import NDK, { NDKEvent, NDKFilter, NDKKind, NDKList, NDKRelay, NDKRelaySet, NDKSimpleGroupMemberList, NDKSimpleGroupMetadata, NDKSubscriptionCacheUsage, NDKUser, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
-import { GroupEntry, GroupStore } from ".";
-import { useObserver } from "@/hooks/observer";
+import { GroupStore } from ".";
 
 export function loadMyGroups(ndk: NDK, currentUser: NDKUser, set: (state: GroupStore) => void) {
     ndk.subscribe([
@@ -59,6 +58,7 @@ export function loadGroups(ndk: NDK, currentUser: NDKUser, relay: string, groupI
     if (groupIds) filters[0]["#d"] = groupIds;
 
     ndk.subscribe(filters, {
+        subId: 'groups-load',
         groupable: false,
         closeOnEose: true,
         cacheUsage: NDKSubscriptionCacheUsage.PARALLEL

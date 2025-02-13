@@ -68,7 +68,12 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
                 }
             }
             targetRootEventId ??= targetEventId;
-            if (!targetRootEventId) return state;
+            if (!targetRootEventId) {
+                console.log(`\t[REACTIONS STORE] no target root event id for`, event.id.substring(0, 8), event.kind, event.encode());
+                return state;
+            }
+
+            // console.log('adding event', targetRootEventId, event.kind, event.encode());
 
             // Get or create stats for this event
             const stats = {...(newReactions.get(targetRootEventId) || DEFAULT_STATS)};
@@ -113,7 +118,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
                     break;
                 case NDKKind.Zap:
                     const invoice = zapInvoiceFromEvent(event);
-                    stats.zappedAmount += invoice.amount;
+                    stats.zappedAmount += (invoice.amount / 1000); // zap invoices are in msats
                     if (invoice.zappee === currentPubkey || currentPubkey === true) {
                         stats.zappedByUser = true;
                     }

@@ -1,5 +1,5 @@
-import { timeZero } from "@/app/_layout";
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
+import { timeZero } from "@/lib/ndk";
 import { useReactionsStore } from "@/stores/reactions";
 import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
@@ -118,7 +118,7 @@ export function useFeedEvents(
      */
     const updateEntries = useCallback((reason: string) => {
         const time = Date.now() - subscriptionStartTime.current;
-        console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
+        // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
         const newSliceIds = Array.from(newEntriesRef.current.values());
         let newSlice = entriesFromIds(new Set(newSliceIds));
@@ -129,7 +129,7 @@ export function useFeedEvents(
         // newer events -- this prevents us from adding new entries below posts we have already
         // rendered
         if (newSlice.length > 0) {
-            console.log(`[FEED HOOK] we have a new slice of ${newSlice.length} entries, rendered entries are ${renderedEntryIdsRef.current.size}`)
+            // console.log(`[FEED HOOK] we have a new slice of ${newSlice.length} entries, rendered entries are ${renderedEntryIdsRef.current.size}`)
 
             let renderedEntries = entriesFromIds(renderedEntryIdsRef.current);
 
@@ -150,22 +150,53 @@ export function useFeedEvents(
 
             // update the renderedIdsRef
             renderedEntryIdsRef.current = new Set(renderedEntries.map(entry => entry.id));
-            console.log('setting entries', { newSliceLength: newSlice.length, renderedEntriesLength: renderedEntries.length })
             setEntries(renderedEntries);
-        } else {
-            console.log('no new entries to add, the slice is empty', newEntriesRef.current.size)
+        // } else {
+        //     console.log('no new entries to add, the slice is empty', newEntriesRef.current.size)
         }
 
         setNewEntries([]);
         newEntriesRef.current.clear();
     }, [isMutedEvent, filterFn]);
 
-    const shouldIncludeRenderedEntry = useCallback((entry: FeedEntry) => {
-        if (!entry.event) return false;
-        if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) return false;
-        if (filterFn && !filterFn(entry, 0)) return false;
-        return true;
-    }, [isMutedEvent, pubkeyBlacklist, filterFn]);
+    // const shouldIncludeRenderedEntry = useCallback((entry: FeedEntry) => {
+    //     if (!entry.event) return false;
+    //     if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) return false;
+    //     if (filterFn && !filterFn(entry, 0)) return false;
+    //     return true;
+    // }, [isMutedEvent, pubkeyBlacklist, filterFn]);
+
+    useEffect(() => {
+        console.log('running mute and blacklist checks')
+        // check if any of the entries or new entries are muted or blacklisted, if anything changes
+        // set the value
+        let changed = false;
+
+        for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
+            if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
+                console.log('removing entry', entry.id, entry.event?.pubkey)
+                changed = true;
+                // remove the entry
+                renderedEntryIdsRef.current.delete(entry.id);
+                allEntriesRef.current.delete(entry.id);
+            }
+        }
+
+        if (changed) setEntries(entriesFromIds(renderedEntryIdsRef.current));
+
+        // same thing for new entries
+        changed = false;
+        for (const entry of entriesFromIds(newEntriesRef.current)) {
+            if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
+                console.log('removing new entry', entry.id, entry.event?.pubkey)
+                changed = true;
+                // remove the entry
+                newEntriesRef.current.delete(entry.id);
+            }
+        }
+
+        if (changed) setNewEntries(entriesFromIds(newEntriesRef.current));
+    }, [isMutedEvent, pubkeyBlacklist])
 
     const highestTimestamp = useRef(-1);
 
@@ -371,6 +402,7 @@ export function useFeedEvents(
         subscriptionStartTime.current = Date.now();
 
         if (subscription.current) {
+            console.log('stopping subscription because of dependencies change', subId, dependencies);
             subscription.current.stop();
             subscription.current = null;
             eosed.current = false;
@@ -384,7 +416,7 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        // console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
+        console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
         
         const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] }, relaySet, false);
 
@@ -396,6 +428,7 @@ export function useFeedEvents(
         subscription.current = sub;
 
         return () => {
+            console.log('stopping subscription because of unmount', subId, dependencies);
             sub.stop();
         }
     }, [ndk, ...dependencies])
@@ -486,7 +519,6 @@ export function useFeedMonitor(
 
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
-            // console.log('removing slice that starts in', slice.start);
             slice.sub.stop();
             activeSlices.current = activeSlices.current.filter(s => s.start !== slice.start);
         }, 500)
@@ -515,12 +547,17 @@ export function useFeedMonitor(
 
             if (!exists) addSlice(neededSlice)
         }
+
+        // // clean up active subs on unmount
         
-        // clean up active subs on unmount
+    }, [activeIndex, events.length < sliceSize]);
+
+    useEffect(() => {
         return () => {
+            console.log('unmounting feed monitor', activeSlices.current.map(s => s.start).join(', '), { eventsLength: events.length, sliceSize, activeIndex });
             activeSlices.current.forEach(slice => slice.sub.stop());
         }
-    }, [activeIndex, events.length < sliceSize]);
+    }, [])
     
     return {
         setActiveIndex

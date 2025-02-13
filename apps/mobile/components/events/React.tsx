@@ -5,6 +5,7 @@ import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useReactionsStore } from "@/stores/reactions";
 import { useReactionPicker } from "@/lib/reaction-picker/hook";
+import { useObserver } from "@/hooks/observer";
 
 type ReactProps = {
     /**
@@ -68,7 +69,6 @@ export default function React({
     showReactionCount = true,
 }: ReactProps) {
     const { react } = useReactEvent();
-
     const handlePress = useCallback(() => {
         if (reactedByUser) return;
         

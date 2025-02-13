@@ -1,8 +1,8 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { nicelyFormattedMilliSatNumber } from '@/utils/bitcoin';
-import { NDKKind, NDKNutzap, NDKZapper, zapInvoiceFromEvent, useNDKWallet, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { amountInSats, nicelyFormattedMilliSatNumber, nicelyFormattedSatNumber } from '@/utils/bitcoin';
+import { NDKZapper, useNDKWallet, NDKEvent, NDKNutzap } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { toast } from '@backpackapp-io/react-native-toast';
@@ -19,7 +19,7 @@ export const sendZap = async (message = 'Zap from Olas', sats: number, event: ND
     }
 
     const balance = wallet.balance();
-    const balanceInSats = balance.unit.startsWith('msat') ? balance.amount / 1000 : balance.amount;
+    const balanceInSats = balance.amount;
     if (balanceInSats < sats) {
         toast.error("You don't have enough balance to zap.");
         return;
@@ -37,18 +37,13 @@ export const sendZap = async (message = 'Zap from Olas', sats: number, event: ND
 
         const pendingPayment = addPendingPayment(zapper);
 
-        console.log('👉 zap pending payment', pendingPayment);
-
         if (wallet instanceof NDKNWCWallet) {
             zapper.on('ln_invoice', ({ recipientPubkey, type, pr }) => {
-                console.log('👉 zap invoice', pr, recipientPubkey, type);
                 addNWCZap({ event, recipientPubkey, pr, zapType: type, pendingPaymentId: pendingPayment.internalId });
             })
         }
 
         await zapper.zap();
-
-        // console.log('zap result', res);
     } catch (error: any) {
         console.error('Error while zapping:', error);
         toast.error(error.message);
@@ -66,7 +61,7 @@ export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser,
         return !!(activeWallet instanceof NDKCashuWallet);
     }, [activeWallet?.walletId]);
 
-    const pendingZapAmount = useMemo(() => pendingZaps.reduce((acc, zap) => zap.zapper.amount + acc, 0), [pendingZaps.length]);
+    const pendingZapAmount = useMemo(() => pendingZaps.reduce((acc, zap) => amountInSats(zap.zapper) + acc, 0), [pendingZaps.length]);
 
     const sendZapWithAmount = useCallback(async (message: string, amount: number) => {
         await sendZap(message, amount, event, activeWallet, addPendingPayment, withFallbackZap);
@@ -81,7 +76,7 @@ export default function Zaps({ event, inactiveColor, zappedAmount, zappedByUser,
                 style={styles.touchable}>
                 <Lightning size={iconSize} stroke={color} strokeWidth={2} fill={(zappedByUser || pendingZapAmount > 0) ? color : 'none'} />
             </Pressable>
-            <Text style={[styles.text, { color: inactiveColor }]}>{nicelyFormattedMilliSatNumber(zappedAmount + pendingZapAmount)}</Text>
+            <Text style={[styles.text, { color: inactiveColor }]}>{nicelyFormattedSatNumber(zappedAmount + pendingZapAmount)}</Text>
         </View>
     );
 }

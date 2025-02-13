@@ -11,6 +11,7 @@ import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
 import { usePostEditorStore } from '@/lib/post-editor/store';
 import { useMemo } from 'react';
+import WalletButton from '@/components/buttons/wallet';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -111,7 +112,7 @@ export default function TabsLayout() {
                     title: 'Wallets',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <Lightning width={24} height={24} strokeWidth={focused ? 2.5 : 2} fill={focused ? color : "transparent"}  stroke={color} />
+                        <WalletButton focused={focused} color={color} />
                     ),
                 }}
             />

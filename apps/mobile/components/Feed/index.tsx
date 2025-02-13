@@ -1,11 +1,9 @@
 import { NDKEvent, NDKEventId, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
-import { ForwardedRef, forwardRef, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Dimensions, Pressable, RefreshControl, View } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import { ArrowUp } from "lucide-react-native";
+import { Pressable, RefreshControl, Text } from "react-native";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
@@ -126,8 +124,6 @@ export default function Feed({
 
         return ret;
     }, [entries, prepend])
-
-    const openPostBottomSheet = usePostBottomSheet();
 
     const renderItem = useCallback(({ item, index }: { item: FeedEntry, index: number }) => {
         if (numColumns === 1) return <FeedItem item={item} index={index} _onPress={_onPress} />

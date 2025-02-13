@@ -1,4 +1,4 @@
-import { NDKCashuMintList, NDKKind, useNDK, useNDKCurrentUser, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEventKindAsync, useNDKSessionEvents, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'react-native';
 import { Icon } from '@roninoss/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -37,20 +37,8 @@ export default function WalletsScreen() {
         setActiveWallet(wallet);
     };
 
-    const loadedWalletIds = useRef(new Set<string>());
-    const [loadedWallets, setLoadedWallets] = useState<NDKCashuWallet[]>([]);
+    const nip60Wallet = useNDKSessionEventKindAsync<NDKCashuWallet>(NDKCashuWallet);
     
-    useEffect(() => {
-        if (!ndk) return;
-        wallets.forEach((wallet) => {
-            if (loadedWalletIds.current.has(wallet.id)) return;
-            loadedWalletIds.current.add(wallet.id);
-            NDKCashuWallet.from(wallet).then((w) => {
-                setLoadedWallets((prev) => [...prev, w]);
-            });
-        });
-    }, [ndk, wallets.length, mintList?.[0]?.id]);
-
     const [primalSupported, setPrimalSupported] = useState(false);
 
     useEffect(() => {
@@ -65,37 +53,34 @@ export default function WalletsScreen() {
     const data = useMemo(() => {
         if (!ndk) return [];
 
-        const mintListP2pk = mintList?.[0]?.p2pk;
+        const options: ListDataItem[] = [];
 
-        const options = loadedWallets
-            .map((wallet) => ({
-                id: wallet.walletId,
-                title: wallet.name,
-                titleClassName: wallet.p2pk === mintListP2pk ? 'font-bold text-green-500' : '',
-                subTitle: (wallet.p2pk === mintListP2pk ? "Nutzap wallet" : ""),
-                onPress: () => activateWallet(wallet),
-                rightView: <Text className="text-sm text-muted-foreground mr-2">{wallet.mints.length} mint(s)</Text>,
-            }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
-
-        if (options.length > 0) {
-            options.unshift('Nostr-Native Wallets');
-        }
-
-        options.push('New Wallet');
-
-        options.push({
-            id: 'nip60',
-            title: 'Nostr-Native Wallet',
-            leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
-            subTitle: 'Create a new NIP-60 wallet',
-            disabled: true,
-            onPress: () => {
-                newWallet().then(() => {
+        if (nip60Wallet) {
+            options.push({
+                id: 'nip60',
+                title: 'Nostr-Native Wallet',
+                leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
+                subTitle: 'Use nostr-native NIP-60 wallet',
+                disabled: true,
+                onPress: () => {
+                    activateWallet(nip60Wallet);
                     router.back();
-                });
-            },
-        });
+                },
+            });
+        } else {
+            options.push({
+                id: 'nip60',
+                title: 'Nostr-Native Wallet',
+                leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
+                subTitle: 'Create a nostr-native NIP-60 wallet',
+                disabled: true,
+                onPress: () => {
+                    newWallet().then(() => {
+                        router.back();
+                    });
+                },
+            });
+        }
 
         options.push({
             id: 'nwc',
@@ -107,7 +92,7 @@ export default function WalletsScreen() {
             },
         });
 
-        if (primalSupported || true) {
+        if (primalSupported) {
             options.push('Wallet Apps')
             
             options.push({
@@ -122,7 +107,7 @@ export default function WalletsScreen() {
         }
 
         return options;
-    }, [searchText, loadedWallets, primalSupported]);
+    }, [searchText, !!primalSupported, !!nip60Wallet]);
 
     function save() {
         SecureStore.setItemAsync('relays', relays.map((r) => r.url).join(','));

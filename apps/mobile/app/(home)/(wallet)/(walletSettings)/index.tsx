@@ -1,4 +1,4 @@
-import { useNDK, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,10 +15,12 @@ import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList);
     const { activeWallet, balance, setActiveWallet } = useNDKWallet();
     const [syncing, setSyncing] = useState(false);
     const { colors } = useColorScheme();
     console.log('balance', balance);
+    console.log('mintlist', JSON.stringify(mintList?.rawEvent?.(), null, 4));
 
     useEffect(() => {
         console.log('use effect balance', balance);
@@ -93,6 +95,13 @@ export default function WalletSettings() {
             'Tools',
 
             {
+                id: 'nutzaps',
+                title: 'Nutzaps',
+                subTitle: "See status of your nutzaps",
+                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/nutzaps'),
+            },
+
+            {
                 id: '4',
                 title: 'Force-Sync',
                 onPress: forceSync,
@@ -117,7 +126,7 @@ export default function WalletSettings() {
                 onPress: () => showDeleteActionSheet(activeWallet as NDKCashuWallet)
             })
             
-            opts.push(`P2PK: ${activeWallet.p2pk ? activeWallet.p2pk : 'Not set'}`);
+            opts.push(`P2PK: ${mintList?.p2pk ? mintList.p2pk : 'Not set'}`);
         }
 
         if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {

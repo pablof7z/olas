@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { searchQueryAtom, useSearchQuery } from "./store";
 import { TextInput, View } from "react-native";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
-import { feedTypeAtom, searchInputRefAtom } from "@/components/FeedType/store";
-import { NDKCacheAdapterSqlite, NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { searchInputRefAtom } from "@/components/FeedType/store";
+import { NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 
 export default function SearchInput() {
@@ -51,8 +51,6 @@ export default function SearchInput() {
         setSearchQuery(input.trim());
     }, [setSearchQuery])
 
-    const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
-    
     const handleInputChange = useCallback((text: string) => {
         if (text.startsWith('@')) {
             // find usernames that match the input

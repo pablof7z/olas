@@ -1,6 +1,5 @@
-import { Icon, MaterialIconName } from '@roninoss/icons';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import {
@@ -14,26 +13,24 @@ import {
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router, Stack, Tabs } from 'expo-router';
-import { CashuMint, GetInfoResponse } from '@cashu/cashu-ts';
-import { NDKCashuMintList, useNDKSession, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { GetInfoResponse } from '@cashu/cashu-ts';
+import { NDKCashuMintList, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export default function MintsScreen() {
     const { ndk } = useNDK();
-    const { activeWallet } = useNDKWallet();
+    const { activeWallet } = useNDKWallet() as { activeWallet: NDKCashuWallet };
     const [ searchText, setSearchText ] = useState<string | null>(null);
     const [url, setUrl] = useState<string>("");
     const [mints, setMints] = useState<string[]>(activeWallet?.mints??[]);
 
     const filter = useMemo(() => ([{ kinds: [38172], limit: 50 }]), [1]);
     const opts = useMemo(() => ({ groupable: false, closeOnEose: true, subId: 'mints' }), []);
-    const { events: mintList } = useSubscribe({ filters: filter, opts });
+    const { events: mintList } = useSubscribe(filter, opts);
     const [mintInfos, setMintInfos] = useState<Record<string, GetInfoResponse | null>>({});
-
-    const insets = useSafeAreaInsets();
 
     const addFn = useCallback(() => {
         console.log("addFn", url)
