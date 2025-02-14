@@ -191,7 +191,7 @@ export default function Profile() {
                 ) : (
                     <Feed
                         filters={filters}
-                        filterKey="1"
+                        filterKey={pubkey}
                         numColumns={3}
                     />
                 )}

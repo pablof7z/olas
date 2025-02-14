@@ -167,7 +167,6 @@ export function useFeedEvents(
     // }, [isMutedEvent, pubkeyBlacklist, filterFn]);
 
     useEffect(() => {
-        console.log('running mute and blacklist checks')
         // check if any of the entries or new entries are muted or blacklisted, if anything changes
         // set the value
         let changed = false;
@@ -463,31 +462,66 @@ export function useFeedEvents(
  * @param sliceSize Sice of the slice
  */
 type Slice = {
-    start: number;
-    end: number;
+    /** The event IDs in this slice */
+    eventIds: string[];
+    /** Original start index in the events array */
+    startIndex: number;
+    /** Original end index in the events array */
+    endIndex: number;
     sub?: NDKSubscription;
     removeTimeout?: NodeJS.Timeout;
+};
+
+const sliceToFilter = (slice: Slice): NDKFilter[] => {
+    return [{ '#e': slice.eventIds }];
+};
+
+function calcNeededSlices(
+    currentIndex: number,
+    sliceSize: number,
+    events: NDKEvent[],
+) {
+    const slices: Slice[] = [];
+    const totalLength = events.length;
+    
+    // Create slices around current position
+    const ranges = [
+        { // Previous slice
+            start: Math.max(0, currentIndex - sliceSize),
+            end: currentIndex
+        },
+        { // Next slice
+            start: currentIndex,
+            end: Math.min(totalLength, currentIndex + sliceSize)
+        }
+    ];
+
+    ranges.forEach(({ start, end }) => {
+        if (start >= end) return;
+        
+        const sliceEvents = events.slice(start, end);
+        if (sliceEvents.length === 0) return;
+
+        slices.push({
+            eventIds: sliceEvents.map(e => e.id),
+            startIndex: start,
+            endIndex: end
+        });
+    });
+
+    return slices;
 }
+
 export function useFeedMonitor(
     events: NDKEvent[],
     sliceSize = 5
 ) {
     const { ndk } = useNDK();
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const activeIds = useRef<Set<string>>(new Set());
     const activeSlices = useRef<Slice[]>([]);
     const currentUser = useNDKCurrentUser();
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
-
-    const sliceToFilter = (slice: Slice): NDKFilter[] => {
-        const filterValues: Record<string, string[]> = {};
-        events.slice(slice.start, slice.end)
-            .flatMap(event => Object.entries(event.filter()))
-            .forEach(([key, value]) => {
-                filterValues[key] ??= [];
-                filterValues[key].push(value[0]);
-            });
-        return Object.entries(filterValues).map(([key, value]) => ({ [key]: value }));
-    }
 
     // useEffect(() => {
     //     if
@@ -499,39 +533,57 @@ export function useFeedMonitor(
     //     eventsRef.current.set(id, event);
     // }
 
-    const addSlice = (slice: Slice) => {
-        if (slice.end - slice.start < sliceSize) {
-            return;
+    const addSlice = (newSlice: Slice) => {
+        if (newSlice.eventIds.length === 0) return;
+
+        const idsToAdd = new Set(newSlice.eventIds);
+        for (const id of idsToAdd) {
+            if (activeIds.current.has(id)) idsToAdd.delete(id);
         }
-        
-        const filters = sliceToFilter(slice);
-        slice.sub = ndk.subscribe(filters, {
+
+        if (idsToAdd.size === 0) return;
+
+        newSlice.eventIds = Array.from(idsToAdd);
+
+        const filters = [{ '#e': newSlice.eventIds }];
+        newSlice.sub = ndk.subscribe(filters, {
             cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
             closeOnEose: false,
             groupable: false,
             skipVerification: true,
-            subId: `feedmonitor-${slice.start}:${slice.end}`
+            subId: `feedmonitor-${newSlice.startIndex}-${newSlice.endIndex}`
         }, undefined, {
             onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey)
         });
-        activeSlices.current.push(slice);
+        activeSlices.current.push(newSlice);
+        for (const id of newSlice.eventIds) {
+            activeIds.current.add(id);
+        }
     }
 
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
             slice.sub.stop();
-            activeSlices.current = activeSlices.current.filter(s => s.start !== slice.start);
+            activeSlices.current = activeSlices.current.filter(s => s.eventIds[0] !== slice.eventIds[0]);
+            for (const id of slice.eventIds) {
+                activeIds.current.delete(id);
+            }
         }, 500)
     }
 
     useEffect(() => {
-        if (activeIndex === null) return;
+        if (activeIndex === null) {
+            console.log('no active index, skipping')
+            return;
+        } else {
+            console.log('active index', activeIndex)
+        }
 
-        const neededSlices = calcNeededSlices(activeIndex, sliceSize, events.length)
+        const neededSlices = calcNeededSlices(activeIndex, sliceSize, events)
 
         // go through the slices we have and determine what we should remove
         for (const activeSlice of activeSlices.current) {
-            const keep = neededSlices.find(slice => slice.start === activeSlice.start);
+            const keep = neededSlices.find(slice => slice.eventIds[0] === activeSlice.eventIds[0]);
 
             if (!keep) {
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
@@ -543,18 +595,18 @@ export function useFeedMonitor(
 
         // go through the slices we want and determine what we need to add
         for (const neededSlice of neededSlices) {
-            const exists = activeSlices.current.find(slice => slice.start === neededSlice.start);
+            const exists = activeSlices.current.find(slice => slice.eventIds[0] === neededSlice.eventIds[0]);
 
             if (!exists) addSlice(neededSlice)
         }
 
         // // clean up active subs on unmount
         
-    }, [activeIndex, events.length < sliceSize]);
+    }, [activeIndex !== null ? events[activeIndex]?.id : null, events.length < sliceSize]);
 
     useEffect(() => {
         return () => {
-            console.log('unmounting feed monitor', activeSlices.current.map(s => s.start).join(', '), { eventsLength: events.length, sliceSize, activeIndex });
+            console.log('unmounting feed monitor', activeSlices.current.map(s => s.eventIds[0]).join(', '), { eventsLength: events.length, sliceSize, activeIndex });
             activeSlices.current.forEach(slice => slice.sub.stop());
         }
     }, [])
@@ -562,46 +614,4 @@ export function useFeedMonitor(
     return {
         setActiveIndex
     };
-}
-
-function calcNeededSlices(
-    currentIndex,
-    sliceSize,
-    totalLength,
-) {
-    const currentSlice: Slice = {
-        start: currentIndex - (currentIndex % sliceSize),
-        end: (currentIndex - (currentIndex % sliceSize)) + sliceSize
-    };
-    const prevSlice: Slice = {
-        start: currentSlice.start - sliceSize,
-        end: currentSlice.end - sliceSize,
-    }
-    const nextSlice: Slice = {
-        start: currentSlice.start + sliceSize,
-        end: currentSlice.end + sliceSize,
-    }
-
-    const mapSlices = (slice: Slice): Slice | null => {
-        // if we are finishing before 0 then this is an invalid slice
-        if (slice.end <= 0) return null;
-
-        // if we are starting after the end this is an invalid slice
-        if (slice.start > totalLength) return null;
-
-        if (slice.start < 0) slice.start = 0;
-        if (slice.end > totalLength) slice.end = totalLength;
-
-        return slice;
-    }
-
-    let slices = [ prevSlice, currentSlice, nextSlice ];
-    // console.log('before', slices, { currentIndex, sliceSize, totalLength})
-    slices = slices
-        .map(mapSlices)
-        .filter(slice => slice !== null)
-    
-    // console.log('calculated slices');
-    // slices.forEach(s => console.log(`from ${s.start} to ${s.end}`))
-    return slices;
 }

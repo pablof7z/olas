@@ -1,10 +1,11 @@
 import { toast } from "@backpackapp-io/react-native-toast";
-import { useNDKNutzapMonitor, useNDKCurrentUser, NDKNutzap, useNDK, NDKKind } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKNutzapMonitor, useNDKCurrentUser, NDKNutzap, useNDK, NDKKind, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import { migrateCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import { useState, useRef, useEffect, useCallback } from "react";
 
 export default function NutzapMonitor() {
     const [start, setStart] = useState(false);
+    const { activeWallet } = useNDKWallet();
     const { nutzapMonitor } = useNDKNutzapMonitor(start);
     const currentUser = useNDKCurrentUser();
     const {ndk} = useNDK();
@@ -34,14 +35,11 @@ export default function NutzapMonitor() {
         // don't start if already started
         if (start) return;
 
-        setTimeout(() => setStart(true), 1000);
-    }, [currentUser?.pubkey, start, hasOldWallets])
+        // don't start if we don't have an active wallet
+        if (!activeWallet?.walletId) return;
+
+        setTimeout(() => setStart(true), 2000);
+    }, [currentUser?.pubkey, start, hasOldWallets, activeWallet?.walletId])
     
     if (!nutzapMonitor) return null;
-
-    // nutzapMonitor.on("seen", (event) => {
-    //     console.log("seen", JSON.stringify(event.rawEvent(), null, 4));
-    //     console.log(`https://njump.me/${event.encode()}`)
-    //     // toast.success("Received a nutzap for " + event.amount + " " + event.unit);
-    // });
 }
