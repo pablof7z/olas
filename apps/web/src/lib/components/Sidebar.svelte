@@ -48,6 +48,8 @@
 				console.log('user', user);
 				setCurrentUser(user);
 			});
+		} else {
+			openLoginModal = true;
 		}
 	}
 
@@ -109,6 +111,7 @@
 	});
 
 	let openModal = $state(false);
+	let openLoginModal = $state(false);
 </script>
 
 <aside
@@ -236,6 +239,27 @@
 
 				<Form.Button class="bg-blue-500">Submit</Form.Button>
 			</form>
+		</Dialog.Header>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={openLoginModal}>
+	<Dialog.Content class="max-w-[450px]">
+		<Dialog.Header>
+			<Dialog.Title>Use a nostr extension for login</Dialog.Title>
+			<ul class="m-4 list-disc">
+				<li class="my-2">
+					<a href="https://getalby.com/" target="_blank" class="text-blue-500">Alby</a>
+				</li>
+				<li class="my-2">
+					<a
+						href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp"
+						target="_blank"
+						class="text-blue-500"
+						>nos2x
+					</a>
+				</li>
+			</ul>
 		</Dialog.Header>
 	</Dialog.Content>
 </Dialog.Root>
