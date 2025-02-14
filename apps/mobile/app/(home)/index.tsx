@@ -327,6 +327,7 @@ function hashtagSearch(hashtag: string) {
         key: 'hashtag-' + hashtag,
         filterFn: null,
         relayUrls: undefined,
+        numColumns: 3,
     }
 }
 
@@ -336,6 +337,7 @@ function textSearch(text: string) {
         key: 'search-' + text,
         filterFn: null,
         relayUrls: nip50Relays,
+        numColumns: 3,
     }
 }
 
@@ -361,7 +363,7 @@ function DataList() {
 
     const searchQuery = useAtomValue(searchQueryAtom);
 
-    const { filters, key, filterFn, relayUrls } = useMemo(() => {
+    const { filters, key, filterFn, relayUrls, numColumns } = useMemo(() => {
         let numColumns = 1;
         if (searchQuery) {
             // is a single word?
@@ -379,7 +381,7 @@ function DataList() {
         } else if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') {
             if (bookmarkIdsForFilter.length === 0) return { filters: undefined, key: 'empty' };
             return {
-                filters: [ { ids: bookmarkIdsForFilter } ], key: 'bookmark-feed'+bookmarkIdsForFilter.length
+                filters: [ { ids: bookmarkIdsForFilter } ], key: 'bookmark-feed'+bookmarkIdsForFilter.length, numColumns: 1
             };
         }
         
@@ -454,7 +456,7 @@ function DataList() {
                 relayUrls={relayUrls}
                 filterKey={key}
                 filterFn={filterFn}
-                numColumns={1}
+                numColumns={numColumns}
             />
         </View>
     );
