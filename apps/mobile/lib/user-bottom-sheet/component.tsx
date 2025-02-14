@@ -23,8 +23,6 @@ export default function BottomSheet() {
     const ref = useSheetRef();
     const [ user, setUser ] = useAtom(userBottomSheetAtom);
 
-    const userProfile = useUserProfile(user?.pubkey);
-
     useEffect(() => {
         if (!ref) return;
 
@@ -40,22 +38,18 @@ export default function BottomSheet() {
         setUser(null);
     }, [setUser]);
 
-    const { colors } = useColorScheme();
-    
-    const feedEditorRef = useAtomValue(feedEditorBottomSheetRefAtom);
-    const feedEditorStore = useFeedEditorStore();
-    const handleAddToCollection = useCallback(() => {
-        feedEditorStore.setMode('edit');
-        feedEditorStore.setPubkeys([user?.pubkey]);
-        feedEditorRef.current?.present();
-        feedEditorRef.current?.expand();
-    }, [feedEditorRef, feedEditorStore, user?.pubkey]);
+    const close = useCallback(() => {
+        ref.current?.dismiss();
+    }, [ref]);
 
-    const { ndk } = useNDK();
-
-    
-
-    const followType = useFollowType(user?.pubkey);
+    // const feedEditorRef = useAtomValue(feedEditorBottomSheetRefAtom);
+    // const feedEditorStore = useFeedEditorStore();
+    // const handleAddToCollection = useCallback(() => {
+    //     feedEditorStore.setMode('edit');
+    //     feedEditorStore.setPubkeys([user?.pubkey]);
+    //     feedEditorRef.current?.present();
+    //     feedEditorRef.current?.expand();
+    // }, [feedEditorRef, feedEditorStore, user?.pubkey]);
 
     return <Sheet ref={ref} onDismiss={handleDismiss}>
         <BottomSheetView style={styles.container}>
@@ -69,9 +63,9 @@ export default function BottomSheet() {
                 </View>
             )} */}
             <View style={styles.buttonContainer}>
-                <FollowButton user={user} />
+                <FollowButton user={user} close={close} />
 
-                <PrivateFollowButton user={user} style={styles.buttonItem} /> 
+                <PrivateFollowButton user={user} style={styles.buttonItem} close={close} /> 
                 
                 {/* <Button variant="secondary"  onPress={handleAddToCollection}>
                     <Bookmark size={38} color1={colors.grey2} color2={colors.grey5} />
@@ -101,20 +95,21 @@ function Btn({ active, Icon, children, onPress }: { active: boolean, Icon: React
     </Button>
 }
 
-function FollowButton({ user }: { user: NDKUser }) {
+function FollowButton({ user, close }: { user: NDKUser, close: () => void }) {
     const { ndk } = useNDK();
     const followType = useFollowType(user?.pubkey);
 
     const handleFollow = useCallback(() => {
         if (!user || !ndk) return;
         publishFollow(ndk, user.pubkey);
+        close();
     }, [user?.pubkey, ndk]);
 
     return <Btn active={followType !== 'private'} Icon={FollowIcon} onPress={handleFollow}>
         <Text>Follow</Text>
     </Btn>
 }
-function PrivateFollowButton({ user, style }: { user: NDKUser, style: StyleProp<ViewStyle> }) {
+function PrivateFollowButton({ user, style, close }: { user: NDKUser, style: StyleProp<ViewStyle>, close: () => void }) {
     const addPrivateFollow = usePrivateFollows((state) => state.add);
     const removePrivateFollow = usePrivateFollows((state) => state.remove);
     const followType = useFollowType(user?.pubkey);
@@ -126,6 +121,7 @@ function PrivateFollowButton({ user, style }: { user: NDKUser, style: StyleProp<
         } else {
             addPrivateFollow(user.pubkey);
         }
+        close();
     }, [user?.pubkey, followType]);
 
     const active = followType === 'private';

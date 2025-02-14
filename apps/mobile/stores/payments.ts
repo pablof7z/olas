@@ -26,6 +26,7 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
 
         const removeZap = () => {
             set((state) => {
+                console.log('calling remove zap');
                 const val = new Map(state.pendingPayments);
                 const id = getZapperTargetId(zapper);
                 let curr = val.get(id) || [];
@@ -37,16 +38,18 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
         }
 
         zapper.once('complete', (results: Map<NDKZapSplit, NDKPaymentConfirmation | Error | undefined>) => {
-            console.log('complete', Array.from(results.values()))
             const error = Array.from(results.values()).find((result) => result instanceof Error)
             if (error) {
                 toast.error(error.message);
             }
+
+            console.log('removing zap from complete');
             
             removeZap();
         });
 
         set((state) => {
+            console.log('adding zap to pending payments');
             const copy = new Map(state.pendingPayments);
             const id = getZapperTargetId(zapper);
             const pending = copy.get(id) || [];
@@ -56,7 +59,10 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
         });
 
         waitForZap(zapper)
-            .then(() => removeZap());
+            .then(() => {
+                console.log('removing zap from waitForZap');
+                removeZap();
+            });
 
         return pendingZap;
     }
@@ -69,6 +75,11 @@ function getZapperTargetId(zapper: NDKZapper) {
     throw "Unexpected target id type";
 }
 
+/**
+ * This function starts a subscription that will wait for a zap to be seen.
+ * @param zapper 
+ * @returns 
+ */
 async function waitForZap(zapper: NDKZapper) {
     const { ndk } = zapper;
     const user = ndk.activeUser;
@@ -76,14 +87,19 @@ async function waitForZap(zapper: NDKZapper) {
     if (!user) throw "active user not set in NDK"
     
     let filters: NDKFilter[] = [
-        { kinds: [NDKKind.Zap], "#P": [user.pubkey], ...zapper.target.filter() },
-        { kinds: [NDKKind.Nutzap], authors: [user.pubkey], ...zapper.target.filter() },
+        { kinds: [NDKKind.Zap], "#P": [user.pubkey], limit: 0, ...zapper.target.filter() },
+        { kinds: [NDKKind.Nutzap], authors: [user.pubkey], limit: 0, ...zapper.target.filter() },
     ]
-
-    console.log("waiting for zap event")
-
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         const sub = ndk.subscribe(filters)
-        sub.on("event", resolve)
+        const timeout = setTimeout(() => {
+            console.log('timeout waiting for a zap to be seen with filter', zapper.target.filter());
+            sub.stop();
+        }, 60000)
+        sub.on("event", () => {
+            clearTimeout(timeout);
+            sub.stop();
+            resolve()
+        })
     });
 }

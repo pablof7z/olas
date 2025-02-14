@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { searchQueryAtom, useSearchQuery } from "./store";
-import { TextInput, View } from "react-native";
+import { TextInput, View, StyleSheet, Pressable } from "react-native";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
-import { feedTypeAtom, searchInputRefAtom } from "@/components/FeedType/store";
-import { NDKCacheAdapterSqlite, NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { searchInputRefAtom } from "@/components/FeedType/store";
+import { NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { Search } from "lucide-react-native";
 
 export default function SearchInput() {
     const searchQuery = useAtomValue(searchQueryAtom);
@@ -51,8 +53,6 @@ export default function SearchInput() {
         setSearchQuery(input.trim());
     }, [setSearchQuery])
 
-    const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
-    
     const handleInputChange = useCallback((text: string) => {
         if (text.startsWith('@')) {
             // find usernames that match the input
@@ -63,8 +63,10 @@ export default function SearchInput() {
         setInput(text);
     }, [input, setInput]);
 
+    const {colors} = useColorScheme();
+
     return (
-        <View className="flex-1 flex-row gap-2">
+        <View style={styles.container}>
             <TextInput
                 ref={inputRef}
                 placeholder="Search"
@@ -72,16 +74,29 @@ export default function SearchInput() {
                 value={input}
                 autoCapitalize="none"
                 autoComplete="off"
-                className="text-xl font-semibold text-foreground"
+                style={[styles.input, { color: colors.foreground }]}
                 autoCorrect={false}
                 onSubmitEditing={() => search(input)}
             />
 
-            {/* <Button variant="plain" onPress={() => setSearchQuery(input)}>
+            <Pressable onPress={() => setSearchQuery(input)}>
                 <Search size={24} color={colors.foreground} />  
-            </Button> */}
+            </Pressable>
         </View>
     )
 }
 
 
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        flexDirection: 'row',
+        gap: 8,
+        alignItems: 'flex-end',
+    },
+    input: {
+        flex: 1,
+        fontSize: 18,
+        fontWeight: 'semibold',
+    }
+})

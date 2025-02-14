@@ -10,11 +10,13 @@ import { StyleSheet } from 'react-native';
 import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import NDK, {
-    NDKCacheAdapterSqlite,
+import {
     NDKEventWithFrom,
     useNDKCurrentUser,
-    useNDKCacheInitialized,
+    NDKCashuMintList,
+    NDKSubscriptionCacheUsage,
+    useNDKInit,
+    useNDKSessionInitWallet,
 } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -25,7 +27,6 @@ import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNDK, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
 import { useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
@@ -39,8 +40,6 @@ import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { COMMUNITIES_ENABLED, DEV_BUILD, mainKinds, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import { initialize } from '@/stores/db';
-import { getRelays } from '@/stores/db/relays';
 import NutzapMonitor from '@/components/cashu/nutzap-monitor';
 import { useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
@@ -49,62 +48,73 @@ import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import { useReactionsStore } from '@/stores/reactions';
 import {CommunityBottomSheet} from '@/lib/post-editor/sheets/CommunityBottomSheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
+import { initializeNDK, timeZero } from '@/lib/ndk';
+import { LogBox } from 'react-native';
+import { settingsStore } from '@/lib/settings-store';
 
-export const timeZero = Date.now();
+LogBox.ignoreAllLogs();
 
-
-initialize();
-
-const cacheAdapter = new NDKCacheAdapterSqlite('olas');
+const currentUserInSettings = SecureStore.getItem('currentUser');
+const ndk = initializeNDK(currentUserInSettings);
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
     [NDKKind.ImageCurationSet, { wrapper: NDKList }],
+    [NDKKind.CashuMintList, { wrapper: NDKCashuMintList }],
     [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
     [NDKKind.SimpleGroupList, { wrapper: NDKList }],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
-const settingsStore = {
-    get: SecureStore.getItemAsync,
-    set: SecureStore.setItemAsync,
-    delete: SecureStore.deleteItemAsync,
-    getSync: SecureStore.getItem,
-};
+const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
+    const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
+    const headerShown = Platform.OS !== 'ios';
 
-const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-    const url = new URL(relay.url);
-    if (direction === 'send' && relay.url.match(/nwc/i)) console.log('👉', url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && relay.url.match(/nwc/i)) console.log('👈', url.hostname, msg.slice(0, 400));
-};
+    return { presentation, headerShown, ...opts };
+}
 
-let timeSinceFirstRender = undefined;
+function useAppSub(pubkey: string | null, dependencies: any[]) {
+    const addReactionEvent = useReactionsStore((state) => state.addEvent);
+    const eventFetched = useRef(0);
+    useEffect(() => {
+        if (!pubkey) return;
+        const timeSinceLastAppSync = SecureStore.getItem('timeSinceLastAppSync');
+        const sinceFilter = timeSinceLastAppSync ? { since: parseInt(timeSinceLastAppSync), limit: 1 } : {};
+
+        const kindString = Array.from(mainKinds).map((k) => k.toString());
+
+        const filters = [
+            { kinds: [NDKKind.Text], '#k': kindString, 'authors': [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [pubkey], ...sinceFilter },
+            // { authors: [user.pubkey], limit: 100 },
+        ];
+
+        const appSub = ndk.subscribe(filters, { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' }, undefined, false);
+        
+        appSub.on("event", (event) => {
+            addReactionEvent(event, pubkey);
+            eventFetched.current++;
+        });
+
+        appSub.on("eose", () => {
+            const time = Math.floor(Date.now() / 1000);
+            SecureStore.setItem('timeSinceLastAppSync', time.toString());
+        });
+
+        setTimeout(() => {
+            appSub.start();
+        }, 10000);
+    }, dependencies);
+}
 
 export default function RootLayout() {
-    const [appReady, setAppReady] = useState(false);
-    const cacheInitialized = useNDKCacheInitialized();
+    const [appReady, setAppReady] = useState(!!currentUserInSettings);
     // const [wotReady, setWotReady] = useState(false);
 
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
-
-    const relays = getRelays();
-    const filteredRelays = relays.filter((r) => {
-        try {
-            return new URL(r.url).protocol.startsWith('ws');
-        } catch (e) {
-            return false;
-        }
-    });
-
-    // if there are no relays... we add a few defaults. Otherwise we don't
-    if (filteredRelays.length === 0) {
-        filteredRelays.push({ url: 'wss://relay.olas.app/', connect: true });
-        filteredRelays.push({ url: 'wss://purplepag.es/', connect: true });
-        filteredRelays.push({ url: 'wss://relay.primal.net/', connect: true });
-    }
-
-    const connectRelays = filteredRelays.filter((r) => r.connect);
-    const blacklistedRelays = filteredRelays.filter((r) => !r.connect);
 
     // // check if we have relay.olas.app, if not, add it
     // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
@@ -115,16 +125,13 @@ export default function RootLayout() {
     //     relays.unshift('wss://purplepag.es/');
     // }
 
-    const { ndk, init: initializeNDK } = useNDK();
+    useNDKInit(ndk, settingsStore);
+
     const initializeSession = useNDKSessionInit();
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const currentUser = useNDKCurrentUser();
     const timeoutRef = useRef(null);
     const setFeedType = useSetAtom(feedTypeAtom);
-
-    // useEffect(() => { console.log('ndk changed', !!ndk, Date.now() - timeSinceFirstRender); }, [ndk])
-    // useEffect(() => { console.log('initializeSession changed', !!initializeSession, Date.now() - timeSinceFirstRender); }, [initializeSession])
-    // useEffect(() => { console.log('currentUser changed', !!currentUser, Date.now() - timeSinceFirstRender); }, [currentUser])
 
     useEffect(() => {
         const storedFeed = SettingsStore.getItem('feed');
@@ -151,63 +158,12 @@ export default function RootLayout() {
         setFeedType(feedType);
     }, []);
 
-    useEffect(() => {
-        if (ndk) ndk.connect();
-    }, [ndk]);
-
-    const addReactionEvent = useReactionsStore((state) => state.addEvent);
+    useAppSub(currentUser?.pubkey, [(!ndk || !currentUser?.pubkey || !appReady), currentUser?.pubkey]);
 
     useEffect(() => {
-        if (!ndk || !currentUser?.pubkey || !appReady) return;
+        if (!currentUser?.pubkey) return;
 
-        const timeSinceLastAppSync = SecureStore.getItem('timeSinceLastAppSync');
-        const sinceFilter = timeSinceLastAppSync ? { since: parseInt(timeSinceLastAppSync) } : {};
-
-        const kindString = Array.from(mainKinds).map((k) => k.toString());
-
-        const filters = [
-            { kinds: [NDKKind.Text], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentUser.pubkey] },
-            { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey], ...sinceFilter },
-            { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [currentUser.pubkey], ...sinceFilter },
-            // { authors: [user.pubkey], limit: 100 },
-        ];
-
-        ndk.subscribe(filters, { groupable: false, skipVerification: true, subId: 'main-sub', cacheUnconstrainFilter: ['#p'] }, undefined, {
-            onEvent: (event) => {
-                addReactionEvent(event, currentUser.pubkey);
-            },
-            onEose: () => {
-                const time = Date.now() / 1000;
-                SecureStore.setItem('timeSinceLastAppSync', time.toString());
-            },
-        });
-    }, [ndk, currentUser?.pubkey, appReady]);
-
-    // useEffect(() => {
-    //     if (!ndk) return;
-    //     if (!appReady) {
-    //         console.log('setting app ready');
-    //         setAppReady(true);
-    //         if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    //     }
-    // }, [ndk])
-
-    useEffect(() => {
-        if (appReady) return;
-
-        if (!timeoutRef.current) {
-            timeoutRef.current = setTimeout(() => {
-                if (!appReady) {
-                    console.log("app wasn't ready, so timing out");
-                    setAppReady(true);
-                }
-            }, 1000);
-        }
-
-        if (!ndk || !currentUser?.pubkey || !cacheInitialized) return;
+        console.log('initializing session');
 
         initializeSession(
             ndk,
@@ -231,33 +187,13 @@ export default function RootLayout() {
                 // onWotReady: () => setWotReady(true),
             }
         );
-    }, [ndk, currentUser?.pubkey, cacheInitialized, appReady]);
+    }, [currentUser?.pubkey]);
 
     useEffect(() => {
-        const currentUserInSettings = SecureStore.getItem('currentUser');
-
-        const opts: any = {};
-        if (DEV_BUILD) opts.netDebug = netDebug;
-
-        initializeNDK({
-            explicitRelayUrls: connectRelays.map((r) => r.url),
-            blacklistRelayUrls: blacklistedRelays.map((r) => r.url),
-            cacheAdapter,
-            enableOutboxModel: true,
-            initialValidationRatio: 0.0,
-            lowestValidationRatio: 0.0,
-            clientName: 'olas',
-            clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
-            settingsStore,
-            ...opts,
-        });
-
         if (!currentUserInSettings) {
             console.log('there was no current user in settings, so setting app ready');
             setAppReady(true);
             // setWotReady(true);
-        } else {
-            console.log('there was a current user in settings, so not setting app ready');
         }
     }, []);
 
@@ -274,9 +210,9 @@ export default function RootLayout() {
 
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
+
     useEffect(() => {
         initAppSettings();
-
         // Configure push notifications
         // configurePushNotifications();
 
@@ -297,19 +233,10 @@ export default function RootLayout() {
         // };
     }, []);
 
-    if (!timeSinceFirstRender) timeSinceFirstRender = Date.now();
-    // console.log('app layout rerender', Date.now() - timeSinceFirstRender);
+    useEffect(() => {
 
-    const modalPresentation = useCallback(
-        (opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
-            const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
-            const headerShown = Platform.OS !== 'ios';
-
-            return { presentation, headerShown, ...opts };
-        },
-        []
-    );
-
+    })
+    
     useWalletMonitor();
 
     return (

@@ -1,5 +1,4 @@
 import { cn } from "@/lib/cn";
-import { useAppStateStore, ZapperWithId } from "../store";
 import { nicelyFormattedMintName } from "@/utils/mint";
 import { Button } from "@/components/nativewindui/Button";
 import { formatMoney } from "@/utils/bitcoin";
@@ -12,8 +11,10 @@ import { Text } from "@/components/nativewindui/Text";
 import { ArrowUp, ArrowDown, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
-import RelativeTime from "@/app/components/relative-time";
 import { PendingZap } from "@/stores/payments";
+import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import { ItemRightColumn } from "./item-right-column";
+import { Counterparty } from "./counterparty";
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
@@ -46,19 +47,10 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: str
     )
 }
 
-export const Zapper = ({ pubkey, timestamp }: { pubkey: string, timestamp: number }) => {
-    const { userProfile } = useUserProfile(pubkey);
-    return (
-        <View className="flex-col gap-0">
-            <Text numberOfLines={1} ellipsizeMode="tail" className="text-lg font-medium text-foreground">{userProfile?.name || userProfile?.displayName}</Text>
-            <RelativeTime className="text-xs text-muted-foreground" timestamp={timestamp} />
-            {/* <Text className="text-xs text-muted-foreground">Nutzap</Text> */}
-        </View>
-    )
-}
+
 
 export default function HistoryItem({ wallet, item, index, target, onPress }: {
-    wallet: NDKWallet, item: NDKEvent | NDKCashuDeposit | ZapperWithId,
+    wallet: NDKWallet, item: NDKEvent | NDKCashuDeposit | PendingZap
     index: number,
     target: any,
     onPress: () => void
@@ -74,6 +66,8 @@ export default function HistoryItem({ wallet, item, index, target, onPress }: {
 
 
 function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, index: number, target: any }) {
+    console.log('pending', item);
+    
     const [ state, setState ] = useState<'pending' | 'sending' | 'complete' | 'failed'>('sending');
     const timer = useRef<NodeJS.Timeout | null>(null);
     const [ error, setError ] = useState<Error | null>(null);
@@ -102,19 +96,17 @@ function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, inde
 
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn('ios:pl-0 pl-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
+            item={{
+                id: item.internalId,
+            }}
             leftView={<LeftView direction="out" pubkey={targetPubkey} />}
-            rightView={(
-                <View className="flex-col items-end gap-0">
-                    <Text className="text-lg font-bold text-foreground">{formatMoney({ amount, unit: item.zapper.unit })}</Text>
-                    <Text className="text-sm text-muted-foreground">{state}</Text>
-                </View>
-            )}
+            rightView={<ItemRightColumn isPending={true} amount={amount} unit={item.zapper.unit} />}
             index={index}
             onPress={onPress}
         >
-            <Zapper pubkey={item.zapper.target?.pubkey} timestamp={item.zapper.created_at} />
+            <Counterparty pubkey={item.zapper.target?.pubkey} />
             {/* <Text className="text-xs text-muted-foreground">{item.id}</Text> */}
             {error && <Text className="text-xs text-red-500">{error.message}</Text>}
         </ListItem>  
@@ -208,37 +200,22 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
     if (walletChange.amount < 0) return <Text>invalid item {item.id}</Text>;
 
     return (
-        <ListItem
-            className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-            target={target}
-            leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterpart} />}
-            item={{
-                id: item.id,
-                title: nutzapCounterpart ? null : walletChange.description,
-                subTitle: nutzapCounterpart ? null : nicelyFormattedMintName(walletChange.mint)
-            }}
-            rightView={<RightView amount={walletChange.amount} unit={walletChange.unit ?? wallet.unit ?? "sat"} createdAt={item.created_at} />}
-            index={index}
-            onPress={onPress}
-        >
-            {nutzapCounterpart && ( <Zapper pubkey={nutzapCounterpart} timestamp={item.created_at} /> )}
-            {/* <Text className="text-xs text-muted-foreground">{nutzapCounterpart?.substring(0, 6)}</Text>
-            <Text className="text-xs text-muted-foreground">{id?.substring(0, 6)}</Text>
-            <Text className="text-xs text-muted-foreground">{walletChange.id?.substring(0, 6)}</Text> */}
-        </ListItem>  
-    )
-}
-
-function RightView({ amount, unit, createdAt }: { amount: number, unit: string, createdAt: number }) {
-    if (!amount) return null;
-
-    const niceAmount = formatMoney({ amount, unit, hideUnit: true });
-    const niceUnit = formatMoney({ amount, unit, hideAmount: true });
-
-    return (
-        <View className="flex-col items-end -gap-1">
-            <Text className="text-lg font-bold text-foreground font-mono">{niceAmount}</Text>
-            <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
-        </View>
+        <Animated.View entering={SlideInDown}>
+            <ListItem
+                className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                target={target}
+                leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterpart} />}
+                item={{
+                    id: item.id,
+                    title: nutzapCounterpart ? null : walletChange.description,
+                    subTitle: nutzapCounterpart ? null : nicelyFormattedMintName(walletChange.mint)
+                }}
+                rightView={<ItemRightColumn amount={walletChange.amount} unit={walletChange.unit} isPending={false} />}
+                index={index}
+                onPress={onPress}
+            >
+                {nutzapCounterpart && ( <Counterparty pubkey={nutzapCounterpart} timestamp={item.created_at} /> )}
+            </ListItem>  
+        </Animated.View>
     )
 }

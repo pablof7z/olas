@@ -1,14 +1,12 @@
-import { NDKCashuMintList, useNDK, useNDKSession, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKKind, useNDK, useNDKSession, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import * as SecureStore from 'expo-secure-store';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -16,11 +14,17 @@ import { Button } from '@/components/nativewindui/Button';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList, NDKKind.CashuMintList, { create: true });
     const { activeWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
-    const [relays, setRelays] = useState<NDKRelay[]>(Array.from((activeWallet as NDKCashuWallet).relaySet.relays.values()));
+    const [relays, setRelays] = useState<string[]>([]);
     const [url, setUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (!mintList) return;
+        setRelays([...mintList.relays])
+    }, [mintList?.relays?.length]);
 
     const addFn = () => {
         console.log({ url });
@@ -31,7 +35,7 @@ export default function WalletRelayScreen() {
                 return;
             }
             const relay = ndk?.addExplicitRelay(url);
-            if (relay) setRelays([...relays, relay]);
+            if (relay) setRelays([...relays, relay.url]);
             setUrl('');
         } catch (e) {
             alert('Invalid URL');
@@ -39,23 +43,23 @@ export default function WalletRelayScreen() {
     };
 
     const removeRelay = useCallback((url: string) => {
-        setRelays(relays.filter((r) => r.url !== url));
+        setRelays(relays.filter((r) => r !== url));
     }, [relays]);
 
     const data = useMemo(() => {
-        let r: NDKRelay[] = relays;
+        let r: string[] = relays;
 
         if (searchText) {
-            r = r.filter((relay) => relay.url.includes(searchText));
+            r = r.filter((relay) => relay.includes(searchText));
         }
 
         return r
-            .map((relay: NDKRelay) => ({
-                id: relay.url,
-                title: relay.url,
+            .map((relay) => ({
+                id: relay,
+                title: relay,
                 rightView: (
                     <View className="flex-1 items-center px-4">
-                        <Button variant="secondary" size="sm" onPress={() => removeRelay(relay.url)}>
+                        <Button variant="secondary" size="sm" onPress={() => removeRelay(relay)}>
                             <Text>Remove</Text>
                         </Button>
                     </View>
@@ -67,15 +71,13 @@ export default function WalletRelayScreen() {
     const save = useCallback(async () => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
         setIsSaving(true);
-        activeWallet.relays = relays.map((r) => r.url);
+        mintList.relays = relays;
         await activeWallet.getP2pk();
         activeWallet.publish().then(() => {
             router.back()
-            const mintList = new NDKCashuMintList(ndk);
-            mintList.mints = activeWallet.mints;
-            mintList.relays = activeWallet.relays;
+            mintList.mints ??= activeWallet.mints;
             mintList.p2pk = activeWallet.p2pk;
-            mintList.publish();
+            mintList.publishReplaceable();
         }).finally(() => {
             setIsSaving(false);
         });

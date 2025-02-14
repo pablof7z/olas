@@ -3,17 +3,16 @@ import { NDKNWCTransaction, NDKNWCWallet } from "@nostr-dev-kit/ndk-wallet";
 import { RefreshControl, StyleSheet, View } from "react-native";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { Text } from "@/components/nativewindui/Text";
 import { ListItem } from "@/components/nativewindui/List";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/utils/bitcoin";
 import { ArrowDown, ArrowUp, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import RelativeTime from "@/app/components/relative-time";
 import { getNWCZap, getNWCZapsByPendingPaymentId } from "@/stores/db/zaps";
-import { Zapper } from "../transactions/item";
 import { PendingZap, usePaymentStore } from "@/stores/payments";
+import { ItemRightColumn } from "../transactions/item-right-column";
+import { Counterparty } from "../transactions/counterparty";
 
 export default function NWCListTansactions() {
     const { activeWallet } = useNDKWallet();
@@ -117,13 +116,13 @@ function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTrans
             className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
             leftView={<LeftView direction={type} pubkey={recipientPubkey} />}
-            rightView={<RightView amount={amount} unit={"msats"} createdAt={createdAt} isPending={isPending} />}
+            rightView={<ItemRightColumn amount={amount} unit={"msats"} isPending={isPending} />}
             index={index}
             onPress={onPress}
             item={{}}
         >
             {recipientPubkey ? (
-                <Zapper pubkey={recipientPubkey} timestamp={createdAt} />
+                <Counterparty pubkey={recipientPubkey} timestamp={createdAt} />
             ) : (
                 <RelativeTime className="text-xs text-muted-foreground" timestamp={createdAt} />
             )}
@@ -161,38 +160,3 @@ const LeftView = ({ direction, pubkey }: { direction: 'incoming' | 'outgoing', p
         </View>
     )
 }
-
-
-function RightView({ amount, unit, createdAt, isPending }: { amount: number, unit: string, createdAt: number, isPending: boolean }) {
-    
-    const { colors } = useColorScheme();
-    const niceAmount = formatMoney({ amount, unit, hideUnit: true });
-    const niceUnit = formatMoney({ amount, unit, hideAmount: true });
-
-    if (!amount) return null;
-
-    return (
-        <View style={rightViewStyles.container}>
-            {isPending && <Timer size={24} color={colors.muted} />}
-            <View style={rightViewStyles.column}>
-                <Text className="text-xl font-bold text-foreground">{niceAmount}</Text>
-                <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
-            </View>
-        </View>
-    )
-}
-
-const rightViewStyles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 4,
-        marginRight: 10,
-    },
-    column: {
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: -10,
-    }
-}) 

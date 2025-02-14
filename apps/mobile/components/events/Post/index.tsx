@@ -32,7 +32,7 @@ import Animated, {
     useAnimatedStyle, 
     withSequence, 
     withTiming, 
-    Easing 
+    Easing,
 } from 'react-native-reanimated';
 import { useReactEvent } from '../React';
 import { sendZap } from './Reactions/Zaps';
@@ -101,16 +101,23 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
 
     const setActiveEvent = useSetAtom(activeEventAtom);
     
-    const handlePinch = useCallback(() => {
-        'worklet';
-        setActiveEvent(event);
-        router.push('/view');
+    const handleSingleTap = useCallback(() => {
+        setTimeout(() => {
+            setActiveEvent(event);
+            router.push('/view');
+        }, 100);
     }, [event.id]);
 
     const doubleTapGesture = Gesture.Tap()
         .numberOfTaps(2)
         .runOnJS(true)
         .onEnd(handleDoubleTap);
+
+    const singleTapGesture = Gesture.Tap()
+        .numberOfTaps(1)
+        .runOnJS(true)
+        .requireExternalGestureToFail(doubleTapGesture)
+        .onEnd(handleSingleTap);
 
     const endSendZap = () => {
         'worklet';
@@ -120,15 +127,11 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
         setTimeout(() => setShowZap(false), 500);
     }
         
-    const tripleTapGesture = Gesture.LongPress()
+    const handleLongPress = Gesture.LongPress()
         .runOnJS(true)
         .onStart(endSendZap);
     
-    const pinchGesture = Gesture.Pinch()
-        .runOnJS(true)
-        .onEnd(handlePinch);
-    
-    const combinedGesture = Gesture.Race(doubleTapGesture, tripleTapGesture, pinchGesture);
+    const combinedGesture = Gesture.Race(doubleTapGesture, handleLongPress, singleTapGesture);
 
     return (
         <GestureDetector gesture={combinedGesture}>

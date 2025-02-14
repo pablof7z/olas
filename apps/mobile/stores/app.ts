@@ -62,7 +62,7 @@ export type AppSettingsStoreActions = {
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
 
     addSavedSearch: (search: SavedSearch) => void;
-    removeSavedSearch: (search: SavedSearch) => void;
+    removeSavedSearch: (title: string) => void;
     updateSavedSearch: (search: SavedSearch) => void;
 
     reset: () => void;

@@ -22,15 +22,6 @@ export function useNotifications(onlyNew = false) {
         { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] },
     ] : false);
 
-    const relays = useMemo(() => {
-        const relaySet = new Set<string>();
-        events.forEach(e => {
-            if (e.relay) relaySet.add(e.relay.url);
-            e.onRelays?.forEach(r => relaySet.add(r.url));
-        });
-        return relaySet;
-    }, [events.length])
-
     const filteredNotifications = useMemo(() => {
         if (onlyNew && seenNotificationsAt > 0) {
             return events

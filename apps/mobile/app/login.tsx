@@ -9,11 +9,12 @@ import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { ArrowRight, Camera, Plus, QrCode } from 'lucide-react-native';
-import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { NDKNip55Signer } from '@nostr-dev-kit/ndk-mobile';
-import { toast } from '@backpackapp-io/react-native-toast';
 import ImageCropPicker from 'react-native-image-crop-picker';
+import { uploadMedia } from '@/lib/post-editor/actions/upload';
+import { prepareMedia } from '@/lib/post-editor/actions/prepare';
+import { createNip60Wallet } from '@/utils/wallet';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
@@ -99,6 +100,7 @@ function SignUp() {
     const [username, setUsername] = useAtom(usernameAtom);
     const { ndk, login } = useNDK();
     const setMode = useSetAtom(modeAtom);
+    const {setActiveWallet} = useNDKWallet();
     const avatar = useAtomValue(avatarAtom);
     const createAccount = useCallback(async () => {
         const signer = NDKPrivateKeySigner.generate();
@@ -108,7 +110,7 @@ function SignUp() {
         let imageUrl = 'https://kawaii-avatar.now.sh/api/avatar?username=' + username;
 
         if (avatar) {
-            const media = await prepareMedia([{ uri: avatar, id: 'avatar', mediaType: 'photo', contentMode: 'square' }]);
+            const media = await prepareMedia([{ uris: [avatar], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
             const uploaded = await uploadMedia(media, ndk);
             imageUrl = uploaded[0].uploadedUri;
         }
@@ -122,6 +124,10 @@ function SignUp() {
             tags: [],
         } as NostrEvent);
         await event.publish();
+
+        createNip60Wallet(ndk).then((wallet) => {
+            setActiveWallet(wallet);
+        });
 
         router.replace('/');
     }, [username]);
@@ -246,12 +252,6 @@ export default function LoginScreen() {
                         </Button>
 
                         <LoginWithNip55Button />
-                        
-                        {/* {Platform.OS === 'android' && (
-                            <Button variant="accent" onPress={loginWithAmber}>
-                                <Text>Login with Amber</Text>
-                            </Button>
-                        )} */}
 
                         <Button
                             variant="plain"

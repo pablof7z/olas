@@ -210,8 +210,7 @@ function MuteButton({ user, currentUser, closeFn }: { user: NDKUser, currentUser
 
     return (
         <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 bg-red-900/10 py-4" onPress={() => {
-            mute(user.pubkey, 'pubkey');
-            closeFn(undefined);
+            closeFn(() => mute(user.pubkey, 'pubkey'));
         }}>
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Mute</Text>

@@ -3,7 +3,7 @@ import { migrations } from './migrations';
 
 export const db = SQLite.openDatabaseSync('snap.db');
 
-export function initialize() {
+export function initializeDatabase() {
     let { user_version } = db.getFirstSync('PRAGMA user_version') as { user_version: number };
     if (!user_version) user_version = 0;
 

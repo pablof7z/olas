@@ -3,7 +3,6 @@ import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo } from 'react';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { metadataAtom } from '@/lib/post-editor/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { Camera as CameraIcon } from 'lucide-react-native';
@@ -13,11 +12,9 @@ import { useAppSettingsStore } from '@/stores/app';
 import { postTypeSelectorSheetRefAtom } from './store';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import Reel from '@/components/icons/reel';
-import { Camera, useCameraDevice, useCameraDevices, useCameraPermission } from 'react-native-vision-camera';
 import Polaroid from '@/components/icons/polaroid';
 import Photo from '@/components/icons/photo';
 import { useAlbums } from '@/components/albums/hook';
-import { AlbumContent } from '../AlbumsView';
 import AlbumSelectorHandler from '@/components/albums/AlbumSelectorHandler';
 import ShortVideo from '@/components/icons/short-video';
 
@@ -27,28 +24,28 @@ export type PostType = {
     uri: string;
 };
 
-function InlineCamera() {
-    const devices = useCameraDevices()
-    const { hasPermission, requestPermission } = useCameraPermission()
+// function InlineCamera() {
+//     const devices = useCameraDevices()
+//     const { hasPermission, requestPermission } = useCameraPermission()
 
-    const { colors } = useColorScheme();
-    if (!hasPermission) {
-        return <Button onPress={() => requestPermission()} style={{ height: 150}}>
-            <Photo size={40} stroke={colors.foreground} />
-            <Text className="text-sm text-muted-foreground">Uncropped</Text>
-        </Button>
-    }
+//     const { colors } = useColorScheme();
+//     if (!hasPermission) {
+//         return <Button onPress={() => requestPermission()} style={{ height: 150}}>
+//             <Photo size={40} stroke={colors.foreground} />
+//             <Text className="text-sm text-muted-foreground">Uncropped</Text>
+//         </Button>
+//     }
 
-    if (devices.length === 0) {
-        return null;
-    }
+//     if (devices.length === 0) {
+//         return null;
+//     }
 
-    return <Camera
+//     return <Camera
         
-        device={devices[0]}
-        isActive={true}
-    />
-}
+//         device={devices[0]}
+//         isActive={true}
+//     />
+// }
 
 // export default function PostTypeSelectorBottomSheet() {
 //     const ref = useSheetRef();

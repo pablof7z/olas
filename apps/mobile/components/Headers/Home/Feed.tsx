@@ -14,8 +14,6 @@ import { Button } from "@/components/nativewindui/Button";
 import { useAppSettingsStore } from "@/stores/app";
 import { useIsSavedSearch } from "@/hooks/saved-search";
 import { searchQueryAtom, useSearchQuery } from "./store";
-import { feedEditorBottomSheetRefAtom } from "@/lib/feed-editor/store";
-import { useFeedEditorStore } from "@/lib/feed-editor/store";
 
 export default function Feed() {
     const [feedType, setFeedType] = useAtom(feedTypeAtom);
@@ -160,7 +158,7 @@ function SaveSearchButton() {
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: 'row', alignItems: 'flex-start', gap: 4,
+        flexDirection: 'row', alignItems: 'center', gap: 4,
         paddingTop: 5,
         paddingBottom: 5,
         flex: 1,

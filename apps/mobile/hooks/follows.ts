@@ -7,11 +7,11 @@ export function usePublicFollowSet() {
 }
 
 export function useAllFollows() {
-    const publicFollows = useFollows();
+    const publicFollows = useFollows() ?? [];
     const privateFollows = usePrivateFollows();
     
     // merge and return
-    const allFollows = new Set([...publicFollows, ...Array.from(privateFollows?.pubkeys ?? [])]);
+    const allFollows = new Set([...publicFollows ?? [], ...Array.from(privateFollows?.pubkeys ?? [])]);
     return allFollows;
 }
 

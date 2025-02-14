@@ -1,110 +1,14 @@
-import { NDKEvent, NDKKind, NDKUser, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { router, Stack } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-import * as User from '~/components/ui/user';
-import RelativeTime from './components/relative-time';
+import { NDKEvent, NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { Stack } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { Text } from '@/components/nativewindui/Text';
 import { FlashList } from '@shopify/flash-list';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import EventContent from '@/components/ui/event/content';
 import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
-import { activeEventAtom } from '@/stores/event';
-
-type NotificationItem = {
-    id: string;
-    type: 'follow' | 'comment' | 'mention' | 'reaction' | 'bookmark';
-    user: {
-        username: string;
-        avatar: string;
-    };
-    timestamp: string;
-    content?: string;
-};
-
-function getLabelForCommentNotification(event: NDKEvent, currentUser: NDKUser) {
-    if (event.kind === NDKKind.GenericReply) {
-        // if the current user is in the P tag
-        if (event.tagValue("P") === currentUser?.pubkey) return "commented on your post";
-        else if (event.tagValue("p") === currentUser?.pubkey) return "replied to your comment";
-        return "replied";
-    }
-
-    return "replied to your post";
-}
-
-const NotificationItem = memo(({ event, currentUser }: { event: NDKEvent, currentUser: NDKUser }) => {
-    const { userProfile } = useUserProfile(event.pubkey);
-
-    const label = useMemo(() => {
-        switch (event.kind) {
-            case NDKKind.GenericRepost:
-                return 'reposted you';
-            case NDKKind.Reaction:
-                return 'reacted to your post';
-            case NDKKind.Text: case NDKKind.GenericReply:
-                return getLabelForCommentNotification(event, currentUser);
-            case NDKKind.Nutzap:
-                return 'zapped you';
-            case 3006:
-                return 'bookmarked your post';
-            case 967:
-                return 'followed you';
-            default:
-                return event.kind.toString();
-        }
-    }, [event.id, currentUser.pubkey]);
-
-    const { ndk } = useNDK();
-    const setActiveEvent = useSetAtom(activeEventAtom);
-    
-    const onPress = useCallback(() => {
-        console.log(JSON.stringify(event.rawEvent(), null, 2));
-        const taggedEventId =  event.getMatchingTags('E')[0]|| event.getMatchingTags('e')[0];
-        if (taggedEventId) {
-            ndk.fetchEventFromTag(taggedEventId, event)
-                .then((event) => {
-                    console.log('result', event);
-                    if (!event) return;
-                    setActiveEvent(event);
-                    router.push(`/view`);
-                })
-        } else {
-            console.log(JSON.stringify(event.rawEvent(), null, 2));
-        }
-    }, [event]);
-
-    const onAvatarPress = useCallback(() => {
-        router.push(`/profile?pubkey=${event.pubkey}`);
-    }, [event.pubkey]);
-    
-    return (
-        <View style={styles.notificationItem} className="flex flex-row gap-2 border-b border-border">
-            <TouchableOpacity onPress={onAvatarPress}>
-                <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={44} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onPress} className="flex-1">
-                <View style={styles.content}>
-                    <View className="flex-row items-center justify-between mb-2">
-                        <Text className="text-foreground">
-                            <User.Name userProfile={userProfile} pubkey={event.pubkey} style={styles.username} /> {label}
-                        </Text>
-                        <Text style={styles.timestamp} className="text-muted-foreground">
-                            <RelativeTime timestamp={event.created_at} />
-                        </Text>
-                    </View>
-                    {event.kind === NDKKind.GenericRepost ? (
-                        <></>
-                    ) : (
-                        event.content.length > 0 && <EventContent className="text-foreground" event={event} />
-                    )}
-                </View>
-            </TouchableOpacity>
-        </View>
-    );
-});
+import NotificationItem from '@/components/notifications/items';
 
 const settingsTabAtom = atom('all');
 
@@ -216,27 +120,5 @@ function NotificationPrompt() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    notificationItem: {
-        flexDirection: 'row',
-        padding: 12,
-        borderBottomWidth: 0.5,
-    },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        marginRight: 12,
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    username: {
-        fontWeight: 'bold',
-    },
-    timestamp: {
-        fontSize: 12,
-        marginBottom: 4,
     },
 });

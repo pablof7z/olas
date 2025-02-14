@@ -1,4 +1,4 @@
-import { useActiveEventStore, useAppStateStore } from "@/components/wallet/store";
+import { useActiveEventStore } from "@/components/wallet/store";
 import { useNDKWallet, NDKKind, useSubscribe, NDKEvent, NDKZapSplit, NDKPaymentConfirmation, NDKNutzap, useNDKCurrentUser, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuDeposit, NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
 import HistoryItem from "./item";
@@ -17,7 +17,6 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         return [{
             kinds: [NDKKind.WalletChange],
             authors: [currentUser.pubkey],
-            ...activeWallet.event.filter()
         }];
     }, [ currentUser?.pubkey, activeWallet?.walletId])
 
@@ -39,7 +38,6 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
      * and use that ID instead of the event ID.
      */
     const listening = useRef(new Set<string>());
-    const completedPendingZaps = useRef(new Map<string, string>());
 
     useEffect(() => {
         for (const pendingPayment of Array.from(pendingPayments.values()).flat()) {
@@ -49,18 +47,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
             // listen for completion of the pending zap
             // THIS DOESN'T WORK BECAUSE THE EVENT I'M RECEIVING IS THE NUTZAP, NOT THE WALLET CHANGE EVENT
             pendingPayment.zapper.once('split:complete', (split: NDKZapSplit, result: NDKPaymentConfirmation) => {
-                console.log('received a split:complete event', {
-                    temporaryId: pendingPayment.internalId,
-                    result
-                })
-
-                if (result instanceof NDKNutzap) {
-                    console.log('marking permanent ID so it is mapped to temporary ID', {
-                        permanentId: result.id,
-                        temporaryId: pendingPayment.internalId
-                    })
-                    completedPendingZaps.current.set(result.id, pendingPayment.internalId);
-                } else if (result instanceof Error) {
+                if (result instanceof Error) {
                     toast.error(result.message);
                 }
             });
@@ -74,22 +61,18 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         router.push('/tx');
     }
 
-    const sortedHistory = useMemo(() => {
-        return history.sort((a, b) => b.created_at - a.created_at)
-    }, [history.length]);
-
-    // const historyWithPendingZaps = useMemo(() => {
-    //     return [
-    //         ...pendingPayments,
-    //         ...history.sort((a, b) => b.created_at - a.created_at)
-    //     ]
-    // }, [history.length, pendingPayments.length]);
+    const historyWithPendingZaps = useMemo(() => {
+        return [
+            ...Array.from(pendingPayments.values()).flat(),
+            ...history.sort((a, b) => b.created_at - a.created_at)
+        ]
+    }, [history.length, pendingPayments.size]);
 
     return (
         <View className="flex-1">
             {/* <Text className="text-white">{sortedHistory.length}</Text> */}
             <FlatList
-                data={sortedHistory}
+                data={historyWithPendingZaps}
                 keyExtractor={(item: NDKEvent) => item.id}
                 contentInsetAdjustmentBehavior="automatic"
                 renderItem={({ item, index, target }) => (

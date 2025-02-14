@@ -1,11 +1,9 @@
 import { NDKEvent, NDKEventId, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
-import { ForwardedRef, forwardRef, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Dimensions, Pressable, RefreshControl, View } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import { ArrowUp } from "lucide-react-native";
+import { Pressable, RefreshControl, Text } from "react-native";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
@@ -26,7 +24,6 @@ type FeedProps = {
 const keyExtractor = (entry: FeedEntry) => entry.id;
 
 export default function Feed({
-    onPress,
     filters,
     filterKey,
     prepend,
@@ -81,19 +78,10 @@ export default function Feed({
             return;
         }
 
-        console.log('👉 FEED INDEX newEntries', newEntries?.length);
         if (visibleIndex?.current > 0 && !showNewEntriesPrompt) setShowNewEntriesPrompt(true)
     }, [newEntries?.length, showNewEntriesPrompt])
 
     const setActiveEvent = useSetAtom(activeEventAtom);
-
-    const _onPress = useCallback((event: NDKEvent) => {
-        if (onPress) onPress(event)
-        else {
-            setActiveEvent(event);
-            router.push('/view');
-        }
-    }, [onPress, setActiveEvent])
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -125,12 +113,10 @@ export default function Feed({
         if (prepend) ret.unshift({ id: 'prepend', node: prepend });
 
         return ret;
-    }, [entries, prepend])
-
-    const openPostBottomSheet = usePostBottomSheet();
+    }, [entries, prepend, numColumns])
 
     const renderItem = useCallback(({ item, index }: { item: FeedEntry, index: number }) => {
-        if (numColumns === 1) return <FeedItem item={item} index={index} _onPress={_onPress} />
+        if (numColumns === 1) return <FeedItem item={item} index={index} />
         else return <EventMediaGridContainer
                 event={item.event}
                 index={index}
@@ -141,7 +127,7 @@ export default function Feed({
                 }}
                 onLongPress={() => { }}
             />
-    }, [numColumns, _onPress])
+    }, [numColumns])
 
     return (
         <>
@@ -159,7 +145,7 @@ export default function Feed({
                 scrollEventThrottle={100}
                 numColumns={numColumns}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
-                getItemType={item => item.id === 'prepend' ? 'prepend' : numColumns === 1 ? 'post' : 'grid'}
+                getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
                 renderItem={renderItem}
                 disableIntervalMomentum={true}
             />
@@ -167,13 +153,12 @@ export default function Feed({
     )
 }
 
-function FeedItem({ item, index, _onPress }: { item: FeedEntry, index: number, _onPress: (event: NDKEvent) => void }) {
+function FeedItem({ item, index }: { item: FeedEntry, index: number }) {
     if (item.id === 'prepend') return item.node;
     return <Post 
         event={item.event} 
         index={index} 
         reposts={item.reposts} 
         timestamp={item.timestamp} 
-        onPress={() => _onPress(item.event)} 
     />;
 }

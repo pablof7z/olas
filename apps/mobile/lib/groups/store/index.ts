@@ -16,7 +16,7 @@ export type GroupStoreState = {
 
 type GroupStoreActions = {
     addGroup: (group: GroupEntry) => void;
-    loadGroups: (ndk: NDK, currentUser: NDKUser, relay: string, groupIds: string[] | undefined) => void;
+    loadGroups: (ndk: NDK, currentUser: NDKUser, relay: string, groupIds?: string[]) => void;
 
     loadMyGroups: (ndk: NDK, currentUser: NDKUser) => void;
 }
