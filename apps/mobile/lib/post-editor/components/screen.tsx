@@ -49,17 +49,10 @@ function Actions() {
     const setMetadata = usePostEditorStore(s => s.setMetadata);
 
     const publishCb = useCallback(() => {
-        if (PUBLISH_ENABLED) {
-            setReadyToPublish(true);
-            publish(ndk, activeBlossomServer);
-            if (router.canGoBack()) router.back();
-            else router.replace("/(home)");
-        } else {
-            setReadyToPublish(true);
-            if (router.canGoBack()) router.back();
-            else router.replace("/(home)");
-            return;
-        }
+        setReadyToPublish(true);
+        publish(ndk, activeBlossomServer);
+        if (router.canGoBack()) router.back();
+        else router.replace("/(home)");
     }, [publish, ndk, activeBlossomServer]);
 
     const shownTagSelector = useRef(false);

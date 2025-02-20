@@ -94,7 +94,7 @@ function getWalletConfig(): {
 
     return {
         walletType: mappedWalletType as NDKWalletTypes,
-        walletPayload: walletPayload.value
+        walletPayload: walletPayload?.value
     }
 }
 

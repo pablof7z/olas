@@ -41,4 +41,4 @@ export type PostMetadata = {
     groups?: GroupEntry[];
 };
 
-export type PostState = "editing" | "uploading" | "uploaded" | "publishing";
+export type PostState = "editing" | "uploading" | "uploaded" | "publishing" | "error";

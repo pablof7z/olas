@@ -9,7 +9,7 @@ import { uploadMedia } from './actions/upload';
 import NDK, { NDKEvent, NDKKind, NDKRelaySet } from '@nostr-dev-kit/ndk-mobile';
 import { mapImagePickerAssetToPostMedia, postTypeToImagePickerType } from '@/utils/media';
 import { generateEvent } from './event';
-
+import { PUBLISH_ENABLED } from '@/utils/const';
 
 interface PostEditorStoreState {
     // internal random id
@@ -104,18 +104,28 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
         set({ readyToPublish: true });
         set({ state: 'uploading' });
         const media = await prepareMedia(get().media);
-        const uploadedMedia = await uploadMedia(media, ndk, blossomServer);
+        let uploadedMedia: PostMedia[] = [];
+        try {
+            uploadedMedia = await uploadMedia(media, ndk, blossomServer);
+        } catch (error) {
+            set({ state: 'error', error: error.message });
+            return;
+        }
 
         set({ state: 'uploaded' });
         
         // setSelectedMedia(uploadedMedia);
         const { metadata } = get();
 
-
-
         let { event, relaySet } = await generateEvent(ndk, metadata, uploadedMedia);
         await event.sign();
         set({ state: 'publishing' });
+
+        if (!PUBLISH_ENABLED) {
+            alert("Publish disabled in dev mode");
+            set({ readyToPublish: false, media: [], state: 'editing', metadata: { caption: '' } });
+            return;
+        }
 
         event.publish(relaySet).then(async () => {
             if (metadata.boost) {

@@ -55,8 +55,6 @@ export default function EditImageTool() {
     //     return resetStore;
     // }, [])
 
-    console.log('EditImageTool imageUri', imageUri);
-
     const originalImageUri = useEditImageStore(s => s.imageUri);
     const editedImageUri = useEditImageStore(s => s.editedImageUri);
 
@@ -181,8 +179,6 @@ export function PreviewWithFilters({ image }: { image: ImageRef }) {
 
     const activeFilter = useAtomValue(activeFilterAtom);
 
-    console.log('active filter in preview', activeFilter?.name);
-
     const imageWidth = Dimensions.get('screen').width;
     const imageHeight = image?.height ? imageWidth * (image?.height / image?.width) : 0;
     const aspectRatio = image?.width / image?.height;
@@ -192,8 +188,6 @@ export function PreviewWithFilters({ image }: { image: ImageRef }) {
     if (!image || !imageHeight) {
         return null;
     }
-
-    console.log('preview with size', imageWidth, imageHeight);
 
     const activeFilterSetting = activeFilter ? availableFilters[activeFilter.name] : null;
     const ActiveFilterComponent = activeFilterSetting?.component;
@@ -348,7 +342,6 @@ export function Filters() {
 
     const editingIndex = usePostEditorStore(s => s.editingIndex);
     const media = usePostEditorStore(s => s.media);
-    console.log('media has length', !!media, media?.length, editingIndex);
     const activeImagePath = media[editingIndex].uris?.[0];
     
     const crop = useCallback(async (options: any) => {

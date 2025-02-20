@@ -62,7 +62,6 @@ export function useWalletMonitor() {
 
     useEffect(() => {
         if (activeWallet) {
-            console.log('active wallet changed', activeWallet.walletId);
             setWalletConfig(activeWallet);
         }
     }, [ activeWallet?.walletId ])
@@ -84,11 +83,9 @@ export function useWalletMonitor() {
                     console.log('most recent cached event', mostRecentCachedEvent[0]);
                 }
             }
-            console.log('starting nip60 wallet', {since});
             nip60Wallet.start({ subId: 'wallet', skipVerification: true, since });
             wallet = nip60Wallet;
         } else if (nip60Wallet) {
-            console.log('defaulting to nip60 wallet');
             setActiveWallet(nip60Wallet);
         }
     }, [currentUser?.pubkey, nip60Wallet, walletType, walletPayload])
