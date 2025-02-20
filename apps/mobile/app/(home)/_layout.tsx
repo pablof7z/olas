@@ -1,5 +1,4 @@
 import { router, Tabs, usePathname } from 'expo-router';
-import Lightning from '@/components/icons/lightning';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Home, Search, UserCircle2, WalletIcon } from 'lucide-react-native';
 import { useScrollToTop } from '@react-navigation/native';
@@ -147,7 +146,6 @@ function UserButton() {
     const { colors } = useColorScheme();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
 
-    
     if (currentUser) {
         return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
     }

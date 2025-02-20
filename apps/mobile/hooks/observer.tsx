@@ -1,77 +1,99 @@
-import { NDKEvent, NDKFilter, wrapEvent, NDKSubscription, NDKSubscriptionCacheUsage, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import {
+    NDKEvent,
+    NDKFilter,
+    NDKSubscription,
+    NDKSubscriptionCacheUsage,
+    useNDK,
+} from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/**
- * Runs a filter in the background without ever talking to relays.
- * @param filters Filters to run.
- * @param key The key by which to re-run the filters. If it's false, don't run anything.
- * @returns 
- */
-export function useObserver(
-    filters: NDKFilter[] | false,
-    dependencides: any[] = []
-) {
+export function useObserver<T extends NDKEvent>(filters: NDKFilter[] | false, dependencies: any[] = []): T[] {
     const { ndk } = useNDK();
     const sub = useRef<NDKSubscription | null>(null);
     const [events, setEvents] = useState<NDKEvent[]>([]);
     const buffer = useRef<NDKEvent[]>([]);
     const bufferTimeout = useRef<NodeJS.Timeout | null>(null);
-    const addedEventIds = new Set();
+    const addedEventIds = useRef(new Set<string>());
 
-    dependencides.push(!!filters);
+    // Push a dependency so the effect re-runs if filters change.
+    dependencies.push(!!filters);
 
     const stopFilters = useCallback(() => {
-        sub.current?.stop();
+        if (sub.current) sub.current.stop();
         sub.current = null;
         buffer.current = [];
-        if (bufferTimeout.current) clearTimeout(bufferTimeout.current);
-        bufferTimeout.current = null;
-        addedEventIds.clear();
+        if (bufferTimeout.current) {
+            clearTimeout(bufferTimeout.current);
+            bufferTimeout.current = null;
+        }
+        addedEventIds.current.clear();
         setEvents([]);
-    }, [ setEvents ]);
+    }, [setEvents]);
 
     useEffect(() => {
-        if (!ndk || !filters || !filters.length) return;
-        
-        let isValid = true;
+        if (!ndk || !filters || filters.length === 0) return;
 
+        let isValid = true;
         if (sub.current) stopFilters();
 
-        sub.current = ndk.subscribe(filters, {
-            skipVerification: true,
-            closeOnEose: true,
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
-            groupable: false,
-            subId: 'observer',
-        }, undefined, false);
-        sub.current.on('event', (event) => {
+        // Helper to process each event with deduplication and buffering.
+        const processEvent = (event: NDKEvent) => {
             if (!isValid) return;
-
-            const tagId = event.tagId()
-            if (addedEventIds.has(tagId)) {
-                console.trace('we already have event' + event.kind, JSON.stringify(filters))
-                return;
-            }
-            addedEventIds.add(tagId);
-            const wrappedEvent = wrapEvent(event);
-            if (wrappedEvent) {
-                buffer.current.push(wrappedEvent);
-            }
+            const tagId = event.tagId();
+            if (addedEventIds.current.has(tagId)) return;
+            addedEventIds.current.add(tagId);
+            buffer.current.push(event);
             if (!bufferTimeout.current) {
                 bufferTimeout.current = setTimeout(() => {
-                    setEvents(prev => [...prev, ...buffer.current]);
+                    setEvents((prev) => [...prev, ...buffer.current]);
                     buffer.current = [];
                     bufferTimeout.current = null;
                 }, 50);
             }
+        };
+
+        // Create the subscription.
+        sub.current = ndk.subscribe(
+            filters,
+            {
+                skipVerification: true,
+                closeOnEose: true,
+                cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
+                groupable: false,
+                subId: "observer",
+                wrap: true,
+            },
+            undefined,
+            false
+        );
+
+        // Process asynchronous events.
+        sub.current.on("event", (event) => {
+            if (!isValid) return;
+            processEvent(event);
         });
-        sub.current.start();
+
+        // Synchronously get events from cache.
+        const syncEvents = sub.current.start(false);
+        if (syncEvents) {
+            for (const event of syncEvents) processEvent(event);
+        }
+
+        // Flush synchronous events immediately.
+        if (buffer.current.length > 0) {
+            if (bufferTimeout.current) {
+                clearTimeout(bufferTimeout.current);
+                bufferTimeout.current = null;
+            }
+            setEvents(buffer.current);
+            buffer.current = [];
+        }
 
         return () => {
             isValid = false;
             stopFilters();
         };
-    }, [ndk, ...dependencides]);
+    }, [ndk, ...dependencies]);
 
-    return events;
+    return events as T[];
 }

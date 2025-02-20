@@ -1,11 +1,10 @@
-import { NDKEvent, NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
 import { Heart } from "lucide-react-native";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useReactionsStore } from "@/stores/reactions";
 import { useReactionPicker } from "@/lib/reaction-picker/hook";
-import { useObserver } from "@/hooks/observer";
 
 type ReactProps = {
     /**
@@ -63,7 +62,7 @@ export function useReactEvent() {
 export default function React({
     event,
     inactiveColor,
-    iconSize = 24,
+    iconSize = 18,
     reactionCount,
     reactedByUser,
     showReactionCount = true,
@@ -71,7 +70,7 @@ export default function React({
     const { react } = useReactEvent();
     const handlePress = useCallback(() => {
         if (reactedByUser) return;
-        
+
         react(event);
     }, [react, event?.id, reactedByUser]);
 

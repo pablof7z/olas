@@ -35,7 +35,7 @@ setInterval(() => {
 export default function BookmarkButton({
     event,
     mutedColor,
-    iconSize = 24,
+    iconSize = 18,
     bookmarkedByUser,
 }: BookmarkProps) {
     const start = performance.now();

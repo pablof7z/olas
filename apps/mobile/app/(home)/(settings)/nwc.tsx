@@ -10,7 +10,7 @@ import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 
 export default function NwcScreen() {
     const { ndk } = useNDK();
-    const { activeWallet, setActiveWallet } = useNDKWallet();
+    const { setActiveWallet } = useNDKWallet();
     const [status, setStatus] = useState<string | null>(null);
     const timeout = useRef<NodeJS.Timeout | null>(null);
 

@@ -6,7 +6,7 @@ import { NDKNWCGetInfoResult, NDKNWCWallet } from "@nostr-dev-kit/ndk-wallet";
 import { NDKRelay, useNDK, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
 import { Button } from "@/components/nativewindui/Button";
 import { Image } from "react-native";
-
+import { useAppSettingsStore } from "@/stores/app";
 export default function NWCDeepLinkScreen() {
     const result = useGlobalSearchParams();
     const value = result?.value as string;
@@ -28,8 +28,6 @@ export default function NWCDeepLinkScreen() {
         wallet.pool.on('relay:connect', (r: NDKRelay) => console.log('connected to', r.url))
 
         wallet.once('ready', async () => {
-            console.log('NWC wallet ready')
-
             setInfo(await wallet.getInfo());
             
             try {

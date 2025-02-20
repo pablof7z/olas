@@ -49,7 +49,7 @@ const sharePost = async (event: NDKEvent) => {
 };
 
 function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.RefObject<BottomSheetModal> }) {
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
+    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, { create: NDKList });
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
     const inset = useSafeAreaInsets();

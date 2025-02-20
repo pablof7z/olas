@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as SecureStore from 'expo-secure-store';
 import { ZapOption } from "@/app/(home)/(settings)/zaps";
 import { db } from "./db";
+import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from "@nostr-dev-kit/ndk-wallet";
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
@@ -44,6 +45,9 @@ export type AppSettingsStoreState = {
      * Saved searches.
      */
     savedSearches: SavedSearch[];
+
+    walletType?: NDKWalletTypes | 'none';
+    walletPayload?: string;
 };
 
 export type AppSettingsStoreActions = {
@@ -65,12 +69,33 @@ export type AppSettingsStoreActions = {
     removeSavedSearch: (title: string) => void;
     updateSavedSearch: (search: SavedSearch) => void;
 
+    setWalletConfig: (wallet: NDKWallet) => void;
+    unlinkWallet: () => void;
+
     reset: () => void;
 };
 
 const defaultZapSetting = {
     amount: 21,
     message: '😍😍😍😍'
+}
+
+function getWalletConfig(): {
+    walletType?: NDKWalletTypes | 'none';
+    walletPayload?: string | undefined;
+} {
+    const walletType = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_type']) as { value: string };
+    if (!walletType) return { walletType: undefined };
+    if (walletType.value === 'none') return { walletType: 'none' };
+
+    const walletPayload = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_payload']) as { value: string | undefined };
+
+    const mappedWalletType = walletType.value === 'nip60' ? 'nip-60' : walletType.value;
+
+    return {
+        walletType: mappedWalletType as NDKWalletTypes,
+        walletPayload: walletPayload.value
+    }
 }
 
 export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set, get) => ({
@@ -82,6 +107,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
     editingPosts: [],
     savedSearches: [],
+    ...getWalletConfig(),
 
     init: async () => {
         const state: Partial<AppSettingsStoreState> = {
@@ -186,6 +212,28 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         set({ savedSearches: get().savedSearches.map(s => s.title === search.title ? search : s) });
     },
 
+    setWalletConfig: (wallet: NDKWallet) => {
+        let payload: string | undefined;
+        
+        if (wallet instanceof NDKCashuWallet) {
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'nip60']);
+            db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
+        } else if (wallet instanceof NDKNWCWallet) {
+            payload = wallet.pairingCode;
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'nwc']);
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_payload', payload]);
+        }
+        set({ walletType: wallet.type, walletPayload: payload });
+    },
+
+    unlinkWallet: () => {
+        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'none']);
+        db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
+        SecureStore.setItemAsync('wallet', 'none');
+        SecureStore.deleteItemAsync('wallet_last_updated_at');
+        set({ walletType: 'none' });
+    },
+    
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
         SecureStore.deleteItemAsync('boost');
@@ -194,6 +242,16 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         SecureStore.deleteItemAsync('videosInFeed');
         SecureStore.deleteItemAsync('defaultZap');
         SecureStore.deleteItemAsync('forceSquareAspectRatio');
-        set({ seenNotificationsAt: 0, promptedForNotifications: false });
+        SecureStore.deleteItemAsync('wallet');
+        SecureStore.deleteItemAsync('wallet_last_updated_at');
+
+        db.runSync('DELETE FROM app_settings;');
+
+        set({
+            seenNotificationsAt: 0,
+            promptedForNotifications: false,
+            walletType: undefined,
+            walletPayload: undefined
+        });
     }
 }));

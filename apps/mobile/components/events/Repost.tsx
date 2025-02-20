@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useReactionsStore } from "@/stores/reactions";
+import AvatarGroup from "../ui/user/AvatarGroup";
 
 type RepostProps = {
     /**
@@ -12,20 +13,17 @@ type RepostProps = {
     event: NDKEvent;
 
     /**
-     * Repost count
-     */
-    repostCount: number;
-
-    /**
      * Whether the user has reposted the event
      */
     repostedByUser: boolean;
 
     /**
-     * Show repost count
+     * Set of users that have reposted the event
      */
-    showRepostCount?: boolean;
+    repostedBy: Set<string>;
 
+    /**
+     * Show repost count
     /**
      * Muted color
      */
@@ -46,10 +44,9 @@ export default function Repost({
     event,
     inactiveColor,
     activeColor,
-    iconSize = 24,
-    repostCount,
+    iconSize = 18,
+    repostedBy,
     repostedByUser,
-    showRepostCount = true,
 }: RepostProps) {
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
     
@@ -82,10 +79,8 @@ export default function Repost({
                     color={repostedByUser ? 'green' : inactiveColor}
                 />
             </TouchableOpacity>
-            {showRepostCount && repostCount > 0 && (
-                <Text style={[styles.text, { color: inactiveColor }]}>
-                    {repostCount}
-                </Text>
+            {repostedBy.size > 0 && (
+                <AvatarGroup pubkeys={Array.from(repostedBy)} avatarSize={iconSize*0.7} threshold={iconSize} />
             )}
         </View>
     )

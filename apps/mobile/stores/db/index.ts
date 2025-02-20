@@ -2,8 +2,9 @@ import * as SQLite from 'expo-sqlite';
 import { migrations } from './migrations';
 
 export const db = SQLite.openDatabaseSync('snap.db');
+let dbInitialized = false;
 
-export function initializeDatabase() {
+if (!dbInitialized) {
     let { user_version } = db.getFirstSync('PRAGMA user_version') as { user_version: number };
     if (!user_version) user_version = 0;
 
@@ -13,4 +14,6 @@ export function initializeDatabase() {
         }
         db.execSync(`PRAGMA user_version = ${migrations.length}`);
     }
+
+    dbInitialized = true;
 }

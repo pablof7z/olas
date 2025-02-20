@@ -5,7 +5,7 @@ import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native
 import { Text } from '@/components/nativewindui/Text';
 import { FlashList } from '@shopify/flash-list';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import NotificationItem from '@/components/notifications/items';

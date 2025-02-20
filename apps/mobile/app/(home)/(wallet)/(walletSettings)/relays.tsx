@@ -14,7 +14,7 @@ import { Button } from '@/components/nativewindui/Button';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList, NDKKind.CashuMintList, { create: true });
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, { create: NDKCashuMintList });
     const { activeWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<string[]>([]);
@@ -27,7 +27,6 @@ export default function WalletRelayScreen() {
     }, [mintList?.relays?.length]);
 
     const addFn = () => {
-        console.log({ url });
         try {
             const uri = new URL(url);
             if (!['wss:', 'ws:'].includes(uri.protocol)) {

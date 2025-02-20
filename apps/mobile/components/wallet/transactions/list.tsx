@@ -7,6 +7,7 @@ import React, { useMemo, useRef, useEffect } from "react";
 import { FlatList, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { usePaymentStore } from "@/stores/payments";
+
 export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet }) {
     const { activeWallet } = useNDKWallet();
     const currentUser = useNDKCurrentUser();
@@ -22,7 +23,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
 
     const { events: history} = useSubscribe(
         filters,
-        { subId: 'tx-list', groupable: false },
+        { subId: 'tx-list', groupable: false, skipVerification: true },
         [currentUser?.pubkey, activeWallet?.walletId]
     );
     const { setActiveEvent } = useActiveEventStore();

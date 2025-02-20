@@ -1,12 +1,13 @@
 import { toast } from "@backpackapp-io/react-native-toast";
-import { useNDKNutzapMonitor, useNDKCurrentUser, NDKNutzap, useNDK, NDKKind, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKNutzapMonitor, useNDKCurrentUser, useNDK, NDKKind, useNDKWallet, useNDKSessionEventKind, NDKCashuMintList } from "@nostr-dev-kit/ndk-mobile";
 import { migrateCashuWallet } from "@nostr-dev-kit/ndk-wallet";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 export default function NutzapMonitor() {
     const [start, setStart] = useState(false);
     const { activeWallet } = useNDKWallet();
-    const { nutzapMonitor } = useNDKNutzapMonitor(start);
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
+    const { nutzapMonitor } = useNDKNutzapMonitor(mintList, start);
     const currentUser = useNDKCurrentUser();
     const {ndk} = useNDK();
     const [hasOldWallets, setHasOldWallets] = useState<boolean | null>(null);

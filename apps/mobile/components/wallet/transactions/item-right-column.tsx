@@ -3,8 +3,10 @@ import { formatMoney } from "@/utils/bitcoin";
 import { Timer } from "lucide-react-native";
 import { View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
-
-export function ItemRightColumn({ amount, unit = 'sats', isPending }: { amount: number, unit: string, isPending: boolean }) {
+import { useMintInfo } from "@/hooks/mint";
+import { Image } from "expo-image";
+export function ItemRightColumn({ mint, amount, unit = 'sats', isPending }: { mint?: string, amount: number, unit: string, isPending: boolean }) {
+    const {mintInfo} = useMintInfo(mint);
     
     const { colors } = useColorScheme();
     const niceAmount = formatMoney({ amount, unit, hideUnit: true });
@@ -18,6 +20,9 @@ export function ItemRightColumn({ amount, unit = 'sats', isPending }: { amount: 
             <View style={rightViewStyles.column}>
                 <Text className="text-xl font-bold text-foreground">{niceAmount}</Text>
                 <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
+                {mintInfo && <View className="flex-row items-center gap-1">
+                    <Image source={{ uri: mintInfo.icon_url }} style={{ width: 16, height: 16, borderRadius: 4 }} />
+                </View>}
             </View>
         </View>
     )

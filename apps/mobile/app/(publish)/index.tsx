@@ -10,7 +10,6 @@ import EditImageTool, { useEditImageStore } from '@/lib/post-editor/components/e
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PostEditorMainScreen from '@/lib/post-editor/components/screen';
 import { useEffect, useMemo } from 'react';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 export default function NewPostScreen() {
     const { colors } = useColorScheme();

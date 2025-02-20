@@ -19,6 +19,7 @@ export default function SettingsLayout() {
             <Stack.Screen name="nwc" options={{ headerShown: false }} />
             <Stack.Screen name="dev" />
             <Stack.Screen name="zaps" />
+            <Stack.Screen name="delete-account" />
         </Stack>
     );
 }

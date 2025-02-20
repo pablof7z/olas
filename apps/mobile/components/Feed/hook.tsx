@@ -1,5 +1,4 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
-import { timeZero } from "@/lib/ndk";
 import { useReactionsStore } from "@/stores/reactions";
 import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
@@ -209,7 +208,7 @@ export function useFeedEvents(
         if (!!ret) {
             // check this isn't muted or blacklisted
             if (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event?.pubkey)) return;
-            
+
             if (!ret.timestamp) ret.timestamp = ret.event?.created_at ?? -1;
 
             // always add it to the allEntriesRef
@@ -401,7 +400,6 @@ export function useFeedEvents(
         subscriptionStartTime.current = Date.now();
 
         if (subscription.current) {
-            console.log('stopping subscription because of dependencies change', subId, dependencies);
             subscription.current.stop();
             subscription.current = null;
             eosed.current = false;
@@ -415,8 +413,6 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        console.log('subscribing to', {dependencies: JSON.stringify(dependencies)}, filters, { subId, relaySet: relaySet?.relayUrls?.join(', ') })
-        
         const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] }, relaySet, false);
 
         sub.on("event", handleEvent);
@@ -427,7 +423,6 @@ export function useFeedEvents(
         subscription.current = sub;
 
         return () => {
-            console.log('stopping subscription because of unmount', subId, dependencies);
             sub.stop();
         }
     }, [ndk, ...dependencies])
@@ -522,6 +517,7 @@ export function useFeedMonitor(
     const activeSlices = useRef<Slice[]>([]);
     const currentUser = useNDKCurrentUser();
     const addRelatedEvent = useReactionsStore(s => s.addEvent);
+    const addRelatedEvents = useReactionsStore(s => s.addEvents);
 
     // useEffect(() => {
     //     if
@@ -547,13 +543,13 @@ export function useFeedMonitor(
 
         const filters = [{ '#e': newSlice.eventIds }];
         newSlice.sub = ndk.subscribe(filters, {
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
             closeOnEose: false,
             groupable: false,
             skipVerification: true,
             subId: `feedmonitor-${newSlice.startIndex}-${newSlice.endIndex}`
         }, undefined, {
-            onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey)
+            onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey),
+            onEvents: (events) => addRelatedEvents(events, currentUser?.pubkey)
         });
         activeSlices.current.push(newSlice);
         for (const id of newSlice.eventIds) {
@@ -572,12 +568,7 @@ export function useFeedMonitor(
     }
 
     useEffect(() => {
-        if (activeIndex === null) {
-            console.log('no active index, skipping')
-            return;
-        } else {
-            console.log('active index', activeIndex)
-        }
+        if (activeIndex === null) return;
 
         const neededSlices = calcNeededSlices(activeIndex, sliceSize, events)
 
@@ -606,7 +597,6 @@ export function useFeedMonitor(
 
     useEffect(() => {
         return () => {
-            console.log('unmounting feed monitor', activeSlices.current.map(s => s.eventIds[0]).join(', '), { eventsLength: events.length, sliceSize, activeIndex });
             activeSlices.current.forEach(slice => slice.sub.stop());
         }
     }, [])

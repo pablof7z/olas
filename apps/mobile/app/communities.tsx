@@ -86,7 +86,7 @@ function RightViewItem({ groupEntry }: { groupEntry: GroupEntry}) {
     const currentUser = useNDKCurrentUser();
     const isMember = currentUser && groupEntry.members.has(currentUser.pubkey);
     const { ndk } = useNDK();
-    const groupList = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.SimpleGroupList, { create: true });
+    const groupList = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { create: NDKList });
 
     const join = useCallback(async (groupEntry: GroupEntry) => {
         const joinReq = new NDKEvent(ndk)

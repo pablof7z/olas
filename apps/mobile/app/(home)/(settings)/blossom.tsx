@@ -14,7 +14,7 @@ import { View } from 'react-native';
 
 export default function BlossomScreen() {
     const { ndk } = useNDK();
-    const blossomList = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.BlossomList, { create: true });
+    const blossomList = useNDKSessionEventKind<NDKList>(NDKKind.BlossomList, { create: NDKList });
     const [searchText, setSearchText] = useState<string | null>(null);
     const [blossoms, setBlossoms] = useState<string[]>(blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1]));
     const [url, setUrl] = useState('');

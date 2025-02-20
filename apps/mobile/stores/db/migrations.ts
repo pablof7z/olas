@@ -152,6 +152,56 @@ export const migrations = [
         up: (db: SQLite.SQLiteDatabase) => {
             db.execSync( `CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);` );
         }
+    },
+
+    {
+        version: 12,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(`CREATE TABLE IF NOT EXISTS mint_info (
+                url TEXT PRIMARY KEY,
+                payload TEXT,
+                created_at INTEGER,
+                updated_at INTEGER
+            )`);
+        }
+    },
+
+    {
+        version: 14,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(`CREATE TABLE IF NOT EXISTS mint_keys (
+                url TEXT PRIMARY KEY,
+                keyset_id TEXT,
+                payload TEXT,
+                created_at INTEGER,
+                updated_at INTEGER
+            )`);
+        }
+    },
+
+    {
+        version: 15,
+        up: (db: SQLite.SQLiteDatabase) => {
+            const walletConfig = SecureStore.getItem('wallet');
+            console.log('walletConfig', walletConfig);
+            db.execSync(`CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )`);
+
+            if (walletConfig) {
+                if (walletConfig === 'none') {
+                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_type', 'none');`);
+                } else {
+                    const payload = JSON.parse(walletConfig);
+                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_type', '${payload.type}');`);
+                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_payload', '${payload.pairingCode ?? payload.bech32}');`);
+                }
+            }
+
+            SecureStore.deleteItemAsync('wallet');
+            SecureStore.deleteItemAsync('wallet_last_updated_at');
+        }
     }
 ];
 

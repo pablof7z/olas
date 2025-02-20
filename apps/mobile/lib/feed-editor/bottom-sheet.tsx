@@ -6,7 +6,6 @@ import { useEffect, useState  } from "react";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text } from "@/components/nativewindui/Text";
 import New from "./new";
 import Confirm from "./confirm";
 import Tabs from "@/components/tabs";

@@ -33,10 +33,12 @@ export class Uploader {
     }
 
     set onError(cb: (error: Error) => void) {
+        console.log('UPLOADER set onError', !!cb);
         this._onError = cb;
     }
 
     set onUploaded(cb: (blob: BlobDescriptor) => void) {
+        console.log('UPLOADER set onUploaded', !!cb);
         this._onUploaded = cb;
     }
 
@@ -112,6 +114,7 @@ export class Uploader {
     }
 
     private xhrOnError(e: ProgressEvent) {
+        console.log('UPLOADER xhrOnError', e);
         if (this._onError) {
             console.log('upload error', JSON.stringify(Object.keys(this.xhr)));
             console.log('upload error', this.xhr.responseText);

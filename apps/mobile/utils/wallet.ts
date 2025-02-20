@@ -16,5 +16,8 @@ export async function createNip60Wallet(ndk: NDK) {
     mintList.mints = wallet.mints;
     mintList.p2pk = wallet.p2pk;
     mintList.publishReplaceable();
+
+    wallet.start({ subId: 'wallet', skipVerification: true });
+    
     return wallet;
 }

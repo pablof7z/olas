@@ -15,7 +15,7 @@ import { activeEventAtom } from '@/stores/event';
 
 export default function Bookmarks() {
     const { ndk } = useNDK();
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.ImageCurationSet, { create: true });
+    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, { create: NDKList });
     const [showOthers, setShowOthers] = useState(false);
     const [bookmarkLists, setBookmarkLists] = useState<NDKList[]>([]);
 

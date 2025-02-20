@@ -207,14 +207,17 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
                 leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterpart} />}
                 item={{
                     id: item.id,
-                    title: nutzapCounterpart ? null : walletChange.description,
-                    subTitle: nutzapCounterpart ? null : nicelyFormattedMintName(walletChange.mint)
                 }}
-                rightView={<ItemRightColumn amount={walletChange.amount} unit={walletChange.unit} isPending={false} />}
+                titleClassName="font-bold"
+                rightView={<ItemRightColumn mint={walletChange.mint} amount={walletChange.amount} unit={walletChange.unit} isPending={false} />}
                 index={index}
                 onPress={onPress}
             >
-                {nutzapCounterpart && ( <Counterparty pubkey={nutzapCounterpart} timestamp={item.created_at} /> )}
+                {nutzapCounterpart && (
+                    <Counterparty pubkey={nutzapCounterpart} timestamp={item.created_at}>
+                        <Text className="text-sm text-muted-foreground">{walletChange.description}</Text>
+                    </Counterparty>
+                )}
             </ListItem>  
         </Animated.View>
     )

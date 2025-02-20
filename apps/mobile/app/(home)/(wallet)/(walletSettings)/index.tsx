@@ -1,4 +1,4 @@
-import { NDKCashuMintList, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,12 +15,10 @@ import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList);
-    const { activeWallet, balance, setActiveWallet } = useNDKWallet();
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
+    const { activeWallet, balance } = useNDKWallet();
     const [syncing, setSyncing] = useState(false);
     const { colors } = useColorScheme();
-    console.log('balance', balance);
-    console.log('mintlist', JSON.stringify(mintList?.rawEvent?.(), null, 4));
 
     useEffect(() => {
         console.log('use effect balance', balance);
@@ -55,23 +53,47 @@ export default function WalletSettings() {
         router.back();
     }, [activeWallet?.walletId])
 
+    const { ndk } = useNDK();
+    const disableNutzaps = useCallback(async () => {
+        const mintList = new NDKEvent(ndk);
+        mintList.kind = NDKKind.CashuMintList;
+        mintList.tags = [];
+        await mintList.publishReplaceable()
+        console.log('new mint list', mintList.id.substring(0, 6));
+    }, [activeWallet])
 
     const { showActionSheetWithOptions } = useActionSheet();
 
-    const showDeleteActionSheet = useCallback((wallet: NDKCashuWallet) => {
+    const showDisableNutzapActionSheet = useCallback(() => {
         showActionSheetWithOptions({
-            title: 'Delete Wallet',
-            message: 'Are you sure you want to delete this wallet?',
-            options: ['Delete', 'Cancel'],
+            title: 'Disable Nutzap',
+            message: 'Are you sure you want to disable receiving nutzaps?',
+            options: ['Disable', 'Cancel'],
             destructiveButtonIndex: 0,
             cancelButtonIndex: 1,
         }, (index) => {
             if (index === 0) {
-                wallet.delete();
-                setActiveWallet(null);
+                disableNutzaps();
             }
         });
     }, [ showActionSheetWithOptions])
+
+    const enableNutzaps = useCallback(async () => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
+
+        if (!activeWallet.p2pks[0]) {
+            toast('Your NIP-60 wallet did not have a private key; fixing that.')
+            await activeWallet.getP2pk();
+            await activeWallet.publish();
+        }
+
+        const mintList = new NDKCashuMintList(ndk);
+        mintList.relays = ndk.pool.connectedRelays().map((r) => r.url);
+        mintList.mints = activeWallet.mints;
+        mintList.p2pk = activeWallet.p2pks[0];
+        await mintList.publishReplaceable();
+        toast.success('Nutzaps enabled');
+    }, [activeWallet, currentUser?.pubkey])
 
     const data = useMemo(() => {
         const opts = [];
@@ -87,9 +109,16 @@ export default function WalletSettings() {
             {
                 id: '3',
                 title: 'Mints',
-                subTitle: "Mints that serve as your wallet's bank",
+                subTitle: "Your wallet's banks",
                 leftView: <IconView name="home-outline" className="bg-green-500" />,
                 onPress: () => router.push('/(home)/(wallet)/(walletSettings)/mints'),
+            },
+            {
+                id: 'tokens',
+                title: 'Coins',
+                subTitle: "Coins in your wallet",
+                leftView: <IconView name="attach-money" className="bg-orange-500" />,
+                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/tokens'),
             },
 
             'Tools',
@@ -118,16 +147,34 @@ export default function WalletSettings() {
             });
             
             opts.push('  ');
+        }
 
+        opts.push(`mintList?.p2pk: ${mintList?.p2pk}`);
+
+        if (mintList?.hasTag("pubkey")) {
+            opts.push('Incoming zaps');
+            
             opts.push({
                 id: 'delete',
-                title: 'Delete Wallet',
+                title: 'Dsiable Nutzaps',
                 titleClassName: 'text-red-500',
-                onPress: () => showDeleteActionSheet(activeWallet as NDKCashuWallet)
+                onPress: () => showDisableNutzapActionSheet()
             })
             
             opts.push(`P2PK: ${mintList?.p2pk ? mintList.p2pk : 'Not set'}`);
+        } else if (activeWallet instanceof NDKCashuWallet) {
+            opts.push('Incoming zaps');
+            
+            opts.push({
+                id: 'enable',
+                title: 'Enable nutzaps',
+                subTitle: 'You are not setup to receive nutzaps.',
+                titleClassName: 'text-green-500',
+                onPress: enableNutzaps
+            })
         }
+
+        opts.push(`mintList? ${JSON.stringify(mintList?.rawEvent?.(), null, 2)}`);
 
         if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {
             opts.push('Warnings')
@@ -153,7 +200,7 @@ export default function WalletSettings() {
         }
 
         return opts;
-    }, [currentUser, activeWallet, balance]);
+    }, [currentUser, activeWallet, balance, mintList?.p2pk, enableNutzaps]);
 
     const [nwcWalletInfo, setNWCWalletInfo] = useState<NDKNWCGetInfoResult | null>(null);
     const nwcRequested = useRef(false);

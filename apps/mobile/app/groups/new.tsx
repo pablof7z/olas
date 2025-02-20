@@ -32,7 +32,7 @@ export default function NewGroup() {
     const { ndk } = useNDK();
     const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const relaySet = NDKRelaySet.fromRelayUrls([relayUrl], ndk, true);
-    const groupBookmark = useNDKSessionEventKind<NDKList>(NDKList, NDKKind.SimpleGroupList, { create: true });
+    const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { create: NDKList });
     
     const createGroup = useCallback(() => {
         const create = new NDKEvent(ndk);

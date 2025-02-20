@@ -1,7 +1,7 @@
-import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEventKindAsync, useNDKSessionEvents, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'react-native';
 import { Icon } from '@roninoss/icons';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Linking, View } from 'react-native';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
@@ -16,28 +16,21 @@ import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { createNip60Wallet } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
 import { DEV_BUILD } from '@/utils/const';
+import { useNip60Wallet } from '@/hooks/wallet';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
-    const currentUser = useNDKCurrentUser();
-
-    const { events: mintList } = useSubscribe(currentUser ? [
-        { kinds: [NDKKind.CashuMintList], authors: [currentUser.pubkey]}
-    ] : false, { wrap: true, closeOnEose: true }) as { events: NDKCashuMintList[] }
-
-    const { events: wallets } = useSubscribe(currentUser ? [
-        { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey]}
-    ] : false)
 
     const activateWallet = async (wallet: NDKCashuWallet) => {
         router.back();
+        wallet.start({ subId: 'wallet', skipVerification: true });
         setActiveWallet(wallet);
     };
 
-    const nip60Wallet = useNDKSessionEventKindAsync<NDKCashuWallet>(NDKCashuWallet);
+    const nip60Wallet = useNip60Wallet();
     
     const [primalSupported, setPrimalSupported] = useState(false);
 
@@ -45,7 +38,6 @@ export default function WalletsScreen() {
         Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
             setPrimalSupported(supported);
         }).catch((e) => {
-            // alert(e.message);
             setPrimalSupported(false);
         });
     }, []);

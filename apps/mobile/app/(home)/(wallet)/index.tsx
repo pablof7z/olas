@@ -44,7 +44,9 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
                 clearTimeout(timeout.current);
                 timeout.current = null;
             }
-        })
+        }).catch((e) => {
+            console.log('NWC info error', e);
+        });
 
         return () => {
             if (timeout.current) {
@@ -54,9 +56,9 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
         }
     }, [wallet?.walletId, retryCount])
 
-    if (!info) {
-        return <ActivityIndicator />
-    }
+    // if (!info) {
+    //     return <ActivityIndicator />
+    // }
 
     if (showTimeoutError) {
         return <View className="flex-1 bg-red-500 text-white p-3 absolute top-0 left-0 right-0">
@@ -87,7 +89,7 @@ function WalletNip60({ wallet }: { wallet: NDKCashuWallet }) {
 export default function WalletScreen() {
     const currentUser = useNDKCurrentUser();
     const { activeWallet, balance } = useNDKWallet();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKCashuMintList, NDKKind.CashuMintList, { create: true });
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, { create: NDKCashuMintList });
     const [isTestnutWallet, setIsTestnutWallet] = useState(false);
 
     useEffect(() => {

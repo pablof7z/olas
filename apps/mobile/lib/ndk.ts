@@ -1,5 +1,4 @@
 import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKRelay } from "@nostr-dev-kit/ndk-mobile";
-import { initializeDatabase } from "@/stores/db";
 import { getRelays } from "@/stores/db/relays";
 import { NET_DEBUG } from "@/utils/const";
 
@@ -13,8 +12,6 @@ export const timeZero = Date.now();
  * @returns 
  */
 export function initializeNDK(currentUser?: Hexpubkey) {
-    initializeDatabase();
-    
     const cacheAdapter = new NDKCacheAdapterSqlite('olas');
 
     const relays = getRelays();
@@ -62,5 +59,5 @@ export function initializeNDK(currentUser?: Hexpubkey) {
 const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
     const url = new URL(relay.url);
     if (direction === 'send' && relay.url.match(/olas/)) console.log(`[NET +${Date.now()-timeZero}ms] 👉`, url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && relay.url.match(/olas/) && msg.match(/9321,/)) console.log('👈', url.hostname, msg.slice(0, 600));
+    if (direction === 'recv' && msg.match(/17375,/)) console.log('👈', url.hostname, msg.slice(0, 600));
 };

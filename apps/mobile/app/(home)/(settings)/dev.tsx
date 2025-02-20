@@ -79,8 +79,6 @@ export default function DevScreen() {
     const db = adapter.db;
 
     const data: Row[] = [];
-    data.push({ id: 'filter-matching-time', title: 'Filter matching time', value: ndk.subManager.filterMatchingTime.toString() });
-    data.push({ id: 'filter-matching-count', title: 'Filter matching count', value: ndk.subManager.filterMatchingCount.toString() });
     data.push(...getSubscriptions());
     data.push(...getUnpublishedEvents(db));
     data.push(...getProfileCount(db));

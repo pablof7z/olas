@@ -1,4 +1,4 @@
-import { NDKEvent, NDKUser, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { MessageCircle } from 'lucide-react-native';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { activeEventAtom } from '@/stores/event';
@@ -6,7 +6,7 @@ import { useSetAtom } from 'jotai';
 import { router } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
 
-export default function Comment({ event, inactiveColor, foregroundColor, iconSize = 24, commentedByUser, commentCount }: { event: NDKEvent, inactiveColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
+export default function Comment({ event, inactiveColor, foregroundColor, iconSize = 18, commentedByUser, commentCount }: { event: NDKEvent, inactiveColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
     const setActiveEvent = useSetAtom(activeEventAtom);
 
     const comment = () => {

@@ -30,7 +30,6 @@ export function LocationBottomSheet() {
         setBottomSheetRef(ref);
 
         return () => {
-            console.log('unmounting location bottom sheet');
             setBottomSheetRef(null);
         };
     }, [ref, setBottomSheetRef]);

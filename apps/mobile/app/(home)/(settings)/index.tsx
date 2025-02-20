@@ -71,6 +71,7 @@ export default function SettingsIosStyleScreen() {
     const wot = useWOT();
     const unpublishedEvents = useNDKUnpublishedEvents();
     const resetAppSettings = useAppSettingsStore(s => s.reset);
+    const unlinkWallet = useAppSettingsStore(s => s.unlinkWallet);
     const toggleAdvancedMode = useAppSettingsStore(s => s.toggleAdvancedMode)
     const advancedMode = useAppSettingsStore(s => s.advancedMode);
 
@@ -89,6 +90,11 @@ export default function SettingsIosStyleScreen() {
         const appJson = require('../../../app.json');
         return appJson.expo.version;
     }, []);
+
+    const handleUnlinkWallet = useCallback(() => {
+        unlinkWallet();
+        setActiveWallet(null);
+    }, [unlinkWallet, setActiveWallet]);
 
     const data = useMemo(() => {
         const opts: ListDataItem[] = [];
@@ -128,6 +134,7 @@ export default function SettingsIosStyleScreen() {
             
             opts.push('Wallet & zaps')
             if (activeWallet) {
+                console.log('activeWallet', activeWallet);
                 let name = activeWallet.type.toString();
                 if (activeWallet instanceof NDKCashuWallet)
                     name = activeWallet.name || activeWallet.walletId;
@@ -139,7 +146,7 @@ export default function SettingsIosStyleScreen() {
                     leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
                     rightView: <View className="items-center justify-center flex-col m-2">
                         <Button variant="secondary" className="flex-col"
-                            onPress={() => setActiveWallet(null)}>
+                            onPress={handleUnlinkWallet}>
                             <Text className="text-sm font-medium text-red-500">Unlink</Text>
                         </Button>
                     </View>,
@@ -185,20 +192,10 @@ export default function SettingsIosStyleScreen() {
             });
         }            opts.push('   ');
 
-            opts.push(relaysItem);
-            opts.push(keyItem);
-            
-            opts.push('    ');
-
+        opts.push(relaysItem);
+        opts.push(keyItem);
         
-        opts.push({
-            id: '4',
-            title: 'Logout',
-            leftView: <IconView name="send-outline" className="bg-destructive" />,
-            onPress: appLogout,
-        });
-
-        opts.push('       ');
+        opts.push('    ');
 
         opts.push({
             id: 'advanced',
@@ -211,6 +208,24 @@ export default function SettingsIosStyleScreen() {
             opts.push(devItem);
             opts.push(emptyCache);
         }
+
+        opts.push('       ');
+        
+        opts.push({
+            id: '4',
+            title: 'Logout',
+            leftView: <IconView name="send-outline" className="bg-destructive" />,
+            onPress: appLogout,
+        });
+
+        opts.push('       ');
+
+        opts.push({
+            id: 'delete',
+            title: 'Delete Account',
+            leftView: <IconView name="delete-outline" className="bg-destructive" />,
+            onPress: () => router.push('/(home)/(settings)/delete-account'),
+        });
 
         opts.push(`Version ${appVersion} (${buildVersion})`);
 

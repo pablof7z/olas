@@ -35,8 +35,9 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import { useReactEvent } from '../React';
-import { sendZap } from './Reactions/Zaps';
-import { usePaymentStore } from '@/stores/payments';
+import { useReactionsStore } from '@/stores/reactions';
+import TopZaps from './Reactions/TopZaps';
+import { useZap } from '@/hooks/zap';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     const {ndk} = useNDK();
@@ -93,9 +94,6 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
         setTimeout(() => setShowHeart(false), 500); // Total animation duration 50+250+200=500ms
     }, [event.id]);
 
-    const { activeWallet } = useNDKWallet();
-    const addPendingPayment = usePaymentStore(s => s.addPendingPayment);
-
     // default zap
     const defaultZap = useAppSettingsStore(s => s.defaultZap);
 
@@ -119,11 +117,13 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
         .requireExternalGestureToFail(doubleTapGesture)
         .onEnd(handleSingleTap);
 
+    const sendZap = useZap();
+
     const endSendZap = () => {
         'worklet';
         setShowZap(true);
         triggerZapAnimation();
-        sendZap(defaultZap.message, defaultZap.amount, event, activeWallet, addPendingPayment, true);
+        sendZap(defaultZap.message, defaultZap.amount, event);
         setTimeout(() => setShowZap(false), 500);
     }
         
@@ -288,10 +288,17 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
         setActiveEvent(event);
         router.push(`/comments`);
     }, [event, setActiveEvent]);
-    
+
+    const reactionStore = useReactionsStore(state => state.reactions);
+    const reactions = useMemo(() => reactionStore?.get(event.id), [reactionStore, event.id]);
+
+    const zapEvents = useMemo(() => {
+        return reactions?.zapEvents ?? [];
+    }, [reactions]);
+
     return (
         <View style={styles.postBottom}>
-            <Reactions event={event} />
+            <Reactions event={event} reactions={reactions} />
 
             {trimmedContent.length > 0 && (
                 <Pressable onPress={showComment}>
@@ -312,7 +319,9 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 </View>
             )} */}
 
-            {/* <InlinedComments event={event} /> */}
+            <TopZaps target={event} zaps={zapEvents} />
+
+            <InlinedComments event={event} reactions={reactions} />
         </View>
     );
 }

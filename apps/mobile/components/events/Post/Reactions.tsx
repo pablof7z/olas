@@ -4,40 +4,40 @@ import { Heart, MessageCircle, BookmarkIcon, Repeat, Zap } from 'lucide-react-na
 import React from '../React';
 import Comment from '../Comment';
 import { useEffect, useMemo, useRef } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, FlatList } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import Zaps from './Reactions/Zaps';
 import Bookmark from './Bookmark';
 import EventContent from '@/components/ui/event/content';
-import { DEFAULT_STATS, useReactionsStore } from '@/stores/reactions';
-import { useObserver } from '@/hooks/observer';
+import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
 import Repost from '../Repost';
 
 export function Reactions({
     event,
     foregroundColor,
     inactiveColor,
+    reactions,
 }: {
     event: NDKEvent;
     foregroundColor?: string;
     inactiveColor?: string;
+    reactions?: ReactionStats;
 }) {
     const { colors } = useColorScheme();
-    const reactions = useReactionsStore(state => state.reactions);
     const {
         reactionCount,
         reactedByUser,
         commentCount,
         commentedByUser,
-        repostCount,
+        repostedBy,
         repostedByUser,
         zappedAmount,
         zappedByUser,
         bookmarkedByUser
-    } = useMemo(() => reactions.get(event.id) ?? DEFAULT_STATS, [reactions, event.id]);
-    
+    } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions, event.id]);
+
     inactiveColor ??= colors.foreground;
     foregroundColor ??= colors.foreground;
 
@@ -65,8 +65,8 @@ export function Reactions({
                     event={event}
                     inactiveColor={inactiveColor}
                     activeColor={foregroundColor}
+                    repostedBy={repostedBy}
                     repostedByUser={repostedByUser}
-                    repostCount={repostCount}
                     iconSize={28}
                 />
 
@@ -88,12 +88,12 @@ export function Reactions({
     );
 }
 
-export function InlinedComments({ event }: { event: NDKEvent }) {
-    const comments = useObserver([
-        { kinds: [NDKKind.GenericReply ], ...event.filter() },
-    ], [event.id])
-
-    if (comments.length === 0) return null;
+export function InlinedComments({ event, reactions }: { event: NDKEvent, reactions?: ReactionStats }) {
+    const comments = reactions?.comments ?? [];
+    
+    if (comments.length === 0) {
+        return null;
+    }
 
     return (
         <View className="flex-1 flex-col gap-0 p-2">

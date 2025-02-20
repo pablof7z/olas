@@ -1,4 +1,4 @@
-import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKUser } from "@nostr-dev-kit/ndk-mobile";
 import { db } from "./index";
 
 type NWCZap = {
@@ -12,11 +12,11 @@ type NWCZap = {
     amount: number;
 }
 
-export function addNWCZap({ event, recipientPubkey, pr, preimage, zapType, pendingPaymentId }: { event: NDKEvent, recipientPubkey: string, pr: string, preimage?: string, zapType: string, pendingPaymentId?: string }) {
-    console.log('👉 adding zap', pr);
+export function addNWCZap({ target, recipientPubkey, pr, preimage, zapType, pendingPaymentId }: { target: NDKEvent | NDKUser, recipientPubkey: string, pr: string, preimage?: string, zapType: string, pendingPaymentId?: string }) {
+    const id = target instanceof NDKEvent ? target.tagId() : target.pubkey;
     db.runSync(
         `INSERT INTO nwc_zaps (pr, preimage, recipient_pubkey, recipient_event_id, zap_type, created_at, updated_at, pending_payment_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-        [pr, preimage ?? "", recipientPubkey, event.tagId(), zapType, new Date().getTime() / 1000, new Date().getTime() / 1000, pendingPaymentId ?? ""]
+        [pr, preimage ?? "", recipientPubkey, id, zapType, new Date().getTime() / 1000, new Date().getTime() / 1000, pendingPaymentId ?? ""]
     )
 }
 

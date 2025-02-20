@@ -3,7 +3,6 @@ import { View, Text } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageProps, useImage } from 'expo-image';
-import { cn } from '@/lib/cn';
 
 interface AvatarProps extends ImageProps {
     pubkey: Hexpubkey;
@@ -22,6 +21,10 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 12
         width: size,
         height: size,
         cacheKey: pubkey,
+    }, {
+        onError: () => {
+            console.log('error loading image', pubkey);
+        }
     })
 
     if (!imageSource) {
@@ -53,9 +56,6 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 12
             recyclingKey={pubkey}
             style={{ width: imageSize, height: imageSize }}
             className="flex-1"
-            onError={() => {
-                console.log('error loading image', pubkey);
-            }}
         />
     </View>
     );

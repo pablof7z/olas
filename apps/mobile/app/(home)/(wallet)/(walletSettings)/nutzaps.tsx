@@ -19,17 +19,6 @@ export default function NutzapsScreen() {
     const [dbNutzaps, setDbNutzaps] = useState(DBCache.wallet.nutzaps.getNutzaps(ndk));
     const { activeWallet } = useNDKWallet();
 
-    const { events: walletTxEvents } = useSubscribe(currentUser?.pubkey ? [{
-        authors: [currentUser?.pubkey],
-        kinds: [NDKKind.WalletChange]
-    }] : false, { groupable: false, closeOnEose: true }, [currentUser?.pubkey])
-
-    const redeemedNutzaps = useMemo(() => {
-        const ids = new Set<string>();
-        walletTxEvents.map((tx) => tx.getMatchingTags("e", "redeemed").forEach((tag) => ids.add(tag[1])));
-        console.log('ids', ids.size);
-        return ids;
-    }, [walletTxEvents])
 
     if (!(activeWallet instanceof NDKCashuWallet)) return null;
 
@@ -38,12 +27,12 @@ export default function NutzapsScreen() {
     return <View style={{ flex: 1 } }>
         <FlashList
             data={nutzaps}
-            renderItem={({item}) => <NutzapRow p2pks={keys} event={item} dbNutzaps={dbNutzaps} redeemedNutzaps={redeemedNutzaps} />}
+            renderItem={({item}) => <NutzapRow wallet={activeWallet} p2pks={keys} event={item} dbNutzaps={dbNutzaps} />}
         />
     </View>
 }   
 
-function NutzapRow({ wallet, p2pks, event, dbNutzaps, redeemedNutzaps }: { wallet: NDKCashuWallet, p2pks: Set<string>, event: NDKEvent, dbNutzaps: DBCache.wallet.nutzaps.NDKNutzapDB[], redeemedNutzaps: Set<string> }) {
+function NutzapRow({ wallet, p2pks, event, dbNutzaps }: { wallet: NDKCashuWallet, p2pks: Set<string>, event: NDKEvent, dbNutzaps: DBCache.wallet.nutzaps.NDKNutzapDB[] }) {
     const nutzap = NDKNutzap.from(event);
     const status = useMemo(() => {
         if (!nutzap) return null;
@@ -57,20 +46,20 @@ function NutzapRow({ wallet, p2pks, event, dbNutzaps, redeemedNutzaps }: { walle
 
     const claim = useCallback(async () => {
         if (!nutzap) return;
-        console.log('claiming', nutzap?.id)
         const res = await wallet.redeemNutzap(nutzap, { onRedeemed });
         console.log('res', res);
     }, [wallet?.walletId, nutzap?.id])
     
     if (!nutzap) return null;
+
+    const spent = ["redeemed", "spent"].includes(status);
     
-    return <View>
-        <Text>amount = {formatMoney({ amount: nutzap.amount, unit: nutzap.unit })}</Text>
-        {!p2pks.has(nutzap.p2pk) && <Text>invalid p2pk {nutzap.p2pk}</Text>}
-        <Text>status = {status}</Text>
-        <Text>{redeemedNutzaps.has(nutzap.id) && 'redeemed'}</Text>
-        <Button variant="primary" onPress={claim}>
-            <Text>Claim</Text>
+    return <View className="flex-row items-center gap-2 justify-between">
+        <Text>{formatMoney({ amount: nutzap.amount, unit: nutzap.unit })}</Text>
+        {!spent && !p2pks.has(nutzap.p2pk) && <Text>invalid p2pk {nutzap.p2pk.substring(0, 6)}...</Text>}
+        <Text>{status}</Text>
+        <Button size="sm" variant={!spent ? "primary" : "plain" } onPress={claim}>
+            <Text>{spent ? 'Claimed' : 'Claim'}</Text>
         </Button>
     </View>
 }

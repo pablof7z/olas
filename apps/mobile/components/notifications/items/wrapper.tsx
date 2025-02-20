@@ -1,3 +1,4 @@
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import RelativeTime from "@/app/components/relative-time";
 import EventContent from "@/components/ui/event/content";
 import { activeEventAtom } from "@/stores/event";
@@ -8,6 +9,7 @@ import React, { useCallback } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import * as User from "@/components/ui/user";
+import { MailOpen, Reply } from 'lucide-react-native';
 
 export function NotificationContainer({ event, label, children }: { event: NDKEvent, label: string, children: React.ReactNode }) {
     const { ndk } = useNDK();
@@ -35,8 +37,9 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
     }, [event.pubkey]);
     
     return (
-        <View style={styles.notificationItem} className="flex flex-row gap-2 border-b border-border">
-            <TouchableOpacity onPress={onAvatarPress}>
+        <Swipeable renderRightActions={() => <RightActions event={event} />}>
+            <View style={styles.notificationItem} className="flex flex-row gap-2 border-b border-border bg-card">
+                <TouchableOpacity onPress={onAvatarPress}>
                 <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={44} />
             </TouchableOpacity>
             <TouchableOpacity onPress={onPress} className="flex-1">
@@ -58,13 +61,32 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
                             event.content.length > 0 && <EventContent className="text-foreground" event={event} />
                         )
                     )}
-                </View>
-            </TouchableOpacity>
-        </View>
+                    </View>
+                </TouchableOpacity>
+            </View>
+        </Swipeable>
+    )
+}
+
+function RightActions({ event }: { event: NDKEvent }) {
+    const setActiveEvent = useSetAtom(activeEventAtom);
+
+    const handleOpen = useCallback(() => {
+        setActiveEvent(event);
+        router.push(`/comments`);
+    }, [event?.id]);
+    
+    return (
+        <TouchableOpacity style={styles.rightAction} onPress={handleOpen}>
+            <MailOpen size={18} color="white" />
+            <Text className="text-white text-xs">Reply</Text>
+        </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
+    rightAction: { width: 75, height: '100%', backgroundColor: 'purple', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' },
+
     notificationItem: {
         flexDirection: 'row',
         padding: 12,

@@ -1,22 +1,19 @@
 import '../global.css';
 import 'expo-dev-client';
 import '@bacons/text-decoder/install';
-import 'react-native-get-random-values';
 import { PortalHost } from '@rn-primitives/portal';
 import * as SecureStore from 'expo-secure-store';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Toasts } from '@backpackapp-io/react-native-toast';
 import { StyleSheet } from 'react-native';
 import UserBottomSheet from '@/lib/user-bottom-sheet/component';
-
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import {
     NDKEventWithFrom,
     useNDKCurrentUser,
-    NDKCashuMintList,
     NDKSubscriptionCacheUsage,
     useNDKInit,
-    useNDKSessionInitWallet,
+    NDKUser,
 } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -25,12 +22,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKKind, NDKList, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { NDKKind, NDKList } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useRef, useState } from 'react';
 import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
 import { useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { relayNoticesAtom } from '@/stores/relays';
 import { useAppSettingsStore } from '@/stores/app';
 import { PromptForNotifications } from './notification-prompt';
@@ -48,9 +44,11 @@ import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import { useReactionsStore } from '@/stores/reactions';
 import {CommunityBottomSheet} from '@/lib/post-editor/sheets/CommunityBottomSheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
-import { initializeNDK, timeZero } from '@/lib/ndk';
+import { initializeNDK } from '@/lib/ndk';
 import { LogBox } from 'react-native';
 import { settingsStore } from '@/lib/settings-store';
+import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
+
 
 LogBox.ignoreAllLogs();
 
@@ -59,9 +57,6 @@ const ndk = initializeNDK(currentUserInSettings);
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
-    [NDKKind.ImageCurationSet, { wrapper: NDKList }],
-    [NDKKind.CashuMintList, { wrapper: NDKCashuMintList }],
-    [NDKKind.CashuWallet, { wrapper: NDKCashuWallet }],
     [NDKKind.SimpleGroupList, { wrapper: NDKList }],
 ] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
@@ -74,6 +69,7 @@ const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platfor
 
 function useAppSub(pubkey: string | null, dependencies: any[]) {
     const addReactionEvent = useReactionsStore((state) => state.addEvent);
+    const addReactionEvents = useReactionsStore((state) => state.addEvents);
     const eventFetched = useRef(0);
     useEffect(() => {
         if (!pubkey) return;
@@ -104,7 +100,10 @@ function useAppSub(pubkey: string | null, dependencies: any[]) {
         });
 
         setTimeout(() => {
-            appSub.start();
+            const cachedEvents = appSub.start(false);
+            if (cachedEvents) {
+                addReactionEvents(cachedEvents, pubkey);
+            }
         }, 10000);
     }, dependencies);
 }
@@ -174,7 +173,16 @@ export default function RootLayout() {
                 muteList: true,
                 wot: false,
                 kinds: sessionKinds,
-                subOpts: { skipVerification: true },
+                filters: (user: NDKUser) => [
+                    {
+                        kinds: [
+                            NDKKind.CashuMintList,
+                            NDKKind.CashuWallet,
+                        ],
+                        authors: [user.pubkey],
+                    },
+                ],
+                subOpts: { wrap: true, skipVerification: true },
             },
             {
                 onReady: () => {
@@ -233,10 +241,6 @@ export default function RootLayout() {
         // };
     }, []);
 
-    useEffect(() => {
-
-    })
-    
     useWalletMonitor();
 
     return (
@@ -320,6 +324,7 @@ export default function RootLayout() {
                                 <FeedEditorBottomSheet />
                                 <UserBottomSheet />
                                 <ReactionPickerBottomSheet />
+                                <ZapperBottomSheet />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />

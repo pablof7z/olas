@@ -1,9 +1,25 @@
-import { useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEventKindAsync, useNDKSessionInitWallet, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
-import { useCallback, useEffect, useRef } from "react";
+import { NDKCacheAdapterSqlite, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
+import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from "@nostr-dev-kit/ndk-wallet";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { db } from "@/stores/db";
 import { useDebounce } from "@/utils/debounce";
-import {settingsStore} from "@/lib/settings-store";
+import { useAppSettingsStore } from "@/stores/app";
+import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from "@/stores/db/cashu";
+
+export function useNip60Wallet() {
+    const [ wallet, setWallet ] = useState<NDKCashuWallet | undefined>(undefined);
+    const event = useNDKSessionEventKind(NDKKind.CashuWallet);
+
+    useEffect(() => {
+        if (event) {
+            NDKCashuWallet.from(event)
+                .then(setWallet)
+                .catch(e => console.error('error loading nip60 wallet', e));
+        }
+    }, [event])
+
+    return wallet;
+}
 
 /**
  * This wallet monitor keeps all known proofs from a NIP-60 wallet in a local database.
@@ -11,21 +27,71 @@ import {settingsStore} from "@/lib/settings-store";
 export function useWalletMonitor() {
     const {ndk} = useNDK();
     const { activeWallet, setActiveWallet } = useNDKWallet();
-    const nip60Wallet = useNDKSessionEventKindAsync<NDKCashuWallet>(NDKCashuWallet);
+    const nip60Wallet = useNip60Wallet();
     const currentUser = useNDKCurrentUser();
-    const initWallet = useNDKSessionInitWallet();
     const timer = useRef<NodeJS.Timeout | null>(null);
+    const walletType = useAppSettingsStore(s => s.walletType);
+    const walletPayload = useAppSettingsStore(s => s.walletPayload);
 
-    const delayedInitWallet = useCallback(() => {
+    useEffect(() => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
+
+        activeWallet.onMintInfoLoaded = (mint, mintInfo) => {
+            dbSetMintInfo(mint, mintInfo);
+        }
+
+        activeWallet.onMintKeysLoaded = (mint, keyMap) => {
+            for (const [keysetId, keys] of keyMap.entries()) {
+                dbSetMintKeys(mint, keysetId, keys);
+            }
+        }
+        
+        activeWallet.onMintInfoNeeded = (mint) => {
+            const mintInfo = dbGetMintInfo(mint);
+            if (mintInfo) return Promise.resolve(mintInfo);
+        }
+        
+        activeWallet.onMintKeysNeeded = (mint) => {
+            const keys = dbGetMintKeys(mint);
+            return Promise.resolve(keys);
+        }
+
+    }, [activeWallet?.walletId])
+
+    const setWalletConfig = useAppSettingsStore(s => s.setWalletConfig);
+
+    useEffect(() => {
+        if (activeWallet) {
+            console.log('active wallet changed', activeWallet.walletId);
+            setWalletConfig(activeWallet);
+        }
+    }, [ activeWallet?.walletId ])
+    
+    const delayedInitWallet = useCallback(async () => {
         if (!currentUser?.pubkey) return;
+        let wallet: NDKWallet | undefined;
 
-        const walletInSetting = settingsStore.getSync('wallet');
-        if (walletInSetting) {
-            initWallet(ndk, settingsStore);
+        if (walletType === 'none') return
+        else if (walletType === 'nwc' && walletPayload) {
+            wallet = new NDKNWCWallet(ndk, { pairingCode: walletPayload });
+        } else if (walletType === 'nip-60') {
+            const cacheAdapter = ndk.cacheAdapter;
+            let since: number | undefined;
+            if ((cacheAdapter instanceof NDKCacheAdapterSqlite)) {
+                const mostRecentCachedEvent = db.getFirstSync('SELECT * FROM events WHERE kind = ? AND pubkey = ? ORDER BY created_at DESC LIMIT 1', [NDKKind.CashuToken, currentUser.pubkey]);
+                if (mostRecentCachedEvent[0]) {
+                    since = mostRecentCachedEvent[0].created_at;
+                    console.log('most recent cached event', mostRecentCachedEvent[0]);
+                }
+            }
+            console.log('starting nip60 wallet', {since});
+            nip60Wallet.start({ subId: 'wallet', skipVerification: true, since });
+            wallet = nip60Wallet;
         } else if (nip60Wallet) {
+            console.log('defaulting to nip60 wallet');
             setActiveWallet(nip60Wallet);
         }
-    }, [currentUser?.pubkey, nip60Wallet])
+    }, [currentUser?.pubkey, nip60Wallet, walletType, walletPayload])
 
     useEffect(() => {
         if (!currentUser?.pubkey || activeWallet) return;
