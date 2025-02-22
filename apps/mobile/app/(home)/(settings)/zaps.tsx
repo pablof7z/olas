@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import { atom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { TextInput, TouchableOpacity, View } from "react-native";
+import { Switch, TextInput, TouchableOpacity, View } from "react-native";
 
 export type ZapOption = {
     amount: number;
@@ -14,6 +14,7 @@ export type ZapOption = {
 }
 
 const defaultZapAtom = atom<ZapOption, [ZapOption], null>(null, (get, set, zap) => set(defaultZapAtom, zap));
+
 function DefaultZapRow({ index, target }) {
     const [defaultZap, setDefaultZap] = useAtom(defaultZapAtom);
     const inputRef = useRef<TextInput>(null);
@@ -49,12 +50,40 @@ function DefaultZapRow({ index, target }) {
     )
 }
 
+function YoloZapsRow({ index, target }) {
+    const yoloZaps = useAppSettingsStore(s => s.yoloZaps);
+    const setYoloZaps = useAppSettingsStore(s => s.setYoloZaps);
+
+    return <>
+        <ListItem
+            index={index}
+            target={target}
+            item={{
+                title: 'YOLO zaps',
+                subTitle: 'Zap by swiping the ⚡️ icon',
+            }}
+            rightView={
+                <Switch
+                    value={yoloZaps}
+                    onValueChange={setYoloZaps}
+                />
+            }
+        />
+        <Text variant="caption1" className="text-muted-foreground p-2">
+            After sending a YOLO zap, you can tap it for a few seconds to cancel it.
+        </Text>
+    </>
+}
+
 export default function Zaps() {
     const settings = useMemo(() => {
-        const opts = [
-            'Default zap',
-            'default-zap',
-        ];
+        const opts = [];
+        
+        opts.push('One-tap zap');
+        opts.push('default-zap');
+
+        opts.push('YOLO zaps')
+        opts.push('yolo-zaps')
 
         return opts;
     }, [1])
@@ -91,6 +120,8 @@ export default function Zaps() {
 function Item({ item, index, target }) {
     if (item === 'default-zap') {
         return <DefaultZapRow index={index} target={target} />;
+    } else if (item === 'yolo-zaps') {
+        return <YoloZapsRow index={index} target={target} />;
     } else if (typeof item === 'string') {
         return <ListSectionHeader {...{ item, index, target }} />;
     }

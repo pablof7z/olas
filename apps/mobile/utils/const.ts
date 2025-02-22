@@ -7,10 +7,12 @@ export const blacklistPubkeys = new Set([
 export const videoKinds = new Set([NDKKind.HorizontalVideo, NDKKind.VerticalVideo]);
 export const mainKinds = new Set([NDKKind.Image, ...Array.from(videoKinds)]);
 
-export const DEV_BUILD = true;
+export const DEV_BUILD = false;
 
 export const PUBLISH_ENABLED = !DEV_BUILD || false;
 
 export const COMMUNITIES_ENABLED = DEV_BUILD && false;
 
 export const NET_DEBUG = DEV_BUILD && true;
+
+export const ZAPS_DISABLED = DEV_BUILD && false;

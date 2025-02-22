@@ -5,25 +5,17 @@ import { Text } from "@/components/nativewindui/Text";
 import UserAvatar from "@/components/ui/user/avatar";
 import { formatMoney } from "@/utils/bitcoin";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { usePaymentStore } from "@/stores/payments";
+import { Payment, targetToId, usePaymentStore } from "@/stores/payments";
+import { colorWithOpacity } from "@/theme/colors";
 
-export default function TopZaps({ target, zaps }: { target: NDKEvent | NDKUser, zaps: NDKNutzap[] }) {
-    const id = target instanceof NDKEvent ? target.tagId() : target.pubkey;
-    const pendingPayments = usePaymentStore(s => s.pendingPayments).get(id) || [];
-    const currentUser = useNDKCurrentUser();
+export default function TopZaps({ target }: { target: NDKEvent | NDKUser }) {
+    const id = targetToId(target);
+    const paymentEntry = usePaymentStore(s => s.entries.get(id));
+
     const sortedZaps = useMemo(() => {
-        const likeZapsPendingPayments = pendingPayments
-            .map(p => {
-                const likeZap = {
-                    amount: p.zapper.amount / 1000,
-                    pubkey: currentUser?.pubkey,
-                    content: p.zapper.comment,
-                }
-                return likeZap;
-            })
-        return [...zaps, ...likeZapsPendingPayments]
+        return (paymentEntry?.payments ?? [])
             .sort((a, b) => b.amount - a.amount);
-    }, [zaps, pendingPayments, currentUser]);
+    }, [paymentEntry]);
 
     // Animation values for container
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -62,16 +54,19 @@ export default function TopZaps({ target, zaps }: { target: NDKEvent | NDKUser, 
             <View style={{ flex: 1 }} />
 
             {sortedZaps.slice(1, 3).map(zap => (
-                <ZapPill zap={zap} withComment={false} />
+                <ZapPill key={zap.internalId} zap={zap} withComment={false} />
             ))}
         </Animated.View>
     );
 }
 
-function ZapPill({ zap, withComment = true }: { zap: NDKNutzap, withComment?: boolean }) {
-    const { userProfile } = useUserProfile(zap.pubkey);
+function ZapPill({ zap, withComment = true }: { zap: Payment, withComment?: boolean }) {
+    const { userProfile } = useUserProfile(zap.sender);
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(100)).current;
+    const scaleAnim = useRef(new Animated.Value(5)).current;  // Start scaled up 5x
+    const rotateAnim = useRef(new Animated.Value(0)).current;
+
+    const { colors } = useColorScheme();
 
     useEffect(() => {
         Animated.parallel([
@@ -80,29 +75,78 @@ function ZapPill({ zap, withComment = true }: { zap: NDKNutzap, withComment?: bo
                 duration: 500,
                 useNativeDriver: true,
             }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                speed: 20,
+                bounciness: 12,
                 useNativeDriver: true,
-            })
+            }),
+            Animated.sequence([
+                Animated.timing(rotateAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(rotateAnim, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                })
+            ])
         ]).start();
     }, []);
+
+    if (withComment) {
+        return (
+            <Animated.View style={[
+                styles.pill,
+                {
+                    opacity: fadeAnim,
+                    transform: [
+                        { 
+                            scale: scaleAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [5, 1]
+                            })
+                        },
+                        { 
+                            translateX: scaleAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [200, 0]
+                            }) 
+                        },
+                        { 
+                            rotate: rotateAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0deg', '15deg']
+                            }) 
+                        },
+                    ],
+                    backgroundColor: colorWithOpacity(colors.foreground, 0.1),
+                    borderRadius: 100,
+                    paddingVertical: 2,
+                    paddingRight: 4,
+                }
+            ]}>
+                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} />
+                <Text className="text-xs font-bold">{formatMoney({ amount: zap.amount, unit: zap.unit, hideUnit: true })}</Text>
+                <Text className="text-xs">{zap.comment}</Text>
+            </Animated.View>
+        );
+    }
 
     return (
         <Animated.View style={[
             styles.pill,
             {
                 opacity: fadeAnim,
-                transform: [{ translateX: slideAnim }]
+                transform: [{ translateX: scaleAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-200, 0]  // Adjust this value based on container width
+                })}]
             }
         ]}>
-            <UserAvatar pubkey={zap.pubkey} userProfile={userProfile} imageSize={20} />
-            {withComment && (
-                <>
-                    <Text className="text-xs font-bold">{formatMoney({ amount: zap.amount, unit: 'sats', hideUnit: true })}</Text>
-                    <Text className="text-xs">{zap.content}</Text>
-                </>
-            )}
+            <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} />
         </Animated.View>
     );
 }
