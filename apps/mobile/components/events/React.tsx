@@ -39,14 +39,14 @@ type ReactProps = {
 }
 
 export function useReactEvent() {
-    const addRelatedEvent = useReactionsStore(s => s.addEvent);
+    const addRelatedEvents = useReactionsStore(s => s.addEvents);
 
     const react = useCallback(async (event: NDKEvent, reaction: string = "+") => {
         const r = await event.react(reaction, false);
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
 
-        addRelatedEvent(r, true);
+        addRelatedEvents([r], true);
         
         r.publish()
             .then((relays) => {
@@ -54,7 +54,7 @@ export function useReactEvent() {
             .catch(e => {
                 console.error(e);
             });
-    }, [addRelatedEvent]);
+    }, [addRelatedEvents]);
 
     return { react };
 }

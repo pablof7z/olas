@@ -1,6 +1,4 @@
 import { NDKEvent, NDKKind, NDKList, NostrEvent, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { router } from 'expo-router';
-import { Heart, MessageCircle, BookmarkIcon, Repeat, Zap } from 'lucide-react-native';
 import React from '../React';
 import Comment from '../Comment';
 import { useEffect, useMemo, useRef } from 'react';
@@ -9,7 +7,6 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { Text } from '@/components/nativewindui/Text';
 import { StyleSheet } from 'react-native';
 import Zaps from './Reactions/Zaps';
-import Bookmark from './Bookmark';
 import EventContent from '@/components/ui/event/content';
 import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
 import Repost from '../Repost';
@@ -33,9 +30,6 @@ export function Reactions({
         commentedByUser,
         repostedBy,
         repostedByUser,
-        zappedAmount,
-        zappedByUser,
-        bookmarkedByUser
     } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions, event.id]);
 
     inactiveColor ??= colors.foreground;
@@ -73,8 +67,6 @@ export function Reactions({
                 <Zaps
                     event={event}
                     inactiveColor={inactiveColor}
-                    zappedAmount={zappedAmount}
-                    zappedByUser={zappedByUser}
                     iconSize={28}
                 />
             </View>

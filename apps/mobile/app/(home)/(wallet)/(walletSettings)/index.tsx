@@ -149,8 +149,6 @@ export default function WalletSettings() {
             opts.push('  ');
         }
 
-        opts.push(`mintList?.p2pk: ${mintList?.p2pk}`);
-
         if (mintList?.hasTag("pubkey")) {
             opts.push('Incoming zaps');
             
@@ -173,8 +171,6 @@ export default function WalletSettings() {
                 onPress: enableNutzaps
             })
         }
-
-        opts.push(`mintList? ${JSON.stringify(mintList?.rawEvent?.(), null, 2)}`);
 
         if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {
             opts.push('Warnings')

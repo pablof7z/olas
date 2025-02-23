@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
@@ -27,6 +27,16 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 12
         }
     })
 
+    if (!pubkey) {
+        console.trace('no pubkey');
+        alert('no pubkey');
+        return (
+            <View style={{ width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden' }}>
+                <Text className="text-foreground text-xl">NO PUBKEY</Text>
+            </View>
+        );
+    }
+
     if (!imageSource) {
         const color = pubkey.slice(0, 6);
         const styles = {
@@ -48,17 +58,38 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, imageSize = 12
         );
     }
 
+    const borderWidth = 4;
+
     return (<View
-        style={{ width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden' }}
+        style={{ width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden', position: 'relative' }}
     >
-        <Image
-            source={imageSource}
-            recyclingKey={pubkey}
-            style={{ width: imageSize, height: imageSize }}
-            className="flex-1"
-        />
+        {/* <SweepGradientDemo size={imageSize} />
+        <View
+            style={{ width: imageSize-borderWidth*2, height: imageSize-borderWidth*2, borderRadius: imageSize, overflow: 'hidden'}}
+        > */}
+            <Image
+                source={imageSource}
+                recyclingKey={pubkey}
+                style={{ width: imageSize, height: imageSize }}
+                // style={{ width: imageSize-borderWidth*2, height: imageSize-borderWidth*2 }}
+                className="flex-1"
+            />
+        {/* </View> */}
     </View>
     );
 };
+
+// export const SweepGradientDemo = ({ size }: { size: number }) => {
+//     return (
+//       <Canvas style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+//         <Rect x={0} y={0} width={size} height={size}>
+//           <SweepGradient
+//             c={vec(size / 2, size / 2)}
+//             colors={["cyan", "magenta", "yellow", "cyan"]}
+//           />
+//         </Rect>
+//       </Canvas>
+//     );
+// };
 
 export default UserAvatar;

@@ -202,6 +202,26 @@ export const migrations = [
             SecureStore.deleteItemAsync('wallet');
             SecureStore.deleteItemAsync('wallet_last_updated_at');
         }
+    },
+
+    {
+        version: 16,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(`CREATE TABLE IF NOT EXISTS payments (
+                internal_id TEXT PRIMARY KEY,
+                target_type TEXT,
+                target_id TEXT,
+                recipient TEXT,
+                sender TEXT,
+                comment TEXT,
+                amount INTEGER,
+                unit TEXT,
+                status TEXT,
+                created_at INTEGER,
+                updated_at INTEGER,
+                receipt_id TEXT
+            )`);
+        }
     }
 ];
 

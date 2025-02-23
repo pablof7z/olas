@@ -42,13 +42,14 @@ import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
 import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import { useReactionsStore } from '@/stores/reactions';
+import { usePaymentStore } from '@/stores/payments';
 import {CommunityBottomSheet} from '@/lib/post-editor/sheets/CommunityBottomSheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
 import { initializeNDK } from '@/lib/ndk';
 import { LogBox } from 'react-native';
 import { settingsStore } from '@/lib/settings-store';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
-
+import ZapModal from '@/components/ZapModal';
 
 LogBox.ignoreAllLogs();
 
@@ -68,8 +69,8 @@ const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platfor
 }
 
 function useAppSub(pubkey: string | null, dependencies: any[]) {
-    const addReactionEvent = useReactionsStore((state) => state.addEvent);
     const addReactionEvents = useReactionsStore((state) => state.addEvents);
+    const addPayments = usePaymentStore((state) => state.addPayments);
     const eventFetched = useRef(0);
     useEffect(() => {
         if (!pubkey) return;
@@ -80,7 +81,7 @@ function useAppSub(pubkey: string | null, dependencies: any[]) {
 
         const filters = [
             { kinds: [NDKKind.Text], '#k': kindString, 'authors': [pubkey], ...sinceFilter },
-            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [pubkey] },
             { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [pubkey], ...sinceFilter },
             { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [pubkey], ...sinceFilter },
             { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [pubkey], ...sinceFilter },
@@ -90,7 +91,8 @@ function useAppSub(pubkey: string | null, dependencies: any[]) {
         const appSub = ndk.subscribe(filters, { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' }, undefined, false);
         
         appSub.on("event", (event) => {
-            addReactionEvent(event, pubkey);
+            addReactionEvents([event], pubkey);
+            addPayments([event]);
             eventFetched.current++;
         });
 
@@ -103,6 +105,7 @@ function useAppSub(pubkey: string | null, dependencies: any[]) {
             const cachedEvents = appSub.start(false);
             if (cachedEvents) {
                 addReactionEvents(cachedEvents, pubkey);
+                addPayments(cachedEvents);
             }
         }, 10000);
     }, dependencies);
@@ -161,8 +164,6 @@ export default function RootLayout() {
 
     useEffect(() => {
         if (!currentUser?.pubkey) return;
-
-        console.log('initializing session');
 
         initializeSession(
             ndk,

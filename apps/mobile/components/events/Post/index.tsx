@@ -289,12 +289,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
         router.push(`/comments`);
     }, [event, setActiveEvent]);
 
-    const reactionStore = useReactionsStore(state => state.reactions);
-    const reactions = useMemo(() => reactionStore?.get(event.id), [reactionStore, event.id]);
-
-    const zapEvents = useMemo(() => {
-        return reactions?.zapEvents ?? [];
-    }, [reactions]);
+    const reactions = useReactionsStore(state => state.reactions.get(event.tagId()));
 
     return (
         <View style={styles.postBottom}>
@@ -304,6 +299,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 <Pressable onPress={showComment}>
                     <EventContent
                         event={event}
+                        numberOfLines={6}
                         content={trimmedContent}
                         className="text-sm text-foreground"
                         onMentionPress={onMentionPress}
@@ -319,9 +315,11 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 </View>
             )} */}
 
-            <TopZaps target={event} zaps={zapEvents} />
+            <TopZaps target={event} />
 
-            <InlinedComments event={event} reactions={reactions} />
+            <Pressable onPress={showComment}>
+                <InlinedComments event={event} reactions={reactions} />
+            </Pressable>
         </View>
     );
 }

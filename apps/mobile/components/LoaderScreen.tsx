@@ -2,8 +2,10 @@ import { View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from './nativewindui/ActivityIndicator';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image } from 'react-native';
+import { usePaymentStore } from '@/stores/payments';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 
 export default function LoaderScreen({
     children,
@@ -14,42 +16,62 @@ export default function LoaderScreen({
     appReady: boolean;
     wotReady: boolean;
 }) {
+    const currentUser = useNDKCurrentUser();
+    const initPaymentStore = usePaymentStore(s => s.init);
     const inset = useSafeAreaInsets();
-    const haveInterval = useRef(false);
-    const [ignoreWot, setIgnoreWot] = useState(true);
+    // const haveInterval = useRef(false);
+    // const [ignoreWot, setIgnoreWot] = useState(true);
+    const [renderApp, setRenderApp] = useState(false);
 
-    if (appReady && !wotReady && !haveInterval.current) {
-        haveInterval.current = true;
-        setInterval(() => {
-            setIgnoreWot(true);
-        }, 3000);
-    }
+    useEffect(() => {
+        const start = Date.now();
+        console.log('init payment store');
+        initPaymentStore(currentUser?.pubkey);
+        const end = Date.now();
+        console.log('payment store init time', end - start);
+    }, [currentUser?.pubkey])
 
-    if (appReady && (wotReady || ignoreWot)) {
-        return children;
-    }
+    useEffect(() => {
+        if (appReady && (wotReady)) {
+            setTimeout(() => {
+                setRenderApp(true);
+            }, 1000);
+        }
+    }, [appReady, wotReady]);
+
+    // if (appReady && !wotReady && !haveInterval.current) {
+    //     haveInterval.current = true;
+    //     setInterval(() => {
+    //         setIgnoreWot(true);
+    //     }, 3000);
+    // }
 
     const logo = require('../assets/logo.png');
 
     return (
-        <View className="h-screen w-screen flex-1 items-center justify-center bg-card">
-            <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
+        <>
+            {!renderApp && (
+                <View className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
+                    <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
 
-            <Text variant="largeTitle" className="mt-4 text-5xl font-black">
-                Olas
-            </Text>
-            <Text variant="callout" className="font-medium opacity-40">
-                Make waves
-            </Text>
+                    <Text variant="largeTitle" className="mt-4 text-5xl font-black">
+                        Olas
+                    </Text>
+                    <Text variant="callout" className="font-medium opacity-40">
+                        Make waves
+                    </Text>
 
-            <View className="absolute bottom-0 left-0 right-0 flex-col items-center gap-2 p-4" style={{ paddingBottom: inset.bottom }}>
-                <ActivityIndicator size="small" color="#FF7F00" />
+                    <View className="absolute bottom-0 left-0 right-0 flex-col items-center gap-2 p-4" style={{ paddingBottom: inset.bottom }}>
+                        <ActivityIndicator size="small" color="#FF7F00" />
 
-                <Text variant="caption1" className="font-light">
-                    <LoadingText appReady={appReady} wotReady={wotReady} />
-                </Text>
-            </View>
-        </View>
+                        <Text variant="caption1" className="font-light">
+                            <LoadingText appReady={appReady} wotReady={wotReady} />
+                        </Text>
+                    </View>
+                </View>
+            )}
+        {appReady && children}
+        </>
     );
 }
 

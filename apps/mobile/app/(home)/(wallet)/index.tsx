@@ -10,11 +10,9 @@ import * as User from '@/components/ui/user';
 import { useColorScheme } from "@/lib/useColorScheme";
 import TransactionHistory from "@/components/wallet/transactions/list";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePaymentStore } from "@/stores/payments";
 import NWCListTansactions from "@/components/wallet/nwc/list-transactions";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ActivityIndicator } from "@/components/nativewindui/ActivityIndicator";
+
 const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) => set(nwcInfoAtom, value));
 const walletTitleAtom = atom<string | null, [string | null], void>(null, (get, set, value) => set(walletTitleAtom, value));
 

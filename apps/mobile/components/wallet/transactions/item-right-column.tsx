@@ -15,20 +15,22 @@ export function ItemRightColumn({ mint, amount, unit = 'sats', isPending }: { mi
     if (!amount) return null;
 
     return (
-        <View style={rightViewStyles.container}>
+        <View style={styles.container}>
             {isPending && <Timer size={24} color={colors.muted} />}
-            <View style={rightViewStyles.column}>
-                <Text className="text-xl font-bold text-foreground">{niceAmount}</Text>
-                <Text className="text-sm text-muted-foreground">{niceUnit}</Text>
-                {mintInfo && <View className="flex-row items-center gap-1">
-                    <Image source={{ uri: mintInfo.icon_url }} style={{ width: 16, height: 16, borderRadius: 4 }} />
-                </View>}
+            <View style={styles.column}>
+                <Text className="text-2xl font-bold text-foreground">{niceAmount}</Text>
+                <View style={styles.unitContainer}>
+                    {mintInfo && <View className="flex-row items-center gap-1">
+                        <Image source={{ uri: mintInfo.icon_url }} style={{ width: 16, height: 16, borderRadius: 4 }} />
+                    </View>}
+                    <Text className="text-xs text-muted-foreground">{niceUnit}</Text>
+                </View>
             </View>
         </View>
     )
 }
 
-const rightViewStyles = StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -40,5 +42,10 @@ const rightViewStyles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'flex-end',
         gap: -10,
+    },
+    unitContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     }
 }) 

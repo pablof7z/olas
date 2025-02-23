@@ -1,7 +1,5 @@
 import { cn } from "@/lib/cn";
-import { nicelyFormattedMintName } from "@/utils/mint";
 import { Button } from "@/components/nativewindui/Button";
-import { formatMoney } from "@/utils/bitcoin";
 import { NDKEvent, useNDK, NDKNutzap, useUserProfile, NDKZapSplit, NDKPaymentConfirmation, NDKKind } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuDeposit, NDKWallet, NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
 import React, { useState, useRef, useEffect, useMemo } from "react";
@@ -66,7 +64,7 @@ export default function HistoryItem({ wallet, item, index, target, onPress }: {
 
 
 function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, index: number, target: any }) {
-    console.log('pending', item);
+    console.log('pending', item.internalId);
     
     const [ state, setState ] = useState<'pending' | 'sending' | 'complete' | 'failed'>('sending');
     const timer = useRef<NodeJS.Timeout | null>(null);

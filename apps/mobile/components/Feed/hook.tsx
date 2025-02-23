@@ -1,4 +1,5 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
+import { usePaymentStore } from "@/stores/payments";
 import { useReactionsStore } from "@/stores/reactions";
 import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
@@ -186,7 +187,7 @@ export function useFeedEvents(
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
             if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
-                console.log('removing new entry', entry.id, entry.event?.pubkey)
+                // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
                 newEntriesRef.current.delete(entry.id);
@@ -516,8 +517,8 @@ export function useFeedMonitor(
     const activeIds = useRef<Set<string>>(new Set());
     const activeSlices = useRef<Slice[]>([]);
     const currentUser = useNDKCurrentUser();
-    const addRelatedEvent = useReactionsStore(s => s.addEvent);
     const addRelatedEvents = useReactionsStore(s => s.addEvents);
+    const addPayments = usePaymentStore(s => s.addPayments);
 
     // useEffect(() => {
     //     if
@@ -548,8 +549,14 @@ export function useFeedMonitor(
             skipVerification: true,
             subId: `feedmonitor-${newSlice.startIndex}-${newSlice.endIndex}`
         }, undefined, {
-            onEvent: (event) => addRelatedEvent(event, currentUser?.pubkey),
-            onEvents: (events) => addRelatedEvents(events, currentUser?.pubkey)
+            onEvent: (event) => {
+                addRelatedEvents([event], currentUser?.pubkey)
+                addPayments([event])
+            },
+            onEvents: (events) => {
+                addRelatedEvents(events, currentUser?.pubkey);
+                addPayments(events);
+            }
         });
         activeSlices.current.push(newSlice);
         for (const id of newSlice.eventIds) {

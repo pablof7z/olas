@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useReactionsStore } from "@/stores/reactions";
-import AvatarGroup from "../ui/user/AvatarGroup";
 
 type RepostProps = {
     /**
@@ -48,7 +47,7 @@ export default function Repost({
     repostedBy,
     repostedByUser,
 }: RepostProps) {
-    const addRelatedEvent = useReactionsStore(s => s.addEvent);
+    const addRelatedEvents = useReactionsStore(s => s.addEvents);
     
     const repost = useCallback(async () => {
         if (repostedByUser) {
@@ -60,7 +59,7 @@ export default function Repost({
         r.tags.push(['k', event.kind.toString()]);
         await r.sign();
 
-        addRelatedEvent(r, true);
+        addRelatedEvents([r], true);
         
         r.publish()
             .then((relays) => {
@@ -79,9 +78,6 @@ export default function Repost({
                     color={repostedByUser ? 'green' : inactiveColor}
                 />
             </TouchableOpacity>
-            {repostedBy.size > 0 && (
-                <AvatarGroup pubkeys={Array.from(repostedBy)} avatarSize={iconSize*0.7} threshold={iconSize} />
-            )}
         </View>
     )
 }

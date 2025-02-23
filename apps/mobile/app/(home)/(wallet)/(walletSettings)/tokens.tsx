@@ -45,7 +45,7 @@ export default function TokensScreen() {
             }} />
 
             <FlashList
-                data={Array.from(tokens.values())}
+                data={Array.from(tokens.values()).filter(t => !!t.tokenId)}
                 keyExtractor={(item) => item.tokenId}
                 renderItem={({ item }) => <TokenItem tokenId={item.tokenId} token={item.token} mint={item.mint} proofEntries={item.proofEntries} />}
             />

@@ -201,8 +201,7 @@ export default function SettingsIosStyleScreen() {
             id: 'advanced',
             title: 'Advanced',
             subTitle: 'Settings for advanced users',
-            rightView: <Switch value={advancedMode} onValueChange={toggleAdvancedMode} />,
-            onPress: toggleAdvancedMode
+            rightView: <Switch value={advancedMode} onValueChange={toggleAdvancedMode} style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }} />,
         })
         if (advancedMode) {
             opts.push(devItem);

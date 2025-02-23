@@ -62,10 +62,8 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
             ))}
 
             {sortedPubkeys.length > threshold && (
-                <View
-                    className={`h-${avatarSize} w-${avatarSize} items-center justify-center rounded-full bg-gray-200`}
-                    style={{ marginLeft: -10 }}>
-                    <Text className="text-sm text-gray-700">+{sortedPubkeys.length - threshold}</Text>
+                <View>
+                    <Text className="text-xs text-gray-700">+{sortedPubkeys.length - threshold}</Text>
                 </View>
             )}
         </View>

@@ -347,8 +347,10 @@ function DataList() {
     const follows = useAllFollows();
     const bookmarkIds = useBookmarkIds();
 
-    const withTweets = useMemo(() => feedType.kind === 'search', [feedType.kind])
     const isSavedSearch = useIsSavedSearch();
+    const withTweets = useMemo(() => (
+        feedType.kind === 'search' && !isSavedSearch
+    ), [feedType.kind, isSavedSearch])
 
     const bookmarkIdsForFilter = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
@@ -432,6 +434,8 @@ function DataList() {
 
         return {filters, key: keyParts.join(), filterFn, numColumns};
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
+
+    console.log('filters', JSON.stringify(filters, null, 4), key);
 
     // useEffect(() => {
     //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array

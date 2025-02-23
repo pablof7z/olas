@@ -1,11 +1,10 @@
 import { useAppSettingsStore } from "@/stores/app";
-import { NDKEvent, NDKRelaySet, NDKSubscriptionCacheUsage, NostrEvent, useNDK, useNDKCurrentUser, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
+import { NDKPrivateKeySigner, NDKEvent, NDKRelaySet, NostrEvent, useNDK, useNDKCurrentUser, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
 import { NDKKind } from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Notifications from 'expo-notifications';
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import { mainKinds } from "@/utils/const";
-import { NDKPrivateKeySigner } from "../../../packages/ndk/ndk/dist";
 import { useObserver } from "./observer";
 
 const kindString = Array.from(mainKinds).map((k) => k.toString());

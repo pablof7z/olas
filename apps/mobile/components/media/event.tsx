@@ -2,6 +2,7 @@ import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from 
 import { Dimensions, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import MediaComponent from './media';
+import ProductGridContainer from '../product/grid-container';
 
 export type EventMediaProps = {
     event: NDKEvent;
@@ -39,6 +40,24 @@ export function EventMediaGridContainer({
     ...props
 }: EventMediaGridContainerProps) {
     size ??= Dimensions.get('window').width / 3;
+
+    if (event.kind === 30402) {
+        return <ProductGridContainer event={event}>
+            <EventMediaContainer
+                event={event}
+                onPress={onPress}
+                forceProxy={forceProxy}
+                onLongPress={onLongPress}
+                style={[styles.mediaGridContainer, {
+                    marginHorizontal: index % 3 === 1 ? 1 : 0,
+                }]}
+                singleMode
+                width={size}
+                height={size}
+                {...props}
+            />
+        </ProductGridContainer>
+    }
 
     return (
         <EventMediaContainer
@@ -178,6 +197,9 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
             return imetas;
         } catch { return []; }
         // const imetas = event.getMatchingTags("images")
+    } else if (event.kind === 30402) {
+        const imaages = event.getMatchingTags("image").map((t) => ({ url: t[1] }));
+        return imaages;
     }
     
     if (event instanceof NDKImage || event instanceof NDKVideo) {

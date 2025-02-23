@@ -144,7 +144,7 @@ function ChatInput({ event }: { event: NDKEvent }) {
     }   
     
     return (<View className="py-4 flex-row items-center w-full gap-4">
-        <UserAvatar userProfile={userProfile} size={10} className="w-6 h-6" />
+        <UserAvatar userProfile={userProfile} className="w-6 h-6" pubkey={currentUser?.pubkey} />
         <View className="flex-col flex-1">
             {replyTo && <Text className="text-orange-500 text-xs">
                 @{replyToProfile?.name}

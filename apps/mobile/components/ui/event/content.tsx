@@ -153,7 +153,7 @@ function RenderPart({
     return <Text {...props}>{part}</Text>;
 }
 
-const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, content, ...props }: EventContentProps & React.ComponentProps<typeof Text>) => {
+const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, numberOfLines, content, ...props }: EventContentProps & React.ComponentProps<typeof Text>) => {
     content ??= event.content;
 
     const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+)/);
@@ -167,7 +167,7 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Tex
     }
 
     return (
-        <Text {...props}>
+        <Text numberOfLines={numberOfLines} {...props}>
             {parts.map((part: string, index: number) => (
                 <RenderPart key={index} part={part} {...props} />
             ))}

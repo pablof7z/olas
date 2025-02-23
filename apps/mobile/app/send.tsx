@@ -1,17 +1,17 @@
 import { List, ListItem } from "@/components/nativewindui/List";
 import { Platform, StyleSheet } from "react-native";
-import { CashuPaymentInfo, Hexpubkey, NDKKind, NDKLnLudData, NDKLnUrlData, NDKUser, NDKUserProfile, NDKZapMethod, NDKZapMethodInfo, NDKZapper, useFollows, useNDK, useNDKSession, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { TextInput, TouchableOpacity, View, KeyboardAvoidingView } from "react-native";
+import { CashuPaymentInfo, Hexpubkey, NDKLnLudData, NDKUser, NDKZapMethod, NDKZapMethodInfo, NDKZapper, useFollows, useNDK, useNDKWallet, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { TextInput, TouchableOpacity, View } from "react-native";
 import * as User from "@/components/ui/user"
 import { Text } from "@/components/nativewindui/Text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonProps, ButtonState } from "@/components/nativewindui/Button";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { usePaymentStore } from "@/stores/payments";

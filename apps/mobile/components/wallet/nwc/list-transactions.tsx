@@ -10,7 +10,7 @@ import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import RelativeTime from "@/app/components/relative-time";
 import { getNWCZap, getNWCZapsByPendingPaymentId } from "@/stores/db/zaps";
-import { PendingZap, usePaymentStore } from "@/stores/payments";
+import { PendingZap, usePendingPayments } from "@/stores/payments";
 import { ItemRightColumn } from "../transactions/item-right-column";
 import { Counterparty } from "../transactions/counterparty";
 
@@ -58,12 +58,12 @@ export default function NWCListTansactions() {
             })
     }, [activeWallet?.walletId])
 
-    const pendingPayments = usePaymentStore(s => s.pendingPayments);
+    const pendingPayments = usePendingPayments();
 
     const txsWithPendingPayments = useMemo(() => {
         // go through the pending payments and see if we find a 
         const notFoundPendingPayments = [];
-        for (const pendingPayment of Array.from(pendingPayments.values()).flat()) {
+        for (const pendingPayment of pendingPayments) {
             const nwcZap = getNWCZapsByPendingPaymentId(pendingPayment.internalId);
             if (!nwcZap) {
                 notFoundPendingPayments.push(pendingPayment);
@@ -74,7 +74,7 @@ export default function NWCListTansactions() {
             ...notFoundPendingPayments,
             ...txs.sort((a, b) => b.created_at - a.created_at)
         ]
-    }, [txs, pendingPayments.size]);
+    }, [txs, pendingPayments.length]);
 
     return <FlashList
         data={txsWithPendingPayments}

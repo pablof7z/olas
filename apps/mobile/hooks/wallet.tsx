@@ -5,6 +5,7 @@ import { db } from "@/stores/db";
 import { useDebounce } from "@/utils/debounce";
 import { useAppSettingsStore } from "@/stores/app";
 import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from "@/stores/db/cashu";
+import { usePaymentStore } from "@/stores/payments";
 
 export function useNip60Wallet() {
     const [ wallet, setWallet ] = useState<NDKCashuWallet | undefined>(undefined);
@@ -32,6 +33,13 @@ export function useWalletMonitor() {
     const timer = useRef<NodeJS.Timeout | null>(null);
     const walletType = useAppSettingsStore(s => s.walletType);
     const walletPayload = useAppSettingsStore(s => s.walletPayload);
+    const setCurrentUser = usePaymentStore(s => s.setCurrentUser);
+
+    useEffect(() => {
+        setCurrentUser(currentUser?.pubkey);
+    }, [currentUser?.pubkey])
+
+    
 
     useEffect(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
@@ -70,25 +78,25 @@ export function useWalletMonitor() {
         if (!currentUser?.pubkey) return;
         let wallet: NDKWallet | undefined;
 
-        if (walletType === 'none') return
+        if (walletType === 'none') return;
         else if (walletType === 'nwc' && walletPayload) {
             wallet = new NDKNWCWallet(ndk, { pairingCode: walletPayload });
-        } else if (walletType === 'nip-60') {
+        } else if (nip60Wallet) {
             const cacheAdapter = ndk.cacheAdapter;
             let since: number | undefined;
             if ((cacheAdapter instanceof NDKCacheAdapterSqlite)) {
-                const mostRecentCachedEvent = db.getFirstSync('SELECT * FROM events WHERE kind = ? AND pubkey = ? ORDER BY created_at DESC LIMIT 1', [NDKKind.CashuToken, currentUser.pubkey]);
-                if (mostRecentCachedEvent[0]) {
-                    since = mostRecentCachedEvent[0].created_at;
-                    console.log('most recent cached event', mostRecentCachedEvent[0]);
-                }
+                const { db } = cacheAdapter;
+                const mostRecentCachedEvent = db.getFirstSync('SELECT created_at FROM events WHERE kind = ? AND pubkey = ? ORDER BY created_at DESC LIMIT 1', [NDKKind.CashuToken, currentUser.pubkey]) as { created_at: number };
+                since = mostRecentCachedEvent?.created_at;
             }
             nip60Wallet.start({ subId: 'wallet', skipVerification: true, since });
             wallet = nip60Wallet;
-        } else if (nip60Wallet) {
-            setActiveWallet(nip60Wallet);
+        } else {
+            return;
         }
-    }, [currentUser?.pubkey, nip60Wallet, walletType, walletPayload])
+
+        setActiveWallet(wallet);
+    }, [currentUser?.pubkey, !!nip60Wallet, walletType, walletPayload])
 
     useEffect(() => {
         if (!currentUser?.pubkey || activeWallet) return;

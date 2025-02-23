@@ -33,10 +33,9 @@ export default function VideoComponent({
         renderDimensions = calcDimensions(dimensions, maxDimensions);
     }
     
-    const videoSource = { uri: url };
     loop ??= true;
     muted ??= true;
-    const player = useVideoPlayer(videoSource, (player) => {
+    const player = useVideoPlayer(url, (player) => {
         player.loop = loop;
         player.muted = muted;
         player.play();
@@ -54,8 +53,6 @@ export default function VideoComponent({
         return { width, height };
     }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
     
-
-    console.log('video style', _style);
 
     return (
         <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>

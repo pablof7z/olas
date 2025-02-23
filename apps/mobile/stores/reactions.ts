@@ -1,4 +1,4 @@
-import { NDKEvent, NDKKind, NDKNutzap, zapInvoiceFromEvent } from "@nostr-dev-kit/ndk-mobile";
+import { getRootTag, NDKEvent, NDKKind } from "@nostr-dev-kit/ndk-mobile";
 import { create } from "zustand";
 
 export type ReactionStats = {
@@ -10,9 +10,6 @@ export type ReactionStats = {
     repostedBy: Set<string>;
     repostedByUser: boolean;
     reposts: NDKEvent[];
-    zapEvents: NDKEvent[];
-    zappedAmount: number;
-    zappedByUser: boolean;
     bookmarkedByUser: boolean;
 }
 
@@ -21,9 +18,6 @@ type ReactionsStore = {
     
     // Map of event ID to reaction stats
     reactions: Map<string, ReactionStats>;
-    
-    // Add events to the store and update stats
-    addEvent: (event: NDKEvent, currentPubkey?: string | boolean) => void;
 
     addEvents: (events: NDKEvent[], currentPubkey?: string | boolean) => void;
     
@@ -40,44 +34,12 @@ export const DEFAULT_STATS: ReactionStats = {
     reposts: [],
     repostedBy: new Set(),
     repostedByUser: false,
-    zapEvents: [],
-    zappedAmount: 0,
-    zappedByUser: false,
     bookmarkedByUser: false,
 } as const;
 
 export const useReactionsStore = create<ReactionsStore>((set, get) => ({
     seenEventIds: new Set(),
     reactions: new Map(),
-
-    addEvent: (event: NDKEvent, currentPubkey?: string | boolean) => {
-        set((state: ReactionsStore) => {
-            // Skip if already processed
-            if (state.seenEventIds.has(event.id)) return state;
-
-            // Create new copies
-            const newSeenEventIds = new Set(state.seenEventIds);
-            newSeenEventIds.add(event.id);
-            const newReactions = new Map(state.reactions);
-
-            const targetRootEventId = getTargetRootEventId(event);
-            if (!targetRootEventId) {
-                console.log(
-                    `[REACTIONS STORE] no target root event id for`,
-                    event.id.substring(0, 8),
-                    event.kind,
-                    event.encode()
-                );
-                return state;
-            }
-
-            let stats = cloneReactionStats(newReactions.get(targetRootEventId) || DEFAULT_STATS);
-            updateStats(stats, event, currentPubkey);
-            newReactions.set(targetRootEventId, stats);
-
-            return { seenEventIds: newSeenEventIds, reactions: newReactions };
-        });
-    },
 
     addEvents: (events: NDKEvent[], currentPubkey?: string | boolean) => {
         set((state: ReactionsStore) => {
@@ -114,17 +76,8 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
 
 
 function getTargetRootEventId(event: NDKEvent): string | undefined {
-    let targetRootEventId: string | undefined;
-    let targetEventId: string | undefined;
-    for (const tag of event.tags) {
-        if (tag[0] === "E") {
-            targetRootEventId = tag[1];
-            break;
-        } else if (tag[0] === "e" && !targetEventId) {
-            targetEventId = tag[1];
-        }
-    }
-    return targetRootEventId ?? targetEventId;
+    const rootTag = getRootTag(event);
+    return rootTag?.[1];
 }
 
 function updateStats(
@@ -161,25 +114,6 @@ function updateStats(
             }
             stats.comments.push(event);
             break;
-        case NDKKind.Nutzap: {
-            const nutzap = NDKNutzap.from(event);
-            if (!nutzap) return;
-            stats.zappedAmount += nutzap.amount;
-            if (nutzap.pubkey === currentPubkey || currentPubkey === true) {
-                stats.zappedByUser = true;
-            }
-            stats.zapEvents.push(nutzap);
-            break;
-        }
-        case NDKKind.Zap: {
-            const invoice = zapInvoiceFromEvent(event);
-            stats.zappedAmount += invoice.amount / 1000; // zap invoices are in msats
-            if (invoice.zappee === currentPubkey || currentPubkey === true) {
-                stats.zappedByUser = true;
-            }
-            stats.zapEvents.push(event);
-            break;
-        }
         case 3006:
             if (event.pubkey === currentPubkey || currentPubkey === true) {
                 stats.bookmarkedByUser = true;
@@ -198,9 +132,6 @@ function cloneReactionStats(stats: ReactionStats): ReactionStats {
       repostedBy: new Set(stats.repostedBy),
       repostedByUser: stats.repostedByUser,
       reposts: [...stats.reposts],
-      zapEvents: [...stats.zapEvents],
-      zappedAmount: stats.zappedAmount,
-      zappedByUser: stats.zappedByUser,
       bookmarkedByUser: stats.bookmarkedByUser,
     };
 }

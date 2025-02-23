@@ -1,7 +1,6 @@
 import { View, StyleSheet, TextInput } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useCallback, useState } from "react";
-import { Ruler } from "@/components/Ruler";
 import Lightning from "@/components/icons/lightning";
 import { NDKEvent, useNDKWallet, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { NDKUser } from "@nostr-dev-kit/ndk-mobile";

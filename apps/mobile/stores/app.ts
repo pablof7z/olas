@@ -32,6 +32,11 @@ export type AppSettingsStoreState = {
     defaultZap: ZapOption;
 
     /**
+     * Whether to enable YOLO zaps.
+     */
+    yoloZaps: boolean;
+
+    /**
      * Whether to show videos in the feed.
      */
     videosInFeed: VideosInFeed;
@@ -60,6 +65,7 @@ export type AppSettingsStoreActions = {
     toggleAdvancedMode: () => void;
 
     setDefaultZap: (zap: ZapOption) => void;
+    setYoloZaps: (yoloZaps: boolean) => void;
 
     setVideosInFeed: (videosInFeed: VideosInFeed) => void;
 
@@ -103,6 +109,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     promptedForNotifications: false,
     advancedMode: false,
     defaultZap: defaultZapSetting,
+    yoloZaps: true,
     videosInFeed: 'from-follows',
     forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
     editingPosts: [],
@@ -150,6 +157,13 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
             lastUsedAt: search.last_used_at
         })).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
 
+        const appSettings = db.getAllSync('SELECT * FROM app_settings') as { key: string, value: string }[];
+        appSettings.forEach(setting => {
+            if (setting.key === 'yoloZaps') {
+                state.yoloZaps = setting.value === 'true';
+            }
+        });
+
         set({ ...state });
     },
 
@@ -184,6 +198,11 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     setDefaultZap: (zap: ZapOption) => {
         SecureStore.setItemAsync('defaultZap', JSON.stringify(zap));
         set({ defaultZap: zap });
+    },
+
+    setYoloZaps: (yoloZaps: boolean) => {
+        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['yoloZaps', yoloZaps.toString()]);
+        set({ yoloZaps });
     },
 
     setVideosInFeed: (videosInFeed: VideosInFeed) => {

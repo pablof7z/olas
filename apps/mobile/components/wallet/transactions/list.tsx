@@ -6,8 +6,8 @@ import { router } from "expo-router";
 import React, { useMemo, useRef, useEffect } from "react";
 import { FlatList, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { usePaymentStore } from "@/stores/payments";
-
+import { usePendingPayments } from "@/stores/payments";
+import { Text } from "@/components/nativewindui/Text";
 export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet }) {
     const { activeWallet } = useNDKWallet();
     const currentUser = useNDKCurrentUser();
@@ -27,7 +27,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         [currentUser?.pubkey, activeWallet?.walletId]
     );
     const { setActiveEvent } = useActiveEventStore();
-    const { pendingPayments } = usePaymentStore();
+    const pendingPayments = usePendingPayments();
 
     /**
      * This two variables provide a way to generate a stable id when a pending zap completes;
@@ -41,7 +41,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
     const listening = useRef(new Set<string>());
 
     useEffect(() => {
-        for (const pendingPayment of Array.from(pendingPayments.values()).flat()) {
+        for (const pendingPayment of pendingPayments) {
             if (listening.current.has(pendingPayment.internalId)) continue;
             listening.current.add(pendingPayment.internalId);
 
@@ -55,7 +55,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
 
             listening.current.delete(pendingPayment.internalId);
         }
-    }, [pendingPayments.size]);
+    }, [pendingPayments.length]);
 
     const onItemPress = (item: NDKEvent) => {
         setActiveEvent(item);
@@ -67,11 +67,11 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
             ...Array.from(pendingPayments.values()).flat(),
             ...history.sort((a, b) => b.created_at - a.created_at)
         ]
-    }, [history.length, pendingPayments.size]);
+    }, [history.length, pendingPayments.length]);
 
     return (
         <View className="flex-1">
-            {/* <Text className="text-white">{sortedHistory.length}</Text> */}
+            <Text className="text-white">{pendingPayments.length}</Text>
             <FlatList
                 data={historyWithPendingZaps}
                 keyExtractor={(item: NDKEvent) => item.id}

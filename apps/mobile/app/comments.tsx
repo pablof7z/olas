@@ -20,7 +20,7 @@ import { useObserver } from '@/hooks/observer';
 import { activeEventAtom } from '@/stores/event';
 import { toast } from '@backpackapp-io/react-native-toast';
 
-const replyEventAtom = atom<NDKEvent | null, [NDKEvent | null], null>(null, (get, set, value) => set(replyEventAtom, value));
+export const replyEventAtom = atom<NDKEvent | null, [NDKEvent | null], null>(null, (get, set, value) => set(replyEventAtom, value));
 
 const Thread = ({ event, indentLevel = 0 }: { event: NDKEvent, indentLevel: number }) => {
     const events = useObserver([

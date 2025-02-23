@@ -4,14 +4,11 @@ import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef, useCallback } from 'react';
-import { useStore } from 'zustand';
 import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { MasonryFlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
-import { EventMediaGridContainer } from '@/components/media/event';
 import { useSetAtom } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
 import EventContent from '@/components/ui/event/content';
@@ -49,7 +46,7 @@ export default function Profile() {
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [
-            // { kinds: [30018, 30402], authors: [pubkey!] },
+            { kinds: [30018, 30402], authors: [pubkey!] },
             { kinds: [NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.Image], authors: [pubkey!] },
             { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey!] },
             { kinds: [NDKKind.Contacts], authors: [pubkey!] },
@@ -101,8 +98,6 @@ export default function Profile() {
     function expandFilters() {
         setFiltersExpanded(true);
     }
-
-    const setActiveEvent = useSetAtom(activeEventAtom);
 
     const insets = useSafeAreaInsets();
     return (
@@ -172,11 +167,11 @@ export default function Profile() {
                     </Text>
                 </View>
 
-                {!follows?.includes(pubkey) && (
-                    <View style={{ padding: 20 }}>
+                <View style={{ paddingHorizontal: 20, paddingVertical: 5 }}>
+                    {!follows?.includes(pubkey) && (
                         <FollowButton variant="primary" pubkey={pubkey} size="sm" className="mx-4" />
+                    )}
                     </View>
-                )}
 
                 {events.length === 0 ? (
                     <View style={styles.noEventsContainer}>

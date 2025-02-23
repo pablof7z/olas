@@ -2,21 +2,22 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import RelativeTime from "@/app/components/relative-time";
 import EventContent from "@/components/ui/event/content";
 import { activeEventAtom } from "@/stores/event";
-import { NDKEvent, NDKKind, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { getRootEventId, NDKEvent, NDKKind, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import * as User from "@/components/ui/user";
 import { MailOpen, Reply } from 'lucide-react-native';
+import { replyEventAtom } from '@/app/comments';
 
 export function NotificationContainer({ event, label, children }: { event: NDKEvent, label: string, children: React.ReactNode }) {
     const { ndk } = useNDK();
     const { userProfile } = useUserProfile(event.pubkey);
 
     const setActiveEvent = useSetAtom(activeEventAtom);
-    
+
     const onPress = useCallback(() => {
         const taggedEventId = event.getMatchingTags('E')[0]|| event.getMatchingTags('e')[0];
         if (taggedEventId) {
@@ -69,10 +70,22 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
 }
 
 function RightActions({ event }: { event: NDKEvent }) {
+    const { ndk } = useNDK();
     const setActiveEvent = useSetAtom(activeEventAtom);
+    const setReplyEvent = useSetAtom(replyEventAtom);
 
     const handleOpen = useCallback(() => {
-        setActiveEvent(event);
+        const rootId = getRootEventId(event);
+        const rootEvent = rootId ? ndk.fetchEventSync([{ ids: [rootId] }])[0] : null;
+
+        const openEvent = rootEvent || event;
+        
+        setActiveEvent(openEvent);
+
+        if (openEvent.id !== event.id) {
+            setReplyEvent(event);
+        }
+
         router.push(`/comments`);
     }, [event?.id]);
     

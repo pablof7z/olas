@@ -4,7 +4,7 @@ export function nicelyFormattedMilliSatNumber(amount: number) {
 
 export function nicelyFormattedSatNumber(amount: number) {
     let format = (num: string): string => {
-        const str = num;
+        const str = String(num);
         const parts = str.split('.');
 
         if (parts.length === 1) return str;
@@ -36,14 +36,16 @@ export function formatMoney({
     hideAmount,
 }: {
     amount: number;
-    unit: string;
+    unit?: string;
     hideUnit?: boolean;
     hideAmount?: boolean;
 }) {
     let number: string;
     let displayUnit: string;
 
-    switch (unit) {
+    unit ??= 'sats';
+
+    switch (unit.toLowerCase()) {
         case 'msat':
         case 'msats':
             number = nicelyFormattedMilliSatNumber(amount);
