@@ -39,6 +39,7 @@
     "@rn-primitives/slot": "^1.1.0",
     "@roninoss/icons": "^0.0.4",
     "@shopify/flash-list": "1.7.3",
+    "@shopify/react-native-skia": "1.5.0",
     "@uidotdev/usehooks": "^2.4.1",
     "base64-arraybuffer": "^1.0.2",
     "class-variance-authority": "^0.7.0",

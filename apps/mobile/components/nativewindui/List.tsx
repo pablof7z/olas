@@ -1,4 +1,5 @@
 import { FlashList, type FlashListProps, type ListRenderItem as FlashListRenderItem, type ListRenderItemInfo } from '@shopify/flash-list';
+import Animated, { FadeInDown, FadeOut, FadeOutDown, LinearTransition, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { cva } from 'class-variance-authority';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
@@ -8,6 +9,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextClassContext } from '~/components/nativewindui/Text';
 import { Button } from '~/components/nativewindui/Button';
 import { cn } from '~/lib/cn';
+
+const _damping = 14;
+const _layout = LinearTransition.springify().damping(_damping);
+const _entering = FadeInDown.springify().damping(_damping);
+const _exiting = FadeOutDown.springify().damping(_damping);
+const _fadeExit = FadeOut.springify().damping(_damping);
 
 cssInterop(FlashList, {
     className: 'style',
@@ -264,12 +271,17 @@ function ListItemComponent<T extends ListDataItem>(
     }
     return (
         <>
-            <Button
-                disabled={disabled || !isPressable(props)}
-                variant="plain"
-                size="none"
-                unstable_pressDelay={100}
-                androidRootClassName={androidRootClassName}
+            <Animated.View
+                layout={_layout}
+                entering={_entering}
+                exiting={_exiting}
+            >
+                <Button
+                    disabled={disabled || !isPressable(props)}
+                    variant="plain"
+                    size="none"
+                    unstable_pressDelay={100}
+                    androidRootClassName={androidRootClassName}
                 className={itemVariants({
                     variant,
                     sectionHeaderAsGap,
@@ -312,7 +324,8 @@ function ListItemComponent<T extends ListDataItem>(
                         {!!rightView && <View>{rightView}</View>}
                     </View>
                 </TextClassContext.Provider>
-            </Button>
+                </Button>
+            </Animated.View>
             {!removeSeparator && Platform.OS !== 'ios' && !isLastInSection && (
                 <View className={cn(variant === 'insets' && 'px-4')}>
                     <View className="bg-border/25 dark:bg-border/80 h-px" />

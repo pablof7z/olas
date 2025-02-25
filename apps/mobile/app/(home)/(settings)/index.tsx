@@ -141,7 +141,7 @@ export default function SettingsIosStyleScreen() {
 
                 opts.push({
                     id: 'wallet-balance',
-                    title: name,
+                    title: "Wallet",
                     subTitle: humanWalletType(activeWallet.type),
                     leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
                     rightView: <View className="items-center justify-center flex-col m-2">
@@ -177,25 +177,40 @@ export default function SettingsIosStyleScreen() {
                 onPress: () => router.push('/(home)/(settings)/content'),
             });
 
-            opts.push('  ');
+            if (advancedMode) {
+                opts.push('  ');
 
-            opts.push({
-                id: 'blossom',
-                title: 'Media Servers',
-                subTitle: defaultBlossomServer,
-                leftView: (
-                    <IconView>
-                        <Text>🌸</Text>
-                    </IconView>
-                ),
-                onPress: () => router.push('/(home)/(settings)/blossom'),
-            });
-        }            opts.push('   ');
+                opts.push({
+                    id: 'blossom',
+                    title: 'Media Servers',
+                    subTitle: defaultBlossomServer,
+                    leftView: (
+                        <IconView>
+                            <Text>🌸</Text>
+                        </IconView>
+                    ),
+                    onPress: () => router.push('/(home)/(settings)/blossom'),
+                });
+            }
+        }
 
-        opts.push(relaysItem);
-        opts.push(keyItem);
+        if (advancedMode) { 
+            opts.push('   ');
+
+            opts.push(relaysItem);
+            opts.push(keyItem);
+        }
         
         opts.push('    ');
+
+        opts.push({
+            id: '4',
+            title: 'Logout',
+            leftView: <IconView name="send-outline" className="bg-destructive" />,
+            onPress: appLogout,
+        });
+
+        opts.push('        ');
 
         opts.push({
             id: 'advanced',
@@ -208,25 +223,18 @@ export default function SettingsIosStyleScreen() {
             opts.push(emptyCache);
         }
 
-        opts.push('       ');
-        
-        opts.push({
-            id: '4',
-            title: 'Logout',
-            leftView: <IconView name="send-outline" className="bg-destructive" />,
-            onPress: appLogout,
-        });
+        if (advancedMode) {
+            opts.push('       ');
 
-        opts.push('       ');
+            opts.push({
+                id: 'delete',
+                title: 'Delete Account',
+                leftView: <IconView name="delete-outline" className="bg-destructive" />,
+                onPress: () => router.push('/(home)/(settings)/delete-account'),
+            });
 
-        opts.push({
-            id: 'delete',
-            title: 'Delete Account',
-            leftView: <IconView name="delete-outline" className="bg-destructive" />,
-            onPress: () => router.push('/(home)/(settings)/delete-account'),
-        });
-
-        opts.push(`Version ${appVersion} (${buildVersion})`);
+            opts.push(`Version ${appVersion} (${buildVersion})`);
+        }
 
         return opts;
     }, [currentUser, activeWallet?.walletId, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode]);

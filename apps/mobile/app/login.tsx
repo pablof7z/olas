@@ -1,9 +1,10 @@
 import 'react-native-get-random-values';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { Image } from 'react-native';
-import { router, useRouter } from 'expo-router';
+import { router, Stack, useRouter } from 'expo-router';
 import { NDKEvent, NDKPrivateKeySigner, NostrEvent, useNip55 } from '@nostr-dev-kit/ndk-mobile';
 import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
@@ -18,7 +19,7 @@ import { createNip60Wallet } from '@/utils/wallet';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
-const modeAtom = atom<'login' | 'signup'>('login');
+const modeAtom = atom<'login' | 'signup'>('signup');
 
 export function LoginWithNip55Button() {
     const {apps} = useNip55();
@@ -194,7 +195,6 @@ export default function LoginScreen() {
     }, [currentUser]);
 
     const [scanQR, setScanQR] = useState(false);
-    const { isAvailable, apps } = useNip55();
 
     async function handleBarcodeScanned({ data }: { data: string }) {
         setPayload(data.trim());
@@ -206,9 +206,16 @@ export default function LoginScreen() {
         }
     }
 
+    const headerHeight = useHeaderHeight();
+
     return (
-        <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4">
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+        <>
+            <Stack.Screen options={{
+                headerTransparent: true,
+                title: ""
+            }} />
+            <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4" style={{ paddingTop: headerHeight }}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                 <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
 
                 {mode === 'login' ? (
@@ -281,7 +288,8 @@ export default function LoginScreen() {
                     <SignUp />
                 )}
             </KeyboardAvoidingView>
-        </View>
+            </View>
+        </>
     );
 }
 

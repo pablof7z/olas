@@ -190,6 +190,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
                         exiting={FadeOut.duration(100)}
                         >
                         <Lightning
+                         style={{ transform: [{ rotate: '15deg' }] }}
                             size={iconSize}
                             stroke={color}
                             strokeWidth={2}

@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform, Linking, Pressable } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
 import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
@@ -9,8 +10,7 @@ import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
-import { useSetAtom } from 'jotai';
-import { activeEventAtom } from '@/stores/event';
+import { Image } from 'expo-image';
 import EventContent from '@/components/ui/event/content';
 import { Check, Copy } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -100,14 +100,23 @@ export default function Profile() {
     }
 
     const insets = useSafeAreaInsets();
+    const headerHeight = useHeaderHeight();
+    
     return (
-        <View style={[styles.container, { paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
+        <>
+            <Stack.Screen options={{
+                headerShown: true,
+                headerTransparent: true,
+                title: '',
+            }} />
+        <View style={[styles.container]}>
             <Animated.View
                 style={[
                     styles.header,
                     {
                         opacity: headerOpacity,
                         transform: [{ translateY: headerTranslateY }],
+                        paddingTop: headerHeight,
                     },
                 ]}>
                 <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} />
@@ -141,7 +150,7 @@ export default function Profile() {
                 </View>
             </Animated.View>
 
-            <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+            <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity, paddingTop: headerHeight }]}>
                 <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={40} />
                 <Text style={styles.username} className="grow text-lg font-bold text-foreground">
                     <User.Name userProfile={userProfile} pubkey={pubkey} />
@@ -192,6 +201,7 @@ export default function Profile() {
                 )}
             </Animated.ScrollView>
         </View>
+        </>
     );
 }
 

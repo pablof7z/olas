@@ -36,6 +36,9 @@ export default function TabsLayout() {
             return {
                 tabBarActiveTintColor: colors.foreground,
                 tabBarInactiveTintColor: colors.muted,
+                tabBarStyle: {
+                    paddingTop: 5,
+                }
             }
         }
     }, [isReels, colors]);

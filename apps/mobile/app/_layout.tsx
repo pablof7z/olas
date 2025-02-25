@@ -49,7 +49,7 @@ import { initializeNDK } from '@/lib/ndk';
 import { LogBox } from 'react-native';
 import { settingsStore } from '@/lib/settings-store';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
-import ZapModal from '@/components/ZapModal';
+import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
 
 LogBox.ignoreAllLogs();
 
@@ -256,7 +256,7 @@ export default function RootLayout() {
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
                                     <PortalHost />
                                     <Stack>
-                                        <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="login" />
 
                                         <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
 
@@ -282,7 +282,7 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="profile" options={modalPresentation({ headerShown: false })} />
+                                        <Stack.Screen name="profile" />
                                         <Stack.Screen name="notifications" options={{ headerShown: false }} />
                                         <Stack.Screen name="communities" options={{ headerShown: false }} />
                                         <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
@@ -326,6 +326,7 @@ export default function RootLayout() {
                                 <UserBottomSheet />
                                 <ReactionPickerBottomSheet />
                                 <ZapperBottomSheet />
+                                <ProductViewBottomSheet />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />
