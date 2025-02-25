@@ -14,6 +14,7 @@ import {
     NDKSubscriptionCacheUsage,
     useNDKInit,
     NDKUser,
+    useNDK,
 } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -50,6 +51,8 @@ import { LogBox } from 'react-native';
 import { settingsStore } from '@/lib/settings-store';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
+import { useObserver } from '@/hooks/observer';
+import { useUserFlareStore } from '@/hooks/user-flare';
 
 LogBox.ignoreAllLogs();
 
@@ -71,6 +74,22 @@ const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platfor
 function useAppSub(pubkey: string | null, dependencies: any[]) {
     const addReactionEvents = useReactionsStore((state) => state.addEvents);
     const addPayments = usePaymentStore((state) => state.addPayments);
+    const setUserFlare = useUserFlareStore((state) => state.setFlare);
+    const { ndk } = useNDK();
+
+    const processedPubkeyRef = useRef(new Set<string>());
+    const olas365events = useObserver([
+        { kinds: [20], "#t": ["olas365"] }
+    ]);
+
+    useEffect(() => {
+        olas365events.forEach(event => {
+            if (processedPubkeyRef.current.has(event.pubkey)) return;
+            processedPubkeyRef.current.add(event.pubkey);
+            setUserFlare(event.pubkey, 'olas365');
+        });
+    }, [olas365events]);
+    
     const eventFetched = useRef(0);
     useEffect(() => {
         if (!pubkey) return;

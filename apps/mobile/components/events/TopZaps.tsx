@@ -8,8 +8,8 @@ import { useColorScheme } from "@/lib/useColorScheme";
 import { Payment, targetToId, usePaymentStore } from "@/stores/payments";
 import { colorWithOpacity } from "@/theme/colors";
 
-export default function TopZaps({ target }: { target: NDKEvent | NDKUser }) {
-    const id = targetToId(target);
+export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
+    const id = targetToId(event);
     const paymentEntry = usePaymentStore(s => s.entries.get(id));
 
     const sortedZaps = useMemo(() => {

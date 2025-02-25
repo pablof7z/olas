@@ -222,6 +222,17 @@ export const migrations = [
                 receipt_id TEXT
             )`);
         }
+    },
+
+    {
+        version: 17,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(`CREATE TABLE IF NOT EXISTS pubkey_flares (
+                pubkey TEXT PRIMARY KEY,
+                flare_type TEXT,
+                created_at INTEGER
+            )`);
+        }
     }
 ];
 

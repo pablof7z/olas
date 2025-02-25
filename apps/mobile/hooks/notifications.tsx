@@ -19,7 +19,7 @@ export function useNotifications(onlyNew = false) {
         { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
         { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] },
-    ] : false, [!!currentUser]);
+    ] : false, {}, [!!currentUser]);
 
     const filteredNotifications = useMemo(() => {
         if (onlyNew && seenNotificationsAt > 0) {

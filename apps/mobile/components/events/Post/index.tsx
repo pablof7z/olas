@@ -2,7 +2,6 @@ import {
     NDKEvent,
     NDKKind,
     useNDKWallet,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
 import { View } from 'react-native';
@@ -36,8 +35,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useReactEvent } from '../React';
 import { useReactionsStore } from '@/stores/reactions';
-import TopZaps from './Reactions/TopZaps';
+import TopZaps from '../TopZaps';
 import { useZap } from '@/hooks/zap';
+import { useUserProfile } from '@/hooks/user-profile';
+import { useUserFlare } from '@/hooks/user-flare';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     const {ndk} = useNDK();
@@ -204,6 +205,7 @@ export default function Post({ event, reposts, timestamp, index }: { index: numb
 
 export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
+    const flare = useUserFlare(event.pubkey);
     const { colors } = useColorScheme();
     const clientName = getClientName(event);
 
@@ -240,11 +242,11 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
                         onPress={() => {
                             router.push(`/profile?pubkey=${event.pubkey}`);
                         }}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} />
+                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={flare ? 56 : 48} borderWidth={2} flare={flare} />
                     </TouchableOpacity>
 
                     <View className="flex-col">
-                        <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" />
+                        <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" flare={flare} />
                         <Text>
                             <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
                             {clientName && (
@@ -315,7 +317,7 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
                 </View>
             )} */}
 
-            <TopZaps target={event} />
+            <TopZaps event={event} />
 
             <Pressable onPress={showComment}>
                 <InlinedComments event={event} reactions={reactions} />

@@ -144,6 +144,7 @@ export default function WalletScreen() {
                                 </Text>
                             </Pressable>
                         )}
+                        
                         {/* {!isNutzapWallet && (
                             <Button onPress={setNutzapWallet}>
                                 <Text>Enable Nutzaps</Text>
@@ -174,7 +175,7 @@ function HeaderLeft() {
 
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>
-            {currentUser && userProfile?.image ? (
+            {currentUser && userProfile?.picture ? (
                 <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
             ) : (
                 <Settings size={24} color={colors.muted} className="w-10 h-10" />

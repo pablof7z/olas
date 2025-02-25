@@ -1,18 +1,19 @@
-import { View, Pressable, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import CalendarButton from "./CalendarButton";
 import Feed from "./Feed";
 import NotificationsButton from "./NotificationsButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NDKKind, NDKNutzap, useSubscribe, useNDKCurrentUser, useUserProfile, useNDKWallet, useNDKNutzapMonitor } from "@nostr-dev-kit/ndk-mobile";
+import { NDKNutzap, useUserProfile, useNDKNutzapMonitor } from "@nostr-dev-kit/ndk-mobile";
 import * as User from "@/components/ui/user";
 import { formatMoney } from "@/utils/bitcoin";
 import { Text } from "@/components/nativewindui/Text";
 import { useState, useEffect } from "react";
+import AvatarGroup from "@/components/ui/user/AvatarGroup";
 
 export default function HomeHeader() {
     const insets = useSafeAreaInsets();
     const [showZap, setShowZap] = useState(false);
-    const [nutzap, setNutzap] = useState<NDKNutzap | null>(null);
+    const [nutzaps, setNutzaps] = useState<NDKNutzap[]>([]);
     const animationProgress = useState(new Animated.Value(0))[0];
 
     useEffect(() => {
@@ -28,12 +29,12 @@ export default function HomeHeader() {
     useEffect(() => {
         if (!nutzapMonitor) return;
 
-        nutzapMonitor.on("redeem", (nutzap) => {
+        nutzapMonitor.on("redeem", (nutzaps) => {
             setShowZap(true);
-            setNutzap(nutzap);
+            setNutzaps(nutzaps);
             setTimeout(() => {
                 setShowZap(false);
-                setTimeout(() => setNutzap(null), 1000);
+                setTimeout(() => setNutzaps([]), 1000);
             }, 1500);
         });
     }, [!!nutzapMonitor]);
@@ -74,25 +75,30 @@ export default function HomeHeader() {
                 width: '100%',
                 zIndex: 2,
             }}>
-                {nutzap && <IncomingZap nutzap={nutzap} />}
+                {nutzaps && <IncomingZap nutzaps={nutzaps} />}
             </Animated.View>
         </View>
     )
 }
 
-function IncomingZap({ nutzap }: { nutzap: NDKNutzap }) {
+function IncomingZap({ nutzaps }: { nutzaps: NDKNutzap[] }) {
     const insets = useSafeAreaInsets();
-    const { userProfile } = useUserProfile(nutzap.pubkey);
+
+    const avatarsSortedByAmount = nutzaps.sort((a, b) => b.amount - a.amount)
+        .map(n => n.pubkey);
+    const totalAmount = nutzaps.reduce((acc, n) => acc + n.amount, 0);
     
     return <View style={[zapNotificationStyle.container, { paddingTop: insets.top + 10 }]} className="pb-2">
-        <User.Avatar pubkey={nutzap.pubkey} userProfile={userProfile} imageSize={40} />
+        <AvatarGroup pubkeys={avatarsSortedByAmount} avatarSize={40} threshold={1} />
 
-        <Text style={{ flex: 1 }}>
-            {nutzap.content}
-        </Text>
+        {nutzaps.length === 1 && (
+            <Text style={{ flex: 1 }}>
+                {nutzaps.map(n => n.content).join(' ')}
+            </Text>
+        )}
 
         <Text style={[zapNotificationStyle.amount, { color: 'orange' }]}>
-            {formatMoney({ amount: nutzap.amount, unit: nutzap.unit })}
+            {formatMoney({ amount: totalAmount })}
         </Text>
     </View>
 }

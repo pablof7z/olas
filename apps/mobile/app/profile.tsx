@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform, Linking, Pressable } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
-import { useUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { useFollows } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef, useCallback } from 'react';
@@ -15,6 +15,8 @@ import EventContent from '@/components/ui/event/content';
 import { Check, Copy } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import Feed from '@/components/Feed';
+import { useUserProfile } from '@/hooks/user-profile';
+import { useUserFlare } from '@/hooks/user-flare';
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
     const { colors } = useColorScheme();
@@ -42,6 +44,9 @@ export default function Profile() {
     const { ndk } = useNDK();
     const user = ndk.getUser({ pubkey });
     const { userProfile } = useUserProfile(pubkey);
+    console.log('userProfile loaded in profile.tsx', userProfile?.picture);
+    const flare = useUserFlare(pubkey);
+    console.log('flare', flare);
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
@@ -119,7 +124,7 @@ export default function Profile() {
                         paddingTop: headerHeight,
                     },
                 ]}>
-                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} />
+                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} flare={flare} />
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statNumber} className="text-foreground">

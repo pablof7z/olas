@@ -25,7 +25,7 @@ export const replyEventAtom = atom<NDKEvent | null, [NDKEvent | null], null>(nul
 const Thread = ({ event, indentLevel = 0 }: { event: NDKEvent, indentLevel: number }) => {
     const events = useObserver([
         { kinds: [NDKKind.Text, NDKKind.GenericReply], ...event.filter() },
-    ], [event.id]);
+    ], {}, [event.id]);
     
     return <View className="flex-1 flex-col">
         <Comment item={event} style={{ paddingLeft: (indentLevel + 1) * 20 }} />
@@ -44,7 +44,7 @@ const Comment = ({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle>
     const currentUser = useNDKCurrentUser();
     const reactions = useObserver(
         [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
-        [item.id]
+        {}, [item.id]
     );
 
     const onReplyPress = useCallback(() => {

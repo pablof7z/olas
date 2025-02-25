@@ -160,8 +160,6 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
             _entries.set(targetId, entry);
         }
         
-        console.log('init payment store loaded ', _entries.size, 'entries');
-
         return {
             entries: _entries,
             currentUser
@@ -358,10 +356,7 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
             const entry = _entries.get(targetId);
             if (!entry) return;
 
-            console.log('removing payment', internalId, entry.payments.length);
-
             const newPayments = entry.payments.filter(p => p.internalId !== internalId);
-            console.log('removing payment now has', newPayments.length);
             if (newPayments.length === 0) {
                 _entries.delete(targetToId(target));
             } else {
@@ -371,8 +366,6 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                     zapCountByCurrentUser: newPayments.filter(p => p.sender === state.currentUser).length
                 });
             }
-
-            console.log('removePayment now has', _entries.size, 'entries');
 
             return { entries: _entries };
         });

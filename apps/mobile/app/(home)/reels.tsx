@@ -159,9 +159,7 @@ const Reel = memo(
 );
 
 export default function ReelsScreen() {
-    const events = useObserver(
-        [{ kinds: [NDKKind.VerticalVideo] }],
-    );
+    const events = useObserver([{ kinds: [NDKKind.VerticalVideo] }]);
     const safeAreaInsets = useSafeAreaInsets();
     const setVisibleItem = useSetAtom(visibleItemAtom);
 

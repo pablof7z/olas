@@ -11,7 +11,7 @@ export default function CalendarButton() {
     const currentUser = useNDKCurrentUser();
     const observer = useObserver(currentUser ? [
         { kinds: [NDKKind.Image], authors: [ currentUser.pubkey ], "#t": ["olas365"] }
-    ] : false, [currentUser?.pubkey])
+    ] : false, {}, [currentUser?.pubkey])
 
     const press = useCallback(() => {
         router.push('/365')

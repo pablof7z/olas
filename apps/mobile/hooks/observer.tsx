@@ -3,11 +3,16 @@ import {
     NDKFilter,
     NDKSubscription,
     NDKSubscriptionCacheUsage,
+    NDKSubscriptionOptions,
     useNDK,
 } from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useObserver<T extends NDKEvent>(filters: NDKFilter[] | false, dependencies: any[] = []): T[] {
+export function useObserver<T extends NDKEvent>(
+    filters: NDKFilter[] | false,
+    opts: NDKSubscriptionOptions = {},
+    dependencies: any[] = []
+): T[] {
     const { ndk } = useNDK();
     const sub = useRef<NDKSubscription | null>(null);
     const [events, setEvents] = useState<NDKEvent[]>([]);
@@ -62,6 +67,7 @@ export function useObserver<T extends NDKEvent>(filters: NDKFilter[] | false, de
                 groupable: false,
                 subId: "observer",
                 wrap: true,
+                ...opts,
             },
             undefined,
             false

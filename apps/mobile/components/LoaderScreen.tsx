@@ -5,7 +5,9 @@ import { ActivityIndicator } from './nativewindui/ActivityIndicator';
 import { useEffect, useRef, useState } from 'react';
 import { Image } from 'react-native';
 import { usePaymentStore } from '@/stores/payments';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useUsersStore } from '@/hooks/user-profile';
+import { useUserFlareStore } from '@/hooks/user-flare';
 
 export default function LoaderScreen({
     children,
@@ -21,15 +23,20 @@ export default function LoaderScreen({
     const inset = useSafeAreaInsets();
     // const haveInterval = useRef(false);
     // const [ignoreWot, setIgnoreWot] = useState(true);
+    const { ndk } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
+    const initUserProfileStore = useUsersStore((state) => state.init);
+    const initUserFlareStore = useUserFlareStore((state) => state.init);
+    useEffect(() => {
+        initPaymentStore(currentUser?.pubkey);
+    }, [currentUser?.pubkey])
 
     useEffect(() => {
-        const start = Date.now();
-        console.log('init payment store');
-        initPaymentStore(currentUser?.pubkey);
-        const end = Date.now();
-        console.log('payment store init time', end - start);
-    }, [currentUser?.pubkey])
+        if (!ndk) return;
+
+        initUserProfileStore(ndk, (ndk.cacheAdapter as NDKCacheAdapterSqlite).db);
+        initUserFlareStore();
+    }, [!!ndk])
 
     useEffect(() => {
         if (appReady && (wotReady)) {

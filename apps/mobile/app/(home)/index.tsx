@@ -1,43 +1,32 @@
 import {
     NDKEventId,
-    NDKSubscription,
-    useNDKWallet,
-    useSubscribe,
+    NDKSubscription
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, NDKFilter, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
-import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Dimensions, Modal, Pressable, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { Pressable, View } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { router, Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
-import { Calendar, ChevronDown, House, Search, UserCircle2, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useFollows, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import NotificationsButton from '@/components/Headers/Home/NotificationsButton';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useAtomValue } from 'jotai';
 import Feed from '@/components/Feed';
-import { FlashList } from '@shopify/flash-list';
-import { useObserver } from '@/hooks/observer';
-import { MediaPreview as PostEditorMediaPreview} from '@/lib/post-editor/components/MediaPreview';
+import { MediaPreview as PostEditorMediaPreview } from '@/lib/post-editor/components/MediaPreview';
 
-import EventMediaContainer from '@/components/media/event';
-import EventContent from '@/components/ui/event/content';
-import UserAvatar from '@/components/ui/user/avatar';
-import { activeEventAtom } from '@/stores/event';
 import { videoKinds } from '@/utils/const';
 import { FeedEntry } from '@/components/Feed/hook';
-import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
+import { feedTypeAtom } from '@/components/FeedType/store';
 import { usePostEditorStore } from '@/lib/post-editor/store';
 import HomeHeader from '@/components/Headers/Home';
 import { useIsSavedSearch } from '@/hooks/saved-search';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
 import { useAllFollows } from '@/hooks/follows';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
-
+import { Stories } from '@/lib/stories/components/feed-item';
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
@@ -94,135 +83,6 @@ function UploadingIndicator() {
             </Button>
         </Pressable>
     )
-}
-
-
-
-function StoryEntry({ events }: { events: NDKEvent[] }) {
-    const pTag = events[0].tagValue('p') ?? events[0].pubkey;
-    const { userProfile } = useUserProfile(pTag);
-    const insets = useSafeAreaInsets(); 
-
-    const [showStory, setShowStory] = useState(false);
-
-    if (showStory) {
-        return (
-            <Modal
-                transparent={false}
-                visible={true}
-                onRequestClose={() => setShowStory(false)}
-            >
-                <View className="bg-black flex-1 h-screen w-screen flex-col items-center justify-center">
-                    <EventMediaContainer
-                        singleMode={true}
-                        event={events[0]}
-                        muted={false}
-                        maxWidth={Dimensions.get('window').width}
-                        maxHeight={Dimensions.get('window').height}
-                        loop={false}
-                        onFinished={() => setShowStory(false)}
-                        // onPress={(player: VideoPlayer) => {
-                        //     player.pause();
-                        //     setShowStory(false);
-                        // }}
-                    />
-
-                    <View className="absolute bottom-0 left-0 right-0 m-4" style={{ paddingBottom: insets.bottom }}>
-                        <EventContent event={events[0]} content={events[0].content} className="text-sm text-white" />
-                    </View>
-                </View>
-            </Modal>
-        );
-    }
-
-    return (
-        <Pressable className="flex-row items-center gap-2" onPress={() => {
-            setShowStory(true);
-        }}>
-            <UserAvatar pubkey={pTag} userProfile={userProfile} className="w-16 h-16 rounded-full" />
-        </Pressable>
-    );
-}
-
-
-function LiveViewEntry({ event }: { event: NDKEvent }) {
-    const setActiveEvent = useSetAtom(activeEventAtom);
-    const pubkey = event.tagValue("p") ?? event.pubkey;
-    const { userProfile } = useUserProfile(pubkey);
-    const isLive = event.tagValue("status") === "live";
-    
-    return (
-        <Pressable className="flex-col items-center gap-2 px-2" onPress={() => {
-            setActiveEvent(event);
-            router.push('/live')
-        }}>
-            <UserAvatar pubkey={pubkey} userProfile={userProfile} className="w-14 h-14 rounded-full" />
-            {isLive && <Text className="text-xs text-white bg-red-500 px-0.5 rounded-lg -translate-y-full">LIVE</Text>}
-        </Pressable>
-    );
-}
-
-function Stories() {
-    const currentUser = useNDKCurrentUser();
-    const twentyFourHoursAgo = (Date.now() - 600 * 60 * 60 * 1000) / 1000;
-    const follows = useAllFollows();
-    const storiesFilters: NDKFilter[] | false = currentUser ? [
-        { kinds: [30311 as NDKKind], authors: Array.from(follows), since: twentyFourHoursAgo },
-        { kinds: [30311 as NDKKind], "#p": Array.from(follows), since: twentyFourHoursAgo }
-    ] : false;
-
-    // const storiesFilters: NDKFilter[] = useMemo(() => ([
-    //     { kinds: [NDKKind.VerticalVideo], since: twentyFourHoursAgo, authors: follows }
-    // ]), [follows?.length]);
-    const { events } = useSubscribe(storiesFilters, {
-        closeOnEose: true,
-        skipVerification: true,
-        groupable: false,
-        wrap: true,
-        cacheUnconstrainFilter: []
-    });
-    // const filteredEvents = useMemo(() => {
-    //     const eventMaps = new Map<Hexpubkey, NDKEvent[]>();
-    //     for (const event of events) {
-    //         const pubkey = event.pubkey;
-    //         if (!eventMaps.has(pubkey)) {
-    //             eventMaps.set(pubkey, []);
-    //         }
-    //         eventMaps.get(pubkey)!.push(event);
-    //     }
-    //     return eventMaps;
-    // }, [events]);
-
-    const filtered = useMemo(() => {
-        const e = new Map<NDKEventId, NDKEvent>();
-        for (const event of events) {
-            // if (event.tagValue("status") === "live") {
-                e.set(event.id, event);
-                console.log(event.id);
-            // }
-        }
-        return Array.from(e.values());
-    }, [events, follows]);
-
-    return (
-        <View className="flex-row" style={{ height: 70 }}>
-            <FlashList
-                data={filtered}
-                horizontal
-                estimatedItemSize={100}
-                keyExtractor={(event) => event.id}
-                renderItem={({item, index, target}) => (
-                    <LiveViewEntry event={item} />
-                )}
-            />
-        </View>
-            // horizontal className="flex-none flex border-b border-border">
-            // <View className="flex-1 flex-row gap-4 p-2">
-            //     {Array.from(filteredEvents.entries()).map(([pubkey, events]) => (
-            //         <StoryEntry key={pubkey} events={events} />
-            //     ))}
-            // </View>
-    );
 }
 
 const bookmarksFilters = [{ kinds: [3006], "#k": ["20"] }];
@@ -435,27 +295,13 @@ function DataList() {
         return {filters, key: keyParts.join(), filterFn, numColumns};
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
-    console.log('filters', JSON.stringify(filters, null, 4), key);
+    return <Text>Feed</Text>
 
-    // useEffect(() => {
-    //     // go through the filters, if there is an author tag, count how many elements it has and add it to the array
-    //     // if there is no author tag, add 0
-
-    //     const authorCountPerFilter = filters.map((filter) => {
-    //         const authorTag = filter.authors;
-    //         if (authorTag) return authorTag.length;
-    //         return 0;
-    //     });
-    //     console.log('filters', JSON.stringify(authorCountPerFilter, null, 4), key);
-    // }, [filters, key])
-
-    // get the height of the navigation bar using expo-navigation   
 
     return (
         <View className="flex-1 bg-card">
             <Feed
-                // prepend={<View style={firstItemStyle} />}
-                // prepend={[<Stories />]}
+                prepend={[<Stories />]}
                 filters={filters}
                 relayUrls={relayUrls}
                 filterKey={key}

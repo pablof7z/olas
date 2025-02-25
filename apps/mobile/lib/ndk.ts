@@ -12,7 +12,7 @@ export const timeZero = Date.now();
  * @returns 
  */
 export function initializeNDK(currentUser?: Hexpubkey) {
-    const cacheAdapter = new NDKCacheAdapterSqlite('olas4');
+    const cacheAdapter = new NDKCacheAdapterSqlite('olas', false);
 
     const relays = getRelays();
     const filteredRelays = relays.filter((r) => {

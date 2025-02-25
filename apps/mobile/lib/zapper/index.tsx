@@ -1,13 +1,10 @@
 import { View, StyleSheet, TextInput } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useCallback, useState } from "react";
-import Lightning from "@/components/icons/lightning";
-import { NDKEvent, useNDKWallet, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { NDKUser } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { atom, useAtomValue } from "jotai";
 import { Button } from "@/components/nativewindui/Button";
 import { formatMoney } from "@/utils/bitcoin";
-import { useSharedValue } from "react-native-reanimated";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "../useColorScheme";
 import { useZap } from "@/hooks/zap";
@@ -23,7 +20,6 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
     const [amount, setAmount] = useState<number>(21);
     const target = useAtomValue(zapperModalTargetAtom);
     const { userProfile } = useUserProfile(target?.pubkey);
-    const amountValue = useSharedValue(amount);
 
     const sendZap = useZap();
 
