@@ -17,6 +17,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import Feed from '@/components/Feed';
 import { useUserProfile } from '@/hooks/user-profile';
 import { useUserFlare } from '@/hooks/user-flare';
+import { BlurView } from 'expo-blur';
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
     const { colors } = useColorScheme();
@@ -44,9 +45,7 @@ export default function Profile() {
     const { ndk } = useNDK();
     const user = ndk.getUser({ pubkey });
     const { userProfile } = useUserProfile(pubkey);
-    console.log('userProfile loaded in profile.tsx', userProfile?.picture);
     const flare = useUserFlare(pubkey);
-    console.log('flare', flare);
     const scrollY = useRef(new Animated.Value(0)).current;
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const filters = useMemo(() => {
@@ -82,29 +81,10 @@ export default function Profile() {
         return null;
     }
 
-    const headerTranslateY = scrollY.interpolate({
-        inputRange: [0, 100],
-        outputRange: [0, -120], // adjust based on difference between header heights
-        extrapolate: 'clamp',
-    });
-
-    const headerOpacity = scrollY.interpolate({
-        inputRange: [0, 100],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-    });
-
-    const compactHeaderOpacity = scrollY.interpolate({
-        inputRange: [0, 100],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-    });
-
     function expandFilters() {
         setFiltersExpanded(true);
     }
 
-    const insets = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
     
     return (
@@ -112,19 +92,23 @@ export default function Profile() {
             <Stack.Screen options={{
                 headerShown: true,
                 headerTransparent: true,
-                title: '',
+                headerRight: () => <FollowButton pubkey={pubkey} />,
+                headerBackground: () => <BlurView style={{ flex: 1 }} />,
+                title: userProfile?.displayName,
             }} />
         <View style={[styles.container]}>
-            <Animated.View
+            <Animated.ScrollView
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                    useNativeDriver: true,
+                })}
+                    scrollEventThrottle={16}
+            >
+                <Animated.View
                 style={[
                     styles.header,
-                    {
-                        opacity: headerOpacity,
-                        transform: [{ translateY: headerTranslateY }],
-                        paddingTop: headerHeight,
-                    },
+                    { paddingTop: headerHeight },
                 ]}>
-                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} flare={flare} />
+                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={80} flare={flare} canSkipBorder={true} />
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statNumber} className="text-foreground">
@@ -155,19 +139,6 @@ export default function Profile() {
                 </View>
             </Animated.View>
 
-            <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity, paddingTop: headerHeight }]}>
-                <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={40} />
-                <Text style={styles.username} className="grow text-lg font-bold text-foreground">
-                    <User.Name userProfile={userProfile} pubkey={pubkey} />
-                </Text>
-                <FollowButton pubkey={pubkey} />
-            </Animated.View>
-
-            <Animated.ScrollView
-                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                    useNativeDriver: true,
-                })}
-                scrollEventThrottle={16}>
                 <View style={styles.bioSection}>
                     <View className="text-foreground flex-row gap-4 items-center">
                         <Text style={styles.username} className="text-foreground ">
