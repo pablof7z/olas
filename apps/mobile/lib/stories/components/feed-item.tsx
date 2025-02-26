@@ -1,34 +1,71 @@
 import UserAvatar from "@/components/ui/user/avatar";
 import { useStories } from "@/hooks/stories";
 import { activeEventAtom } from "@/stores/event";
-import { useNDKCurrentUser, NDKEvent, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, useUserProfile, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import { View, FlatList, Pressable, StyleSheet } from "react-native";
-import { FadeIn, FadeOut } from "react-native-reanimated";
+import { Pressable, StyleSheet, View, Text } from "react-native";
+import { FadeOut, SlideInRight } from "react-native-reanimated";
 import Animated from "react-native-reanimated";
 import StoriesModal from "../Modal";
 import { storiesAtom, showStoriesModalAtom } from "../store";
 import { useUserFlare } from "@/hooks/user-flare";
+import { useCallback } from "react";
+import { usePostEditorStore } from "@/lib/post-editor/store";
+
+function StoryPrompt() {
+    const currentUser = useNDKCurrentUser();
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const setPostMetadata = usePostEditorStore((s) => s.setMetadata);
+    const { openPickerIfEmpty } = usePostEditorStore();
+
+    const handlePress = useCallback(() => {
+        openPickerIfEmpty();
+        setPostMetadata({ caption: '', expiration: Date.now() + (24 * 60 * 60 * 1000) });
+        router.push('/(publish)');
+        // router.push('/(camera)/CameraPage');
+    }, [])
+
+    if (!currentUser) return null;
+    
+    return <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: 5 }}>
+        <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={70} flare={'story_prompt'} includeFlareLabel={true} />
+    </Pressable>
+}
 
 export function Stories() {
     const stories = useStories();
+    const currentUser = useNDKCurrentUser();
+
+    const renderItem = useCallback(({item: [pubkey, { events, live }], index, target}) => {
+        if (pubkey === 'prompt') {
+            return <StoryPrompt />
+        }
+        return <StoryEntry events={events} live={live} />
+    }, []);
+
+    // if (stories.size === 0) {
+    //     return null;
+    // }
+
+    const storyEntries = Array.from(stories.entries());
+    if (!stories.has(currentUser?.pubkey)) {
+        const prompt: [string, { events: NDKEvent[], live: boolean }] = ["prompt", { events: [], live: false }];
+        storyEntries.unshift(prompt);
+    }
 
     return (
         <>
-            <FlatList
+            <Animated.FlatList
                 style={styles.stories}
-                data={Array.from(stories.entries())}
+                className="flex-none flex border-b border-border"
+                data={storyEntries}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={([pubkey, { events, live }]) => {
                     return pubkey
                 }}
-
-                renderItem={({item: [pubkey, { events, live }], index, target}) => (
-                    <StoryEntry events={events} live={live} />
-                    // <LiveViewEntry event={item} />
-                )}
+                renderItem={renderItem}
             />
             <StoriesModal />
         </>
@@ -53,7 +90,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
 
     return (
         <Animated.View
-            entering={FadeIn}
+            entering={SlideInRight}
             exiting={FadeOut}
         >
             <Pressable style={{ flexDirection: 'column', alignItems: 'center', margin: 5 }} onPress={() => {
@@ -66,7 +103,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                     setShowStoriesModal(true);
                 }
             }}>
-                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={70} flare={live ? 'live' : flare} includeFlareLabel={true} />
+                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={70} flare={live ? 'live' : flare} includeFlareLabel={false} />
             </Pressable>
         </Animated.View>
     );
@@ -75,6 +112,6 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
 
 const styles = StyleSheet.create({
     stories: {
-        height: 80,
+        height: 85,
     }
 })

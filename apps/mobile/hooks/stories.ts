@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useObserver } from "./observer";
-import { Hexpubkey, NDKEvent, NDKSubscriptionCacheUsage, useSubscribe } from "@nostr-dev-kit/ndk-mobile";
+import { Hexpubkey, NDKEvent } from "@nostr-dev-kit/ndk-mobile";
 
 type StoryEntry = {
     events: NDKEvent[],
@@ -8,12 +8,13 @@ type StoryEntry = {
 }
 
 export function useStories() {
-    useSubscribe([
-        { kinds: [30311] }
-    ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
+    // useSubscribe([
+    //     { kinds: [30311] }
+    // ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
     const events = useObserver(
-        [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
+        [{ kinds: [20], since: twentyFourHoursAgo }],
+        // [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
         { cacheUnconstrainFilter: [] }
     )
 

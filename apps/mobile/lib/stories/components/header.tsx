@@ -1,7 +1,9 @@
 import { NDKImage } from "@nostr-dev-kit/ndk-mobile";
-import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from "react-native";
 import * as User from '@/components/ui/user';
 import { useUserProfile } from "@/hooks/user-profile";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type StoryHeaderProps = {
     item: NDKImage,
@@ -15,11 +17,12 @@ export function StoryHeader({
     onClose,
 }: StoryHeaderProps) {
     const { userProfile, flare } = useUserProfile(item.pubkey);
+    const insets = useSafeAreaInsets();
 
     return (
-      <View style={[styles.container, style]}>
+      <View style={[styles.container, style, { paddingTop: insets.top }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <Pressable style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }} onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}>
           <User.Avatar 
             pubkey={item.pubkey} 
             userProfile={userProfile} 
@@ -31,7 +34,7 @@ export function StoryHeader({
             pubkey={item.pubkey}
             style={{ color: 'white', marginLeft: 8, fontWeight: '600' }}
           />
-        </View>
+        </Pressable>
         
         <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
           <Text style={{ color: 'white', fontSize: 24 }}>✕</Text>
@@ -43,12 +46,10 @@ export function StoryHeader({
   
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    paddingTop: 60,
-    top: 0,
+    marginTop: 10,
     left: 0,
     right: 0,
   }

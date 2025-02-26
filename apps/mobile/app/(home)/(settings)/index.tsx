@@ -11,7 +11,7 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router, Stack } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
-import { useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
 import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
@@ -20,6 +20,7 @@ import { Button } from '@/components/nativewindui/Button';
 import { humanWalletType } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
 import { toast } from '@backpackapp-io/react-native-toast';
+import { WALLET_ENABLED } from '@/utils/const';
 
 const relaysItem = {
     id: 'relays',
@@ -96,6 +97,18 @@ export default function SettingsIosStyleScreen() {
         setActiveWallet(null);
     }, [unlinkWallet, setActiveWallet]);
 
+    const handleNukeDatabase = useCallback(() => {
+        const db = (ndk?.cacheAdapter as NDKCacheAdapterSqlite).db
+        // get all the tables and delete them
+        db.runSync(`DROP TABLE IF EXISTS events;`);
+        db.runSync(`DROP TABLE IF EXISTS profiles;`);
+        db.runSync(`DROP TABLE IF EXISTS relay_status;`);
+        db.runSync(`DROP TABLE IF EXISTS event_tags;`);
+        db.runSync(`PRAGMA user_version = 0;`);
+        toast.success('Local database reset successfully');
+        process.exit(0);
+    }, [ndk]);
+
     const data = useMemo(() => {
         const opts: ListDataItem[] = [];
         
@@ -113,7 +126,7 @@ export default function SettingsIosStyleScreen() {
                     router.push(`/profile?pubkey=${currentUser.pubkey}`);
                 },
                 title: (<View className="flex-row gap-4 items-center">
-                    <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
+                    <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} canSkipBorder={true} />
                     <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} className="text-foreground text-lg font-medium" />
                 </View>
                 ),
@@ -132,39 +145,41 @@ export default function SettingsIosStyleScreen() {
                 }
             }
             
-            opts.push('Wallet & zaps')
-            if (activeWallet) {
-                console.log('activeWallet', activeWallet);
-                let name = activeWallet.type.toString();
-                if (activeWallet instanceof NDKCashuWallet)
-                    name = activeWallet.name || activeWallet.walletId;
+            if (WALLET_ENABLED) {
+                opts.push('Wallet & zaps')
+                if (activeWallet) {
+                    console.log('activeWallet', activeWallet);
+                    let name = activeWallet.type.toString();
+                    if (activeWallet instanceof NDKCashuWallet)
+                        name = activeWallet.name || activeWallet.walletId;
 
-                opts.push({
-                    id: 'wallet-balance',
-                    title: "Wallet",
-                    subTitle: humanWalletType(activeWallet.type),
-                    leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
-                    rightView: <View className="items-center justify-center flex-col m-2">
-                        <Button variant="secondary" className="flex-col"
-                            onPress={handleUnlinkWallet}>
-                            <Text className="text-sm font-medium text-red-500">Unlink</Text>
-                        </Button>
-                    </View>,
-                    onPress: () => {
-                        if (!activeWallet) return;
-                        activeWallet.updateBalance?.();
-                        router.push('/(home)/(wallet)')
-                    }
-                });
+                    opts.push({
+                        id: 'wallet-balance',
+                        title: "Wallet",
+                        subTitle: humanWalletType(activeWallet.type),
+                        leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
+                        rightView: <View className="items-center justify-center flex-col m-2">
+                            <Button variant="secondary" className="flex-col"
+                                onPress={handleUnlinkWallet}>
+                                <Text className="text-sm font-medium text-red-500">Unlink</Text>
+                            </Button>
+                        </View>,
+                        onPress: () => {
+                            if (!activeWallet) return;
+                            activeWallet.updateBalance?.();
+                            router.push('/(home)/(wallet)')
+                        }
+                    });
 
-                opts.push({
-                    id: 'zaps',
-                    title: 'Zaps',
-                    leftView: <IconView name="lightning-bolt" className="bg-yellow-500" />,
-                    onPress: () => router.push('/(home)/(settings)/zaps'),
-                })
-            } else {
-                opts.push(walletItem)
+                    opts.push({
+                        id: 'zaps',
+                        title: 'Zaps',
+                        leftView: <IconView name="lightning-bolt" className="bg-yellow-500" />,
+                        onPress: () => router.push('/(home)/(settings)/zaps'),
+                    })
+                } else {
+                    opts.push(walletItem)
+                }
             }
 
             opts.push('      ');
@@ -221,6 +236,12 @@ export default function SettingsIosStyleScreen() {
         if (advancedMode) {
             opts.push(devItem);
             opts.push(emptyCache);
+            opts.push({
+                id: 'nuke-database',
+                title: 'Reset local database',
+                leftView: <IconView name="database-remove" className="bg-red-500" />,
+                onPress: handleNukeDatabase,
+            });
         }
 
         if (advancedMode) {

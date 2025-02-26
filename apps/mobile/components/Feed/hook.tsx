@@ -331,6 +331,7 @@ export function useFeedEvents(
             case 30018:
             case 30402:
             case NDKKind.Text:
+            case NDKKind.Media:
             case NDKKind.Image: return handleContentEvent(eventId, event);
             case NDKKind.GenericRepost: return handleRepost(event);
             case 3006: return handleBookmark(event);

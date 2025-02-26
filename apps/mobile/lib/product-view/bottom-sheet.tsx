@@ -18,7 +18,7 @@ export function ProductViewBottomSheet() {
     return (
         <Sheet ref={sheetRef}>
             <BottomSheetView
-                style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+                style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 10, height: Dimensions.get('window').height * 0.9 }}
             >
                 {productEvent && <ProductView event={productEvent} />}
             </BottomSheetView>

@@ -33,7 +33,13 @@ export default function SearchInput() {
     const { ndk } = useNDK();
 
     const search = useCallback(async (input: string) => {
-        if (input.startsWith('npub1')) {
+        if (input.match(/@.*\.\w+/)) {
+            const user = await ndk.getUserFromNip05(input);
+            if (user) {
+                router.push(`/profile?pubkey=${user.pubkey}`);
+                return;
+            }
+        } else if (input.startsWith('npub1')) {
             try {
                 const user = new NDKUser({npub: input});
                 router.push(`/profile?pubkey=${user.pubkey}`);
@@ -49,7 +55,6 @@ export default function SearchInput() {
             }
         }
         
-        console.log('setting search query', input);
         setSearchQuery(input.trim());
     }, [setSearchQuery])
 

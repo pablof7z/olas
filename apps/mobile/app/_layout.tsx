@@ -308,7 +308,6 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
                                         <Stack.Screen name="comments" options={modalPresentation({ title: 'Comments' })} />
-                                        <Stack.Screen name="365" options={{ headerShown: true, title: '#olas365' }} />
 
                                         <Stack.Screen
                                             name="view"

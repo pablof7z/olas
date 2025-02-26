@@ -6,8 +6,9 @@ import { Pressable, Text, StyleSheet, View } from "react-native";
 
 export default function FlareLabel({ flare, pubkey }: { flare: string, pubkey: string }) {
     const handleFlarePress = useCallback(() => {
+        console.log('handleFlarePress', flare);
         if (flare === 'olas365') {
-            router.push(`/365?pubkey=${pubkey}`);
+            router.push(`/profile?pubkey=${pubkey}&view=olas365`);
         }
     }, [flare]);
 
@@ -25,6 +26,7 @@ export default function FlareLabel({ flare, pubkey }: { flare: string, pubkey: s
 const flareLabelMap = {
     live: 'LIVE',
     olas365: '#365',
+    story_prompt: 'Add',
 }
 
 const styles = StyleSheet.create({
@@ -45,7 +47,9 @@ export const FlareElement = memo(({ flare, size }: { flare: string, size: number
     if (flare === 'live') {
         return <LiveFlare />;
     } else if (flare === 'olas365') {
-        return <OlasFlare size={size} />;
+        return <OlasFlare size={size} />; 
+    } else if (flare === 'story_prompt') {
+        return <StoryPromptFlare size={size} />;
     }
     return null;
 });
@@ -53,6 +57,19 @@ export const FlareElement = memo(({ flare, size }: { flare: string, size: number
 export const LiveFlare = memo(() => {
     return (
         <View style={{ width: '100%', height: '100%', backgroundColor: 'red', overflow: 'hidden', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+    );
+});
+
+export const StoryPromptFlare = memo(({ size }: { size: number }) => {
+    return (
+        <Canvas style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <Rect x={0} y={0} width={size} height={size}>
+            <SweepGradient
+                c={vec(size / 2, size / 2)}
+                colors={["#999999", "#cccccc", "#999999"]}
+            />
+            </Rect>
+        </Canvas>
     );
 });
 

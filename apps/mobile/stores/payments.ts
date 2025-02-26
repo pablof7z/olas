@@ -286,6 +286,7 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                     sender = decodedZapReceipt.zappee;
                 } else if (event.kind === NDKKind.Nutzap) {
                     const zap = (event instanceof NDKNutzap) ? event : NDKNutzap.from(event);
+                    if (!zap) continue;
 
                     newAmount = amountInSats({ amount: zap.amount, unit: zap.unit ?? "sat" });
                     unit = "sats";

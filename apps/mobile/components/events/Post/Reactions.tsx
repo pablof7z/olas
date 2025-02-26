@@ -10,6 +10,7 @@ import Zaps from './Reactions/Zaps';
 import EventContent from '@/components/ui/event/content';
 import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
 import Repost from '../Repost';
+import { WALLET_ENABLED } from '@/utils/const';
 
 export function Reactions({
     event,
@@ -64,11 +65,13 @@ export function Reactions({
                     iconSize={28}
                 />
 
-                <Zaps
-                    event={event}
-                    inactiveColor={inactiveColor}
-                    iconSize={28}
-                />
+                {WALLET_ENABLED && (
+                    <Zaps
+                        event={event}
+                        inactiveColor={inactiveColor}
+                        iconSize={28}
+                    />
+                )}
             </View>
 
         //     <Bookmark

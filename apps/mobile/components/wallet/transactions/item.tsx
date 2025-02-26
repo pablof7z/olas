@@ -1,7 +1,8 @@
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/nativewindui/Button";
 import { NDKEvent, useNDK, NDKNutzap, useUserProfile, NDKZapSplit, NDKPaymentConfirmation, NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuDeposit, NDKWallet, NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
+import { NDKCashuDeposit, NDKWallet } from "@nostr-dev-kit/ndk-wallet";
+import { NDKCashuWalletTx } from "@nostr-dev-kit/ndk-mobile";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { ListItem } from "@/components/nativewindui/List";
@@ -139,18 +140,18 @@ function HistoryItemCashuQuote({ item, index, target, onPress }: { item: NDKCash
     )
 }
 
-const historyItemCache = new Map<string, NDKWalletChange>();
+const historyItemCache = new Map<string, NDKCashuWalletTx>();
 const nutzapItemCache = new Map<string, NDKNutzap>();
 
 function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: NDKWallet, item: NDKEvent, index: number, target: any, onPress: () => void }) {
     const { ndk } = useNDK();
     const [ nutzap, setNutzap ] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id));
     const id = item.tagId();
-    const [ walletChange, setWalletChange ] = useState<NDKWalletChange | null>(historyItemCache.get(id));
+    const [ walletChange, setWalletChange ] = useState<NDKCashuWalletTx | null>(historyItemCache.get(id));
 
     useEffect(() => {
         if (!walletChange && item.content.length > 0) {
-            NDKWalletChange.from(item).then((walletChange) => {
+            NDKCashuWalletTx.from(item).then((walletChange) => {
                 if (item.id === walletChange.id) {
                     setWalletChange(walletChange);
                 }

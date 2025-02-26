@@ -2,7 +2,7 @@ import { useRoute } from '@react-navigation/native';
 import { useAugmentedRef } from '@rn-primitives/hooks';
 import { Portal } from '@rn-primitives/portal';
 import { Icon } from '@roninoss/icons';
-import { Stack, useNavigation } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as React from 'react';
 import { BackHandler, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, ZoomIn, withTiming } from 'react-native-reanimated';
@@ -22,7 +22,6 @@ const SCREEN_OPTIONS = {
 export function LargeTitleHeader(props: LargeTitleHeaderProps) {
     const insets = useSafeAreaInsets();
     const { colors } = useColorScheme();
-    const navigation = useNavigation();
     const route = useRoute();
     const id = React.useId();
     const fallbackSearchBarRef = React.useRef<LargeTitleSearchBarRef>(null);
@@ -89,7 +88,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
     }
 
     const isInlined = props.materialPreset === 'inline';
-    const canGoBack = navigation.canGoBack();
+    const canGoBack = router.canGoBack();
 
     if (props.shown === false) return null;
 
@@ -120,7 +119,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                                     size="icon"
                                     variant="plain"
                                     onPress={() => {
-                                        navigation.goBack();
+                                        router.back();
                                     }}>
                                     <Icon name="arrow-left" size={24} color={colors.foreground} />
                                 </Button>

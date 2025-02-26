@@ -11,7 +11,8 @@ import UserAvatar from '@/components/ui/user/avatar';
 import { usePostEditorStore } from '@/lib/post-editor/store';
 import { useMemo } from 'react';
 import WalletButton from '@/components/buttons/wallet';
-
+import { useUserFlare } from '@/hooks/user-flare';
+import { WALLET_ENABLED } from '@/utils/const';
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
@@ -108,16 +109,18 @@ export default function TabsLayout() {
                 }}
             />
 
-            <Tabs.Screen
-                name="(wallet)"
-                options={{
-                    title: 'Wallets',
-                    headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        <WalletButton focused={focused} color={color} />
-                    ),
-                }}
-            />
+            {WALLET_ENABLED && (
+                <Tabs.Screen
+                    name="(wallet)"
+                    options={{
+                        title: 'Wallets',
+                        headerShown: false,
+                        tabBarIcon: ({ color, focused }) => (
+                            <WalletButton focused={focused} color={color} />
+                        ),
+                    }}
+                />
+            )}
 
             <Tabs.Screen
                 name="(settings)"
@@ -148,9 +151,10 @@ function UserButton() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userFlare = useUserFlare(currentUser?.pubkey);
 
     if (currentUser) {
-        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} />
+        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} flare={userFlare} canSkipBorder={true} borderWidth={1} />
     }
     
     return (

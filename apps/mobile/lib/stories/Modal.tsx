@@ -1,31 +1,18 @@
-/*
-Tap right => move to next post from story
-Tap right => if is last item from the story, moves to next story
-Tap left => move to prev post from story
-Tap left => if is first post from story, moves to previous story
-Slide right => next story
-Slide left => Prev story
-Timings:
-- Image => 2 seconds
-- Video => video duration
-!Image and Videos are from Pexels.com!
-*/
-
 import { showStoriesModalAtom, storiesAtom } from "@/lib/stories/store";
 import { NDKImage, NDKImetaTag } from "@nostr-dev-kit/ndk-mobile";
-import { useVideoPlayer, VideoView, VideoPlayerStatus } from "expo-video";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { atom } from "jotai";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Easing,
-  Modal,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View
+    Animated,
+    Dimensions,
+    Easing,
+    Modal,
+    StyleSheet,
+    TouchableWithoutFeedback,
+    View
 } from "react-native";
 import { Image, ImageStyle, useImage } from "expo-image";
 import { StoryHeader } from "./components/header";
@@ -33,6 +20,7 @@ import TopZaps from "@/components/events/TopZaps";
 import Zaps from "@/components/events/Post/Reactions/Zaps";
 import StoryText from './components/StoryText';
 import { urlIsVideo } from "@/utils/media";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -43,7 +31,7 @@ const StoryProgress = ({
   index,
   onEnd,
   active,
-  duration = 2000,
+  duration = 8000,
 }) => {
   const progress = useRef(new Animated.Value(-width / 3)).current;
   const [progressWidth, setProgressWidth] = useState(null);
@@ -107,7 +95,7 @@ const StoryProgress = ({
     if (done) {
       progress.setValue(0);
     }
-  }, [active, done]);
+  }, [active, done, duration, progressWidth]);
 
   useEffect(() => {
     progress.setValue(-progressWidth);
@@ -201,13 +189,20 @@ function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
                 onLoadStart={() => {
                     setIsLoading(true);
                 }}
-                onLoadEnd={() => {
-                    console.log('load end', imageSource?.width, imageSource?.height);
+                onDisplay={() => {
+                  console.log('display', imageSource?.width, imageSource?.height);
                     setIsLoading(false);
-                    setDuration(2000);
+                    setDuration(8000);
                     if (imageSource?.width && imageSource?.height && isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
                         setIsLandscape(true);
                     }
+                }}
+                onLoad={() => {
+                    console.log('load', imageSource?.width, imageSource?.height);
+                }}
+                onLoadEnd={() => {
+                    console.log('load end', imageSource?.width, imageSource?.height);
+                    
 
                     console.log('image width', imageSource.width, 'image height', imageSource.height);
                 }}
@@ -259,8 +254,9 @@ const Slide = ({
   onClose: () => void;
 }) => {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [duration, setDuration] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const duration = useAtomValue(durationAtom);
+  console.log('slide duration', duration);
+  const [loading, setLoading] = useAtom(isLoadingAtom);
 
   useEffect(() => {
     setActiveSlide(0);
@@ -290,12 +286,12 @@ const Slide = ({
 
   const [isLongPressed, setIsLongPressed] = useState(false);
 
-  console.log('item', JSON.stringify(item.rawEvent(), null, 2));
-
   if (!(item instanceof NDKImage)) return null;
 
   const url = item.imetas[activeSlide].url;
 
+  const insets = useSafeAreaInsets();
+  
   if (!url) return null;
 
     const type = urlIsVideo(url) ? 'video' : 'image';
@@ -342,7 +338,7 @@ const Slide = ({
           alignItems: "center",
           justifyContent: "space-evenly",
           position: "absolute",
-          top: 50,
+          top: insets.top,
         }}>
         {item.imetas.map((_, i) => {
           return (
@@ -382,119 +378,123 @@ const angle = Math.atan(perspective / (width / 2));
 
 export default function StoriesModal() {
     const [showStoriesModal, setShowStoriesModal] = useAtom(showStoriesModalAtom);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const stories = useAtomValue(storiesAtom);
-  const ref = useRef<Animated.FlatList>(null);
+    const scrollX = useRef(new Animated.Value(0)).current;
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const stories = useAtomValue(storiesAtom);
+    const ref = useRef<Animated.FlatList>(null);
+    const setIsLoading = useSetAtom(isLoadingAtom);
+    const setDuration = useSetAtom(durationAtom);
 
-  const close = useCallback(() => {
-    setShowStoriesModal(false);
-    setActiveIndex(0);
-    ref.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [setShowStoriesModal]);
+    const close = useCallback(() => {
+      setShowStoriesModal(false);
+      setActiveIndex(0);
+      setIsLoading(true);    // reset loading
+      setDuration(-1);       // reset duration
+      ref.current?.scrollToOffset({ offset: 0, animated: false });
+    }, [setShowStoriesModal]);
 
-  if (!showStoriesModal) return null;
+    if (!showStoriesModal) return null;
 
-  return (
-    <Modal visible={showStoriesModal} onDismiss={close} animationType="slide">
-    <View style={styles.container}>
-      <Animated.FlatList
-        ref={ref}
-        data={stories}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          {
-            useNativeDriver: true,
-          }
-        )}
-        pagingEnabled
-        onScrollBeginDrag={() => setIsScrolling(true)}
-        onScrollEndDrag={() => setIsScrolling(false)}
-        onMomentumScrollEnd={(ev) => {
-          setActiveIndex(Math.floor(ev.nativeEvent.contentOffset.x / width));
-        }}
-        renderItem={({ item, index }) => {
-          const inputRange = [
-            (index - 0.5) * width,
-            index * width,
-            (index + 0.5) * width,
-          ];
-          const rotateY = scrollX.interpolate({
-            inputRange,
-            outputRange: [`${angle / 2}rad`, "0rad", `-${angle / 2}rad`],
-          });
-          const opacity = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.5, 1, 0.5],
-          });
+    return (
+      <Modal visible={showStoriesModal} onDismiss={close}>
+      <View style={styles.container}>
+        <Animated.FlatList
+          ref={ref}
+          data={stories}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            {
+              useNativeDriver: true,
+            }
+          )}
+          pagingEnabled
+          onScrollBeginDrag={() => setIsScrolling(true)}
+          onScrollEndDrag={() => setIsScrolling(false)}
+          onMomentumScrollEnd={(ev) => {
+            setActiveIndex(Math.floor(ev.nativeEvent.contentOffset.x / width));
+          }}
+          renderItem={({ item, index }) => {
+            const inputRange = [
+              (index - 0.5) * width,
+              index * width,
+              (index + 0.5) * width,
+            ];
+            const rotateY = scrollX.interpolate({
+              inputRange,
+              outputRange: [`${angle / 2}rad`, "0rad", `-${angle / 2}rad`],
+            });
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.5, 1, 0.5],
+            });
 
-          const translateX1 = scrollX.interpolate({
-            inputRange,
-            outputRange: [-width / 2, 0, width / 2],
-            extrapolate: "clamp",
-          });
-          const translateX2 = scrollX.interpolate({
-            inputRange,
-            outputRange: [width / 2, 0, -width / 2],
-            extrapolate: "clamp",
-          });
-          return (
-            <Animated.View
-              style={{
-                opacity,
-                transform: [
-                  { perspective: width * 4 },
-                  { translateX: translateX1 },
-                  { rotateY },
-                  { translateX: translateX2 },
-                ],
-              }}>
-              <Slide
-                item={item}
-                index={index}
-                active={index === activeIndex}
-                onNextSlide={() => {
-                  if (index + 1 >= stories.length) {
-                    close();
-                  } else {
+            const translateX1 = scrollX.interpolate({
+              inputRange,
+              outputRange: [-width / 2, 0, width / 2],
+              extrapolate: "clamp",
+            });
+            const translateX2 = scrollX.interpolate({
+              inputRange,
+              outputRange: [width / 2, 0, -width / 2],
+              extrapolate: "clamp",
+            });
+            return (
+              <Animated.View
+                style={{
+                  opacity,
+                  transform: [
+                    { perspective: width * 4 },
+                    { translateX: translateX1 },
+                    { rotateY },
+                    { translateX: translateX2 },
+                  ],
+                }}>
+                <Slide
+                  item={item}
+                  index={index}
+                  active={index === activeIndex}
+                  onNextSlide={() => {
+                    if (index + 1 >= stories.length) {
+                      close();
+                    } else {
+                      ref.current?.scrollToOffset({
+                        offset: (index + 1) * width,
+                        animated: true,
+                      });
+                    }
+                  }}
+                  isScrolling={isScrolling}
+                  onPrevSlide={() => {
                     ref.current?.scrollToOffset({
-                      offset: (index + 1) * width,
+                      offset: (index - 1) * width,
                       animated: true,
                     });
-                  }
-                }}
-                isScrolling={isScrolling}
-                onPrevSlide={() => {
-                  ref.current?.scrollToOffset({
-                    offset: (index - 1) * width,
-                    animated: true,
-                  });
-                }}
-                onClose={close}
-              />
-            </Animated.View>
-          );
-        }}
-      />
-      </View>
-    </Modal>
-  );
+                  }}
+                  onClose={close}
+                />
+              </Animated.View>
+            );
+          }}
+        />
+        </View>
+      </Modal>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "#000",
-  },
-  paragraph: {
-    margin: 24,
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: "#000",
+    },
+    paragraph: {
+        margin: 24,
+        fontSize: 18,
+        fontWeight: "bold",
+        textAlign: "center",
+    },
 });

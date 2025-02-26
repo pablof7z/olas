@@ -16,3 +16,7 @@ export const COMMUNITIES_ENABLED = DEV_BUILD && false;
 export const NET_DEBUG = DEV_BUILD && true;
 
 export const ZAPS_DISABLED = DEV_BUILD && false;
+
+export const SHOP_ENABLED = DEV_BUILD && false;
+
+export const WALLET_ENABLED = !DEV_BUILD || false;

@@ -1,10 +1,8 @@
-import React, { memo, useCallback, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageProps, useImage } from 'expo-image';
-import { BlurMask, Canvas, Rect, SweepGradient, vec } from '@shopify/react-native-skia';
-import { router } from 'expo-router';
 import FlareLabel, { FlareElement } from './flare';
 interface AvatarProps extends ImageProps {
     pubkey: Hexpubkey;
@@ -13,9 +11,14 @@ interface AvatarProps extends ImageProps {
     borderWidth?: number;
     flare?: string | null;
     includeFlareLabel?: boolean;
+
+    /**
+     * Whether to skip padding the avatar if there is no flare border to be displayed!
+     */
+    canSkipBorder?: boolean;
 }
 
-const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderWidth = 4, imageSize = 128, includeFlareLabel = false, ...props }) => {
+const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderWidth = 4, imageSize = 128, includeFlareLabel = false, canSkipBorder = false, ...props }) => {
     const size = 128;
     imageSize ??= size / 3;
 
@@ -65,8 +68,8 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderW
         );
     }
 
-    const imageMargin = borderWidth*0.75;
-    const realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
+    let imageMargin = borderWidth*0.75;
+    let realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
 
     if (flare) {
         return (<View>
@@ -95,13 +98,19 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderW
         );
     }
 
+    if (canSkipBorder) {
+        borderWidth = 0;
+        imageMargin = 0;
+        realImageSize = imageSize;
+    }
+
     return (<View
         style={{ padding: borderWidth + imageMargin, width: imageSize, height: imageSize, overflow: 'hidden', position: 'relative' }}
     >
             <Image
                 source={imageSource}
                 recyclingKey={pubkey}
-                style={{ width: realImageSize, height: realImageSize, borderRadius: imageSize }}
+                style={{ flex: 1, width: realImageSize, height: realImageSize, borderRadius: imageSize }}
                 className="flex-1"
             />
     </View>

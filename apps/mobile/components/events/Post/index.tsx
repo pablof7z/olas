@@ -41,7 +41,6 @@ import { useUserProfile } from '@/hooks/user-profile';
 import { useUserFlare } from '@/hooks/user-flare';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
-    const {ndk} = useNDK();
     const scale = useSharedValue(0);
     const opacity = useSharedValue(0);
     const [showHeart, setShowHeart] = useState(false);

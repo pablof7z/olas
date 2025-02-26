@@ -6,7 +6,6 @@ import { useNip60Wallet } from "@/hooks/wallet";
 
 export default function NutzapMonitor() {
     const [start, setStart] = useState(false);
-    console.log('nutzap start', start);
     const { activeWallet } = useNDKWallet();
     const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
     const { nutzapMonitor } = useNDKNutzapMonitor(mintList, start);
@@ -14,8 +13,6 @@ export default function NutzapMonitor() {
     const {ndk} = useNDK();
     const [hasOldWallets, setHasOldWallets] = useState<boolean | null>(null);
     const cashuWallet = useNip60Wallet();
-
-    console.log('nutzapMonitor', !!nutzapMonitor, { haveCashuWallet: !!cashuWallet, activeWallet: activeWallet?.walletId });
 
     useEffect(() => {
         if (!cashuWallet || !nutzapMonitor) return;

@@ -92,7 +92,7 @@ export default function ImageComponent({
 
     return (
         <Pressable
-            style={styles.pressable}
+            style={[styles.pressable, style]}
             onPress={onPress}
             onLongPress={onLongPress}
             className={className}

@@ -295,13 +295,10 @@ function DataList() {
         return {filters, key: keyParts.join(), filterFn, numColumns};
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
-    return <Text>Feed</Text>
-
-
     return (
         <View className="flex-1 bg-card">
             <Feed
-                prepend={[<Stories />]}
+                prepend={<Stories />}
                 filters={filters}
                 relayUrls={relayUrls}
                 filterKey={key}

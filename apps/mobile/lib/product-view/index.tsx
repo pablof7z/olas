@@ -12,8 +12,8 @@ import EventContent from "@/components/ui/event/content";
 import MultiStepButton from "@/components/multistep-button";
 import React, { useState } from "react";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-
-const { height } = Dimensions.get("window");
+import { ScrollView } from "react-native-gesture-handler";
+import { Scroll } from "lucide-react-native";
 
 const sizeAtom = atom<string | undefined, [string], void>(undefined, (get, set, size) => {
     set(sizeAtom, size);
@@ -101,21 +101,29 @@ export default function ProductView({ event }: { event: NDKEvent }) {
             <Text variant="title1">
                 {product.title}
             </Text>
-            {step === 0 && (<>
-                <FlatList
-                    horizontal
-                    data={product.images}
-                    renderItem={({ item }) => (
-                        <Image source={{ uri: item }} style={{ width: Dimensions.get('window').width-20, height: 400, borderRadius: 16 }} />
-                    )}
-                />
-                
-                <EventContent event={event} content={summary} />
 
-                <SizeSelector sizes={product.sizes} />
-            </>)}
+            <Text variant="body" style={{ fontWeight: '800', color: 'green' }}>
+                {formatMoney({ amount: product.price?.amount, unit: product.price?.currency })}
+            </Text>
+            
+            <ScrollView>
+                {step === 0 && (<>
+                    <FlatList
+                        horizontal
+                        data={product.images}
+                        style={{ marginBottom: 10 }}
+                        renderItem={({ item }) => (
+                            <Image source={{ uri: item }} style={{ width: Dimensions.get('window').width-20, height: 400, borderRadius: 16 }} />
+                        )}
+                    />
+                    
+                    <EventContent event={event} content={summary} />
 
-            {step === 1 && <ShippingInformationStep />}
+                    <SizeSelector sizes={product.sizes} />
+                </>)}
+
+                {step === 1 && <ShippingInformationStep />}
+            </ScrollView>
 
             <MultiStepButton
                 data={Array.from(steps.keys())}
@@ -210,12 +218,12 @@ class NDKClassifiedListing extends NDKEvent {
         if (location) this.tags.push(["location", location]);
     }
 
-    get price(): { amount: string; currency: string; frequency?: string } | undefined {
+    get price(): { amount: number; currency: string; frequency?: string } | undefined {
         const priceTag = this.tags.find(t => t[0] === "price");
         if (!priceTag) return undefined;
         
         return {
-            amount: priceTag[1],
+            amount: parseInt(priceTag[1]),
             currency: priceTag[2],
             frequency: priceTag[3]
         };

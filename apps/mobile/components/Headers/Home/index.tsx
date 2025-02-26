@@ -1,10 +1,8 @@
 import { View, StyleSheet, Animated } from "react-native";
-import CalendarButton from "./CalendarButton";
 import Feed from "./Feed";
 import NotificationsButton from "./NotificationsButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NDKNutzap, useUserProfile, useNDKNutzapMonitor } from "@nostr-dev-kit/ndk-mobile";
-import * as User from "@/components/ui/user";
+import { NDKNutzap, useNDKNutzapMonitor } from "@nostr-dev-kit/ndk-mobile";
 import { formatMoney } from "@/utils/bitcoin";
 import { Text } from "@/components/nativewindui/Text";
 import { useState, useEffect } from "react";
@@ -53,10 +51,7 @@ export default function HomeHeader() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Feed />
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <CalendarButton />
-                        <NotificationsButton />
-                    </View>
+                    <NotificationsButton />
                 </View>
             </Animated.View>
 

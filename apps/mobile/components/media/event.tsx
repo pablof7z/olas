@@ -48,9 +48,7 @@ export function EventMediaGridContainer({
                 onPress={onPress}
                 forceProxy={forceProxy}
                 onLongPress={onLongPress}
-                style={[styles.mediaGridContainer, {
-                    marginHorizontal: index % 3 === 1 ? 1 : 0,
-                }]}
+                style={[styles.mediaGridContainer]}
                 singleMode
                 width={size}
                 height={size}
@@ -65,9 +63,7 @@ export function EventMediaGridContainer({
             onPress={onPress}
             forceProxy={forceProxy}
             onLongPress={onLongPress}
-            style={[styles.mediaGridContainer, {
-                marginHorizontal: index % 3 === 1 ? 1 : 0,
-            }]}
+            style={[styles.mediaGridContainer, index % 3 !== 0 ? { marginLeft: 0.5 } : {}] }
             singleMode
             width={size}
             height={size}
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
-        marginBottom: 1,
+        marginBottom: 0.5,
     }
 });
 

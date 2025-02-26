@@ -16,7 +16,7 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         if (!currentUser || !(activeWallet instanceof NDKCashuWallet)) return false;
 
         return [{
-            kinds: [NDKKind.WalletChange],
+            kinds: [NDKKind.CashuWalletTx],
             authors: [currentUser.pubkey],
         }];
     }, [ currentUser?.pubkey, activeWallet?.walletId])

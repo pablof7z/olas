@@ -2,7 +2,7 @@ import { ScrollView, View } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import { useEffect, useState } from "react";
 import { Hexpubkey, NDKEvent, NDKTag, NDKUser, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
-import { NDKWalletChange } from "@nostr-dev-kit/ndk-wallet";
+import { NDKCashuWalletTx } from "@nostr-dev-kit/ndk-mobile";
 import { UserAsHeader } from "./send";
 import { useActiveEventStore } from "@/components/wallet/store";
 import Post from "@/components/events/Post";
@@ -15,7 +15,7 @@ export default function TxView() {
     const [records, setRecords] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        NDKWalletChange.from(activeEvent).then((e) => {
+        NDKCashuWalletTx.from(activeEvent).then((e) => {
             setEvent(e);
 
             const counterpart = getCounterPart(e, currentUser);
@@ -89,13 +89,13 @@ function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent, t
     </View>
 }
 
-function getCounterPart(event: NDKWalletChange, currentUser: NDKUser): Hexpubkey | undefined {
+function getCounterPart(event: NDKCashuWalletTx, currentUser: NDKUser): Hexpubkey | undefined {
     const pTags = event.getMatchingTags('p');
 
     return pTags.find((tag) => tag[1] !== currentUser.pubkey)?.[1];
 }
 
-function getRecords(event: NDKWalletChange): Record<string, string> {
+function getRecords(event: NDKCashuWalletTx): Record<string, string> {
     const res = {};
 
     for (const tag of event.tags) {

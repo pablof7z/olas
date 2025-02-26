@@ -3,7 +3,7 @@ import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Pressable, RefreshControl, Text } from "react-native";
+import { Pressable, RefreshControl, Text, StyleSheet } from "react-native";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
@@ -21,6 +21,11 @@ type FeedProps = {
     numColumns?: number
 }
 
+type PrependEntry = {
+    id: string;
+    node: React.ReactNode;
+}
+
 const keyExtractor = (entry: FeedEntry) => entry.id;
 
 export default function Feed({
@@ -34,8 +39,6 @@ export default function Feed({
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>();
     const [refreshCount, setRefreshCount] = useState(0);
-
-    // useEffect(() => console.log('prop changed'), [onPress, filters, filterKey, prepend, filterFn, relayUrls])
 
     useScrollToTop(ref);
 
@@ -96,7 +99,7 @@ export default function Feed({
     }, [updateEntries, setRefreshCount, setRefreshing]);
     
     const renderEntries = useMemo(() => {
-        let ret: (FeedEntry | { id: string, node: React.ReactNode })[] = [...entries];
+        let ret: (FeedEntry | PrependEntry)[] = [...entries];
 
         if (numColumns > 1) {
             // sort entries by whether they have an imeta tag, if they do, sort by timestamp
@@ -110,29 +113,39 @@ export default function Feed({
             // });
         }
         
-        if (prepend) ret.unshift({ id: 'prepend', node: prepend });
+        if (prepend && numColumns === 1) ret.unshift({ id: 'prepend', node: prepend });
 
         return ret;
     }, [entries, prepend, numColumns])
 
-    const renderItem = useCallback(({ item, index }: { item: FeedEntry, index: number }) => {
-        if (numColumns === 1) return <FeedItem item={item} index={index} />
-        else return <EventMediaGridContainer
-                event={item.event}
-                index={index}
-                forceProxy={true}
-                onPress={() => {
-                    setActiveEvent(item.event);
-                    router.push('/view');
-                }}
-                onLongPress={() => { }}
+    const renderItem = useCallback(({ item, index }: { item: FeedEntry | PrependEntry, index: number }) => {
+        if (numColumns === 1 && index === 0 && item.id === 'prepend') return (item as PrependEntry).node;
+        item = item as FeedEntry;
+        
+        if (numColumns === 1) return (
+            <Post 
+                event={item.event} 
+                index={index} 
+                reposts={item.reposts} 
+                timestamp={item.timestamp} 
             />
+        )
+        else return <EventMediaGridContainer
+            event={item.event}
+            index={index}
+            forceProxy={true}
+            onPress={() => {
+                setActiveEvent(item.event);
+                router.push('/view');
+            }}
+            onLongPress={() => { }}
+        />
     }, [numColumns])
 
     return (
         <>
             {showNewEntriesPrompt && (
-                <Pressable className="absolute flex flex-row gap-2 z-50 top-0 left-1/2 -translate-x-1/2 bg-primary/80 px-4 py-2 rounded-full" onPress={update}>
+                <Pressable style={styles.newEntriesPrompt} onPress={update}>
                     <Text className="text-white text-sm">{newEntries.length} new posts</Text>
                 </Pressable>
             )}
@@ -153,12 +166,18 @@ export default function Feed({
     )
 }
 
-function FeedItem({ item, index }: { item: FeedEntry, index: number }) {
-    if (item.id === 'prepend') return item.node;
-    return <Post 
-        event={item.event} 
-        index={index} 
-        reposts={item.reposts} 
-        timestamp={item.timestamp} 
-    />;
-}
+const styles = StyleSheet.create({
+    newEntriesPrompt: {
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: [{ translateX: -50 }],
+        zIndex: 50,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: 10,
+        borderRadius: 10,
+        flexDirection: 'row',
+        gap: 10,
+    }
+
+})

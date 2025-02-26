@@ -101,6 +101,8 @@
     "react-native-svg": "15.8.0",
     "react-native-uitextview": "^1.4.0",
     "react-native-view-shot": "^4.0.3",
+    "react-native-vision-camera": "^4.6.4",
+    "react-native-worklets-core": "^1.5.0",
     "sweet-sfsymbols": "^0.7.2",
     "tailwind-merge": "^2.5.4",
     "tailwindcss": "^3.4.17"
