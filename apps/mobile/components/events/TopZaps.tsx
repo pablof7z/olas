@@ -128,7 +128,7 @@ function ZapPill({ zap, withComment = true }: { zap: Payment, withComment?: bool
                     paddingRight: 4,
                 }
             ]}>
-                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} />
+                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} canSkipBorder={true} />
                 <Text className="text-xs font-bold">{formatMoney({ amount: zap.amount, unit: zap.unit, hideUnit: true })}</Text>
                 <Text className="text-xs">{zap.comment}</Text>
             </Animated.View>
