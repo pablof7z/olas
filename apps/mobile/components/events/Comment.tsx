@@ -5,13 +5,13 @@ import { activeEventAtom } from '@/stores/event';
 import { useSetAtom } from 'jotai';
 import { router } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
+import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 
 export default function Comment({ event, inactiveColor, foregroundColor, iconSize = 18, commentedByUser, commentCount }: { event: NDKEvent, inactiveColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
-    const setActiveEvent = useSetAtom(activeEventAtom);
+    const openComment = useCommentBottomSheet();
 
     const comment = () => {
-        setActiveEvent(event);
-        router.push(`/comments`);
+        openComment(event);
     };
 
     return (
