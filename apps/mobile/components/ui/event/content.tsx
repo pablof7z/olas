@@ -176,10 +176,3 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Tex
 };
 
 export default EventContent;
-
-const style = StyleSheet.create({
-    mention: {
-        color: 'blue',
-        fontWeight: '600',
-    },
-});

@@ -1,7 +1,7 @@
 import { usePubkeyBlacklist } from "@/hooks/blacklist";
 import { usePaymentStore } from "@/stores/payments";
 import { useReactionsStore } from "@/stores/reactions";
-import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, wrapEvent, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
+import NDK, { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKRelaySet, NDKSubscription, NDKSubscriptionCacheUsage, useMuteFilter, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters, VerifiedEvent } from "nostr-tools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -117,7 +117,6 @@ export function useFeedEvents(
      * update in the feed of entries to render
      */
     const updateEntries = useCallback((reason: string) => {
-        const time = Date.now() - subscriptionStartTime.current;
         // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
         const newSliceIds = Array.from(newEntriesRef.current.values());
@@ -254,8 +253,7 @@ export function useFeedEvents(
 
     const handleContentEvent = useCallback((eventId: string, event: NDKEvent) => {
         updateEntry(eventId, (entry: FeedEntry) => {
-            const wrappedEvent = wrapEvent(event);
-            return { ...entry, event: wrappedEvent, timestamp: event.created_at };
+            return { ...entry, event, timestamp: event.created_at };
         });
     }, [setNewEntries, updateEntry]);
 
@@ -415,7 +413,11 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        const sub = ndk.subscribe(filters, { groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] }, relaySet, false);
+        const sub = ndk.subscribe(
+            filters,
+            { wrap: true, groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] },
+            relaySet, false
+        );
 
         sub.on("event", handleEvent);
         sub.once('eose', handleEose);

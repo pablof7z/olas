@@ -8,7 +8,7 @@ import { View } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
-import RelativeTime from '@/app/components/relative-time';
+import RelativeTime from '@/components/relative-time';
 import { Gesture, TouchableOpacity, GestureDetector } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -25,7 +25,6 @@ import { getClientName } from '@/utils/event';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import Lightning from "@/components/icons/lightning"
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import Animated, { 
     useSharedValue, 
     useAnimatedStyle, 
@@ -39,6 +38,7 @@ import TopZaps from '../TopZaps';
 import { useZap } from '@/hooks/zap';
 import { useUserProfile } from '@/hooks/user-profile';
 import { useUserFlare } from '@/hooks/user-flare';
+import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     const scale = useSharedValue(0);
@@ -283,12 +283,10 @@ function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent
     //     return tags;
     // }, [event.id]);
 
-    const setActiveEvent = useSetAtom(activeEventAtom);
-
+    const openComment = useCommentBottomSheet();
     const showComment = useCallback(() => {
-        setActiveEvent(event);
-        router.push(`/comments`);
-    }, [event, setActiveEvent]);
+        openComment(event);
+    }, [event]);
 
     const reactions = useReactionsStore(state => state.reactions.get(event.tagId()));
 

@@ -1,5 +1,5 @@
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import RelativeTime from "@/app/components/relative-time";
+import RelativeTime from "@/components/relative-time";
 import EventContent from "@/components/ui/event/content";
 import { activeEventAtom } from "@/stores/event";
 import { getRootEventId, NDKEvent, NDKKind, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
@@ -10,7 +10,7 @@ import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import * as User from "@/components/ui/user";
 import { MailOpen, Reply } from 'lucide-react-native';
-import { replyEventAtom } from '@/app/comments';
+import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 
 export function NotificationContainer({ event, label, children }: { event: NDKEvent, label: string, children: React.ReactNode }) {
     const { ndk } = useNDK();
@@ -71,22 +71,13 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
 
 function RightActions({ event }: { event: NDKEvent }) {
     const { ndk } = useNDK();
-    const setActiveEvent = useSetAtom(activeEventAtom);
-    const setReplyEvent = useSetAtom(replyEventAtom);
+    const openComment = useCommentBottomSheet();
 
     const handleOpen = useCallback(() => {
         const rootId = getRootEventId(event);
         const rootEvent = rootId ? ndk.fetchEventSync([{ ids: [rootId] }])[0] : null;
-
         const openEvent = rootEvent || event;
-        
-        setActiveEvent(openEvent);
-
-        if (openEvent.id !== event.id) {
-            setReplyEvent(event);
-        }
-
-        router.push(`/comments`);
+        openComment(openEvent, openEvent.id !== event.id ? event : undefined);
     }, [event?.id]);
     
     return (

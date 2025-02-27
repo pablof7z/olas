@@ -1,18 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Platform, Linking, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
 import * as User from '@/components/ui/user';
-import { NDKCacheAdapterSqlite, NDKUser, NDKUserProfile, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import ReelIcon from '@/components/icons/reel';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
-import { NDKEvent, NDKFilter, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+import { NDKFilter } from '@nostr-dev-kit/ndk-mobile';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
 import { Image } from 'expo-image';
 import EventContent from '@/components/ui/event/content';
-import { ArrowLeft, Check, Copy, Grid, ShoppingBag, ShoppingCart, Video, Wind } from 'lucide-react-native';
+import { ArrowLeft, Check, Copy, Grid, ShoppingCart, Wind } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import Feed from '@/components/Feed';
 import { useUserProfile } from '@/hooks/user-profile';
@@ -25,10 +25,8 @@ import { atom, useAtom, useSetAtom } from 'jotai';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { FeedEntry } from '@/components/Feed/hook';
 import { SHOP_ENABLED } from '@/utils/const';
-import { FlashList } from '@shopify/flash-list';
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
     const { colors } = useColorScheme();
@@ -234,19 +232,22 @@ function StoriesContainer({ pubkey }: { pubkey: string }) {
     const latestOlas365 = useObserver([
         { "#t": ["olas365"], authors: [pubkey], limit: 1 },
     ], { wrap: true, cacheUnconstrainFilter: []}, [pubkey])
-    const setView = useSetAtom(profileContentViewAtom);
 
+    const handleOpenStories = useCallback(() => {
+        router.push(`/365?pubkey=${pubkey}`);
+    }, [latestOlas365.length])
+    
     if (!latestOlas365.length) return null;
 
     return <View style={{ flex: 1, margin: 20, flexDirection: 'row', alignItems: 'center' }}>
-        <TouchableOpacity style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onPress={() => setView('olas365')}>
+        <TouchableOpacity style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onPress={handleOpenStories}>
             <View style={{ flexDirection: 'row', gap: 10, width: 40, height: 40, borderRadius: 40, overflow: 'hidden' }}>
                 <EventMediaContainer
                     event={latestOlas365[0]}
                     width={40}
                     className="rounded-lg"
                     singleMode
-                    onPress={() => setView('olas365')}
+                    onPress={handleOpenStories}
                     height={40}
                 contentFit="cover"
                 maxWidth={Dimensions.get('window').width}
@@ -279,76 +280,6 @@ const postFilterFn = (entry: FeedEntry) => {
     }
 
     return true;
-}
-
-const currentYear = new Date().getFullYear();
-
-function getDayOfYear(timestamp: number) {
-    const date = new Date(timestamp * 1000);
-    const year = date.getFullYear();
-    const startOfYear = new Date(year, 0, 1);
-    const diffTime = Math.abs(date.getTime() - startOfYear.getTime());
-    const difference_In_Days = Math.ceil(diffTime / (1000 * 3600 * 24)); 
-
-    if (year !== currentYear) return;
-    
-    return difference_In_Days;
-}
-
-function EmptyDay() {
-    return <View style={{ backgroundColor: '#ddd', flex: 1, width: '100%', height: '100%' }} />
-}
-
-function Olas365View({ pubkey,  }: { pubkey: string }) {
-    const { events } = useSubscribe([
-        { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365"], authors: [pubkey] },
-    ], undefined, [pubkey])
-
-    const renderEntries = useMemo(() => {
-        const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
-        const days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => (
-            { day: index + 1, event: null }
-        ));
-    
-        for (const event of events) {
-            const day = getDayOfYear(event.created_at);
-            if (!day) continue;
-            days[day-1].event = event;
-        }
-
-        return days.reverse();
-    }, [events]);
-    
-    const renderItem = useCallback(({ item: { day, event } }: { item: { day: number, event: NDKEvent } }) => {
-        return <View style={{ width: Dimensions.get('window').width / 3, height: Dimensions.get('window').width / 3 }}>
-            {event ? (
-                <EventMediaContainer
-                    event={event}
-                    width={Dimensions.get('window').width / 3}
-                    height={Dimensions.get('window').width / 3}
-                    contentFit="cover"
-                    maxWidth={Dimensions.get('window').width}
-                    maxHeight={Dimensions.get('window').width}
-                />
-            ) : (
-                <EmptyDay />
-            )}
-
-            <Text style={{ padding: 4, fontSize: 12, color: 'gray', position: 'absolute', bottom: 0, left: 0, right: 0 }}>Day {day}</Text>
-        </View>
-    }, []);
-
-    return (
-        <FlashList
-            data={renderEntries}
-            estimatedItemSize={500}
-            keyExtractor={(e) => e.day.toString()}
-            scrollEventThrottle={100}
-            numColumns={3}
-            renderItem={renderItem}
-            disableIntervalMomentum={true}
-        />
-    )
 }
 
 function ProfileContent({ pubkey }: { pubkey: string }) {
@@ -401,16 +332,12 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
                 
             </View>
 
-            {view === 'olas365' ? (
-                <Olas365View pubkey={pubkey} />
-            ) : (
-                <Feed
-                    filters={filters}
-                    filterKey={filterKey}
-                    filterFn={filterFn}
-                    numColumns={numColumns}
-                />
-            )}
+            <Feed
+                filters={filters}
+                filterKey={filterKey}
+                filterFn={filterFn}
+                numColumns={numColumns}
+            />
         </>
     )
 }

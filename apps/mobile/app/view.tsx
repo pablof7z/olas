@@ -3,7 +3,7 @@ import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
-import RelativeTime from './components/relative-time';
+import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import EventMediaContainer from '@/components/media/event';
 import { Reactions } from '@/components/events/Post/Reactions';

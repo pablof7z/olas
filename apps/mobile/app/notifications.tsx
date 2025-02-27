@@ -9,6 +9,7 @@ import { atom, useAtom } from 'jotai';
 import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import NotificationItem from '@/components/notifications/items';
+import { WALLET_ENABLED } from '@/utils/const';
 
 const settingsTabAtom = atom('all');
 
@@ -16,6 +17,10 @@ const replyKinds = new Set([NDKKind.GenericReply, NDKKind.Text]);
 const replyFilter = (event: NDKEvent) => replyKinds.has(event.kind);
 
 const reactionFilter = (event: NDKEvent) => event.kind === NDKKind.Reaction;
+
+const segmentOptions = ['All', 'Replies', 'Reactions']
+
+if (WALLET_ENABLED) segmentOptions.push('Zaps');
 
 export default function Notifications() {
     const [settingsTab, setSettingsTab] = useAtom(settingsTabAtom);
@@ -74,7 +79,7 @@ export default function Notifications() {
             <View style={styles.container} className="bg-card">
                 <NotificationPrompt />
                 <SegmentedControl
-                    values={['All', 'Replies', 'Reactions', 'Zaps']}
+                    values={segmentOptions}
                     selectedIndex={selectedIndex}
                     onIndexChange={(index) => {
                         switch (index) {

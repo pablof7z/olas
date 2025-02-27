@@ -1,7 +1,7 @@
 import { useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { View } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
-import RelativeTime from "@/app/components/relative-time";
+import RelativeTime from "@/components/relative-time";
 
 export const Counterparty = ({ pubkey, timestamp, children }: { pubkey: string, timestamp?: number, children?: React.ReactNode }) => {
     const { userProfile } = useUserProfile(pubkey);

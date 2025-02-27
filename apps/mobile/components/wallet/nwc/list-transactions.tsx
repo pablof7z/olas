@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { ArrowDown, ArrowUp, Timer } from "lucide-react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
-import RelativeTime from "@/app/components/relative-time";
+import RelativeTime from "@/components/relative-time";
 import { getNWCZap, getNWCZapsByPendingPaymentId } from "@/stores/db/zaps";
 import { PendingZap, usePendingPayments } from "@/stores/payments";
 import { ItemRightColumn } from "../transactions/item-right-column";

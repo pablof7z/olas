@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import WalletButton from '@/components/buttons/wallet';
 import { useUserFlare } from '@/hooks/user-flare';
 import { WALLET_ENABLED } from '@/utils/const';
+
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();

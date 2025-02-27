@@ -53,6 +53,8 @@ import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
 import { useObserver } from '@/hooks/observer';
 import { useUserFlareStore } from '@/hooks/user-flare';
+import StoriesModal from '@/lib/stories/Modal';
+import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
 
 LogBox.ignoreAllLogs();
 
@@ -305,9 +307,9 @@ export default function RootLayout() {
                                         <Stack.Screen name="notifications" options={{ headerShown: false }} />
                                         <Stack.Screen name="communities" options={{ headerShown: false }} />
                                         <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
+                                        <Stack.Screen name="365" />
 
                                         <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
-                                        <Stack.Screen name="comments" options={modalPresentation({ title: 'Comments' })} />
 
                                         <Stack.Screen
                                             name="view"
@@ -343,8 +345,10 @@ export default function RootLayout() {
                                 <FeedEditorBottomSheet />
                                 <UserBottomSheet />
                                 <ReactionPickerBottomSheet />
+                                <CommentsBottomSheet />
                                 <ZapperBottomSheet />
                                 <ProductViewBottomSheet />
+                                <StoriesModal />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />

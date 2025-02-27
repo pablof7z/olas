@@ -6,9 +6,9 @@ import { Pressable, Text, StyleSheet, View } from "react-native";
 
 export default function FlareLabel({ flare, pubkey }: { flare: string, pubkey: string }) {
     const handleFlarePress = useCallback(() => {
-        console.log('handleFlarePress', flare);
         if (flare === 'olas365') {
-            router.push(`/profile?pubkey=${pubkey}&view=olas365`);
+            router.push(`/365?pubkey=${pubkey}`);
+            // router.push(`/profile?pubkey=${pubkey}&view=olas365`);
         }
     }, [flare]);
 

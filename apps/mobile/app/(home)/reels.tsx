@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { Reactions } from '@/components/events/Post/Reactions';
 import { getImetas } from '@/components/media/event';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import RelativeTime from '../components/relative-time';
+import RelativeTime from '@/components/relative-time';
 import { getClientName } from '@/utils/event';
 import { useObserver } from '@/hooks/observer';
 
@@ -45,8 +45,6 @@ const Reel = memo(
                 }
             });
         });
-
-        console.log({pathname, isVisible, visibleItem})
 
         useEffect(() => {
             if (isVisible && pathname === '/reels') {
