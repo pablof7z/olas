@@ -67,7 +67,6 @@ export function Stories() {
                 }}
                 renderItem={renderItem}
             />
-            <StoriesModal />
         </>
             // horizontal className="flex-none flex border-b border-border">
             // <View className="flex-1 flex-row gap-4 p-2">

@@ -147,6 +147,8 @@ export default function Profile() {
             setView(view);
         }
     }, [view])
+
+    const containerStyle = useMemo<StyleProp<ViewStyle>>(() => ({ flex: 1, backgroundColor: colors.card }), [colors.card]);
     
     if (!pubkey) {
         return null;
@@ -160,7 +162,7 @@ export default function Profile() {
                 headerTransparent: true,
                 header: () => <Header user={user} pubkey={pubkey} userProfile={userProfile} scrollY={scrollY} />
             }} />
-            <View style={[styles.container]}>
+            <View style={containerStyle}>
                 <Animated.ScrollView
                     onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
                         useNativeDriver: false,
@@ -168,11 +170,11 @@ export default function Profile() {
                     scrollEventThrottle={16}
                 >
                     {userProfile?.banner ? (
-                        <Image source={{ uri: userProfile.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 50 }} />
+                        <Image source={{ uri: userProfile.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} />
                     ) : (
-                        <View style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 50, backgroundColor: `#${user.pubkey.slice(0, 6)}` }} />
+                        <View style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, backgroundColor: `#${user.pubkey.slice(0, 6)}` }} />
                     )}
-                    <View style={[ styles.header, { marginTop: -20 } ]}>
+                    <View style={[ styles.header, { marginTop: -50 } ]}>
                         <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} />
                         <View style={styles.statsContainer}>
                             <View style={styles.statItem}>
@@ -308,24 +310,27 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
     }, [view]);
 
     const { colors } = useColorScheme();
-    
+
+    const activeButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({ borderBottomWidth: 2, borderBottomColor: colors.primary }), [colors.primary]);
+    const inactiveButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({ borderBottomWidth: 2, borderBottomColor: 'transparent' }), []);
+
     return (
         <>
             <View style={profileContentStyles.container}>
-                <TouchableOpacity style={[profileContentStyles.button, view === 'photos' && { borderBottomColor: colors.primary }]} onPress={() => setView('photos')}>
+                <TouchableOpacity style={[profileContentStyles.button, view === 'photos' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('photos')}>
                     <Grid size={24} color={colors.primary} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[profileContentStyles.button, view === 'reels' && { borderBottomColor: colors.primary }]} onPress={() => setView('reels')}>
+                <TouchableOpacity style={[profileContentStyles.button, view === 'reels' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('reels')}>
                     <ReelIcon width={24} strokeWidth={2} stroke={colors.primary} fill={colors.primary} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[profileContentStyles.button, view === 'posts' && { borderBottomColor: colors.primary }]} onPress={() => setView('posts')}>
+                <TouchableOpacity style={[profileContentStyles.button, view === 'posts' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('posts')}>
                     <Wind size={24} color={colors.primary} />
                 </TouchableOpacity>
 
                 {SHOP_ENABLED && (  
-                    <TouchableOpacity style={[profileContentStyles.button, view === 'products' && { borderBottomColor: colors.primary }]} onPress={() => setView('products')}>
+                    <TouchableOpacity style={[profileContentStyles.button, view === 'products' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('products')}>
                         <ShoppingCart size={24} color={colors.primary} />
                     </TouchableOpacity>
                 )}
@@ -377,13 +382,11 @@ const profileContentStyles = StyleSheet.create({
 // }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
     header: {
         flexDirection: 'row',
         paddingHorizontal: 20,
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        marginBottom: 5,
     },
     statsContainer: {
         flex: 1,

@@ -1,9 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { forwardRef, useMemo } from 'react';
+import { View, Text, StyleSheet, ImageSourcePropType, Pressable } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Image, ImageProps, useImage } from 'expo-image';
 import FlareLabel, { FlareElement } from './flare';
+import { useColorScheme } from '@/lib/useColorScheme';
+
 interface AvatarProps extends ImageProps {
     pubkey: Hexpubkey;
     userProfile: NDKUserProfile | null;
@@ -16,15 +19,32 @@ interface AvatarProps extends ImageProps {
      * Whether to skip padding the avatar if there is no flare border to be displayed!
      */
     canSkipBorder?: boolean;
+
+    /**
+     * The color of the border to be displayed around the avatar.
+     */
+    borderColor?: string;
 }
 
-const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderWidth = 4, imageSize = 128, includeFlareLabel = false, canSkipBorder = false, ...props }) => {
+const UserAvatar = forwardRef(function UserAvatar({
+    pubkey,
+    userProfile,
+    flare,
+    borderWidth,
+    imageSize = 128,
+    includeFlareLabel = false,
+    canSkipBorder = false,
+    borderColor,
+    ...props
+}: AvatarProps, ref) {
+    const { colors } = useColorScheme();
     const size = 128;
     imageSize ??= size / 3;
+    borderWidth ??= imageSize / 16;
 
-    const proxiedImageUrl: string | null = userProfile?.picture ? getProxiedImageUrl(userProfile.picture, size) : null;
+    const proxiedImageUrl: string | null = userProfile?.picture ? getProxiedImageUrl(userProfile.picture, 300) : null;
 
-    
+    borderColor ??= colors.card;
 
     const imageSource = useImage({
         uri: proxiedImageUrl ? proxiedImageUrl : undefined,
@@ -38,88 +58,141 @@ const UserAvatar: React.FC<AvatarProps> = ({ pubkey, userProfile, flare, borderW
     })
 
     if (!pubkey) {
-        console.trace('no pubkey');
-        alert('no pubkey');
-        return (
-            <View style={{ width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden' }}>
-                <Text className="text-foreground text-xl">NO PUBKEY</Text>
-            </View>
-        );
+        alert('no pubkey was passed to the UserAvatar component! This is a bug');
+        return null;
     }
 
-    if (!imageSource) {
-        const color = pubkey.slice(0, 6);
-        const styles = {
+    const style = useAnimatedStyle(() => {
+        return {
+            ...styles.container,
             width: imageSize,
             height: imageSize,
             borderRadius: imageSize,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: `#${color}`,
-            ...(props.style as object || {})
         }
-        return (<View
-            className={props.className}
-            style={styles}
-            >   
-                <Text className="text-foreground text-xl">{pubkey.slice(0, 2).toUpperCase()}</Text>
-            </View>
-        );
-    }
+    })
 
-    let imageMargin = borderWidth*0.75;
+    return (<Animated.View ref={ref} style={style}>
+        {flare && <FlareElement flare={flare} size={imageSize} />}
+        <AvatarInner
+            image={imageSource}
+            pubkey={pubkey}
+            imageSize={imageSize}
+            borderWidth={borderWidth}
+            canSkipBorder={canSkipBorder}
+            flare={flare}
+            borderColor={borderColor}
+            {...props}
+        />
+    </Animated.View>)
+});
+
+function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, ...props }: { image: ImageSourcePropType, pubkey: string, imageSize: number, borderWidth: number, imageMargin: number, canSkipBorder: boolean, flare: string | null, borderColor: string, [key: string]: any }) {
+    let imageMargin = borderWidth / 3;
     let realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
 
-    if (flare) {
-        return (<View>
-            <View
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden', position: 'relative' }}
-            >
-                <FlareElement flare={flare} size={imageSize} />
-
-                <View
-                    style={{ width: imageSize-borderWidth*2, height: imageSize-borderWidth*2, borderRadius: imageSize, borderWidth: imageMargin, borderColor: 'white', overflow: 'hidden'}}
-                >
-                    <Image
-                        source={imageSource}
-                        recyclingKey={pubkey}
-                        style={{ width: realImageSize, height: realImageSize, borderRadius: imageSize }}
-                        className="flex-1"
-                    />
-                </View>
-                </View>
-                {includeFlareLabel && (
-                    <View style={styles.flareLabelContainer}>
-                        <FlareLabel pubkey={pubkey} flare={flare} />
-                    </View>
-                )}
-            </View>
-        );
-    }
-
-    if (canSkipBorder) {
+    if (canSkipBorder && !flare) {
         borderWidth = 0;
         imageMargin = 0;
         realImageSize = imageSize;
     }
+    
+    const innerContainerStyle = useMemo(() => {
+        return {
+            width: imageSize - borderWidth*2,
+            height: imageSize - borderWidth*2,
+            borderRadius: imageSize - borderWidth*2,
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            borderWidth: imageMargin,
+            borderColor: borderColor,
+        }
+    }, [imageSize])
 
-    return (<View
-        style={{ padding: borderWidth + imageMargin, width: imageSize, height: imageSize, overflow: 'hidden', position: 'relative' }}
-    >
+    const imageStyle = useMemo(() => {
+        return {
+            width: realImageSize,
+            height: realImageSize,
+            borderRadius: realImageSize,
+        }
+    }, [imageSize])
+    
+    // if (!image) return <Text className="text-foreground text-xl">{pubkey.slice(0, 2).toUpperCase()}</Text>
+
+    // if (!flare) {
+        // return (
+        //     <Image
+        //         source={image}
+        //         recyclingKey={pubkey}
+        //     />
+        // )
+    // }
+
+    return (
+        <Animated.View style={innerContainerStyle}>
             <Image
-                source={imageSource}
-                recyclingKey={pubkey}
-                style={{ flex: 1, width: realImageSize, height: realImageSize, borderRadius: imageSize }}
-                className="flex-1"
+                source={image}
+                style={imageStyle}
             />
-    </View>
-    );
+        </Animated.View>
+    )
+
+    // if (flare) {
+    //     return (<View>
+    //         <View
+    //             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden', position: 'relative' }}
+    //         >
+    //             <FlareElement flare={flare} size={imageSize} />
+
+    //             <View
+    //                 style={{ width: imageSize-borderWidth*2, height: imageSize-borderWidth*2, borderRadius: imageSize, borderWidth: imageMargin, borderColor: 'white', overflow: 'hidden'}}
+    //             >
+    //                 <Image
+    //                     source={imageSource}
+    //                     recyclingKey={pubkey}
+    //                     style={{ width: realImageSize, height: realImageSize, borderRadius: imageSize }}
+    //                     className="flex-1"
+    //                 />
+    //             </View>
+    //             </View>
+    //             {includeFlareLabel && (
+    //                 <View style={styles.flareLabelContainer}>
+    //                     <FlareLabel pubkey={pubkey} flare={flare} />
+    //                 </View>
+    //             )}
+    //         </View>
+    //     );
+    // }
+
+    // if (canSkipBorder) {
+    //     borderWidth = 0;
+    //     imageMargin = 0;
+    //     realImageSize = imageSize;
+    // }
+
+    // return (<View
+    //     style={{ padding: borderWidth + imageMargin, width: imageSize, height: imageSize, overflow: 'hidden', position: 'relative' }}
+    // >
+    //         <Image
+    //             source={imageSource}
+    //             recyclingKey={pubkey}
+    //             style={{ flex: 1, width: realImageSize, height: realImageSize, borderRadius: imageSize }}
+    //             className="flex-1"
+    //         />
+    // </View>
+    // );
 };
 
 export default UserAvatar;
 
 const styles = StyleSheet.create({
+    container: {
+        overflow: 'hidden',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     flareLabelContainer: {
         position: 'absolute',
         bottom: -4,

@@ -8,7 +8,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { replyEventAtom, rootEventAtom } from './store';
 import { Comment } from './components/comment';
 import { Thread } from './components/thread';
-import NewComment from './new-comment';
+import NewComment from './components/new-comment';
 import { BottomSheetFlashList, BottomSheetView } from '@gorhom/bottom-sheet';
 
 export default function Comments() {
@@ -18,7 +18,6 @@ export default function Comments() {
         { kinds: [NDKKind.Text, NDKKind.GenericReply], ...rootEvent.filter() },
         { kinds: [NDKKind.GenericReply], ...rootEvent.nip22Filter() },
     ], { groupable: false, closeOnEose: false, subId: 'comments' }, [ rootEvent.id]);
-    console.log('rendering comments', rootEvent.id, events.length)
 
     const filteredComments = useMemo(() => {
         const [tagKey, tagValue] = rootEvent.tagReference();
