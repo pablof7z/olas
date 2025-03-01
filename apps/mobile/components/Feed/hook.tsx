@@ -108,6 +108,8 @@ export function useFeedEvents(
     const pubkeyBlacklist = usePubkeyBlacklist();
     const isMutedEvent = useMuteFilter();
 
+    const freezeState = useRef(false);
+
     const entriesFromIds = (ids: Set<NDKEventId>) => Array.from(ids.values())
         .map(id => allEntriesRef.current.get(id))
         .filter(entry => !!entry);
@@ -117,6 +119,7 @@ export function useFeedEvents(
      * update in the feed of entries to render
      */
     const updateEntries = useCallback((reason: string) => {
+        if (freezeState.current) return;
         // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
         const newSliceIds = Array.from(newEntriesRef.current.values());
@@ -149,6 +152,7 @@ export function useFeedEvents(
 
             // update the renderedIdsRef
             renderedEntryIdsRef.current = new Set(renderedEntries.map(entry => entry.id));
+            console.log('setting rendered entries', renderedEntries.length)
             setEntries(renderedEntries);
         // } else {
         //     console.log('no new entries to add, the slice is empty', newEntriesRef.current.size)
@@ -172,7 +176,6 @@ export function useFeedEvents(
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
             if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
-                console.log('removing entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -180,7 +183,9 @@ export function useFeedEvents(
             }
         }
 
-        if (changed) setEntries(entriesFromIds(renderedEntryIdsRef.current));
+        if (changed) {
+            setEntries(entriesFromIds(renderedEntryIdsRef.current));
+        }
 
         // same thing for new entries
         changed = false;
@@ -200,6 +205,10 @@ export function useFeedEvents(
 
     /**
      * This is invoked when something for an entry has changed.
+     * 
+     * @param id The id of the entry to update
+     * @param cb A callback that receives the current entry and a boolean indicating if the state should be frozen
+     * @param freezeState Whether the state should not be updated -- this is useful when adding events in bulk
      */
     const updateEntry = useCallback((id: string, cb: (currentEntry: FeedEntry) => FeedEntry) => {
         let entry: FeedEntry = allEntriesRef.current.get(id);
@@ -220,6 +229,10 @@ export function useFeedEvents(
             const isNotAlreadyMarkedAsNew = !newEntriesRef.current.has(id);
             const passesFilters = filterFn ? filterFn(ret, 0) : true;
 
+            if (!passesFilters) {
+                return;
+            }
+
             const isEosed = eosed.current;
 
             const isNotTooOld = !(isEosed && ret.timestamp < (Date.now() / 1000) - NEW_ENTRY_THRESHOLD);
@@ -227,7 +240,6 @@ export function useFeedEvents(
             if (
                 isNotAlreadyRendered &&
                 isNotAlreadyMarkedAsNew &&
-                passesFilters &&
                 isNotTooOld
             ) {
                 newEntriesRef.current.add(id);
@@ -326,6 +338,7 @@ export function useFeedEvents(
         switch (event.kind) {
             case NDKKind.VerticalVideo:
             case NDKKind.HorizontalVideo:
+            case 22:
             case 30018:
             case 30402:
             case NDKKind.Text:
@@ -337,18 +350,20 @@ export function useFeedEvents(
         }
     }, [handleContentEvent, handleRepost, handleBookmark, handleDeletion]);
 
+    const handleBulkEvents = useCallback((events: NDKEvent[]) => {
+        freezeState.current = true;
+        for (const event of events) {
+            handleEvent(event);
+        }
+
+        freezeState.current = false;
+        updateEntries('bulk events');
+    }, [handleEvent, updateEntries]);
+
     const handleEose = useCallback(() => {
         updateEntries('eose');
         eosed.current = true;
     }, [updateEntries])
-
-    /**
-     * We want to flush the buffer the moment the cache finishes loading, particularly for when
-     * we are not connected to relays and there won't be an EOSE coming any time soon.
-     */
-    const handleCacheEose = useCallback(() => {
-        updateEntries('cache-eose');
-    }, [updateEntries]);
 
     const filterExistingEvents = useCallback(() => {
         let changed = false;
@@ -415,15 +430,17 @@ export function useFeedEvents(
 
         const sub = ndk.subscribe(
             filters,
-            { wrap: true, groupable: false, skipVerification: true, subId, cacheUnconstrainFilter: [] },
-            relaySet, false
+            { wrap: true, groupable: false, skipVerification: true, subId },
+            relaySet, {
+                onEvent: handleEvent,
+                onEose: handleEose,
+                onEvents: handleBulkEvents
+            }
         );
-
-        sub.on("event", handleEvent);
-        sub.once('eose', handleEose);
-        sub.once('cacheEose', handleCacheEose);
-
-        sub.start();
+        
+        // res will come back with an array of cached events, they need to be filtered (for blacklist and mutes) and then inserted in bulk into the state
+        // that the caller will be able to render
+        
         subscription.current = sub;
 
         return () => {
@@ -526,12 +543,6 @@ export function useFeedMonitor(
     // useEffect(() => {
     //     if
     // }, [events[0]?.id, ])
-
-    // const handleEvent = (event: NDKEvent) => {
-    //     const id = event.tagId();
-    //     const current = 
-    //     eventsRef.current.set(id, event);
-    // }
 
     const addSlice = (newSlice: Slice) => {
         if (newSlice.eventIds.length === 0) return;

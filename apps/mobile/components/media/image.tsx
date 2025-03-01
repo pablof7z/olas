@@ -3,7 +3,6 @@ import { Image, ImageSource, useImage } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle, StyleSheet, Dimensions } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { type MediaDimensions } from "./types";
-import { Text } from '../nativewindui/Text';
 
 /**
  * This keeps a record of the known image heights for a given url.
@@ -73,22 +72,37 @@ export default function ImageComponent({
 
     // Calculate dimensions only once
     const finalDimensions = useMemo(() => {
+        let resDim: MediaDimensions;
         if (dimensions && !renderDimensions) {
             return calcDimensions(dimensions, maxDimensions);
         }
         return renderDimensions || maxDimensions;
     }, [dimensions, renderDimensions, maxDimensions]);
 
-    const cacheKey = useMemo(
-        () => [url, sizeForProxy??""].join('-'),
-        [url, sizeForProxy]
-    );
+    const cacheKey = useMemo(() => {
+        const fileNameInUrl = url.split('/').pop();
+        const [fileName, fileExtension] = fileNameInUrl?.split('.') || [fileNameInUrl];
+        const res = [fileName];
+
+        if (useImgProxy) res.push(sizeForProxy.toString());
+
+        if (fileExtension) res.push(fileExtension);
+
+        return res.join('.');
+    }, [url, sizeForProxy, useImgProxy]);
+    
     const imageSource = useImage({
         uri: pUri,
         cacheKey,
     })
 
     const blurhashObj = { blurhash };
+
+    if (finalDimensions?.width && !finalDimensions?.height) {
+        finalDimensions.height = finalDimensions.width;
+
+        console.trace('we had a width but no height', url, { finalDimensions, dimensions, renderDimensions, maxDimensions });
+    }
 
     return (
         <Pressable
@@ -102,12 +116,13 @@ export default function ImageComponent({
                 placeholder={blurhashObj}
                 placeholderContentFit={contentFit}
                 priority={priority}
+                cachePolicy="disk"
                 source={imageSource}
                 contentFit={contentFit}
                 recyclingKey={url}
-                // onLoadStart={() => {
-                //     console.log('onLoadStart', cacheKey)
-                // }}
+                onLoadStart={() => {
+                    console.log('onLoadStart', cacheKey)
+                }}
                 onError={(e) => {
                     console.log('Image loading error', cacheKey, e)
                 }}
@@ -122,8 +137,8 @@ export default function ImageComponent({
                     }
                 }}
                 style={{
-                    width: finalDimensions?.width,
-                    height: finalDimensions?.height,
+                    width: Math.floor(finalDimensions?.width) ?? 100,
+                    height: Math.floor(finalDimensions?.height) ?? 100,
                 }}
             />
             {/* <Text className="text-red-500">{forceDimensions?.width}x{forceDimensions?.height}</Text>

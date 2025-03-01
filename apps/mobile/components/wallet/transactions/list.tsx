@@ -71,7 +71,6 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
 
     return (
         <View className="flex-1">
-            <Text className="text-white">{pendingPayments.length}</Text>
             <FlatList
                 data={historyWithPendingZaps}
                 keyExtractor={(item: NDKEvent) => item.id}

@@ -58,6 +58,6 @@ export function initializeNDK(currentUser?: Hexpubkey) {
 
 const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
     const url = new URL(relay.url);
-    if (direction === 'send' && relay.url.match(/olas/)) console.log(`[NET +${Date.now()-timeZero}ms] 👉`, url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && msg.match(/17375,/)) console.log('👈', url.hostname, msg.slice(0, 600));
+    if (direction === 'send' && relay.url.match(/vertex/)) console.log(`[NET +${Date.now()-timeZero}ms] 👉`, url.hostname, msg.slice(0, 400));
+    if (direction === 'recv' && relay.url.match(/vertex/)) console.log('👈', url.hostname, msg.slice(0, 600));
 };

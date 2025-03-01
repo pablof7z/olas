@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, View, TouchableWithoutFeedback, Keyboar
 import { NDKEvent, useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { replyEventAtom, rootEventAtom } from './store';
 import { Comment } from './components/comment';

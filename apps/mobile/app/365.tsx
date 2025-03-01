@@ -1,23 +1,32 @@
-// Inspiration: https://dribbble.com/shots/15057600-Wallpapers-App-Interactions
-import { NDKEvent, NDKImage, NDKKind, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { NDKEvent, NDKFilter, NDKImage, NDKImetaTag, NDKKind, NDKSubscriptionCacheUsage, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { AnimatePresence } from "framer-motion";
+import { Image } from "expo-image";
 import { MotiView } from "moti";
 import * as React from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  ImageBackground,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
+    Dimensions,
+    Modal,
+    Pressable,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import EventMediaContainer from "@/components/media/event";
-import { FlashList } from "@shopify/flash-list";
-import { BlurView } from "expo-blur";
+import { AnimatedFlashList, FlashList } from "@shopify/flash-list";
+import { Image as ExpoImage, ImageRef, useImage } from "expo-image";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    useAnimatedScrollHandler,
+    interpolate,
+    Extrapolation,
+} from "react-native-reanimated";
+import { useStoriesView } from "@/lib/stories/store";
+import StoriesModal from "@/lib/stories/Modal";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -32,240 +41,358 @@ function getDayOfYear(timestamp: number) {
     const year = date.getFullYear();
     const startOfYear = new Date(year, 0, 1);
     const diffTime = Math.abs(date.getTime() - startOfYear.getTime());
-    const difference_In_Days = Math.ceil(diffTime / (1000 * 3600 * 24)); 
-
+    const difference_In_Days = Math.ceil(diffTime / (1000 * 3600 * 24));
     if (year !== currentYear) return;
-    
     return difference_In_Days;
 }
 
+function AnimatedBackground({
+    item,
+    index,
+    scrollX,
+    cardCount,
+    image,
+}: {
+    item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
+    index: number;
+    scrollX: { value: number };
+    cardCount: number;
+    image: ImageRef | null;
+}) {
+    const imageAnimatedStyle = useAnimatedStyle(() => {
+        const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
+        const opacity = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [0, 0.4, 0],
+            Extrapolation.CLAMP
+        );
+        return { opacity };
+    });
+
+    const textAnimatedStyle = useAnimatedStyle(() => {
+        const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
+        const textOpacity = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [0, 1, 0],
+            Extrapolation.CLAMP
+        );
+        const textTranslate = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [200, 0, -200],
+            Extrapolation.CLAMP
+        );
+        return {
+            opacity: textOpacity,
+            transform: [{ translateX: textTranslate }],
+        };
+    });
+
+    return (
+        <SafeAreaView key={`bg-item-${item.day}`} style={StyleSheet.absoluteFill}>
+            <AnimatedImage
+                source={{ uri: item.imeta.url }}
+                style={[StyleSheet.absoluteFill, { blurRadius: 30 }, imageAnimatedStyle]}
+                blurhash={item.imeta.blurhash}
+            />
+            <View
+                style={{
+                    flex: 0.25,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: cardCount + 1,
+                }}>
+                <Animated.View style={[{ marginBottom: SPACING * 2, alignItems: "center" }, textAnimatedStyle]}>
+                    <Text
+                        style={{
+                            color: "#fff",
+                            fontSize: 28,
+                            marginBottom: SPACING / 2,
+                            fontWeight: "800",
+                            textTransform: "capitalize",
+                        }}>
+                        Day #{getDayOfYear(item.event.created_at)}
+                    </Text>
+                    <Text
+                        style={{
+                            color: "#ffffffcc",
+                            fontSize: 16,
+                            fontWeight: "500",
+                            textAlign: "center",
+                            marginBottom: SPACING,
+                        }}
+                        numberOfLines={3}
+                        adjustsFontSizeToFit>
+                        {item.event.content}
+                    </Text>
+                    <Text
+                        style={{
+                            color: "#ffffffaa",
+                            fontSize: 13,
+                            fontWeight: "500",
+                            textAlign: "center",
+                        }}>
+                        {new Date(item.event.created_at * 1000).toLocaleDateString()}
+                    </Text>
+                </Animated.View>
+            </View>
+        </SafeAreaView>
+    );
+}
+
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+function AnimatedRenderItem({
+    item,
+    index,
+    scrollX,
+    image,
+    events
+}: {
+    item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
+    index: number;
+    scrollX: { value: number };
+    image: ImageRef | null;
+    events: NDKEvent[];
+}) {
+    const animatedStyle = useAnimatedStyle(() => {
+        const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
+        const translateY = interpolate(
+            animated,
+            [index - 1, index, index + 1],
+            [100, 40, 100],
+            Extrapolation.CLAMP
+        );
+        const scale = interpolate(
+            animated,
+            [index - 1, index, index + 1],
+            [1.5, 1, 1.5],
+            Extrapolation.CLAMP
+        );
+        return {
+            transform: [{ translateY }, { scale }],
+        };
+    });
+
+    const openStory = useStoriesView();
+
+    const [showModal, setShowModal] = useState(false);
+    const handleCardPress = useCallback(() => {
+        const eventsForStories = events.slice(index, -1);
+        openStory(eventsForStories);
+        setShowModal(true);
+        // router.push('/stories');
+    }, [index, item.event, openStory]);
+
+    return (
+        <Animated.View
+            style={{
+                width: IMAGE_WIDTH,
+                height: IMAGE_HEIGHT,
+                margin: SPACING,
+                overflow: "hidden",
+                borderRadius: 30,
+            }}>
+                <Pressable onPress={handleCardPress}>
+            <AnimatedImage
+                blurhash={item.imeta.blurhash}
+                style={[
+                    {
+                        width: IMAGE_WIDTH,
+                        height: IMAGE_HEIGHT,
+                        resizeMode: "cover",
+                        borderRadius: 20,
+                    },
+                    animatedStyle,
+                ]}
+                    source={image}
+                />
+                </Pressable>
+                {showModal && <Modal transparent={true} animationType="slide"><StoriesModal onClose={() => setShowModal(false)} /></Modal>}
+        </Animated.View>
+    );
+}
+
 export default function Wallpapers() {
-    const scrollX = React.useRef(new Animated.Value(0)).current;
-    const { pubkey } = useLocalSearchParams();
-    const { events } = useSubscribe<NDKImage>([
-        { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365"], authors: [pubkey] },
-    ], { wrap: true}, [pubkey])
-    
+    const scrollX = useSharedValue(0);
+    const { pubkey } = useLocalSearchParams() as { pubkey: string };
+    const { events } = useSubscribe<NDKImage>(
+        [
+            { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365"], authors: [pubkey] },
+        ],
+        { wrap: true },
+        [pubkey]
+    );
+
+    const imageLoadStartedRef = useRef<Set<string>>(new Set());
+    const [images, setImages] = useState<Map<string, ImageRef>>(new Map());
+
     const [cardEntries, gridEntries] = useMemo(() => {
         const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
-        let days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => (
-            { day: index + 1, event: null, url: null }
-        ));
-    
+        let days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => ({
+            day: index + 1,
+            event: null,
+            imeta: null,
+        }));
+
         for (const event of events) {
-            const url = event?.imetas?.[0]?.url;
-            if (!url) continue;
+            const imeta = event?.imetas?.[0];
+            if (!imeta?.url) continue;
             const day = getDayOfYear(event.created_at);
             if (!day) continue;
-            days[day-1].event = event;
-            days[day-1].url = url;
+            days[day - 1].event = event;
+            days[day - 1].imeta = imeta;
+
+            if (!imageLoadStartedRef.current.has(imeta.url)) {
+                imageLoadStartedRef.current.add(imeta.url);
+                ExpoImage.loadAsync({ uri: imeta.url }).then((image) => {
+                    setImages(prev => {
+                        const newImages = new Map(prev);
+                        newImages.set(imeta.url, image);
+                        return newImages;
+                    });
+                }).catch((error) => {
+                    console.log("error", error, imeta.url);
+                });
+            }
         }
 
         days = days.reverse();
 
-        return [
-            days.filter(e => !!e.event),
-            days
-        ]
+        return [days.filter((e) => !!e.event), days];
     }, [events]);
 
     const { userProfile } = useUserProfile(pubkey);
 
+    const scrollHandler = useAnimatedScrollHandler((event) => {
+        scrollX.value = event.contentOffset.x;
+    });
+
     return (
-      <>
-            <Stack.Screen options={{
-                headerTransparent: true,
-                headerTitle: userProfile?.name ? `${userProfile?.name}'s #olas365` : '#olas365',
-                headerBackTitle: 'Back',
-                headerBackVisible: true,
-                headerTintColor: 'white',
-                
-            }} />
-    <ScrollView>
-    <View
-      style={{ flex: 1, backgroundColor: "#000", justifyContent: "flex-end", height: Dimensions.get("screen").height }}>
-      <AnimatePresence>
-        {cardEntries.length === 0 && (
-          <MotiView
-            key='loading'
-            from={{ opacity: 0.8, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{
-              type: "timing",
-              duration: 1000,
-            }}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              position: "absolute",
-              width,
-              height,
-            }}>
-            <Text>Loading ...</Text>
-          </MotiView>
-        )}
-      </AnimatePresence>
-      <View style={[StyleSheet.absoluteFillObject]}>
-        {cardEntries.map((item, index) => {
-          // doing it faster instead of halfway through
-          const inputRange = [index - 0.8, index, index + 0.8];
-          const animated = Animated.divide(scrollX, IMAGE_WIDTH + SPACING * 2);
-
-          const opacity = animated.interpolate({
-            inputRange,
-            outputRange: [0, 0.4, 0],
-          });
-          const textOpacity = animated.interpolate({
-            inputRange,
-            outputRange: [0, 1, 0],
-          });
-          const textTranslate = animated.interpolate({
-            inputRange,
-            outputRange: [200, 0, -200],
-          });
-          return (
-            <SafeAreaView
-              key={`bg-item-${item.day}`}
-              style={[StyleSheet.absoluteFillObject]}>
-              <Animated.Image
-                source={{ uri: item.url }}
-                style={[StyleSheet.absoluteFillObject, { opacity }]}
-                blurRadius={30}
-              />
-              <View
-                style={[
-                  {
-                    flex: 0.25,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: cardEntries.length + 1,
-                  },
-                ]}>
-                <Animated.View
-                  style={{
-                    opacity: textOpacity,
-                    transform: [{ translateX: textTranslate }],
-                    marginBottom: SPACING * 2,
-                    alignItems: "center",
-                  }}>
-                  <Text
-                    style={{
-                      color: "#fff",
-                      fontSize: 28,
-                      marginBottom: SPACING / 2,
-                      fontWeight: "800",
-                      textTransform: "capitalize",
-                    }}>
-                        Day #{getDayOfYear(item.event.created_at)}
-                  </Text>
-                  <Text
-                    style={{ color: "#ffffffcc", fontSize: 16, fontWeight: "500", textAlign: "center", marginBottom: SPACING }}
-                    numberOfLines={3}
-                    adjustsFontSizeToFit>
-                    {item.event.content}
-                  </Text>
-                          <Text style={{ color: "#ffffffaa", fontSize: 13, fontWeight: "500", textAlign: "center" }}>
-                            {new Date(item.event.created_at * 1000).toLocaleDateString()}
-                          </Text>
-                </Animated.View>
-              </View>
-            </SafeAreaView>
-          );
-        })}
-      </View>
-      <Animated.FlatList
-        data={cardEntries}
-        extraData={cardEntries}
-        keyExtractor={(item) => String(item.event.id)}
-        scrollEventThrottle={16}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: (width - (IMAGE_WIDTH + SPACING * 2)) / 2,
-        }}
-        style={{ flexGrow: 0, backgroundColor: "transparent" }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          {
-            useNativeDriver: true,
-          }
-        )}
-        snapToInterval={IMAGE_WIDTH + SPACING * 2}
-        decelerationRate='fast'
-        renderItem={({ item, index }) => {
-          const inputRange = [index - 1, index, index + 1];
-          const animated = Animated.divide(scrollX, IMAGE_WIDTH + SPACING * 2);
-
-          const translateY = animated.interpolate({
-            inputRange,
-            outputRange: [100, 40, 100],
-            extrapolate: "clamp",
-          });
-          const scale = animated.interpolate({
-            inputRange,
-            outputRange: [1.5, 1, 1.5],
-            extrapolate: "clamp",
-          });
-          return (
-            <Animated.View
-              style={{
-                width: IMAGE_WIDTH,
-                height: IMAGE_HEIGHT,
-                transform: [
-                  {
-                    translateY,
-                  },
-                ],
-                margin: SPACING,
-                overflow: "hidden",
-                borderRadius: 30,
-              }}>
-              <Animated.Image
-                style={{
-                  borderRadius: 20,
-                  width: IMAGE_WIDTH,
-                  height: IMAGE_HEIGHT,
-                  resizeMode: "cover",
-                  transform: [{ scale }],
+        <>
+            <Stack.Screen
+                options={{
+                    headerTransparent: true,
+                    headerTitle: userProfile?.name ? `${userProfile?.name}'s #olas365` : "#olas365",
+                    headerBackTitle: "Back",
+                    headerBackVisible: true,
+                    headerTintColor: "white",
                 }}
-                source={{ uri: item.url }}
-              />
-            </Animated.View>
-          );
-        }}
-      />
-    </View>
-    <Olas365View entries={gridEntries} />
+            />
+            <ScrollView>
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "#000",
+                        justifyContent: "flex-end",
+                        height: height,
+                    }}>
+                    <AnimatePresence>
+                        {cardEntries.length === 0 || images.size === 0 && (
+                            <MotiView
+                                key="loading"
+                                from={{ opacity: 0.8, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 1.1 }}
+                                transition={{
+                                    type: "timing",
+                                    duration: 1000,
+                                }}
+                                style={{
+                                    flex: 1,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    position: "absolute",
+                                    width: width,
+                                    height: height,
+                                }}>
+                                <Text>Loading ...</Text>
+                            </MotiView>
+                        )}
+                    </AnimatePresence>
+                    <View style={StyleSheet.absoluteFill}>
+                        {cardEntries.map((item, index) => (
+                            <AnimatedBackground
+                                key={`bg-item-${item.day}`}
+                                item={item}
+                                index={index}
+                                scrollX={scrollX}
+                                cardCount={cardEntries.length}
+                                image={images.get(item.imeta.url)}
+                            />
+                        ))}
+                    </View>
+                    {/* Wrap FlashList in a container with an explicit height */}
+                    <View style={{ height: IMAGE_HEIGHT + SPACING * 2, flexDirection: 'column',  }}>
+                        <Animated.FlatList
+                            data={cardEntries}
+                            extraData={cardEntries}
+                            keyExtractor={(item) => String(item.event.id)}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingHorizontal: (width - (IMAGE_WIDTH + SPACING * 2)) / 2,
+                            }}
+                            onScroll={scrollHandler}
+                            scrollEventThrottle={16}
+                            snapToInterval={IMAGE_WIDTH + SPACING * 2}
+                            decelerationRate="fast"
+                            renderItem={({ item, index }) => (
+                                <AnimatedRenderItem item={item} index={index} scrollX={scrollX} image={images.get(item.imeta.url)} events={events} />
+                            )}
+                        />
+                    </View>
+                </View>
+                <Olas365View entries={gridEntries} images={images} />
             </ScrollView>
-            </>
-  );
+        </>
+    );
 }
+
 function EmptyDay() {
-    return <View style={{ backgroundColor: '#ddd', flex: 1, width: '100%', height: '100%' }} />
+    return <View style={{ backgroundColor: "#ddd", flex: 1, width: "100%", height: "100%" }} />;
 }
 
-export function Olas365View({ entries }: { entries: { day: number, event: NDKEvent }[] }) {
-    const renderItem = useCallback(({ item: { day, event } }: { item: { day: number, event: NDKEvent } }) => {
-        return <View style={{ width: Dimensions.get('window').width / 3, height: Dimensions.get('window').width / 3 }}>
-            {event ? (
-                <EventMediaContainer
-                    event={event}
-                    width={Dimensions.get('window').width / 3}
-                    height={Dimensions.get('window').width / 3}
-                    contentFit="cover"
-                    maxWidth={Dimensions.get('window').width}
-                    singleMode
-                    maxHeight={Dimensions.get('window').width}
-                />
-            ) : (
-                <EmptyDay />
-            )}
+export function Olas365View({ entries, images }: { entries: { day: number; event: NDKImage }[], images: Map<string, ImageRef> }) {
+    const openStory = useStoriesView();
+    const handleCardPress = useCallback((event: NDKImage) => {
+        openStory([event]);
+        router.push('/stories');
+    }, [openStory]);
 
-            <Text style={{ padding: 4, fontSize: 12, color: 'gray', position: 'absolute', bottom: 0, left: 0, right: 0 }}>Day {day}</Text>
-        </View>
-    }, []);
+    const renderItem = useCallback(
+        ({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
+            return (
+                <View style={{ width: Dimensions.get("window").width / 3, height: Dimensions.get("window").width / 3, margin: 0.5, overflow: "hidden" }}>
+                    {event ? (
+                        <TouchableOpacity style={{ flex: 1 }} onPress={() => handleCardPress(event)}>
+                            <AnimatedImage
+                                source={images.get(event?.imetas?.[0]?.url)}
+                                style={{ flex: 1 }}
+                            />
+                        </TouchableOpacity>
+                    ) : (
+                        <EmptyDay />
+                    )}
+                    <Text
+                        style={{
+                            padding: 4,
+                            fontSize: 12,
+                            color: "gray",
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                        }}>
+                        Day {day}
+                    </Text>
+                </View>
+            );
+        },
+        []
+    );
 
     return (
         <FlashList
@@ -277,5 +404,5 @@ export function Olas365View({ entries }: { entries: { day: number, event: NDKEve
             renderItem={renderItem}
             disableIntervalMomentum={true}
         />
-    )
+    );
 }

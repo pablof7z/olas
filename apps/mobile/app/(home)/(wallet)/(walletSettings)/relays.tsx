@@ -128,7 +128,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 }
                 {...info}>
                 <TextInput
-                    className="flex-1 text-lg text-foreground"
+                    className="flex-1 text-lg text-foreground placeholder:text-muted-foreground"
                     placeholder="Add relay"
                     onChangeText={info.item.set}
                     autoCapitalize="none"

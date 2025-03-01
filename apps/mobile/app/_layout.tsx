@@ -56,7 +56,7 @@ import { useUserFlareStore } from '@/hooks/user-flare';
 import StoriesModal from '@/lib/stories/Modal';
 import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
 
-LogBox.ignoreAllLogs();
+// LogBox.ignoreAllLogs();
 
 const currentUserInSettings = SecureStore.getItem('currentUser');
 const ndk = initializeNDK(currentUserInSettings);
@@ -311,15 +311,14 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
 
+                                        <Stack.Screen name="view" />
+
                                         <Stack.Screen
-                                            name="view"
+                                            name="stories"
                                             options={{
-                                                contentStyle: { backgroundColor: 'black' },
-                                                presentation: 'modal',
                                                 headerShown: false,
                                             }}
                                         />
-
                                         <Stack.Screen
                                             name="live"
                                             options={{
@@ -348,7 +347,6 @@ export default function RootLayout() {
                                 <CommentsBottomSheet />
                                 <ZapperBottomSheet />
                                 <ProductViewBottomSheet />
-                                <StoriesModal />
                             </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />

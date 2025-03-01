@@ -4,7 +4,7 @@ import { NDKKind } from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Notifications from 'expo-notifications';
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
-import { mainKinds } from "@/utils/const";
+import { mainKinds, WALLET_ENABLED } from "@/utils/const";
 import { useObserver } from "./observer";
 
 const kindString = Array.from(mainKinds).map((k) => k.toString());
@@ -18,7 +18,7 @@ export function useNotifications(onlyNew = false) {
         { kinds: [NDKKind.GenericReply ], '#K': kindString, '#p': [currentUser.pubkey] },
         { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
         { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },
-        { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] },
+        ...[(WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], "#p": [currentUser.pubkey] } : {})],
     ] : false, {}, [!!currentUser]);
 
     const filteredNotifications = useMemo(() => {

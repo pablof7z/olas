@@ -50,9 +50,9 @@ export default function WalletsScreen() {
         if (nip60Wallet) {
             options.push({
                 id: 'nip60',
-                title: 'Nostr-Native Wallet',
+                title: 'Nostr Wallet',
                 leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
-                subTitle: 'Use nostr-native NIP-60 wallet',
+                subTitle: 'Use your nostr native wallet',
                 disabled: true,
                 onPress: () => {
                     activateWallet(nip60Wallet);
@@ -76,9 +76,9 @@ export default function WalletsScreen() {
 
         options.push({
             id: 'nwc',
-            title: 'Nostr Wallet Connect',
+            title: 'Connect external wallet (NWC)',
             leftView: <IconView name="link" className="bg-gray-500 rounded-lg" />,
-            subTitle: 'Connect to a Nostr Wallet',
+            subTitle: 'Connect an external wallet',
             onPress: () => {
                 router.push('/(home)/(settings)/nwc');
             },

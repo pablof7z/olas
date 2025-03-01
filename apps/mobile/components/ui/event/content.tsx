@@ -145,7 +145,7 @@ function RenderPart({
         return <RenderMention entity={mentionMatch} onMentionPress={onMentionPress} />;
     }
 
-    const hashtagMatch = part.match(/^#(\w+)/);
+    const hashtagMatch = part.match(/^#([\p{L}\p{N}_\-]+)/u);
     if (hashtagMatch) {
         return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress || defaultHashtagPress} />;
     }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useObserver } from "./observer";
-import { Hexpubkey, NDKEvent } from "@nostr-dev-kit/ndk-mobile";
+import { Hexpubkey, NDKEvent, NDKImage } from "@nostr-dev-kit/ndk-mobile";
 
 type StoryEntry = {
     events: NDKEvent[],
@@ -50,8 +50,19 @@ export function useStories() {
     return stories;
 }
 
-function isStory(event: NDKEvent) {
-    return event.hasTag('expiration')
+function isStory(event: NDKImage) {
+    const expiration = event.tagValue('expiration');
+    if (!expiration) return false;
+
+    const firstImeta = event.imetas?.[0];
+    if (!firstImeta) return false;
+
+    if (!firstImeta.dim) return false;
+    const [width, height] = firstImeta.dim.split('x').map(Number);
+    if (!width || !height) return false;
+    const isPortrait = width < height;
+
+    return isPortrait;
 }
 
 function isLiveEvent(event: NDKEvent) {

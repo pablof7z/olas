@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
 import * as User from '@/components/ui/user';
-import { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import ReelIcon from '@/components/icons/reel';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -76,12 +76,13 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
             intensity={blurIntensity} 
             style={[headerStyles.container, { paddingTop: insets.top }]}>
             <View style={headerStyles.leftContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 30, height: 30, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
+                <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
                     <ArrowLeft size={24} color={"white"} />
                 </TouchableOpacity>
 
                 <Animated.View style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}>
-                    <Pressable onPress={() => router.back()} style={{ flexDirection: 'column' }}>
+                    <User.Avatar userProfile={userProfile} pubkey={pubkey} imageSize={40} borderWidth={0} canSkipBorder={true} />
+                    <Pressable onPress={() => router.back()} style={{ flexDirection: 'column', marginHorizontal: 10 }}>
                         <User.Name userProfile={userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 20, fontWeight: 'bold' }} />
                         {userProfile?.nip05 && (
                             <Text style={{ color: colors.muted, fontSize: 12 }}>{prettifyNip05(userProfile?.nip05)}</Text>
@@ -120,23 +121,24 @@ export default function Profile() {
     const { userProfile } = useUserProfile(pubkey);
     const flare = useUserFlare(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
-    const { events } = useSubscribe([
+    const { events: content } = useSubscribe([
         { kinds: [NDKKind.Image, NDKKind.VerticalVideo], authors: [pubkey] },
         { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey] },
+        { kinds: [NDKKind.Text], authors: [pubkey] },
         { kinds: [NDKKind.Contacts], authors: [pubkey] },
-    ], undefined, [pubkey])
+    ], { skipVerification: true }, [pubkey])
+
+    const olasContent = useMemo(() => {
+        return content.filter((e) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
+    }, [content.length])
 
     const followCount = useMemo(() => {
-        const contacts = events.find((e) => e.kind === NDKKind.Contacts);
+        const contacts = content.find((e) => e.kind === NDKKind.Contacts);
         if (!contacts) return 0;
         const followTags = contacts.tags.filter((t) => t[0] === 'p');
         if (!followTags) return 0;
         return new Set(followTags.map((t) => t[1])).size;
-    }, [events]);
-
-    const sortedContent = useMemo(() => {
-        return events.filter((e) => [NDKKind.Text, NDKKind.Image, NDKKind.VerticalVideo].includes(e.kind)).sort((a, b) => b.created_at - a.created_at);
-    }, [events]);
+    }, [content]);
 
     const insets = useSafeAreaInsets();
     const {colors} = useColorScheme();
@@ -169,17 +171,15 @@ export default function Profile() {
                     })}
                     scrollEventThrottle={16}
                 >
-                    {userProfile?.banner ? (
-                        <Image source={{ uri: userProfile.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} />
-                    ) : (
-                        <View style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, backgroundColor: `#${user.pubkey.slice(0, 6)}` }} />
-                    )}
-                    <View style={[ styles.header, { marginTop: -50 } ]}>
+                    <View style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, backgroundColor: `#${user.pubkey.slice(0, 6)}` }}>
+                        <Image source={{ uri: userProfile?.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} contentFit="cover" />
+                    </View>
+                    <View style={[ styles.header, { marginTop: -48, marginBottom: 10 } ]}>
                         <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} />
                         <View style={styles.statsContainer}>
                             <View style={styles.statItem}>
                                 <Text style={styles.statNumber} className="text-foreground">
-                                    {sortedContent.length}
+                                    {olasContent.length}
                                 </Text>
                                 <Text style={styles.statLabel} className="text-foreground">
                                     Posts
@@ -241,7 +241,7 @@ function StoriesContainer({ pubkey }: { pubkey: string }) {
     
     if (!latestOlas365.length) return null;
 
-    return <View style={{ flex: 1, margin: 20, flexDirection: 'row', alignItems: 'center' }}>
+    return <View style={{ flex: 1, marginHorizontal: 20, marginTop: 20, flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onPress={handleOpenStories}>
             <View style={{ flexDirection: 'row', gap: 10, width: 40, height: 40, borderRadius: 40, overflow: 'hidden' }}>
                 <EventMediaContainer
@@ -275,7 +275,8 @@ const postFilterFn = (entry: FeedEntry) => {
         let val = knownKind1s.get(entry.event.id);
         if (val !== undefined) return val;
 
-        val = !!entry.event.content.match(imageOrVideoUrlRegexp);
+        if (entry.event.hasTag("e")) val = false
+        else val = !!entry.event.content.match(imageOrVideoUrlRegexp);
         knownKind1s.set(entry.event.id, val);
 
         return val;
@@ -294,9 +295,8 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
 
         if (view === "posts") {
             res.push({ kinds: [NDKKind.Text], authors: [pubkey] });
-            res.push({ kinds: [NDKKind.Media], authors: [pubkey] });
             filterFn = postFilterFn;
-            numColumns = 1;
+            numColumns = 3;
         } else if (view === "reels") {
             res.push({ kinds: [NDKKind.VerticalVideo], authors: [pubkey] });
         } else if (view === "photos") {
@@ -342,6 +342,7 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
                 filterKey={filterKey}
                 filterFn={filterFn}
                 numColumns={numColumns}
+                filterOpts={{ cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE }}
             />
         </>
     )
@@ -352,11 +353,11 @@ const screenWidth = Dimensions.get('window').width;
 
 const profileContentStyles = StyleSheet.create({
     container: {
+        marginTop: 20,
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-evenly',
-        marginTop: 10,
     },
     button: {
         flexDirection: 'row',

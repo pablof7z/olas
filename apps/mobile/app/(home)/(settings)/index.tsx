@@ -52,9 +52,18 @@ const devItem = {
     },
 };
 
+const viewCacheContent = {
+    id: 'cache-view',
+    title: 'View Content cache',
+    leftView: <IconView name="tray-arrow-up" className="bg-red-500" />,
+    onPress: () => {
+        router.push('/(home)/(settings)/content/cache');
+    }
+}
+
 const emptyCache = {
     id: 'cache-empty',
-    title: 'Empty content cache',
+    title: 'Empty Content cache',
     leftView: <IconView name="tray-arrow-up" className="bg-red-500" />,
     onPress: () => {
         Image.clearDiskCache();
@@ -148,7 +157,6 @@ export default function SettingsIosStyleScreen() {
             if (WALLET_ENABLED) {
                 opts.push('Wallet & zaps')
                 if (activeWallet) {
-                    console.log('activeWallet', activeWallet);
                     let name = activeWallet.type.toString();
                     if (activeWallet instanceof NDKCashuWallet)
                         name = activeWallet.name || activeWallet.walletId;
@@ -235,6 +243,7 @@ export default function SettingsIosStyleScreen() {
         })
         if (advancedMode) {
             opts.push(devItem);
+            opts.push(viewCacheContent);
             opts.push(emptyCache);
             opts.push({
                 id: 'nuke-database',

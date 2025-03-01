@@ -1,4 +1,4 @@
-import { NDKEvent, NDKEventId, NDKFilter } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKFilter, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -9,12 +9,12 @@ import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import { EventMediaGridContainer } from "../media/event";
-import { usePostBottomSheet } from "@/hooks/post-bottom-sheet";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
     filters: NDKFilter[];
     filterKey: string;
+    filterOpts?: NDKSubscriptionOptions;
     prepend?: React.ReactNode;
     filterFn?: (feedEntry: FeedEntry, index: number) => boolean
     relayUrls?: string[]
@@ -26,7 +26,7 @@ type PrependEntry = {
     node: React.ReactNode;
 }
 
-const keyExtractor = (entry: FeedEntry) => entry.id;
+const keyExtractor = (entry: FeedEntry | PrependEntry) => entry.id;
 
 export default function Feed({
     filters,
@@ -34,41 +34,38 @@ export default function Feed({
     prepend,
     filterFn,
     relayUrls,
-    numColumns = 1
+    numColumns = 1,
+    filterOpts
 }: FeedProps) {
     const visibleIndex = useRef(0);
-    const ref = useRef<FlashList<any> | null>();
+    const ref = useRef<FlashList<any> | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
 
     useScrollToTop(ref);
 
     const sliceIndex = numColumns * 7;
-    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls }, [filterKey + refreshCount]);
+    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls, ...filterOpts }, [filterKey + refreshCount]);
     const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event), sliceIndex)
 
+    const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
+
     const onViewableItemsChanged = useCallback(({ viewableItems }) => {
-        visibleIndex.current = viewableItems[0]?.index ?? null;
-        if (visibleIndex.current === 0 && showNewEntriesPrompt) setShowNewEntriesPrompt(false)
-        setActiveIndex(visibleIndex.current)
-    }, []);
+        visibleIndex.current = viewableItems[0]?.index ?? 0;
+        if (visibleIndex.current === 0 && showNewEntriesPrompt) {
+            setShowNewEntriesPrompt(false);
+        }
+        setActiveIndex(visibleIndex.current);
+    }, [setActiveIndex, showNewEntriesPrompt]);
 
     const update = useCallback(() => {
         if (!ref.current) return;
         ref.current.scrollToIndex({
             animated: true,
             index: 0
-        })
+        });
         updateEntries('update run');
-        setShowNewEntriesPrompt(false)
+        setShowNewEntriesPrompt(false);
     }, [updateEntries]);
-
-    const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
-    
-    // useEffect(() => console.log('update entries changes'), [updateEntries])
-    // useEffect(() => console.log('new entries changes', newEntries?.length), [newEntries?.length])
-    // useEffect(() => console.log('entries changes', entries?.length), [entries?.length])
-    // useEffect(() => console.log('setActiveIndex changes'), [setActiveIndex])
-    // useEffect(() => console.log('showNewEntriesPrompt changes'), [showNewEntriesPrompt])
 
     useEffect(() => {
         if (newEntries.length === 0) return;
@@ -76,13 +73,15 @@ export default function Feed({
             updateEntries('no visible entries');
             return;
         }
-        if (visibleIndex?.current === 0) {
+        if (visibleIndex.current === 0) {
             updateEntries('visible index is 0');
             return;
         }
 
-        if (visibleIndex?.current > 0 && !showNewEntriesPrompt) setShowNewEntriesPrompt(true)
-    }, [newEntries?.length, showNewEntriesPrompt])
+        if (visibleIndex.current > 0 && !showNewEntriesPrompt) {
+            setShowNewEntriesPrompt(true);
+        }
+    }, [newEntries?.length, showNewEntriesPrompt]);
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 
@@ -91,25 +90,24 @@ export default function Feed({
     const forceRefresh = useCallback(() => {
         setRefreshing(true);
         updateEntries('force refresh');
-        setShowNewEntriesPrompt(false)
+        setShowNewEntriesPrompt(false);
         setRefreshCount(refreshCount + 1);
         setTimeout(() => {
             setRefreshing(false);
         }, 1000);
-    }, [updateEntries, setRefreshCount, setRefreshing]);
+    }, [updateEntries, refreshCount]);
     
     const renderEntries = useMemo(() => {
         let ret: (FeedEntry | PrependEntry)[] = [...entries];
 
         if (numColumns > 1) {
             // sort entries by whether they have an imeta tag, if they do, sort by timestamp
-            ret = ret
-                // .sort((a, b) => {
-                // const aHasImeta = a.event.tags.some(tag => tag.name === 'imeta');
-                // const bHasImeta = b.event.tags.some(tag => tag.name === 'imeta');
-                // if (aHasImeta && !bHasImeta) return -1;
-                // if (!aHasImeta && bHasImeta) return 1;
-                // return a.event.created_at! - b.event.created_at!;
+            // ret = ret.sort((a, b) => {
+            // const aHasImeta = a.event.tags.some(tag => tag.name === 'imeta');
+            // const bHasImeta = b.event.tags.some(tag => tag.name === 'imeta');
+            // if (aHasImeta && !bHasImeta) return -1;
+            // if (!aHasImeta && bHasImeta) return 1;
+            // return a.event.created_at! - b.event.created_at!;
             // });
         }
         
@@ -118,27 +116,29 @@ export default function Feed({
         return ret;
     }, [entries, prepend, numColumns])
 
+    const handleGridPress = useCallback((event: NDKEvent) => {
+        setActiveEvent(event);
+        router.push('/view');
+    }, [])
+
     const renderItem = useCallback(({ item, index }: { item: FeedEntry | PrependEntry, index: number }) => {
         if (numColumns === 1 && index === 0 && item.id === 'prepend') return (item as PrependEntry).node;
         item = item as FeedEntry;
         
         if (numColumns === 1) return (
-            <Post 
-                event={item.event} 
-                index={index} 
-                reposts={item.reposts} 
-                timestamp={item.timestamp} 
+            <Post
+                event={item.event}
+                index={index}
+                reposts={item.reposts}
+                timestamp={item.timestamp}
             />
         )
         else return <EventMediaGridContainer
             event={item.event}
             index={index}
             forceProxy={true}
-            onPress={() => {
-                setActiveEvent(item.event);
-                router.push('/view');
-            }}
-            onLongPress={() => { }}
+            numColumns={numColumns}
+            onPress={() => handleGridPress(item.event)}
         />
     }, [numColumns])
 
@@ -149,19 +149,21 @@ export default function Feed({
                     <Text className="text-white text-sm">{newEntries.length} new posts</Text>
                 </Pressable>
             )}
-            <FlashList
-                ref={ref}
-                data={renderEntries}
-                estimatedItemSize={500}
-                keyExtractor={keyExtractor}
-                onViewableItemsChanged={onViewableItemsChanged}
-                scrollEventThrottle={100}
-                numColumns={numColumns}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
-                getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
-                renderItem={renderItem}
-                disableIntervalMomentum={true}
-            />
+            {renderEntries.length > 0 && (
+                <FlashList
+                    ref={ref}
+                    data={renderEntries}
+                    estimatedItemSize={500}
+                    keyExtractor={keyExtractor}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    scrollEventThrottle={100}
+                    numColumns={numColumns}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
+                    getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
+                    renderItem={renderItem}
+                    disableIntervalMomentum={true}
+                />
+            )}
         </>
     )
 }

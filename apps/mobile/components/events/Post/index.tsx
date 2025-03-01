@@ -3,7 +3,7 @@ import {
     NDKKind,
     useNDKWallet,
 } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Pressable, Share, StyleSheet } from 'react-native';
+import { Dimensions, Pressable, Share, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import * as User from '@/components/ui/user';
@@ -168,17 +168,6 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
 
 export default function Post({ event, reposts, timestamp, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
-    let content = event.content.trim();
-
-    if (event.kind === NDKKind.Text) {
-        // remove the urls from the content
-        content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g, '');
-        // replace \n\n\n or more with \n
-        content = content.replace(/\n\s*\n\s*\n+/g, '\n');
-        // remove from content \n that are after the last word
-        content = content.replace(/\n\s*$/g, '');
-    }
-
     const priority = useMemo<('high' | 'normal' | 'low')>(() => {
         if (index === 0) return 'high';
         if (index <= 2) return 'normal';
@@ -191,13 +180,22 @@ export default function Post({ event, reposts, timestamp, index }: { index: numb
     const screen = Dimensions.get('window');
     const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width * 1.1 : ((screen.height * 0.8) - headerHeight));
 
+    const { colors } = useColorScheme();
+
+    const containerStyle = useMemo<StyleProp<ViewStyle>>(() => ({
+        overflow: 'hidden',
+        borderBottomWidth: 1,
+        borderBottomColor: colors.grey5,
+        paddingVertical: 10,
+    }), []);
+
     return (
-        <View className="overflow-hidden border-b border-border py-2">
+        <View style={containerStyle}>
             <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
 
             <MediaSection event={event} priority={priority} maxHeight={maxHeight} />
 
-            <PostBottom event={event} trimmedContent={content} />
+            <PostBottom event={event} />
         </View>
     );
 }
@@ -273,7 +271,22 @@ const onMentionPress = (pubkey: string) => {
     router.push(`/profile?pubkey=${pubkey}`);
 };
 
-function PostBottom({ event, trimmedContent }: { event: NDKEvent; trimmedContent: string }) {
+function PostBottom({ event }: { event: NDKEvent }) {
+    const trimmedContent = useMemo(() => {
+        let content = event.content.trim();
+
+        if (event.kind === NDKKind.Text) {
+            // remove the urls from the content
+            content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g, '');
+            // replace \n\n\n or more with \n
+            content = content.replace(/\n\s*\n\s*\n+/g, '\n');
+            // remove from content \n that are after the last word
+            content = content.replace(/\n\s*$/g, '');
+        }
+
+        return content;
+    }, [event.content]);
+    
     // const tagsToRender = useMemo(() => {
     //     const tags = new Set(event.getMatchingTags('t').map(t => t[1]));
     //     // remove the tags that are already in the content

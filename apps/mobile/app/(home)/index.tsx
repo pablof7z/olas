@@ -261,7 +261,7 @@ function DataList() {
         const filters: NDKFilter[] = [];
     
         // filters.push({ kinds: [1] });
-        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo], ...hashtagFilter, limit: 500 });
+        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21, 22], ...hashtagFilter, limit: 500 });
         filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter, limit: 50 });
 
         if (withTweets) {

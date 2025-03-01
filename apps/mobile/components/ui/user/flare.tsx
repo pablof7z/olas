@@ -1,4 +1,4 @@
-import { Rect, SweepGradient, vec } from "@shopify/react-native-skia";
+import { Circle, Rect, SweepGradient, vec } from "@shopify/react-native-skia";
 import { Canvas } from "@shopify/react-native-skia";
 import { router } from "expo-router";
 import { memo, useCallback } from "react";
@@ -43,11 +43,11 @@ const styles = StyleSheet.create({
     }
 })
 
-export const FlareElement = memo(({ flare, size }: { flare: string, size: number }) => {
+export const FlareElement = memo(({ flare, size, borderWidth }: { flare: string, size: number, borderWidth?: number }) => {
     if (flare === 'live') {
         return <LiveFlare />;
     } else if (flare === 'olas365') {
-        return <OlasFlare size={size} />; 
+        return <OlasFlare size={size} borderWidth={borderWidth} />; 
     } else if (flare === 'story_prompt') {
         return <StoryPromptFlare size={size} />;
     }
@@ -73,17 +73,28 @@ export const StoryPromptFlare = memo(({ size }: { size: number }) => {
     );
 });
 
-export const OlasFlare = memo(({ size }: { size: number }) => {
-    return (
-        <Canvas style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <Rect x={0} y={0} width={size} height={size}>
-            <SweepGradient
-                c={vec(size / 2, size / 2)}
-                colors={["#112FED", "cyan", "#112FED"]}
-            />
-            </Rect>
-        </Canvas>
-    );
-}, (prevProps, nextProps) => {
-    return prevProps.size === nextProps.size;
-});
+export const OlasFlare = memo(
+    ({ size, borderWidth }: { size: number; borderWidth?: number }) => {
+        return (
+            <Canvas style={{ flex: 1, position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+                {borderWidth ? (
+                    // Hollow Circle (stroke only)
+                    <Circle 
+                        cx={size / 2} 
+                        cy={size / 2} 
+                        r={size / 2 - borderWidth / 2} 
+                        style="stroke"
+                        strokeWidth={borderWidth}
+                    >
+                        <SweepGradient c={vec(size / 2, size / 2)} colors={["#112FED", "cyan", "#112FED"]} />
+                    </Circle>
+                ) : (
+                    <Rect x={0} y={0} width={size} height={size}>
+                        <SweepGradient c={vec(size / 2, size / 2)} colors={["#112FED", "cyan", "#112FED"]} />
+                    </Rect>
+                )}
+            </Canvas>
+        );
+    },
+    (prevProps, nextProps) => prevProps.size === nextProps.size && prevProps.borderWidth === nextProps.borderWidth
+);

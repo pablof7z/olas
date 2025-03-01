@@ -19,4 +19,4 @@ export const ZAPS_DISABLED = DEV_BUILD && false;
 
 export const SHOP_ENABLED = DEV_BUILD && false;
 
-export const WALLET_ENABLED = !DEV_BUILD || false;
+export const WALLET_ENABLED = DEV_BUILD || true;

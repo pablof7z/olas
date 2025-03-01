@@ -1,12 +1,16 @@
 import { NDKEvent, NDKNutzap, NDKUser, useNDKCurrentUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { useMemo, useRef, useEffect, useState } from "react";
-import { View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated, Pressable } from "react-native";
 import { Text } from "@/components/nativewindui/Text";
 import UserAvatar from "@/components/ui/user/avatar";
 import { formatMoney } from "@/utils/bitcoin";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Payment, targetToId, usePaymentStore } from "@/stores/payments";
 import { colorWithOpacity } from "@/theme/colors";
+import { router } from "expo-router";
+import { activeEventAtom } from "@/stores/event";
+import { useSetAtom } from "jotai";
+import { useCommentBottomSheet } from "@/lib/comments/bottom-sheet";
 
 export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
     const id = targetToId(event);

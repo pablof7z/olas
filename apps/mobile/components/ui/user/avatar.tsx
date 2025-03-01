@@ -1,5 +1,5 @@
 import React, { forwardRef, useMemo } from 'react';
-import { View, Text, StyleSheet, ImageSourcePropType, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ImageSourcePropType, Pressable, ViewStyle } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -71,8 +71,20 @@ const UserAvatar = forwardRef(function UserAvatar({
         }
     })
 
+    const flareBorderContainerStyle = useMemo<ViewStyle>(() => {
+        return {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: imageSize,
+            overflow: 'hidden',
+        }
+    }, [imageSize, borderWidth, borderColor])
+
     return (<Animated.View ref={ref} style={style}>
-        {flare && <FlareElement flare={flare} size={imageSize} />}
+        {flare && <View style={flareBorderContainerStyle}><FlareElement flare={flare} size={imageSize} borderWidth={borderWidth} /></View>}
         <AvatarInner
             image={imageSource}
             pubkey={pubkey}
@@ -81,12 +93,24 @@ const UserAvatar = forwardRef(function UserAvatar({
             canSkipBorder={canSkipBorder}
             flare={flare}
             borderColor={borderColor}
+            includeFlareLabel={includeFlareLabel}
             {...props}
         />
     </Animated.View>)
 });
 
-function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, ...props }: { image: ImageSourcePropType, pubkey: string, imageSize: number, borderWidth: number, imageMargin: number, canSkipBorder: boolean, flare: string | null, borderColor: string, [key: string]: any }) {
+type AvatarInnerProps = {
+    image: ImageSourcePropType;
+    pubkey: string;
+    imageSize: number;
+    borderWidth: number;
+    includeFlareLabel: boolean;
+    canSkipBorder: boolean;
+    flare: string | null;
+    borderColor: string;
+}
+
+function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, includeFlareLabel, ...props }: AvatarInnerProps) {
     let imageMargin = borderWidth / 3;
     let realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
 
@@ -105,8 +129,6 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
-            borderWidth: imageMargin,
-            borderColor: borderColor,
         }
     }, [imageSize])
 
@@ -117,25 +139,26 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
             borderRadius: realImageSize,
         }
     }, [imageSize])
-    
-    // if (!image) return <Text className="text-foreground text-xl">{pubkey.slice(0, 2).toUpperCase()}</Text>
-
-    // if (!flare) {
-        // return (
-        //     <Image
-        //         source={image}
-        //         recyclingKey={pubkey}
-        //     />
-        // )
-    // }
 
     return (
-        <Animated.View style={innerContainerStyle}>
-            <Image
-                source={image}
-                style={imageStyle}
-            />
-        </Animated.View>
+        <>
+            <Animated.View style={innerContainerStyle}>
+                {image?.width ? (
+                    <Image
+                        source={image}
+                        style={imageStyle}
+                        recyclingKey={pubkey}
+                    />
+                ) : (
+                    <View style={{ width: realImageSize, height: realImageSize, borderRadius: realImageSize, backgroundColor: `#${pubkey.slice(0, 6)}` }} />
+                )}
+            </Animated.View>
+            {includeFlareLabel && (
+                <View style={styles.flareLabelContainer}>
+                    <FlareLabel pubkey={pubkey} flare={flare} />
+                </View>
+            )}
+        </>
     )
 
     // if (flare) {
@@ -188,7 +211,6 @@ export default UserAvatar;
 
 const styles = StyleSheet.create({
     container: {
-        overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

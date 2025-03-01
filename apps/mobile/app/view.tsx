@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Text } from '@/components/nativewindui/Text';
 import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
@@ -11,8 +12,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { activeEventAtom } from '@/stores/event';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
+import { useUserFlare } from '@/hooks/user-flare';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -56,16 +58,12 @@ export default function ViewScreen() {
         content = content.replace(url, '');
     }
 
-    const insets = useSafeAreaInsets(); 
-    const style = useMemo(() => {
-        const isAndroid = Platform.OS === 'android';
-        if (isAndroid) {
-            return {
-                paddingTop: insets.top,
-            }
-        }
-        return {};
-    }, [insets.top]);
+    const height = useHeaderHeight(); 
+    const insets = useSafeAreaInsets();
+    const style = useMemo(() => ({
+            paddingTop: height,
+    }), [height]);
+    const flare = useUserFlare(activeEvent.pubkey);
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${activeEvent.pubkey}`);
@@ -74,10 +72,22 @@ export default function ViewScreen() {
     const maxHeight = Math.floor(Dimensions.get('window').height * 0.7);
 
     return (
-        <ScrollView style={[styles.scrollView, style]}>
+        <>
+            <Stack.Screen
+                options={{
+                    contentStyle: { backgroundColor: 'black' },
+                    headerShown: true,
+                    title: '',
+                    headerTransparent: true,
+                    headerBackTitle: "Back",
+                    headerBackVisible: true,
+                    headerTintColor: "white",
+                }}
+            />
+        <View style={[styles.scrollView, style]}>
             <View style={styles.container}>
                 <TouchableOpacity onPress={viewProfile} style={styles.header}>
-                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={32} />
+                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={32} borderColor='black' canSkipBorder={true} flare={flare} />
                     <View style={styles.userInfo}>
                         <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} style={styles.userName} />
                         <Text style={styles.timestamp}>
@@ -86,7 +96,8 @@ export default function ViewScreen() {
                     </View>
                 </TouchableOpacity>
 
-                <ScrollView minimumZoomScale={1} maximumZoomScale={5}>
+                <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }}
+                contentContainerStyle={{ flex: 1 }}>
                     <EventMediaContainer
                         event={activeEvent}
                         contentFit="contain"
@@ -97,7 +108,7 @@ export default function ViewScreen() {
                 </ScrollView>
 
                 {/* Content */}
-                <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 4 }]}>
+                <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 2 }]}>
                     {price && <Text numberOfLines={1} variant="title1" className="text-white">{nicelyFormattedSatNumber(price)} {currency.toLowerCase()}</Text>}
                     {title && <Text numberOfLines={1} variant="title1" className="text-white">{title}</Text>}
                     <EventContent event={activeEvent} content={content} style={styles.eventContent} />
@@ -105,7 +116,8 @@ export default function ViewScreen() {
                 </View>
 
             </View>
-        </ScrollView>
+        </View>
+        </>
     );
 }
 

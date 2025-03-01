@@ -100,6 +100,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                 }  else {
                     setStories(events);
                     setShowStoriesModal(true);
+                    router.push('/stories');
                 }
             }}>
                 <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={70} flare={live ? 'live' : flare} includeFlareLabel={false} />

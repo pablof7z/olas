@@ -26,8 +26,10 @@ export type EventMediaGridContainerProps = {
     index: number;
     forceProxy?: boolean;
     onPress: () => void;
-    onLongPress: () => void;
+    onLongPress?: () => void;
     size?: number;
+    numColumns: number;
+    style?: StyleProp<ViewStyle>;
 } & Partial<View>;
 
 export function EventMediaGridContainer({
@@ -36,10 +38,12 @@ export function EventMediaGridContainer({
     onPress,
     forceProxy,
     onLongPress,
+    numColumns = 3,
     size,
+    style,
     ...props
 }: EventMediaGridContainerProps) {
-    size ??= Dimensions.get('window').width / 3;
+    size ??= Dimensions.get('window').width / numColumns;
 
     if (event.kind === 30402) {
         return <ProductGridContainer event={event}>
@@ -52,23 +56,25 @@ export function EventMediaGridContainer({
                 singleMode
                 width={size}
                 height={size}
+                style={style}
                 {...props}
             />
         </ProductGridContainer>
     }
 
     return (
-        <EventMediaContainer
-            event={event}
-            onPress={onPress}
-            forceProxy={forceProxy}
-            onLongPress={onLongPress}
-            style={[styles.mediaGridContainer, index % 3 !== 0 ? { marginLeft: 0.5 } : {}] }
-            singleMode
-            width={size}
-            height={size}
-            {...props}
-        />
+        <View style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}] }>
+            <EventMediaContainer
+                event={event}
+                onPress={onPress}
+                forceProxy={forceProxy}
+                onLongPress={onLongPress}
+                singleMode
+                width={size}
+                height={size}
+                {...props}
+            />
+        </View>
     );
 }
 
@@ -188,7 +194,6 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
     if (event.kind === 30018) {
         try {
             const parsed = JSON.parse(event.content);
-            console.log('getImetas', JSON.stringify(parsed, null, 2));
             const imetas = parsed.images.map((image: string) => ({ url: image }));
             return imetas;
         } catch { return []; }

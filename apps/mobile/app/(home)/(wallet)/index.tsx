@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Pressable } from "react-native";
+import { View, Text, SafeAreaView, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from "react-native";
 import { NDKCashuMintList, NDKKind, NDKUser, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKSessionEvents, useNDKWallet, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from "@nostr-dev-kit/ndk-wallet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import TransactionHistory from "@/components/wallet/transactions/list";
 import WalletBalance from "@/components/ui/wallet/WalletBalance";
 import NWCListTansactions from "@/components/wallet/nwc/list-transactions";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) => set(nwcInfoAtom, value));
 const walletTitleAtom = atom<string | null, [string | null], void>(null, (get, set, value) => set(walletTitleAtom, value));
@@ -119,6 +120,8 @@ export default function WalletScreen() {
     const { colors } = useColorScheme();
     const walletTitle = useAtomValue(walletTitleAtom);
 
+    const insets = useSafeAreaInsets();
+
     return (
         <>
             <Stack.Screen
@@ -126,13 +129,12 @@ export default function WalletScreen() {
                     headerShown: true,
                     headerTransparent: true,
                     title: walletTitle,
-                    headerBackground: () => <BlurView intensity={100} tint="light" />,  
                     headerRight: () => <TouchableOpacity onPress={() => router.push('/(home)/(wallet)/(walletSettings)')}>
                         <SettingsIcon size={24} color={colors.foreground} />
                     </TouchableOpacity>
                 }}
             />
-            <SafeAreaView className="flex-1">
+            <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
                 <View className="flex-1 flex-col">
                     <View className="flex-col grow">
                         {isTestnutWallet && (
@@ -151,7 +153,9 @@ export default function WalletScreen() {
                             </Button>
                         )} */}
                         
-                        {balance && <WalletBalance amount={balance.amount} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>}
+                        <View style={{ paddingTop: 50, paddingBottom: 10}}>
+                            <WalletBalance amount={balance.amount} onPress={() => activeWallet?.updateBalance?.()} onLongPress={onLongPress}/>
+                        </View>
 
                         {/* {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />} */}
                         {activeWallet instanceof NDKCashuWallet && (<>
@@ -162,7 +166,7 @@ export default function WalletScreen() {
                         {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />}
                     </View>
                 </View>
-            </SafeAreaView>
+            </View>
         </>
     );
 }
@@ -199,20 +203,63 @@ function WalletButtons() {
     const send = () => router.push('/send')
     const scan = () => router.push('/scan')
     const { colors } = useColorScheme();
+
+    const width = (Dimensions.get('window').width / 2) - 20;
+
+    const buttonStyle = useMemo<StyleProp<ViewStyle>>(() => ({
+        ...buttonStyles.button,
+        backgroundColor: colors.foreground,
+        width: width,
+    }), [colors.card]);
+
+    const scannerButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({
+        ...buttonStyles.scannerButton,
+        borderWidth: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        left: width-30,
+        borderColor: colors.foreground,
+        backgroundColor: colors.background,
+        borderRadius: 80,
+        width: 90,
+        height: 90,
+        zIndex: 100,
+    }), [colors.card]);
     
     return (
-        <View className="flex-row justify-evenly p-4">
-            <Button variant="secondary" className="grow items-center bg-foreground -mr-[25px] h-[65px]" onPress={receive}>
+        <View style={buttonStyles.container}>
+            <TouchableOpacity style={[buttonStyle, {left: 0 }]} onPress={receive}>
                 <Text className="py-2 text-background font-bold text-lg uppercase">Receive</Text>
-            </Button>
-            <Button variant="secondary" className="flex-none border-2 border-foreground items-center bg-card !rounded-full -mt-[5px] w-[80px] h-[80px] z-50" onPress={scan}>
+            </TouchableOpacity>
+            <TouchableOpacity style={scannerButtonStyle} onPress={scan}>
                 <View className="!py-5">
                     <QrCode size={24} color={colors.foreground} />
                 </View>
-            </Button>
-            <Button variant="secondary" className="grow items-center bg-foreground -ml-[25px] h-[65px]" onPress={send}>
+            </TouchableOpacity>
+            <TouchableOpacity style={[buttonStyle, {right: 0}]} onPress={send}>
                 <Text className="py-2 text-background font-bold text-lg uppercase">Send</Text>
-            </Button>
+            </TouchableOpacity>
         </View>
     )
 }
+
+const buttonStyles = StyleSheet.create({
+    container: {
+        position: 'relative',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
+        padding: 10,
+    },
+    button: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 16,
+        height: 70
+    },
+    scannerButton: {
+    }
+})
