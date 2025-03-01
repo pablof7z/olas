@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { searchQueryAtom, useSearchQuery } from "./store";
 import { TextInput, View, StyleSheet, Pressable } from "react-native";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { searchInputRefAtom } from "@/components/FeedType/store";
-import { NDKUser, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKRelaySet, NDKSubscriptionCacheUsage, NDKUser, NostrEvent, useNDK } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Search } from "lucide-react-native";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 export default function SearchInput() {
     const searchQuery = useAtomValue(searchQueryAtom);
@@ -32,22 +33,67 @@ export default function SearchInput() {
 
     const { ndk } = useNDK();
 
+    const dvmRelaySet = useMemo(() => {
+        if (!ndk) return null;
+        return NDKRelaySet.fromRelayUrls(['wss://relay.vertexlab.io'], ndk);
+    }, [ndk]);
+
+    const dvmSearch = useCallback(async (input: string) => {
+        const req = new NDKEvent(ndk, {
+            kind: 5315,
+            tags: [["param", "search", input]]
+        } as NostrEvent);
+        await req.sign();
+
+        try {
+            const sub = ndk.subscribe([
+                { kinds: [6315, 7000], ...req.filter() }
+            ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY }, dvmRelaySet, {
+                onEvent: (event) => {
+                    if (event.kind === 7000) {
+                        const statusTag = event.getMatchingTags('status')?.[0];
+                        const status = statusTag?.[2] ?? statusTag?.[1];
+                        if (status) toast(status);
+                        return;
+                    }
+
+                    sub.stop();
+
+                    try {
+                        const records = JSON.parse(event.content);
+                        for (const record of records) {
+                            if (record.pubkey) {
+                                router.push(`/profile?pubkey=${record.pubkey}`);
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                },
+                onEose: (event) => {
+                    req.publish(dvmRelaySet);
+                }
+            });
+            sub.start();
+        } catch (e) {
+            console.error(e);
+        }
+
+
+        
+    }, []);
+
     const search = useCallback(async (input: string) => {
-        if (input.match(/@.*\.\w+/)) {
-            const user = await ndk.getUserFromNip05(input);
-            if (user) {
-                router.push(`/profile?pubkey=${user.pubkey}`);
-                return;
-            }
-        } else if (input.startsWith('npub1')) {
+        if (input.startsWith('npub1')) {
             try {
                 const user = new NDKUser({npub: input});
                 router.push(`/profile?pubkey=${user.pubkey}`);
                 return;
             } catch {}
-        }
-        
-        if (input.match(/@/)) {
+        } else if (input.startsWith('@') && !input.match(/\./)) {
+            dvmSearch(input.slice(1));
+        } else if (input.match(/@/)) {
             const user = await ndk.getUserFromNip05(input);
             if (user) {
                 router.push(`/profile?pubkey=${user.pubkey}`);
