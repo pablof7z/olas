@@ -55,17 +55,17 @@ export function Comment({ item, style }: { item: NDKEvent, style?: StyleProp<Vie
             isReplying && "bg-accent/10"
         )}>
             <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)} style={styles.avatar}>
-                <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={24} flare={flare} borderWidth={1} />
+                <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={32} flare={flare} borderWidth={1} />
             </Pressable>
 
             <View className="flex-col flex-1">
                 <View className="flex-row items-center gap-1">
-                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-bold text-foreground" />
+                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-semibold text-foreground" />
                     <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
                 </View>
 
                 <Pressable onPress={onReplyPress} onLongPress={copyEventId}>
-                    <EventContent event={item} className="text-base text-foreground" />
+                    <EventContent event={item} className="text-sm text-foreground pb-2" />
                     <Text className="text-xs text-muted-foreground">Reply</Text>
                 </Pressable>
             </View>
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'row',
-        padding: 4,
+        padding: 8,
     },
     avatar: {
         paddingRight: 8,

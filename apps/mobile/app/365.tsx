@@ -51,7 +51,6 @@ function AnimatedBackground({
     index,
     scrollX,
     cardCount,
-    image,
 }: {
     item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
     index: number;
@@ -148,13 +147,11 @@ function AnimatedRenderItem({
     item,
     index,
     scrollX,
-    image,
     events
 }: {
     item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
     index: number;
     scrollX: { value: number };
-    image: ImageRef | null;
     events: NDKEvent[];
 }) {
     const animatedStyle = useAnimatedStyle(() => {
@@ -182,8 +179,8 @@ function AnimatedRenderItem({
     const handleCardPress = useCallback(() => {
         const eventsForStories = events.slice(index, -1);
         openStory(eventsForStories);
-        setShowModal(true);
-        // router.push('/stories');
+        // setShowModal(true);
+        router.push('/stories');
     }, [index, item.event, openStory]);
 
     return (
@@ -207,7 +204,7 @@ function AnimatedRenderItem({
                     },
                     animatedStyle,
                 ]}
-                    source={image}
+                    source={{ uri: item.imeta.url }}
                 />
                 </Pressable>
                 {showModal && <Modal transparent={true} animationType="slide"><StoriesModal onClose={() => setShowModal(false)} /></Modal>}
@@ -227,7 +224,6 @@ export default function Wallpapers() {
     );
 
     const imageLoadStartedRef = useRef<Set<string>>(new Set());
-    const [images, setImages] = useState<Map<string, ImageRef>>(new Map());
 
     const [cardEntries, gridEntries] = useMemo(() => {
         const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
@@ -247,15 +243,7 @@ export default function Wallpapers() {
 
             if (!imageLoadStartedRef.current.has(imeta.url)) {
                 imageLoadStartedRef.current.add(imeta.url);
-                ExpoImage.loadAsync({ uri: imeta.url }).then((image) => {
-                    setImages(prev => {
-                        const newImages = new Map(prev);
-                        newImages.set(imeta.url, image);
-                        return newImages;
-                    });
-                }).catch((error) => {
-                    console.log("error", error, imeta.url);
-                });
+                ExpoImage.prefetch(imeta.url, 'memory-disk')
             }
         }
 
@@ -290,7 +278,7 @@ export default function Wallpapers() {
                         height: height,
                     }}>
                     <AnimatePresence>
-                        {cardEntries.length === 0 || images.size === 0 && (
+                        {cardEntries.length === 0 && (
                             <MotiView
                                 key="loading"
                                 from={{ opacity: 0.8, scale: 0.9 }}
@@ -320,7 +308,6 @@ export default function Wallpapers() {
                                 index={index}
                                 scrollX={scrollX}
                                 cardCount={cardEntries.length}
-                                image={images.get(item.imeta.url)}
                             />
                         ))}
                     </View>
@@ -340,12 +327,12 @@ export default function Wallpapers() {
                             snapToInterval={IMAGE_WIDTH + SPACING * 2}
                             decelerationRate="fast"
                             renderItem={({ item, index }) => (
-                                <AnimatedRenderItem item={item} index={index} scrollX={scrollX} image={images.get(item.imeta.url)} events={events} />
+                                <AnimatedRenderItem item={item} index={index} scrollX={scrollX} events={events} />
                             )}
                         />
                     </View>
                 </View>
-                <Olas365View entries={gridEntries} images={images} />
+                <Olas365View entries={gridEntries} />
             </ScrollView>
         </>
     );
@@ -355,7 +342,7 @@ function EmptyDay() {
     return <View style={{ backgroundColor: "#ddd", flex: 1, width: "100%", height: "100%" }} />;
 }
 
-export function Olas365View({ entries, images }: { entries: { day: number; event: NDKImage }[], images: Map<string, ImageRef> }) {
+export function Olas365View({ entries }: { entries: { day: number; event: NDKImage }[] }) {
     const openStory = useStoriesView();
     const handleCardPress = useCallback((event: NDKImage) => {
         openStory([event]);
@@ -369,7 +356,7 @@ export function Olas365View({ entries, images }: { entries: { day: number; event
                     {event ? (
                         <TouchableOpacity style={{ flex: 1 }} onPress={() => handleCardPress(event)}>
                             <AnimatedImage
-                                source={images.get(event?.imetas?.[0]?.url)}
+                                source={{ uri: event?.imetas?.[0]?.url }}
                                 style={{ flex: 1 }}
                             />
                         </TouchableOpacity>

@@ -37,6 +37,11 @@ export type AppSettingsStoreState = {
     yoloZaps: boolean;
 
     /**
+     * The growth factor for YOLO zaps.
+     */
+    yoloZapsGrowthFactor: number;
+
+    /**
      * Whether to show videos in the feed.
      */
     videosInFeed: VideosInFeed;
@@ -66,7 +71,8 @@ export type AppSettingsStoreActions = {
 
     setDefaultZap: (zap: ZapOption) => void;
     setYoloZaps: (yoloZaps: boolean) => void;
-
+    setYoloZapsGrowthFactor: (growthFactor: number) => void;
+    
     setVideosInFeed: (videosInFeed: VideosInFeed) => void;
 
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
@@ -110,6 +116,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     advancedMode: false,
     defaultZap: defaultZapSetting,
     yoloZaps: true,
+    yoloZapsGrowthFactor: 0.85,
     videosInFeed: 'from-follows',
     forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
     editingPosts: [],
@@ -159,8 +166,9 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         const appSettings = db.getAllSync('SELECT * FROM app_settings') as { key: string, value: string }[];
         appSettings.forEach(setting => {
-            if (setting.key === 'yoloZaps') {
-                state.yoloZaps = setting.value === 'true';
+            switch (setting.key) {
+                case 'yoloZaps': state.yoloZaps = setting.value === 'true'; break;
+                case 'yolo_zaps_growth_factor': state.yoloZapsGrowthFactor = parseFloat(setting.value); break;
             }
         });
 
@@ -203,6 +211,11 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     setYoloZaps: (yoloZaps: boolean) => {
         db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['yoloZaps', yoloZaps.toString()]);
         set({ yoloZaps });
+    },
+
+    setYoloZapsGrowthFactor: (growthFactor: number) => {
+        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['yolo_zaps_growth_factor', growthFactor.toString()]);
+        set({ yoloZapsGrowthFactor: growthFactor });
     },
 
     setVideosInFeed: (videosInFeed: VideosInFeed) => {

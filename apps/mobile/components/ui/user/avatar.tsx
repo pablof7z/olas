@@ -160,51 +160,6 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
             )}
         </>
     )
-
-    // if (flare) {
-    //     return (<View>
-    //         <View
-    //             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: imageSize, height: imageSize, borderRadius: imageSize, overflow: 'hidden', position: 'relative' }}
-    //         >
-    //             <FlareElement flare={flare} size={imageSize} />
-
-    //             <View
-    //                 style={{ width: imageSize-borderWidth*2, height: imageSize-borderWidth*2, borderRadius: imageSize, borderWidth: imageMargin, borderColor: 'white', overflow: 'hidden'}}
-    //             >
-    //                 <Image
-    //                     source={imageSource}
-    //                     recyclingKey={pubkey}
-    //                     style={{ width: realImageSize, height: realImageSize, borderRadius: imageSize }}
-    //                     className="flex-1"
-    //                 />
-    //             </View>
-    //             </View>
-    //             {includeFlareLabel && (
-    //                 <View style={styles.flareLabelContainer}>
-    //                     <FlareLabel pubkey={pubkey} flare={flare} />
-    //                 </View>
-    //             )}
-    //         </View>
-    //     );
-    // }
-
-    // if (canSkipBorder) {
-    //     borderWidth = 0;
-    //     imageMargin = 0;
-    //     realImageSize = imageSize;
-    // }
-
-    // return (<View
-    //     style={{ padding: borderWidth + imageMargin, width: imageSize, height: imageSize, overflow: 'hidden', position: 'relative' }}
-    // >
-    //         <Image
-    //             source={imageSource}
-    //             recyclingKey={pubkey}
-    //             style={{ flex: 1, width: realImageSize, height: realImageSize, borderRadius: imageSize }}
-    //             className="flex-1"
-    //         />
-    // </View>
-    // );
 };
 
 export default UserAvatar;

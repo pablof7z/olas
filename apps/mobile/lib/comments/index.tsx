@@ -3,8 +3,8 @@ import { KeyboardAvoidingView, Platform, View, TouchableWithoutFeedback, Keyboar
 import { NDKEvent, useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { replyEventAtom, rootEventAtom } from './store';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { replyEventAtom, rootEventAtom, showMentionSuggestionsAtom } from './store';
 import { Comment } from './components/comment';
 import { Thread } from './components/thread';
 import NewComment from './components/new-comment';
@@ -34,39 +34,22 @@ export default function Comments() {
         return () => { setReplyEvent(null); }
     }, [setReplyEvent]);
 
-    const style = useMemo(() => {
-        const isAndroid = Platform.OS === 'android';
-        if (isAndroid) {
-            return {
-                paddingTop: 10,
-            }
-        } else {
-            return {
-                paddingVertical: 20,
-            }
-        }
-    }, [Platform.OS, 1])
-    
     return (
         <View
             style={styles.container}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <BottomSheetView className="w-full flex-1" style={styles.innerContainer}>
-                    <BottomSheetView className="flex-1 w-full">
-                    <BottomSheetFlashList
-                        data={filteredComments}
-                        renderItem={({ item }) => {
-                            if (item.id === rootEvent.id) return <Comment item={item} />
-                            return <Thread event={item} indentLevel={0} isRoot={true} />
-                        }}
-                        estimatedItemSize={50}
-                        keyExtractor={(item) => item.id}
-                    />
-                    </BottomSheetView>
+                <BottomSheetFlashList
+                    data={filteredComments}
+                    renderItem={({ item }) => {
+                        if (item.id === rootEvent.id) return <Comment item={item} />
+                        return <Thread event={item} indentLevel={0} isRoot={true} />
+                    }}
+                    estimatedItemSize={50}
+                    keyExtractor={(item) => item.id}
+                />
                     {currentUser && <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />}
                 </BottomSheetView>
-            </TouchableWithoutFeedback>
         </View>
     );
 }

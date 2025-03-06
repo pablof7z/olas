@@ -1,23 +1,40 @@
 import { NDKEvent, NDKUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { Send } from "lucide-react-native";
-import { Text } from "react-native";
+import { NativeSyntheticEvent, Text, TextInputKeyPressEventData } from "react-native";
 import { useState, useCallback } from "react";
 import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { replyEventAtom } from "../store";
+import { replyEventAtom, showMentionSuggestionsAtom } from "../store";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import { useUserFlare } from "@/hooks/user-flare";
 import { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
+import MentionSuggestions from './mention-suggestions';
 
 export default function NewComment({ event, currentUser, autoFocus }: { event: NDKEvent, currentUser: NDKUser, autoFocus: boolean }) {
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();
-    const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
+    const [replyEvent, setReplyEvent] = useAtom<NDKEvent | null>(replyEventAtom);
     const flare = useUserFlare(currentUser?.pubkey);
+    const [showMentionSuggestions, setShowMentionSuggestions] = useAtom(showMentionSuggestionsAtom);
+
+    const handleChangeText = useCallback((text: string) => {
+        setComment(text);
+    }, []);
+
+    // const handleKeyPress = useCallback((event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    //     console.log(event.nativeEvent.key);
+    //     if (event.nativeEvent.key === '@') {
+    //         console.log('@');
+    //         event.preventDefault();
+    //         event.stopPropagation();@
+    //         setComment('');
+    //         setShowMentionSuggestions(true);
+    //     }
+    // }, [showMentionSuggestions]);
 
     const handleSend = useCallback(async () => {
         const commentEvent = (replyEvent || event).reply();
@@ -33,21 +50,28 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
             style={[styles.inputContainer, { paddingBottom: insets.bottom }]}
             className="border-t border-border items-start"
         > 
-            <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} flare={flare} borderWidth={1} canSkipBorder={true} />
-            <BottomSheetTextInput
-                style={styles.input}
-                className="text-foreground"
-                value={comment}
-                autoFocus={autoFocus}
-                onChangeText={setComment}
-                onSubmitEditing={handleSend}
-                placeholder="Type a message..."
-                multiline
-                returnKeyType="send"
-            />
-            <TouchableOpacity style={styles.sendButton} disabled={!comment.trim()} onPress={handleSend}>
-                <Send size={20} color={colors.foreground} />
-            </TouchableOpacity>
+            {/* {showMentionSuggestions && <MentionSuggestions query={comment} />} */}
+            {!showMentionSuggestions && (
+                <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} flare={flare} borderWidth={1} canSkipBorder={true} />
+            )}
+                <BottomSheetTextInput
+                    style={styles.input}
+                    className="text-foreground"
+                    value={comment}
+                    autoFocus={autoFocus}
+                    enablesReturnKeyAutomatically={true}
+                    // onKeyPress={handleKeyPress}
+                    onChangeText={handleChangeText}
+                    onSubmitEditing={handleSend}
+                    placeholder="Type a message..."
+                    multiline
+                    returnKeyType="send"
+                />
+            {!showMentionSuggestions && (
+                <TouchableOpacity style={styles.sendButton} disabled={!comment.trim()} onPress={handleSend}>
+                    <Send size={20} color={colors.foreground} />
+                </TouchableOpacity>
+            )}
         </BottomSheetView>
     )
 }

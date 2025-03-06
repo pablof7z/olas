@@ -312,6 +312,7 @@ export default function RootLayout() {
                                         <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
 
                                         <Stack.Screen name="view" />
+                                        <Stack.Screen name="eula" options={modalPresentation()} />
 
                                         <Stack.Screen
                                             name="stories"

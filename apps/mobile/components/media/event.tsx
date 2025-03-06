@@ -19,6 +19,7 @@ export type EventMediaProps = {
     maxHeight?: number;
     onPress?: () => void;
     onLongPress?: () => void;
+    autoplay?: boolean;
 };
 
 export type EventMediaGridContainerProps = {
@@ -72,6 +73,7 @@ export function EventMediaGridContainer({
                 singleMode
                 width={size}
                 height={size}
+                autoplay={false}
                 {...props}
             />
         </View>
@@ -93,6 +95,7 @@ export default function EventMediaContainer({
     event,
     width,
     className,
+    autoplay,
     muted,
     singleMode,
     height,
@@ -131,6 +134,7 @@ export default function EventMediaContainer({
                 onLongPress={onLongPress}
                 className={className}
                 style={style}
+                autoplay={autoplay}
                 {...props}
             />
         );

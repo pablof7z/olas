@@ -102,8 +102,9 @@ export default function ViewScreen() {
                         event={activeEvent}
                         contentFit="contain"
                         maxWidth={Dimensions.get('window').width}
-                        maxHeight={maxHeight}
+                        maxHeight={Dimensions.get('window').height}
                         muted={false}
+                        autoplay={true}
                     />
                 </ScrollView>
 

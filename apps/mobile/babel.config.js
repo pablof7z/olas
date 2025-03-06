@@ -10,7 +10,8 @@ module.exports = function (api) {
 
     plugins: [
       'babel-plugin-transform-vite-meta-env',
-      '@babel/plugin-syntax-import-attributes'
+      '@babel/plugin-syntax-import-attributes',
+      'react-native-reanimated/plugin',
     ],
   };
 };

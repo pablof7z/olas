@@ -33,12 +33,20 @@ export default function WalletsScreen() {
     const nip60Wallet = useNip60Wallet();
     
     const [primalSupported, setPrimalSupported] = useState(false);
+    const [albySupported, setAlbySupported] = useState(true);
+    const [nwcSupported, setNwcSupported] = useState(false);
 
     useEffect(() => {
         Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
             setPrimalSupported(supported);
         }).catch((e) => {
             setPrimalSupported(false);
+        });
+
+        Linking.canOpenURL('nostrnwc://').then((supported) => {
+            setAlbySupported(supported);
+        }).catch((e) => {
+            setAlbySupported(false);
         });
     }, []);
 
@@ -84,18 +92,32 @@ export default function WalletsScreen() {
             },
         });
 
-        if (primalSupported) {
+        if (primalSupported || albySupported) {
             options.push('Wallet Apps')
             
-            options.push({
-                id: 'primal',
-                title: 'Connect Primal Wallet',
-                leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
-                subTitle: `Primal Wallet`,
-                onPress: () => {
-                    Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
-                },
-            });
+            if (primalSupported) {
+                options.push({
+                    id: 'primal',
+                    title: 'Connect Primal Wallet',
+                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                    subTitle: `Primal Wallet`,
+                    onPress: () => {
+                        Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                    },
+                });
+            }
+
+            if (albySupported) {
+                options.push({
+                    id: 'alby',
+                    title: 'Connect Alby Wallet',
+                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                    subTitle: `Alby Wallet`,
+                    onPress: () => {
+                        Linking.openURL('nostrnwc://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                    },
+                });
+            }
         }
 
         return options;

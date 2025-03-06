@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, StyleSheet, Pressable, Dimensions } from "react-native";
 import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from "react-native-reanimated";
-import { Gesture, GestureDetector, SimultaneousGesture } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useAppSettingsStore } from "@/stores/app";
 import Lightning from "@/components/icons/lightning";
 import { useZapperModal } from "@/lib/zapper/hook";
@@ -9,10 +9,11 @@ import { useZap } from "@/hooks/zap";
 import { usePaymentStore } from "@/stores/payments";
 import { ZapModal } from "@/components/ZapModal";
 import { X } from "lucide-react-native";
+import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
 
-export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
-    const cancelZapRef = useRef<() => void>(null);
-    const paymentEntry = usePaymentStore((s) => s.entries.get(event.tagId()));
+export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor }: { event?: NDKEvent, inactiveColor: string, iconSize?: number, growthFactor?: number }) {
+    const cancelZapRef = useRef<() => void | null>(null);
+    const paymentEntry = usePaymentStore((s) => s.entries.get(event?.tagId() ?? ""));
     const defaultZap = useAppSettingsStore((s) => s.defaultZap);
     const sendZap = useZap();
     const openZapperModal = useZapperModal();
@@ -24,6 +25,11 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
     const buttonIconAnim = useSharedValue(1);
     const abortPanRef = useRef(false);
 
+    const yoloZaps = useAppSettingsStore((s) => s.yoloZaps);
+    const yoloZapsGrowthFactor = useAppSettingsStore((s) => s.yoloZapsGrowthFactor);
+    
+    growthFactor ??= yoloZapsGrowthFactor;
+
     useEffect(() => {
         setShowCancel(false);
         setGestureEnded(false);
@@ -31,6 +37,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
 
     const sendZapWithAmount = useCallback(
         async (message: string, amount: number, delayMs = 0) => {
+            if (!event) return;
             try {
                 const ret = sendZap(message, amount, event, delayMs);
                 if (delayMs > 0 && !(ret instanceof Promise)) {
@@ -61,13 +68,13 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
     }, [gestureEnded, zapAmount, sendZapWithAmount]);
 
     const openZapper = useCallback(() => {
+        if (!event) return;
         openZapperModal(event);
-    }, [event]);
+    }, [event?.id]);
 
-    const color = paymentEntry?.zapCountByCurrentUser > 0 ? "orange" : inactiveColor;
+    const color = (paymentEntry && paymentEntry.zapCountByCurrentUser > 0) ? "orange" : inactiveColor;
     const [modalVisible, setModalVisible] = useState(false);
     const [explode, setExplosion] = useState(false);
-    const yoloZaps = useAppSettingsStore((s) => s.yoloZaps);
 
     const buttonIconStyle = useAnimatedStyle(() => ({
         opacity: buttonIconAnim.value,
@@ -78,6 +85,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
 
     const panGesture = Gesture.Pan()
         .onStart(() => {
+            zapAmount.value = 1;
             abortPanRef.current = false;
             panOffsetY.value = 0;
             buttonIconAnim.value = withSpring(0, { damping: 80, stiffness: 200 });
@@ -90,16 +98,23 @@ export default function Zaps({ event, inactiveColor, iconSize = 18 }) {
                 runOnJS(setModalVisible)(false);
                 abortPanRef.current = true;
             } else {
-                const horizontalFactor = 1;
-                const distance = Math.sqrt(
-                    evt.changeX * evt.changeX + evt.changeY * evt.changeY
-                );
-                zapAmount.value = Math.round(
-                    Math.max(
-                        0,
-                        zapAmount.value + Math.pow(distance, 1.2) * horizontalFactor
-                    )
-                );
+                const distance = Math.sqrt(evt.changeY * evt.changeY);
+                let newVal: number;
+                newVal = zapAmount.value;
+
+                const absX = Math.abs(evt.changeX);
+                const absY = Math.abs(evt.changeY);
+
+                const isHorizontal = absX > (absY / 2);
+
+                if (isHorizontal) {
+                    newVal -= Math.pow(absX, growthFactor);
+                } else {
+                    newVal += Math.pow(distance, growthFactor);
+                    newVal += absX;
+                }
+
+                zapAmount.value = Math.round(Math.max(1, newVal));
             }
             panOffsetY.value = evt.translationY;
         })

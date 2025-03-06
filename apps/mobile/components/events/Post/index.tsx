@@ -139,6 +139,7 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
                 <EventMediaContainer
                     event={event}
                     onPress={onPress}
+                    autoplay={true}
                     muted={true}
                     maxHeight={maxHeight}
                     priority={priority}
@@ -200,6 +201,21 @@ export default function Post({ event, reposts, timestamp, index }: { index: numb
     );
 }
 
+const postHeaderStyle = StyleSheet.create({
+    container: {
+        flexDirection: 'column',
+        gap: 10,
+        paddingHorizontal: 4,
+    },
+    innerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        width: '100%',
+    }
+})
+
 export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
     const { userProfile } = useUserProfile(event.pubkey);
     const flare = useUserFlare(event.pubkey);
@@ -215,9 +231,9 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
     }, [event, optionsSheetRef]);
 
     return (
-        <View className="flex-col p-2">
+        <View style={postHeaderStyle.container}>
             {reposts.length > 0 && (
-                <View style={{ flex: 1, flexDirection: 'column' }}>
+                <View style={postHeaderStyle.innertContainer}>
                     <View className="w-full flex-row items-center justify-between gap-2 pb-0">
                         <View style={{ flexDirection: 'row', gap: 4 }}>
                             <Repeat size={16} color={'green'} />
@@ -233,7 +249,7 @@ export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; rep
                 </View>
             )}
 
-            <View className="w-full flex-row items-center justify-between gap-2">
+            <View style={postHeaderStyle.innerContainer}>
                 <View style={styles.profileContainer}>
                     <TouchableOpacity
                         onPress={() => {

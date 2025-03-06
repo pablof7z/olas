@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
 import * as User from '@/components/ui/user';
-import { NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKImage, NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import ReelIcon from '@/components/icons/reel';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -126,7 +126,7 @@ export default function Profile() {
         { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey] },
         { kinds: [NDKKind.Text], authors: [pubkey] },
         { kinds: [NDKKind.Contacts], authors: [pubkey] },
-    ], { skipVerification: true }, [pubkey])
+    ], { wrap: true, skipVerification: true }, [pubkey])
 
     const olasContent = useMemo(() => {
         return content.filter((e) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
@@ -175,7 +175,7 @@ export default function Profile() {
                         <Image source={{ uri: userProfile?.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} contentFit="cover" />
                     </View>
                     <View style={[ styles.header, { marginTop: -48, marginBottom: 10 } ]}>
-                        <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} />
+                        <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderMarginWidth={0} />
                         <View style={styles.statsContainer}>
                             <View style={styles.statItem}>
                                 <Text style={styles.statNumber} className="text-foreground">

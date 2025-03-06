@@ -16,6 +16,7 @@ export default function VideoComponent({
     onPress,
     onLongPress,
     onFinished,
+    autoplay,
 }: {
     url: string;
     loop?: boolean;
@@ -26,6 +27,7 @@ export default function VideoComponent({
     onPress?: (player: VideoPlayer) => void;
     onLongPress: () => void;
     onFinished?: () => void;
+    autoplay?: boolean;
 }) {
     let renderDimensions = forceDimensions || knownVideoDimensions[url];
 
@@ -38,10 +40,7 @@ export default function VideoComponent({
     const player = useVideoPlayer(url, (player) => {
         player.loop = loop;
         player.muted = muted;
-        player.play();
-        player.addListener('playingChange', (playing) => {
-            console.log(playing);
-        });
+        if (autoplay) player.play();
         player.addListener('playToEnd', () => {
             onFinished?.();
         });

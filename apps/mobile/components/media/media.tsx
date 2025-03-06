@@ -19,6 +19,7 @@ export default function MediaComponent({
     onLongPress,
     muted,
     style,
+    autoplay,
     ...props
 }: {
     imeta: NDKImetaTag;
@@ -34,6 +35,7 @@ export default function MediaComponent({
     muted?: boolean;
     className?: string;
     style?: StyleProp<ViewStyle>;
+    autoplay?: boolean;
 }) {
     const forceDimensions= width && height ? { width, height } : undefined;
     const {
@@ -64,6 +66,7 @@ export default function MediaComponent({
                 onPress={onPress}
                 onLongPress={onLongPress}
                 muted={muted}
+                autoplay={autoplay}
                 {...props}
             />
         );

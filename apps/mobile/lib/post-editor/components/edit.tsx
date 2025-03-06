@@ -1,18 +1,17 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { create } from "zustand";
-import { useEffect, useMemo, useRef, useState, useCallback, RefObject, act } from "react";
-import { Dimensions, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useRef, useCallback, RefObject } from "react";
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { Button } from "@/components/nativewindui/Button";
 import { Text } from "@/components/nativewindui/Text";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as FileSystem from "expo-file-system";
 import { Image, ImageRef, ImageStyle, useImage } from "expo-image";
-import { availableFilters, FilterSetting } from "@/lib/post-editor/const";
+import { availableFilters } from "@/lib/post-editor/const";
 import { Slider } from "@/components/nativewindui/Slider";
 import { Fullscreen, SquareDashed } from "lucide-react-native";
 import ImageCropPicker from "react-native-image-crop-picker";
-import { PostEditorStore, usePostEditorStore } from "@/components/NewPost/store";
+import { usePostEditorStore } from "@/components/NewPost/store";
 
 type AppliedFilter = {
     name: string;

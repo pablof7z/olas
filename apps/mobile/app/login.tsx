@@ -1,7 +1,7 @@
 import 'react-native-get-random-values';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions } from 'react-native';
+import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, View, Dimensions, TouchableOpacity } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { Image } from 'react-native';
 import { router, Stack, useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { uploadMedia } from '@/lib/post-editor/actions/upload';
 import { prepareMedia } from '@/lib/post-editor/actions/prepare';
 import { createNip60Wallet } from '@/utils/wallet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const avatarAtom = atom<string>("");
 const usernameAtom = atom<string | undefined>('@');
@@ -135,24 +136,25 @@ function SignUp() {
 
     return (
         <View className="w-full flex-col items-center gap-4">
-            <Text variant="caption1" className="text-2xl font-bold">
-                Sign Up
-            </Text>
-
             <AvatarChooser />
 
-            <TextInput
-                className="w-full rounded-md border border-border p-2 text-xl text-foreground"
-                autoCapitalize="none"
-                autoComplete={undefined}
-                placeholder="Enter your username"
-                autoCorrect={false}
-                value={username}
-                onChangeText={(t) => {
-                    if (!t.startsWith('@')) t = '@' + t;
-                    setUsername(t.trim());
-                }}
-            />
+            <View style={{ flexDirection: 'column', width: '100%' }}>
+                <TextInput
+                    className="w-full rounded-md border border-border p-2 text-xl text-foreground"
+                    autoCapitalize="none"
+                    autoComplete={undefined}
+                    placeholder="Enter your username"
+                    autoCorrect={false}
+                    value={username}
+                    onChangeText={(t) => {
+                        if (!t.startsWith('@')) t = '@' + t;
+                        setUsername(t.trim());
+                    }}
+                />
+                <Text variant="caption1" className="w-full text-muted-foreground">
+                    Choose a username
+                </Text>
+            </View>
 
             <Button variant="accent" size="lg" className="w-full" onPress={createAccount}>
                 <Text className="py-2 text-lg font-bold text-white">Sign Up</Text>
@@ -164,7 +166,7 @@ function SignUp() {
                 onPress={() => {
                     setMode('login');
                 }}>
-                <Text>Already in Nostr?</Text>
+                <Text>Already on Nostr?</Text>
             </Button>
         </View>
     );
@@ -177,7 +179,6 @@ export default function LoginScreen() {
     const router = useRouter();
     const mode = useAtomValue(modeAtom);
     const setMode = useSetAtom(modeAtom);
-    const logo = require('../assets/logo.png');
 
     const handleLogin = async () => {
         if (!ndk) return;
@@ -207,6 +208,12 @@ export default function LoginScreen() {
     }
 
     const headerHeight = useHeaderHeight();
+    const insets = useSafeAreaInsets();
+
+    const handleTermsOfService = useCallback(() => {
+        router.push('/eula')
+    }, []);
+    
 
     return (
         <>
@@ -214,80 +221,81 @@ export default function LoginScreen() {
                 headerTransparent: true,
                 title: ""
             }} />
-            <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4" style={{ paddingTop: headerHeight }}>
+            <View className="w-full flex-1 items-center justify-center bg-card px-8 py-4" style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-                <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
+                    {mode === 'login' ? (
+                        <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
+                            {scanQR && (
+                                <View
+                                    style={{
+                                        borderRadius: 8,
+                                        height: Dimensions.get('window').width * 0.75,
+                                        width: Dimensions.get('window').width * 0.75,
+                                    }}>
+                                    <CameraView
+                                        barcodeScannerSettings={{
+                                            barcodeTypes: ['qr'],
+                                        }}
+                                        style={{ flex: 1, width: '100%', borderRadius: 8 }}
+                                        onBarcodeScanned={handleBarcodeScanned}
+                                    />
+                                </View>
+                            )}
 
-                {mode === 'login' ? (
-                    <View className="h-full w-full flex-1 items-stretch justify-center gap-4">
-                        <Text variant="heading" className="text-2xl font-bold">
-                            Login
-                        </Text>
+                            <TextInput
+                                style={styles.input}
+                                className="text-foreground placeholder:text-muted-foreground"
+                                multiline={true}
+                                autoCapitalize="none"
+                                autoComplete={undefined}
+                                placeholder="Enter your nsec or bunker:// connection"
+                                autoCorrect={false}
+                                value={payload}
+                                onChangeText={setPayload}
+                            />
 
-                        {scanQR && (
-                            <View
-                                style={{
-                                    borderRadius: 8,
-                                    height: Dimensions.get('window').width * 0.75,
-                                    width: Dimensions.get('window').width * 0.75,
+                            <Button variant="accent" size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
+                                <Text className="py-2 text-lg font-bold text-white">Login</Text>
+                                <ArrowRight size={24} color="white" />
+                            </Button>
+
+                            <LoginWithNip55Button />
+
+                            <Button
+                                variant="plain"
+                                onPress={() => {
+                                    setMode('signup');
                                 }}>
-                                <CameraView
-                                    barcodeScannerSettings={{
-                                        barcodeTypes: ['qr'],
-                                    }}
-                                    style={{ flex: 1, width: '100%', borderRadius: 8 }}
-                                    onBarcodeScanned={handleBarcodeScanned}
-                                />
-                            </View>
-                        )}
+                                <Text>New to nostr?</Text>
+                            </Button>
 
-                        <TextInput
-                            style={styles.input}
-                            className="text-foreground placeholder:text-muted-foreground"
-                            multiline={true}
-                            autoCapitalize="none"
-                            autoComplete={undefined}
-                            placeholder="Enter your nsec or bunker:// connection"
-                            autoCorrect={false}
-                            value={payload}
-                            onChangeText={setPayload}
-                        />
+                            {!scanQR && (
+                                <View className="w-full flex-row justify-center">
+                                    <Button
+                                        variant="plain"
+                                        onPress={() => {
+                                            ndk.signer = undefined;
+                                            setScanQR(true);
+                                        }}
+                                        className="bg-muted/10 border border-border"
+                                        style={{ flexDirection: 'column', gap: 8 }}>
+                                        <QrCode size={64} />
+                                        <Text>Scan QR</Text>
+                                    </Button>
+                                </View>
+                            )}
+                        </View>
+                    ) : (
+                        <SignUp />
+                    )}
+                </KeyboardAvoidingView>
 
-                        <Button variant="accent" size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
-                            <Text className="py-2 text-lg font-bold text-white">Login</Text>
-                            <ArrowRight size={24} color="white" />
-                        </Button>
-
-                        <LoginWithNip55Button />
-
-                        <Button
-                            variant="plain"
-                            onPress={() => {
-                                setMode('signup');
-                            }}>
-                            <Text>New to nostr?</Text>
-                        </Button>
-
-                        {!scanQR && (
-                            <View className="w-full flex-row justify-center">
-                                <Button
-                                    variant="plain"
-                                    onPress={() => {
-                                        ndk.signer = undefined;
-                                        setScanQR(true);
-                                    }}
-                                    className="bg-muted/10 border border-border"
-                                    style={{ flexDirection: 'column', gap: 8 }}>
-                                    <QrCode size={64} />
-                                    <Text>Scan QR</Text>
-                                </Button>
-                            </View>
-                        )}
-                    </View>
-                ) : (
-                    <SignUp />
-                )}
-            </KeyboardAvoidingView>
+                <TouchableOpacity onPress={handleTermsOfService} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 20 }}>
+                    <Text className="text-sm text-muted-foreground">
+                        By continuing you agree to our{' '}
+                        <Text className="text-sm text-primary">Terms of Service</Text>
+                    </Text>
+                </TouchableOpacity>
             </View>
         </>
     );

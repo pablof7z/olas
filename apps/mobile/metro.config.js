@@ -1,6 +1,9 @@
 // Learn more https://docs.expo.dev/guides/monorepos
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
 const { FileStore } = require('metro-cache');
 const path = require('path');
 
@@ -23,4 +26,4 @@ config.cacheStores = [
   new FileStore({ root: path.join(projectRoot, 'node_modules', '.cache', 'metro') }),
 ];
 
-module.exports = withNativeWind(config, { input: './global.css', inlineRem: 16 });
+module.exports = wrapWithReanimatedMetroConfig(withNativeWind(config, { input: './global.css', inlineRem: 16 }));

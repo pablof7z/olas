@@ -1,13 +1,13 @@
-import { View } from 'react-native';
+import { Dimensions, TouchableOpacity, View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from './nativewindui/ActivityIndicator';
-import { useEffect, useRef, useState } from 'react';
-import { Image } from 'react-native';
+import { useEffect, useState } from 'react';
 import { usePaymentStore } from '@/stores/payments';
 import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useUsersStore } from '@/hooks/user-profile';
 import { useUserFlareStore } from '@/hooks/user-flare';
+import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
 
 export default function LoaderScreen({
     children,
@@ -46,20 +46,22 @@ export default function LoaderScreen({
         }
     }, [appReady, wotReady]);
 
-    // if (appReady && !wotReady && !haveInterval.current) {
-    //     haveInterval.current = true;
-    //     setInterval(() => {
-    //         setIgnoreWot(true);
-    //     }, 3000);
-    // }
+    if (appReady && !wotReady && !haveInterval.current) {
+        haveInterval.current = true;
+        setInterval(() => {
+            setIgnoreWot(true);
+        }, 3000);
+    }
+
+    const screenDimensions = Dimensions.get('window');
 
     const logo = require('../assets/logo.png');
 
     return (
         <>
-            {!renderApp && (
-                <View className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
-                    <Image source={logo} style={{ width: 300, height: 100, objectFit: 'contain' }} />
+            {(!renderApp) && (
+                <Animated.View exiting={FadeOut} className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
+                    <Animated.Image source={logo} entering={ZoomIn} style={[{ width: 300, height: 100, objectFit: 'contain' }]} />
 
                     <Text variant="largeTitle" className="mt-4 text-5xl font-black">
                         Olas
@@ -75,7 +77,11 @@ export default function LoaderScreen({
                             <LoadingText appReady={appReady} wotReady={wotReady} />
                         </Text>
                     </View>
-                </View>
+
+                    <TouchableOpacity onPress={() => setRenderApp(!renderApp)}>
+                        <Text>Render App</Text>
+                    </TouchableOpacity>
+                </Animated.View>
             )}
         {appReady && children}
         </>
