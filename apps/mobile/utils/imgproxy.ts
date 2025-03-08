@@ -27,6 +27,7 @@ export function getProxiedImageUrl(url: string, size: number = WINDOW_WIDTH, fac
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
     finalConfig.modifiers.width = Math.floor(size * factor).toString();
+    finalConfig.modifiers.format = 'webp';
     const imageUrl = getImageUrl(url, finalConfig);
     return imageUrl;
 }

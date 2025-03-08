@@ -3,12 +3,13 @@ import { FlashList } from "@shopify/flash-list";
 import Post from "../events/Post";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Pressable, RefreshControl, Text, StyleSheet } from "react-native";
+import { Pressable, RefreshControl, Text, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { useSetAtom } from "jotai";
 import { activeEventAtom } from "@/stores/event";
 import { router } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import { EventMediaGridContainer } from "../media/event";
+import { scrollDirAtom } from "./store";
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -142,6 +143,39 @@ export default function Feed({
         />
     }, [numColumns])
 
+    const scrollPosRef = useRef(0);
+    const scrollDirRef = useRef<"up" | "down">("down");
+    const minScrollThreshold = 60; // minimum pixels to scroll before changing direction
+
+    useEffect(() => {
+        setScrollDir('up');
+    }, [filterKey])
+
+    const setScrollDir = useSetAtom(scrollDirAtom);
+    const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const currentScrollPos = event.nativeEvent.contentOffset.y;
+        const scrollDiff = Math.abs(currentScrollPos - scrollPosRef.current);
+        const scrollDir = currentScrollPos < scrollPosRef.current ? 'up' : 'down';
+
+        if (currentScrollPos < 20 && scrollDirRef.current === 'down') {
+            setScrollDir('up');
+            scrollDirRef.current = 'up';
+            scrollPosRef.current = currentScrollPos;
+            return;
+        }
+
+        if (scrollDiff < minScrollThreshold) return;
+
+        if (scrollDir === 'up' && scrollDirRef.current === 'down') {
+            setScrollDir('up');
+            scrollDirRef.current = 'up';
+        } else if (scrollDir === 'down' && scrollDirRef.current === 'up') {
+            setScrollDir('down');
+            scrollDirRef.current = 'down';
+        }
+        scrollPosRef.current = currentScrollPos;
+    }, [])
+
     return (
         <>
             {showNewEntriesPrompt && (
@@ -156,6 +190,7 @@ export default function Feed({
                     estimatedItemSize={500}
                     keyExtractor={keyExtractor}
                     onViewableItemsChanged={onViewableItemsChanged}
+                    onScroll={onScroll}
                     scrollEventThrottle={100}
                     numColumns={numColumns}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}

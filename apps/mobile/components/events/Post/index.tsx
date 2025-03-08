@@ -1,44 +1,37 @@
 import {
     NDKEvent,
     NDKKind,
-    useNDKWallet,
+    useUserProfile
 } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Pressable, Share, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
-import * as User from '@/components/ui/user';
 import EventContent from '@/components/ui/event/content';
-import RelativeTime from '@/components/relative-time';
-import { Gesture, TouchableOpacity, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { memo, useMemo, useCallback, useEffect, useState } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { InlinedComments, Reactions } from './Reactions';
-import FollowButton from '@/components/buttons/follow';
-import { Text } from '@/components/nativewindui/Text';
-import { Heart, MoreHorizontal, Repeat } from 'lucide-react-native';
-import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { Heart } from 'lucide-react-native';
 import EventMediaContainer from '@/components/media/event';
-import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { getClientName } from '@/utils/event';
+import { useSetAtom } from 'jotai';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
-import Lightning from "@/components/icons/lightning"
-import Animated, { 
-    useSharedValue, 
-    useAnimatedStyle, 
-    withSequence, 
-    withTiming, 
+import Lightning from "@/components/icons/lightning";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSequence,
+    withTiming,
     Easing,
 } from 'react-native-reanimated';
 import { useReactEvent } from '../React';
 import { useReactionsStore } from '@/stores/reactions';
 import TopZaps from '../TopZaps';
 import { useZap } from '@/hooks/zap';
-import { useUserProfile } from '@/hooks/user-profile';
-import { useUserFlare } from '@/hooks/user-flare';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
+import { PostHeader } from './Header';
+import { isUserProfileDeleted } from '@/lib/utils/user';
 
 export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
     const scale = useSharedValue(0);
@@ -168,6 +161,8 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
 }
 
 export default function Post({ event, reposts, timestamp, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
+    const { userProfile } = useUserProfile(event.pubkey);
+    
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<('high' | 'normal' | 'low')>(() => {
         if (index === 0) return 'high';
@@ -190,95 +185,15 @@ export default function Post({ event, reposts, timestamp, index }: { index: numb
         paddingVertical: 10,
     }), []);
 
+    if (isUserProfileDeleted(userProfile)) return null;
+
     return (
         <View style={containerStyle}>
-            <PostHeader event={event} reposts={reposts} timestamp={timestamp} />
+            <PostHeader event={event} reposts={reposts} timestamp={timestamp} userProfile={userProfile} />
 
             <MediaSection event={event} priority={priority} maxHeight={maxHeight} />
 
             <PostBottom event={event} />
-        </View>
-    );
-}
-
-const postHeaderStyle = StyleSheet.create({
-    container: {
-        flexDirection: 'column',
-        gap: 10,
-        paddingHorizontal: 4,
-    },
-    innerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 10,
-        width: '100%',
-    }
-})
-
-export function PostHeader({ event, reposts, timestamp }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
-    const { userProfile } = useUserProfile(event.pubkey);
-    const flare = useUserFlare(event.pubkey);
-    const { colors } = useColorScheme();
-    const clientName = getClientName(event);
-
-    const setOptionsMenuEvent = useSetAtom(optionsMenuEventAtom);
-    const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
-
-    const openOptionsMenu = useCallback(() => {
-        setOptionsMenuEvent(event);
-        optionsSheetRef.current?.present();
-    }, [event, optionsSheetRef]);
-
-    return (
-        <View style={postHeaderStyle.container}>
-            {reposts.length > 0 && (
-                <View style={postHeaderStyle.innertContainer}>
-                    <View className="w-full flex-row items-center justify-between gap-2 pb-0">
-                        <View style={{ flexDirection: 'row', gap: 4 }}>
-                            <Repeat size={16} color={'green'} />
-
-                            <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
-
-                            <Text className="text-xs text-muted-foreground">
-                                {'Reposted '}
-                                <RelativeTime timestamp={timestamp} />
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-            )}
-
-            <View style={postHeaderStyle.innerContainer}>
-                <View style={styles.profileContainer}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            router.push(`/profile?pubkey=${event.pubkey}`);
-                        }}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={flare ? 56 : 48} borderWidth={2} flare={flare} />
-                    </TouchableOpacity>
-
-                    <View className="flex-col">
-                        <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" flare={flare} />
-                        <Text>
-                            <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
-                            {clientName && (
-                                <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
-                                    {` via ${clientName}`}
-                                </Text>
-                            )}
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                    <FollowButton pubkey={event.pubkey} />
-
-                    <Pressable onPress={openOptionsMenu}>
-                        <MoreHorizontal size={20} color={colors.foreground} />
-                    </Pressable>
-                </View>
-            </View>
         </View>
     );
 }
@@ -358,11 +273,5 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         gap: 10,
         padding: 10,
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        padding: 2,
     }
 });

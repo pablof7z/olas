@@ -41,7 +41,7 @@ export function LoginWithNip55Button() {
     </View>
 }
 
-function AvatarChooser() {
+export function AvatarChooser() {
     const username = useAtomValue(usernameAtom);
     const [avatar, setAvatar] = useAtom(avatarAtom);
     const chooseImage = useCallback(() => {
@@ -82,7 +82,7 @@ function AvatarChooser() {
             
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
-                    source={{ uri: avatar || 'https://kawaii-avatar.now.sh/api/avatar?username=' + username }}
+                    source={{ uri: avatar || 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username }}
                     className="h-full w-full rounded-full object-cover"
                 />
             </View>
@@ -109,7 +109,7 @@ function SignUp() {
         const nsec = nip19.nsecEncode(signer._privateKey!);
         await login(nsec);
 
-        let imageUrl = 'https://kawaii-avatar.now.sh/api/avatar?username=' + username;
+        let imageUrl = 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username;
 
         if (avatar) {
             const media = await prepareMedia([{ uris: [avatar], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
@@ -157,8 +157,10 @@ function SignUp() {
             </View>
 
             <Button variant="accent" size="lg" className="w-full" onPress={createAccount}>
-                <Text className="py-2 text-lg font-bold text-white">Sign Up</Text>
-                <ArrowRight size={24} color="white" />
+                <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text className="py-2 text-lg font-bold text-white">Sign Up</Text>
+                    <ArrowRight size={24} color="white" />
+                </View>
             </Button>
 
             <Button

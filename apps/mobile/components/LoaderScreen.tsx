@@ -2,12 +2,13 @@ import { Dimensions, TouchableOpacity, View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from './nativewindui/ActivityIndicator';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePaymentStore } from '@/stores/payments';
-import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useUsersStore } from '@/hooks/user-profile';
 import { useUserFlareStore } from '@/hooks/user-flare';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
+import { useAppSettingsStore } from '@/stores/app';
 
 export default function LoaderScreen({
     children,
@@ -21,15 +22,27 @@ export default function LoaderScreen({
     const currentUser = useNDKCurrentUser();
     const initPaymentStore = usePaymentStore(s => s.init);
     const inset = useSafeAreaInsets();
-    // const haveInterval = useRef(false);
-    // const [ignoreWot, setIgnoreWot] = useState(true);
-    const { ndk } = useNDK();
+    const haveInterval = useRef(false);
+    const [ignoreWot, setIgnoreWot] = useState(true);
+    const { ndk, logout } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
     const initUserProfileStore = useUsersStore((state) => state.init);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
     useEffect(() => {
         initPaymentStore(currentUser?.pubkey);
     }, [currentUser?.pubkey])
+    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const resetAppSettings = useAppSettingsStore(s => s.reset);
+    
+    useEffect(() => {
+        if (!userProfile?.name || !currentUser?.pubkey) return;
+
+        if (userProfile.name === 'deleted-account') {
+            alert('This account has been deleted. You need to create a new account to continue.');
+            logout();
+            resetAppSettings();
+        }
+    }, [currentUser?.pubkey, userProfile?.name])
 
     useEffect(() => {
         if (!ndk) return;
@@ -53,8 +66,6 @@ export default function LoaderScreen({
         }, 3000);
     }
 
-    const screenDimensions = Dimensions.get('window');
-
     const logo = require('../assets/logo.png');
 
     return (
@@ -77,10 +88,6 @@ export default function LoaderScreen({
                             <LoadingText appReady={appReady} wotReady={wotReady} />
                         </Text>
                     </View>
-
-                    <TouchableOpacity onPress={() => setRenderApp(!renderApp)}>
-                        <Text>Render App</Text>
-                    </TouchableOpacity>
                 </Animated.View>
             )}
         {appReady && children}

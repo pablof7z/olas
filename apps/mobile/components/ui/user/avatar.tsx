@@ -1,15 +1,14 @@
-import React, { forwardRef, useMemo } from 'react';
-import { View, Text, StyleSheet, ImageSourcePropType, Pressable, ViewStyle } from 'react-native';
+import React, { ForwardedRef, forwardRef, useMemo } from 'react';
+import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Image, ImageProps, useImage } from 'expo-image';
 import FlareLabel, { FlareElement } from './flare';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 interface AvatarProps extends ImageProps {
     pubkey: Hexpubkey;
-    userProfile: NDKUserProfile | null;
+    userProfile?: NDKUserProfile | null;
     imageSize?: number;
     borderWidth?: number;
     flare?: string | null;
@@ -24,6 +23,11 @@ interface AvatarProps extends ImageProps {
      * The color of the border to be displayed around the avatar.
      */
     borderColor?: string;
+
+    /**
+     * Whether to skip proxying the image.
+     */
+    skipProxy?: boolean;
 }
 
 const UserAvatar = forwardRef(function UserAvatar({
@@ -34,15 +38,21 @@ const UserAvatar = forwardRef(function UserAvatar({
     imageSize = 128,
     includeFlareLabel = false,
     canSkipBorder = false,
+    skipProxy = false,
     borderColor,
     ...props
-}: AvatarProps, ref) {
+}: AvatarProps, ref: ForwardedRef<View>) {
     const { colors } = useColorScheme();
     const size = 128;
     imageSize ??= size / 3;
     borderWidth ??= imageSize / 16;
 
-    const proxiedImageUrl: string | null = userProfile?.picture ? getProxiedImageUrl(userProfile.picture, 300) : null;
+    let proxiedImageUrl: string | null = null;
+    
+    if (userProfile?.picture) {
+        if (skipProxy) proxiedImageUrl = userProfile.picture;
+        else proxiedImageUrl = getProxiedImageUrl(userProfile.picture, 300);
+    }
 
     borderColor ??= colors.card;
 
@@ -50,7 +60,7 @@ const UserAvatar = forwardRef(function UserAvatar({
         uri: proxiedImageUrl ? proxiedImageUrl : undefined,
         width: size,
         height: size,
-        cacheKey: pubkey,
+        cacheKey: userProfile?.picture,
     }, {
         onError: () => {
             if (proxiedImageUrl) console.log('error loading image', pubkey);
@@ -62,28 +72,24 @@ const UserAvatar = forwardRef(function UserAvatar({
         return null;
     }
 
-    const style = useAnimatedStyle(() => {
-        return {
-            ...styles.container,
-            width: imageSize,
-            height: imageSize,
-            borderRadius: imageSize,
-        }
-    })
+    const style = useMemo<ViewStyle>(() => ({
+        ...styles.container,
+        width: imageSize,
+        height: imageSize,
+        borderRadius: imageSize,
+    }), [imageSize])
 
-    const flareBorderContainerStyle = useMemo<ViewStyle>(() => {
-        return {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderRadius: imageSize,
-            overflow: 'hidden',
-        }
-    }, [imageSize, borderWidth, borderColor])
+    const flareBorderContainerStyle = useMemo<ViewStyle>(() => ({
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: imageSize,
+        overflow: 'hidden',
+    }), [imageSize, borderWidth, borderColor])
 
-    return (<Animated.View ref={ref} style={style}>
+    return (<View ref={ref} style={style}>
         {flare && <View style={flareBorderContainerStyle}><FlareElement flare={flare} size={imageSize} borderWidth={borderWidth} /></View>}
         <AvatarInner
             image={imageSource}
@@ -96,22 +102,22 @@ const UserAvatar = forwardRef(function UserAvatar({
             includeFlareLabel={includeFlareLabel}
             {...props}
         />
-    </Animated.View>)
+    </View>)
 });
 
 type AvatarInnerProps = {
-    image: ImageSourcePropType;
+    image: ImageSourcePropType | null;
     pubkey: string;
     imageSize: number;
     borderWidth: number;
     includeFlareLabel: boolean;
     canSkipBorder: boolean;
-    flare: string | null;
+    flare: string | null | undefined;
     borderColor: string;
 }
 
 function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, includeFlareLabel, ...props }: AvatarInnerProps) {
-    let imageMargin = borderWidth / 3;
+    let imageMargin = borderWidth;
     let realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
 
     if (canSkipBorder && !flare) {
@@ -120,30 +126,26 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
         realImageSize = imageSize;
     }
     
-    const innerContainerStyle = useMemo(() => {
-        return {
-            width: imageSize - borderWidth*2,
-            height: imageSize - borderWidth*2,
-            borderRadius: imageSize - borderWidth*2,
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-        }
-    }, [imageSize])
+    const innerContainerStyle = useMemo<ViewStyle>(() => ({
+        width: imageSize - borderWidth*2,
+        height: imageSize - borderWidth*2,
+        borderRadius: imageSize - borderWidth*2,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+    }), [imageSize])
 
-    const imageStyle = useMemo(() => {
-        return {
-            width: realImageSize,
-            height: realImageSize,
-            borderRadius: realImageSize,
-        }
-    }, [imageSize])
+    const imageStyle = useMemo<ImageStyle>(() => ({
+        width: realImageSize,
+        height: realImageSize,
+        borderRadius: realImageSize,
+    }), [imageSize])
 
     return (
         <>
-            <Animated.View style={innerContainerStyle}>
-                {image?.width ? (
+            <View style={innerContainerStyle}>
+                {image ? (
                     <Image
                         source={image}
                         style={imageStyle}
@@ -152,8 +154,8 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
                 ) : (
                     <View style={{ width: realImageSize, height: realImageSize, borderRadius: realImageSize, backgroundColor: `#${pubkey.slice(0, 6)}` }} />
                 )}
-            </Animated.View>
-            {includeFlareLabel && (
+            </View>
+            {includeFlareLabel && flare && (
                 <View style={styles.flareLabelContainer}>
                     <FlareLabel pubkey={pubkey} flare={flare} />
                 </View>

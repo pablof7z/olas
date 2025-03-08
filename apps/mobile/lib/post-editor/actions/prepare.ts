@@ -34,8 +34,8 @@ export async function prepareMediaItem(media: PostMedia): Promise<PostMedia> {
         await FileSystem.copyAsync({ from: media.uris[0], to: newUri });
 
         const exif = await Exify.readAsync(newUri);
-        const hasLocation = exif.GPSLatitude !== undefined && exif.GPSLongitude !== undefined;
-        location = hasLocation ? { latitude: exif.GPSLatitude, longitude: exif.GPSLongitude } : undefined;
+        const hasLocation = exif?.GPSLatitude !== undefined && exif?.GPSLongitude !== undefined;
+        location = hasLocation ? { latitude: exif.GPSLatitude!, longitude: exif.GPSLongitude! } : undefined;
 
         const compressedUri = await CompressedImage.compress(newUri, {
             compressionMethod: 'auto',

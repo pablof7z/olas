@@ -4,7 +4,7 @@ import { Text, TextProps, View } from 'react-native';
 import FlareLabel, { FlareElement } from './flare';
 
 interface NameProps extends TextProps {
-    userProfile: NDKUserProfile | null;
+    userProfile?: NDKUserProfile | null;
     pubkey: string;
     flare?: string;
 }

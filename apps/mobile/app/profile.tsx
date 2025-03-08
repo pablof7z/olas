@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Pressable, StyleProp, ViewStyle, TextInput, Touchable } from 'react-native';
 import * as User from '@/components/ui/user';
-import { NDKImage, NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKImage, NDKSubscriptionCacheUsage, NDKUser, NDKUserProfile, NostrEvent, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import ReelIcon from '@/components/icons/reel';
 import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -12,21 +12,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FollowButton from '@/components/buttons/follow';
 import { Image } from 'expo-image';
 import EventContent from '@/components/ui/event/content';
-import { ArrowLeft, Check, Copy, Grid, ShoppingCart, Wind } from 'lucide-react-native';
+import { ArrowLeft, Check, Copy, Grid, ImageIcon, ShoppingCart, Wind, X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import Feed from '@/components/Feed';
-import { useUserProfile } from '@/hooks/user-profile';
+import { useUserProfile, useUsersStore } from '@/hooks/user-profile';
 import { useUserFlare } from '@/hooks/user-flare';
 import { BlurView } from 'expo-blur';
 import { useObserver } from '@/hooks/observer';
 import EventMediaContainer from '@/components/media/event';
 import { prettifyNip05 } from '@/utils/user';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { FeedEntry } from '@/components/Feed/hook';
 import { SHOP_ENABLED } from '@/utils/const';
+import ImageCropPicker from 'react-native-image-crop-picker';
+import { prepareMedia } from '@/lib/post-editor/actions/prepare';
+import { uploadMedia } from '@/lib/post-editor/actions/upload';
 
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+export const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+
+const editModeAtom = atom<boolean>(false);
+const editProfileAtom = atom<NDKUserProfile | null>(null);
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
     const { colors } = useColorScheme();
@@ -53,9 +59,12 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
     const { colors } = useColorScheme();
     const insets = useSafeAreaInsets();
     const bannerHeight = insets.top + headerStyles.leftContainer.height + 50;
+    const currentUser = useNDKCurrentUser();
     
     // Create a new Animated.Value for blur intensity
     const defaultBlurValue = new Animated.Value(0);
+    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     
     // Use the scrollY value if available, otherwise use the default
     const blurIntensity = scrollY ? scrollY.interpolate({
@@ -70,20 +79,65 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
         outputRange: [0, 0.5, 1],
         extrapolate: 'clamp'
     }) : defaultBlurValue;
-    
+
+    const cancelProfileEdit = useCallback(() => {
+        setEditMode(false);
+        setEditProfile(null);
+    }, [setEditMode, setEditProfile]);
+
+    const startProfileEdit = useCallback(() => {
+        setEditMode(true);
+        setEditProfile(userProfile);
+    }, [setEditMode, setEditProfile, userProfile]);
+
+    const { ndk } = useNDK();
+    const updateUserProfile = useUsersStore(s => s.update);
+
+    const saveProfileEdit = useCallback(async () => {
+        const e = new NDKEvent(ndk, { kind: 0 } as NostrEvent);
+        const profileWithoutEmptyValues = Object.fromEntries(Object.entries(editProfile || {}).filter(([_, value]) => value !== null));
+        delete profileWithoutEmptyValues.created_at;
+
+        if (editProfile?.picture && !editProfile.picture?.startsWith('https:')) {
+            const media = await prepareMedia([{ uris: [editProfile.picture], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
+            const uploaded = await uploadMedia(media, ndk);
+            if (!uploaded[0].uploadedUri) return;
+            profileWithoutEmptyValues.picture = uploaded[0].uploadedUri;
+        }
+
+        if (editProfile?.banner && !editProfile.banner?.startsWith('https:')) {
+            const media = await prepareMedia([{ uris: [editProfile.banner], id: 'banner', mediaType: 'image', contentMode: 'landscape' }]);
+            const uploaded = await uploadMedia(media, ndk);
+            if (!uploaded[0].uploadedUri) return;
+            profileWithoutEmptyValues.banner = uploaded[0].uploadedUri;
+        }
+        
+        e.content = JSON.stringify(profileWithoutEmptyValues);
+        await e.publishReplaceable();
+        console.log('publishing profile', JSON.stringify(e.rawEvent(), null, 4));
+        if (editProfile) updateUserProfile(pubkey, editProfile);
+        setEditMode(false);
+
+    }, [editProfile, setEditMode, pubkey, ndk, updateUserProfile]);
+
     return (
         <AnimatedBlurView 
             intensity={blurIntensity} 
             style={[headerStyles.container, { paddingTop: insets.top }]}>
             <View style={headerStyles.leftContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
-                    <ArrowLeft size={24} color={"white"} />
-                </TouchableOpacity>
+                {editMode ? (
+                    <TouchableOpacity onPress={cancelProfileEdit} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
+                        <X size={24} color={"white"} />
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
+                        <ArrowLeft size={24} color={"white"} />
+                    </TouchableOpacity>
+                )}
 
                 <Animated.View style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}>
-                    <User.Avatar userProfile={userProfile} pubkey={pubkey} imageSize={40} borderWidth={0} canSkipBorder={true} />
-                    <Pressable onPress={() => router.back()} style={{ flexDirection: 'column', marginHorizontal: 10 }}>
-                        <User.Name userProfile={userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 20, fontWeight: 'bold' }} />
+                    <Pressable onPress={() => router.back()} style={{ flexDirection: 'column' }}>
+                        <User.Name userProfile={editProfile || userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 20, fontWeight: 'bold' }} />
                         {userProfile?.nip05 && (
                             <Text style={{ color: colors.muted, fontSize: 12 }}>{prettifyNip05(userProfile?.nip05)}</Text>
                         )}
@@ -92,8 +146,20 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
                 </Animated.View>
             </View>
 
-            <Animated.View style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}>
-                <FollowButton variant="secondary" pubkey={pubkey} size="sm" className="mx-4" />
+            <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {currentUser?.pubkey === pubkey && editMode && (
+                    <TouchableOpacity onPress={saveProfileEdit} style={{ paddingHorizontal: 20, backgroundColor: '#00000055', borderRadius: 100, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
+                        <Text style={{ color: 'white', fontSize: 14 }}>Save</Text>
+                    </TouchableOpacity>
+                )}
+                {currentUser?.pubkey === pubkey && !editMode && (
+                    <TouchableOpacity onPress={startProfileEdit} style={{ paddingHorizontal: 20, backgroundColor: '#00000055', borderRadius: 100, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
+                        <Text style={{ color: 'white', fontSize: 14 }}>Edit</Text>
+                    </TouchableOpacity>
+                )}
+                {currentUser?.pubkey !== pubkey && (
+                    <FollowButton variant="secondary" pubkey={pubkey} size="sm" className="mx-4" />
+                )}
             </Animated.View>
         </AnimatedBlurView>
     )
@@ -118,16 +184,27 @@ export default function Profile() {
     const { pubkey, view } = useLocalSearchParams() as { pubkey: string, view?: string };
     const { ndk } = useNDK();
     const user = ndk.getUser({ pubkey });
+    const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(pubkey);
     const flare = useUserFlare(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const { events: content } = useSubscribe([
-        { kinds: [NDKKind.Image, NDKKind.VerticalVideo], authors: [pubkey] },
+        { kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21], authors: [pubkey] },
         { kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey] },
         { kinds: [NDKKind.Text], authors: [pubkey] },
-        { kinds: [NDKKind.Contacts], authors: [pubkey] },
+        { kinds: [30402], authors: [pubkey] },
+        { kinds: [NDKKind.Metadata, NDKKind.Contacts], authors: [pubkey] },
     ], { wrap: true, skipVerification: true }, [pubkey])
+    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const setEditProfile = useSetAtom(editProfileAtom);
 
+    useEffect(() => {
+        if (currentUser?.pubkey !== pubkey && editMode) {
+            setEditMode(false);
+            setEditProfile(null);
+        }
+    }, [currentUser?.pubkey, editMode, pubkey])
+    
     const olasContent = useMemo(() => {
         return content.filter((e) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
     }, [content.length])
@@ -151,11 +228,14 @@ export default function Profile() {
     }, [view])
 
     const containerStyle = useMemo<StyleProp<ViewStyle>>(() => ({ flex: 1, backgroundColor: colors.card }), [colors.card]);
+
+    const hasProducts = useMemo(() => {
+        return content.some((e) => e.kind === 30402);
+    }, [content]);
     
     if (!pubkey) {
         return null;
     }
-    
     
     return (
         <>
@@ -172,10 +252,10 @@ export default function Profile() {
                     scrollEventThrottle={16}
                 >
                     <View style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, backgroundColor: `#${user.pubkey.slice(0, 6)}` }}>
-                        <Image source={{ uri: userProfile?.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} contentFit="cover" />
+                        <Banner pubkey={pubkey} />
                     </View>
                     <View style={[ styles.header, { marginTop: -48, marginBottom: 10 } ]}>
-                        <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderMarginWidth={0} />
+                        <Avatar pubkey={pubkey} userProfile={userProfile} flare={flare} colors={colors} />
                         <View style={styles.statsContainer}>
                             <View style={styles.statItem}>
                                 <Text style={styles.statNumber} className="text-foreground">
@@ -210,24 +290,140 @@ export default function Profile() {
 
                     <View style={styles.bioSection}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <User.Name userProfile={userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 16, fontWeight: 'bold' }} />
+                            <Name userProfile={userProfile} pubkey={pubkey} colors={colors} />
                             <CopyToClipboard text={userProfile?.nip05 || user.npub} size={16} />
                         </View>
                         {userProfile?.nip05 && (
                             <Text style={{ color: colors.muted, fontSize: 12 }}>{prettifyNip05(userProfile?.nip05)}</Text>
                         )}
-                        <Text style={styles.bio} className="text-muted-foreground">
-                            {userProfile?.about ? <EventContent content={userProfile.about} /> : null}
-                        </Text>
+                        <About userProfile={userProfile} colors={colors} />
                     </View>
 
                     <StoriesContainer pubkey={pubkey} />
 
-                    <ProfileContent pubkey={pubkey} />
+                    <ProfileContent pubkey={pubkey} hasProducts={hasProducts} />
                 </Animated.ScrollView>
             </View>
         </>
     );
+}
+
+function Banner({ pubkey }: { pubkey: string }) {
+    const { userProfile } = useUserProfile(pubkey);
+    const insets = useSafeAreaInsets();
+    const [editProfile, setEditProfile] = useAtom(editProfileAtom);
+    const editMode = useAtomValue(editModeAtom);
+
+    const width = Dimensions.get('window').width;
+    const height = insets.top + headerStyles.leftContainer.height + 100;
+
+    const handleChooseImage = useCallback(() => {
+        ImageCropPicker.openPicker({
+            width: width,
+            height: height,
+            cropping: true,
+        }).then((image) => {
+            setEditProfile({ ...editProfile, banner: image.path });
+        });
+    }, [editProfile, setEditProfile]);
+    
+    
+    if (editMode) {
+        return <TouchableOpacity onPress={handleChooseImage} style={{ width: '100%', height, backgroundColor: `#${pubkey.slice(0, 6)}`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <Image source={{ uri: editProfile?.banner }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, flex: 1}} contentFit="cover" />
+            <View style={{ position: 'absolute', top: '50%', marginTop: 20, right: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000bb', borderRadius: 100, width: 40, height: 40 }} onPress={handleChooseImage}>
+                <ImageIcon size={18} color="white" />
+            </View>
+       </TouchableOpacity>
+    }
+    
+    if (!userProfile?.banner) return null;
+    
+    return <Image source={{ uri: userProfile?.banner }} style={{ width: '100%', height: insets.top + headerStyles.leftContainer.height + 100 }} contentFit="cover" />
+}
+
+function Avatar({ pubkey, userProfile, flare, colors }: { pubkey: string, userProfile?: NDKUserProfile, flare?: NDKUserFlare, colors: Record<string, string> }) {
+    const [editProfile, setEditProfile] = useAtom(editProfileAtom);
+    const editMode = useAtomValue(editModeAtom);
+
+    const handleChooseImage = useCallback(() => {
+        ImageCropPicker.openPicker({
+            width: 400,
+            height: 400,
+            cropping: true,
+            multiple: false,
+            mediaType: 'photo',
+            includeExif: false,
+        }).then((image) => {
+            console.log('image', image);
+            setEditProfile({ ...editProfile, picture: image.path });
+
+        });
+    }, []);
+
+    if (editMode) {
+        return <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+            <User.Avatar pubkey={pubkey} userProfile={editProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} skipProxy={true} />
+            <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000bb', borderRadius: 100, width: 40, height: 40, transform: [{ translateX: 5 }, { translateY: 5 }] }} onPress={handleChooseImage}>
+                <ImageIcon size={18} color="white" />
+            </TouchableOpacity>
+        </View>
+    }
+    
+    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} borderMarginWidth={0} />
+}
+
+function About({ userProfile, colors }: { userProfile?: NDKUserProfile, colors: Record<string, string> }) {
+    const [editProfile, setEditProfile] = useAtom(editProfileAtom);
+    const editMode = useAtomValue(editModeAtom);
+
+    const setAbout = useCallback((text: string) => {
+        setEditProfile({ ...editProfile, about: text });
+    }, [editProfile, setEditProfile]);
+
+    if (editMode) {
+        return (
+            <TextInput
+                value={editProfile?.about || ''}
+                multiline
+                onChangeText={setAbout}
+                style={{ color: colors.foreground, fontSize: 13, borderWidth: 1, minHeight: 100, borderColor: colors.grey3, padding: 10, marginVertical: 10, marginHorizontal: -6, borderRadius: 5, flex: 1, width: '100%' }}
+            />
+        )
+    }
+    
+    const about = editProfile?.about || userProfile?.about;
+    
+    if (!about) return null;
+    
+    return (
+        <Text style={styles.bio} className="text-muted-foreground">
+            <EventContent content={about} />
+        </Text>
+    )
+}
+
+function Name({ userProfile, pubkey, colors }: { userProfile?: NDKUserProfile, pubkey: string, colors: Record<string, string> }) {
+    const [editProfile, setEditProfile] = useAtom(editProfileAtom);
+    const editMode = useAtomValue(editModeAtom);
+
+    const setName = useCallback((text: string) => {
+        setEditProfile({ ...editProfile, name: text });
+    }, [editProfile, setEditProfile]);
+    
+    if (editMode) {
+        return (
+            <TextInput
+                value={editProfile?.name || ''}
+                onChangeText={setName}
+                style={{ color: colors.foreground, fontSize: 16, fontWeight: 'bold', borderWidth: 1, borderColor: colors.grey3, padding: 5, margin: -6, borderRadius: 5, flex: 1 }}
+            />
+        )
+    }
+    
+    return (
+        <User.Name userProfile={userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 16, fontWeight: 'bold' }} />
+    )
 }
 
 function StoriesContainer({ pubkey }: { pubkey: string }) {
@@ -251,9 +447,9 @@ function StoriesContainer({ pubkey }: { pubkey: string }) {
                     singleMode
                     onPress={handleOpenStories}
                     height={40}
-                contentFit="cover"
-                maxWidth={Dimensions.get('window').width}
-                maxHeight={Dimensions.get('window').width}
+                    contentFit="cover"
+                    maxWidth={Dimensions.get('window').width}
+                    maxHeight={Dimensions.get('window').width}
                     priority="high"
                 />
             </View>
@@ -285,7 +481,7 @@ const postFilterFn = (entry: FeedEntry) => {
     return true;
 }
 
-function ProfileContent({ pubkey }: { pubkey: string }) {
+function ProfileContent({ pubkey, hasProducts }: { pubkey: string, hasProducts: boolean }) {
     const [view, setView] = useAtom(profileContentViewAtom);
 
     const {filters, filterKey, filterFn, numColumns} = useMemo<{filters: NDKFilter[], filterKey: string, filterFn: (entry: FeedEntry) => boolean, numColumns: number}>(() => {
@@ -298,7 +494,7 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
             filterFn = postFilterFn;
             numColumns = 3;
         } else if (view === "reels") {
-            res.push({ kinds: [NDKKind.VerticalVideo], authors: [pubkey] });
+            res.push({ kinds: [NDKKind.VerticalVideo, 21], authors: [pubkey] });
         } else if (view === "photos") {
             res.push({ kinds: [NDKKind.Image], authors: [pubkey] });
             res.push({ kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey] });
@@ -314,23 +510,31 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
     const activeButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({ borderBottomWidth: 2, borderBottomColor: colors.primary }), [colors.primary]);
     const inactiveButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({ borderBottomWidth: 2, borderBottomColor: 'transparent' }), []);
 
+    const COLUMN_COUNT = hasProducts ? 4 : 3;
+    const screenWidth = Dimensions.get('window').width;
+
+    const buttonStyle = useMemo<StyleProp<ViewStyle>>(() => ({
+        ...profileContentStyles.button,
+        width: screenWidth / COLUMN_COUNT,
+    }), [screenWidth, COLUMN_COUNT]);
+
     return (
         <>
             <View style={profileContentStyles.container}>
-                <TouchableOpacity style={[profileContentStyles.button, view === 'photos' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('photos')}>
+                <TouchableOpacity style={[buttonStyle, view === 'photos' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('photos')}>
                     <Grid size={24} color={colors.primary} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[profileContentStyles.button, view === 'reels' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('reels')}>
+                <TouchableOpacity style={[buttonStyle, view === 'reels' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('reels')}>
                     <ReelIcon width={24} strokeWidth={2} stroke={colors.primary} fill={colors.primary} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[profileContentStyles.button, view === 'posts' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('posts')}>
+                <TouchableOpacity style={[buttonStyle, view === 'posts' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('posts')}>
                     <Wind size={24} color={colors.primary} />
                 </TouchableOpacity>
 
-                {SHOP_ENABLED && (  
-                    <TouchableOpacity style={[profileContentStyles.button, view === 'products' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('products')}>
+                {hasProducts && (
+                    <TouchableOpacity style={[buttonStyle, view === 'products' ? activeButtonStyle : inactiveButtonStyle]} onPress={() => setView('products')}>
                         <ShoppingCart size={24} color={colors.primary} />
                     </TouchableOpacity>
                 )}
@@ -348,8 +552,6 @@ function ProfileContent({ pubkey }: { pubkey: string }) {
     )
 }
 
-const COLUMN_COUNT = SHOP_ENABLED ? 4 : 3;
-const screenWidth = Dimensions.get('window').width;
 
 const profileContentStyles = StyleSheet.create({
     container: {
@@ -365,10 +567,11 @@ const profileContentStyles = StyleSheet.create({
         justifyContent: 'center',
         paddingBottom: 5,
         borderBottomWidth: 2,
-        width: screenWidth / COLUMN_COUNT,
         borderBottomColor: 'transparent',
     }
 });
+
+
 
 // function Products({ pubkey }: { pubkey: string }) {
 //     const { ndk } = useNDK();

@@ -1,4 +1,5 @@
-import { View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet } from "react-native";
+import Animated, { SlideOutUp, useSharedValue, withTiming, useAnimatedStyle, FadeIn } from "react-native-reanimated";
 import Feed from "./Feed";
 import NotificationsButton from "./NotificationsButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,20 +8,39 @@ import { formatMoney } from "@/utils/bitcoin";
 import { Text } from "@/components/nativewindui/Text";
 import { useState, useEffect } from "react";
 import AvatarGroup from "@/components/ui/user/AvatarGroup";
+import { useAtomValue } from "jotai";
+import { FadeOut } from "react-native-reanimated";
+import { scrollDirAtom } from "@/components/Feed/store";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 export default function HomeHeader() {
     const insets = useSafeAreaInsets();
     const [showZap, setShowZap] = useState(false);
     const [nutzaps, setNutzaps] = useState<NDKNutzap[]>([]);
-    const animationProgress = useState(new Animated.Value(0))[0];
+    const animationProgress = useSharedValue(0);
+    const headerAnim = useSharedValue(0);
+    const scrollDir = useAtomValue(scrollDirAtom);
 
     useEffect(() => {
-        Animated.timing(animationProgress, {
-            toValue: showZap ? 1 : 0,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
+        headerAnim.value = withTiming(scrollDir === 'up' ? 0 : 1, { duration: 200 });
+    }, [scrollDir]);
+
+    useEffect(() => {
+        headerAnim.value = withTiming(showZap ? 1 : 0, { duration: 300 });
     }, [showZap]);
+
+    const containerStyle = useAnimatedStyle(() => ({
+        transform: [{
+            translateY: headerAnim.value * -100
+        }]
+    }));
+
+    const zapStyle = useAnimatedStyle(() => ({
+        transform: [{
+            translateY: animationProgress.value * -100
+        }],
+        opacity: animationProgress.value
+    }));
 
     const { nutzapMonitor } = useNDKNutzapMonitor();
     
@@ -37,44 +57,41 @@ export default function HomeHeader() {
         });
     }, [!!nutzapMonitor]);
 
+    const { colors } = useColorScheme();
+
     return (
-        <View className="!bg-card border-b border-border pb-2" style={{ flexDirection: 'row', alignItems: 'center', paddingTop: insets.top + 10, width: '100%' }}>
-            <Animated.View style={{
-                transform: [{
-                    translateY: animationProgress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -100]
-                    })
-                }],
-                width: '100%',
-            }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Feed />
-
-                    <NotificationsButton />
-                </View>
-            </Animated.View>
-
-            <Animated.View style={{
-                transform: [{
-                    translateY: animationProgress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-100, 0]
-                    })
-                }],
-                opacity: animationProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 1]
-                }),
-                position: 'absolute',
-                width: '100%',
-                zIndex: 2,
-            }}>
-                {nutzaps && <IncomingZap nutzaps={nutzaps} />}
-            </Animated.View>
-        </View>
+        <Animated.View style={[
+            styles.header,
+            containerStyle,
+            { backgroundColor: colors.card }
+        ]}>
+            {!nutzaps.length ? (
+                <Animated.View entering={FadeIn} exiting={FadeOut} style={{ width: '100%', marginTop: insets.top }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Feed />
+                        <NotificationsButton />
+                    </View>
+                </Animated.View>
+            ) : (
+                <Animated.View entering={FadeIn} exiting={FadeOut} style={[zapStyle, {
+                    width: '100%',
+                    marginTop: insets.top   
+                }]}>
+                    {nutzaps && <IncomingZap nutzaps={nutzaps} />}
+                </Animated.View>
+            )}
+        </Animated.View>
     )
 }
+
+const styles = StyleSheet.create({
+    header: {
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        width: '100%',
+    }
+});
 
 function IncomingZap({ nutzaps }: { nutzaps: NDKNutzap[] }) {
     const insets = useSafeAreaInsets();

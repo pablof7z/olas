@@ -1,10 +1,11 @@
 import UserAvatar from "@/components/ui/user/avatar";
 import { useStories } from "@/hooks/stories";
 import { activeEventAtom } from "@/stores/event";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { NDKEvent, useUserProfile, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import { Pressable, StyleSheet, View, Text } from "react-native";
+import { Pressable, StyleSheet, View, Text, ViewStyle, StyleProp } from "react-native";
 import { FadeOut, SlideInRight } from "react-native-reanimated";
 import Animated from "react-native-reanimated";
 import StoriesModal from "../Modal";
@@ -28,21 +29,28 @@ function StoryPrompt() {
 
     if (!currentUser) return null;
     
-    return <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: 5 }}>
-        <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={70} flare={'story_prompt'} includeFlareLabel={true} />
-    </Pressable>
+    return <Animated.View
+        entering={SlideInRight}
+        exiting={FadeOut}
+    >
+        <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}>
+            <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={90} borderWidth={3} />
+            <Text style={styles.name}>Your story</Text>
+        </Pressable>
+    </Animated.View>
 }
 
-export function Stories() {
+export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
     const stories = useStories();
     const currentUser = useNDKCurrentUser();
 
-    const renderItem = useCallback(({item: [pubkey, { events, live }], index, target}) => {
+    const renderItem = useCallback(({item: [pubkey, { events, live }], index, target}: {item: [string, { events: NDKEvent[], live: boolean }], index: number, target: any}) => {
         if (pubkey === 'prompt') {
             return <StoryPrompt />
         }
         return <StoryEntry events={events} live={live} />
     }, []);
+
 
     // if (stories.size === 0) {
     //     return null;
@@ -55,10 +63,9 @@ export function Stories() {
     }
 
     return (
-        <>
+        <View style={[styles.stories, style]}>
             <Animated.FlatList
                 style={styles.stories}
-                className="flex-none flex border-b border-border"
                 data={storyEntries}
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -67,7 +74,7 @@ export function Stories() {
                 }}
                 renderItem={renderItem}
             />
-        </>
+        </View>
             // horizontal className="flex-none flex border-b border-border">
             // <View className="flex-1 flex-row gap-4 p-2">
             //     {Array.from(filteredEvents.entries()).map(([pubkey, events]) => (
@@ -87,12 +94,14 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
 
     const setShowStoriesModal = useSetAtom(showStoriesModalAtom);
 
+    if (userProfile?.name === 'deleted-account') return null;
+
     return (
         <Animated.View
             entering={SlideInRight}
             exiting={FadeOut}
         >
-            <Pressable style={{ flexDirection: 'column', alignItems: 'center', margin: 5 }} onPress={() => {
+            <Pressable style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }} onPress={() => {
                 if (live) {
                     console.log(JSON.stringify(events[0].rawEvent(), null, 4));
                     setActiveEvent(events[0]);
@@ -103,7 +112,8 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                     router.push('/stories');
                 }
             }}>
-                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={70} flare={live ? 'live' : flare} includeFlareLabel={false} />
+                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={live ? 'live' : flare} includeFlareLabel={false} borderWidth={3} />
+                <Text style={styles.name}>{userProfile?.name}</Text>
             </Pressable>
         </Animated.View>
     );
@@ -112,6 +122,12 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
 
 const styles = StyleSheet.create({
     stories: {
-        height: 85,
+        marginTop: 5,
+        marginHorizontal: 5,
+        height: 120,
+    },
+    name: {
+        fontSize: 12,
+        marginTop: 5,
     }
 })

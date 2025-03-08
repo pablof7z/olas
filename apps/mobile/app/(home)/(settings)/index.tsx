@@ -2,7 +2,7 @@ import { Icon, MaterialIconName } from '@roninoss/icons';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image } from 'expo-image';
-import { Platform, Pressable, Switch, View } from 'react-native';
+import { Platform, Pressable, Switch, TouchableOpacity, View } from 'react-native';
 
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
@@ -11,7 +11,8 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { router, Stack } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import * as User from '@/components/ui/user';
-import { NDKCacheAdapterSqlite, useNDKUnpublishedEvents, useUserProfile, useWOT } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, useNDKUnpublishedEvents, useWOT } from '@nostr-dev-kit/ndk-mobile';
+import { useUserProfile } from '@/hooks/user-profile';
 import { useNDK, useNDKWallet, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
@@ -118,6 +119,8 @@ export default function SettingsIosStyleScreen() {
         process.exit(0);
     }, [ndk]);
 
+    const { colors } = useColorScheme();
+
     const data = useMemo(() => {
         const opts: ListDataItem[] = [];
         
@@ -137,8 +140,7 @@ export default function SettingsIosStyleScreen() {
                 title: (<View className="flex-row gap-4 items-center">
                     <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} canSkipBorder={true} />
                     <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} className="text-foreground text-lg font-medium" />
-                </View>
-                ),
+                </View>)
             });
             
             if (advancedMode) {
@@ -159,7 +161,7 @@ export default function SettingsIosStyleScreen() {
                 if (activeWallet) {
                     let name = activeWallet.type.toString();
                     if (activeWallet instanceof NDKCashuWallet)
-                        name = activeWallet.name || activeWallet.walletId;
+                        name = activeWallet.walletId;
 
                     opts.push({
                         id: 'wallet-balance',
@@ -224,14 +226,16 @@ export default function SettingsIosStyleScreen() {
             opts.push(keyItem);
         }
         
-        opts.push('    ');
+        if (currentUser?.pubkey) {
+            opts.push('    ');
 
-        opts.push({
-            id: '4',
-            title: 'Logout',
-            leftView: <IconView name="send-outline" className="bg-destructive" />,
-            onPress: appLogout,
-        });
+            opts.push({
+                id: '4',
+                title: 'Logout',
+                leftView: <IconView name="send-outline" className="bg-destructive" />,
+                onPress: appLogout,
+            });
+        }
 
         opts.push('        ');
 
@@ -253,7 +257,9 @@ export default function SettingsIosStyleScreen() {
             });
         }
 
-        if (advancedMode) {
+        opts.push(`Version ${appVersion} (${buildVersion})`);
+    
+        if (currentUser?.pubkey) {
             opts.push('       ');
 
             opts.push({
@@ -262,12 +268,10 @@ export default function SettingsIosStyleScreen() {
                 leftView: <IconView name="delete-outline" className="bg-destructive" />,
                 onPress: () => router.push('/(home)/(settings)/delete-account'),
             });
-
-            opts.push(`Version ${appVersion} (${buildVersion})`);
         }
 
         return opts;
-    }, [currentUser, activeWallet?.walletId, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode]);
+    }, [currentUser?.pubkey, activeWallet?.walletId, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode, userProfile?.name]);
 
     return (
         <>

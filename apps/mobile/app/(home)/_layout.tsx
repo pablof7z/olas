@@ -9,41 +9,71 @@ import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
 import { usePostEditorStore } from '@/lib/post-editor/store';
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import WalletButton from '@/components/buttons/wallet';
 import { useUserFlare } from '@/hooks/user-flare';
 import { WALLET_ENABLED } from '@/utils/const';
+import { Button } from '@/components/nativewindui/Button';
+import { scrollDirAtom } from '@/components/Feed/store';
+import { Animated, Platform, ViewStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
+    const tabBarAnim = useRef(new Animated.Value(0)).current;
 
     const openPickerIfEmpty = usePostEditorStore(s => s.openPickerIfEmpty);
 
     // Hook to handle scroll to top
     useScrollToTop(scrollRef);
 
+    const scrollDir = useAtomValue(scrollDirAtom);
+
+    useEffect(() => {
+        Animated.timing(tabBarAnim, {
+            toValue: scrollDir === 'up' ? 0 : 1,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    }, [scrollDir]);
+
     const isReels = usePathname() === '/reels';
     const screenOptions = useMemo(() => {
+        const commonStyle: ViewStyle = {
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            transform: [{
+                translateY: tabBarAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 100]
+                })
+            }],
+        };
+
         if (isReels) {
             return {
                 tabBarActiveTintColor: 'white',
                 tabBarInactiveTintColor: 'white',
                 tabBarStyle: {
+                    ...commonStyle,
                     backgroundColor: 'black',
                 }
             }
         } else {
             return {
                 tabBarActiveTintColor: colors.foreground,
-                tabBarInactiveTintColor: colors.muted,
+                tabBarInactiveTintColor: colors.foreground,
                 tabBarStyle: {
-                    paddingTop: 5,
+                    ...commonStyle,
+                    backgroundColor: colors.card,
                 }
             }
         }
-    }, [isReels, colors]);
+    }, [isReels, colors, tabBarAnim]);
 
     return (
         <Tabs
@@ -76,7 +106,7 @@ export default function TabsLayout() {
                     title: 'Reels',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} style={{ color: color }} />
+                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} color={color} />
                     ),
                 }}
             />
@@ -105,23 +135,23 @@ export default function TabsLayout() {
                 options={{
                     title: 'Publish',
                     tabBarIcon: ({ color, focused }) => (
-                        <NewIcon width={24} height={24} strokeWidth={2.5} style={{ color }} />
+                        <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />
                     ),
                 }}
             />
 
-            {WALLET_ENABLED && (
+            {WALLET_ENABLED ? (
                 <Tabs.Screen
                     name="(wallet)"
                     options={{
                         title: 'Wallets',
                         headerShown: false,
                         tabBarIcon: ({ color, focused }) => (
-                            <WalletButton focused={focused} color={color} />
+                            <WalletButton size={24} focused={focused} color={color} />
                         ),
                     }}
                 />
-            )}
+            ) : null}
 
             <Tabs.Screen
                 name="(settings)"
@@ -129,7 +159,7 @@ export default function TabsLayout() {
                     title: 'Settings',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <UserButton />
+                        <UserButton size={24} />
                     )
                 }}
                 listeners={{
@@ -148,17 +178,17 @@ export default function TabsLayout() {
 }
 
 
-function UserButton() {
+function UserButton({ size = 32 }: { size?: number }) {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const userFlare = useUserFlare(currentUser?.pubkey);
 
     if (currentUser) {
-        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} flare={userFlare} canSkipBorder={true} borderWidth={1} />
+        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={size} flare={userFlare} canSkipBorder={true} borderWidth={1} />
     }
     
     return (
-        <UserCircle2 size={24} color={colors.foreground} strokeWidth={2} />
+        <UserCircle2 size={size} color={colors.foreground} strokeWidth={2} />
     )
 }

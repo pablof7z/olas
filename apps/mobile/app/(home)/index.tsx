@@ -1,32 +1,31 @@
 import {
+    Hexpubkey,
     NDKEventId,
     NDKSubscription
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Pressable, View } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
+import { View } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack } from 'expo-router';
-import { Text } from '@/components/nativewindui/Text';
-import { X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue } from 'jotai';
 import Feed from '@/components/Feed';
-import { MediaPreview as PostEditorMediaPreview } from '@/lib/post-editor/components/MediaPreview';
 
 import { videoKinds } from '@/utils/const';
 import { FeedEntry } from '@/components/Feed/hook';
 import { feedTypeAtom } from '@/components/FeedType/store';
-import { usePostEditorStore } from '@/lib/post-editor/store';
 import HomeHeader from '@/components/Headers/Home';
 import { useIsSavedSearch } from '@/hooks/saved-search';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
 import { useAllFollows } from '@/hooks/follows';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { Stories } from '@/lib/stories/components/feed-item';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import UploadIndicator from '@/components/UploadIndicator';
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
@@ -35,54 +34,17 @@ export default function HomeScreen() {
             <Stack.Screen
                 options={{
                     headerShown: true,
-                    headerTransparent: false,
+                    headerTransparent: true,
                     header: () => <HomeHeader />,
                 }}
             />
 
-            <UploadingIndicator />
-
-            <DataList />
+            <View style={{ flex: 1, backgroundColor: 'blue' }}>
+                <UploadIndicator />
+                <DataList />
+            </View>
         </>
     );
-}
-
-function UploadingIndicator() {
-    const readyToPublish = usePostEditorStore(s => s.readyToPublish);
-    const uploading = usePostEditorStore(s => s.state === 'uploading');
-    const metadata = usePostEditorStore(s => s.metadata);
-    const uploadError = usePostEditorStore(s => s.error);
-    const resetPostEditor = usePostEditorStore(s => s.reset);
-    const { colors } = useColorScheme();
-    
-    if (!readyToPublish) return null;
-    
-    return (
-        <Pressable
-            className="border-b border-border"
-            style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, backgroundColor: colors.card, flexDirection: 'row', gap: 10, alignItems: 'center' }}
-        >
-            <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden'}}>
-                <PostEditorMediaPreview limit={1} withEdit={false} maxWidth={60} maxHeight={60} />
-            </View>
-
-            <View className="flex-col items-start flex-1">
-                {uploadError ? (
-                    <Text className="text-red-500 text-sm">{uploadError}</Text>
-                ) : (
-                    <Text className="text-lg font-medium">
-                        {uploading ? 'Uploading' : 'Publishing'}
-                    </Text>
-                )}
-                <Text variant="caption1" numberOfLines={1} className="text-muted-foreground">{metadata.caption}</Text>
-            </View>
-
-
-            <Button variant="plain" onPress={resetPostEditor}>
-                <X size={24} color={colors.foreground} />
-            </Button>
-        </Pressable>
-    )
 }
 
 const bookmarksFilters = [{ kinds: [3006], "#k": ["20"] }];
@@ -145,7 +107,7 @@ const FOR_YOU_UNFOLLOWED_POST_THRESHOLD = 2;
 
 function forYouFilter(followSet: Set<string>) {
     let run = 0;
-    let unfollowedPubkeysRecentlyShown = [];
+    let unfollowedPubkeysRecentlyShown: Hexpubkey[] = [];
     
     return (feedEntry: FeedEntry, index: number) => {
         if (index === 0) {
@@ -295,10 +257,14 @@ function DataList() {
         return {filters, key: keyParts.join(), filterFn, numColumns};
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
+    const insets = useSafeAreaInsets();
+    const headerHeight = useHeaderHeight();
+    const { colors } = useColorScheme();
+
     return (
-        <View className="flex-1 bg-card">
+        <View style={{ flex: 1, backgroundColor: colors.card, paddingTop: insets.top }}>
             <Feed
-                prepend={<Stories />}
+                prepend={<Stories style={{ marginTop: headerHeight - insets.top }} />}
                 filters={filters}
                 relayUrls={relayUrls}
                 filterKey={key}

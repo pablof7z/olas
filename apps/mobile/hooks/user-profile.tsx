@@ -20,6 +20,7 @@ interface UserStoreActions {
     init: (ndk: NDK, db: SQLiteDatabase) => void,
 
     setUsed: (pubkey: string) => void,
+    update: (pubkey: string, profile: NDKUserProfile) => void,
 }
 
 type UsersStore = UserStoreProps & UserStoreActions;
@@ -33,7 +34,6 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
         const userFlare = getAllPubkeyFlares();
         
         const entries = db.getAllSync('SELECT * FROM profiles') as NDKSqliteProfileRecord[];
-        console.log('init user profile store loaded entries', entries.length);
         const map = new Map<string, UserEntry>();
         for (const entry of entries) {
             map.set(entry.pubkey, {
@@ -58,6 +58,10 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
     setUsed: (pubkey: string) => {
         const { entries, used, ndk } = get();
         if (used.has(pubkey)) return;
+        if (!ndk) {
+            console.log('no ndk available for profile hook');
+            return;
+        }
 
         const entry = entries.get(pubkey);
         const hasIt = !!entry;
@@ -107,6 +111,21 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
             return { used: _s };
         });
     },
+
+    update: (pubkey: string, profile: NDKUserProfile) => {
+        set(s => {
+            const _entries = new Map(s.entries);
+            const entry = _entries.get(pubkey) ?? { profile: null, flare: null };
+            const current = { ...entry };
+            current.profile = profile;
+            if (current.profile) {
+                _entries.set(pubkey, current);
+            } else {
+                _entries.delete(pubkey);
+            }
+            return { entries: _entries };
+        });
+    }
 }));
 
 

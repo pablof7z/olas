@@ -1,11 +1,12 @@
 import * as React from "react"
 import Svg, { SvgProps, Path } from "react-native-svg"
 /* SVGR has dropped some elements not supported by react-native-svg: title */
-const SvgComponent = ({ strokeWidth = 2, ...props }: SvgProps) => (
+const SvgComponent = ({ width = 24, strokeWidth = 2, ...props }: SvgProps) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={width}
+    height={width}
+    viewBox="0 0 24 24"
     fill="currentColor"
     stroke="currentColor"
     aria-label="New post"

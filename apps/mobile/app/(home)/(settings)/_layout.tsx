@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { Platform } from 'react-native';
 import { useColorScheme } from '~/lib/useColorScheme';
-
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 export default function SettingsLayout() {
     const { colors } = useColorScheme();
+    const bottomHeight = useBottomTabBarHeight();
 
     return (
         <Stack
@@ -11,6 +12,9 @@ export default function SettingsLayout() {
                 title: 'Settings',
                 headerShown: true,
                 headerTintColor: Platform.OS === 'ios' ? undefined : colors.foreground,
+                contentStyle: {
+                    paddingBottom: bottomHeight
+                },
             }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="content/index" />

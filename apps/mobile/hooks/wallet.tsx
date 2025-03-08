@@ -15,7 +15,7 @@ export function useNip60Wallet() {
         if (event) {
             NDKCashuWallet.from(event)
                 .then(setWallet)
-                .catch(e => console.error('error loading nip60 wallet', e));
+                .catch(e => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)));
         }
     }, [event])
 
