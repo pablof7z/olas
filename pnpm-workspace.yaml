@@ -2,6 +2,7 @@ packages:
     - 'apps/*'
     - 'packages/eslint-config'
     - 'packages/ndk/ndk'
+    - 'packages/ndk/ndk-test'
     - 'packages/ndk/ndk-cache-dexie'
     - 'packages/ndk/ndk-svelte'
     - 'packages/ndk/ndk-mobile'

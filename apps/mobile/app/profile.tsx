@@ -28,10 +28,12 @@ import { SHOP_ENABLED } from '@/utils/const';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { prepareMedia } from '@/lib/post-editor/actions/prepare';
 import { uploadMedia } from '@/lib/post-editor/actions/upload';
+import BackButton from '@/components/buttons/back-button';
+import { toast } from '@backpackapp-io/react-native-toast';
 
 export const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
-const editModeAtom = atom<boolean>(false);
+const editStateAtom = atom<string | null>(null);
 const editProfileAtom = atom<NDKUserProfile | null>(null);
 
 function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
@@ -55,7 +57,7 @@ function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
 }
 
 
-function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey: string, userProfile: NDKUserProfile, scrollY: Animated.Value }) {
+function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey: string, userProfile?: NDKUserProfile, scrollY: Animated.Value }) {
     const { colors } = useColorScheme();
     const insets = useSafeAreaInsets();
     const bannerHeight = insets.top + headerStyles.leftContainer.height + 50;
@@ -63,7 +65,7 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
     
     // Create a new Animated.Value for blur intensity
     const defaultBlurValue = new Animated.Value(0);
-    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [editState, setEditState] = useAtom(editStateAtom);
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     
     // Use the scrollY value if available, otherwise use the default
@@ -81,58 +83,43 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
     }) : defaultBlurValue;
 
     const cancelProfileEdit = useCallback(() => {
-        setEditMode(false);
+        setEditState(null);
         setEditProfile(null);
-    }, [setEditMode, setEditProfile]);
+    }, [setEditState, setEditProfile]);
 
     const startProfileEdit = useCallback(() => {
-        setEditMode(true);
+        setEditState('edit');
         setEditProfile(userProfile);
-    }, [setEditMode, setEditProfile, userProfile]);
+    }, [setEditState, setEditProfile, userProfile]);
 
     const { ndk } = useNDK();
     const updateUserProfile = useUsersStore(s => s.update);
 
     const saveProfileEdit = useCallback(async () => {
+        setEditState('saving');
         const e = new NDKEvent(ndk, { kind: 0 } as NostrEvent);
         const profileWithoutEmptyValues = Object.fromEntries(Object.entries(editProfile || {}).filter(([_, value]) => value !== null));
         delete profileWithoutEmptyValues.created_at;
 
-        if (editProfile?.picture && !editProfile.picture?.startsWith('https:')) {
-            const media = await prepareMedia([{ uris: [editProfile.picture], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
-            const uploaded = await uploadMedia(media, ndk);
-            if (!uploaded[0].uploadedUri) return;
-            profileWithoutEmptyValues.picture = uploaded[0].uploadedUri;
-        }
-
-        if (editProfile?.banner && !editProfile.banner?.startsWith('https:')) {
-            const media = await prepareMedia([{ uris: [editProfile.banner], id: 'banner', mediaType: 'image', contentMode: 'landscape' }]);
-            const uploaded = await uploadMedia(media, ndk);
-            if (!uploaded[0].uploadedUri) return;
-            profileWithoutEmptyValues.banner = uploaded[0].uploadedUri;
-        }
-        
         e.content = JSON.stringify(profileWithoutEmptyValues);
         await e.publishReplaceable();
         console.log('publishing profile', JSON.stringify(e.rawEvent(), null, 4));
         if (editProfile) updateUserProfile(pubkey, editProfile);
-        setEditMode(false);
+        setEditState(null);
 
-    }, [editProfile, setEditMode, pubkey, ndk, updateUserProfile]);
+    }, [editProfile, setEditState, pubkey, ndk, updateUserProfile]);
 
     return (
         <AnimatedBlurView 
             intensity={blurIntensity} 
             style={[headerStyles.container, { paddingTop: insets.top }]}>
             <View style={headerStyles.leftContainer}>
-                {editMode ? (
+                {editState === 'edit' ? (
                     <TouchableOpacity onPress={cancelProfileEdit} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
                         <X size={24} color={"white"} />
                     </TouchableOpacity>
                 ) : (
-                    <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 10, backgroundColor: '#00000055', borderRadius: 100, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
-                        <ArrowLeft size={24} color={"white"} />
-                    </TouchableOpacity>
+                    <BackButton />
                 )}
 
                 <Animated.View style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}>
@@ -147,12 +134,12 @@ function Header({ user, pubkey, userProfile, scrollY }: { user: NDKUser, pubkey:
             </View>
 
             <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {currentUser?.pubkey === pubkey && editMode && (
+                {currentUser?.pubkey === pubkey && editState && (
                     <TouchableOpacity onPress={saveProfileEdit} style={{ paddingHorizontal: 20, backgroundColor: '#00000055', borderRadius: 100, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
                         <Text style={{ color: 'white', fontSize: 14 }}>Save</Text>
                     </TouchableOpacity>
                 )}
-                {currentUser?.pubkey === pubkey && !editMode && (
+                {currentUser?.pubkey === pubkey && !editState && (
                     <TouchableOpacity onPress={startProfileEdit} style={{ paddingHorizontal: 20, backgroundColor: '#00000055', borderRadius: 100, height: 40, alignItems: 'center', justifyContent: 'center', marginHorizontal: 10 }}>
                         <Text style={{ color: 'white', fontSize: 14 }}>Edit</Text>
                     </TouchableOpacity>
@@ -195,15 +182,15 @@ export default function Profile() {
         { kinds: [30402], authors: [pubkey] },
         { kinds: [NDKKind.Metadata, NDKKind.Contacts], authors: [pubkey] },
     ], { wrap: true, skipVerification: true }, [pubkey])
-    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [editState, setEditState] = useAtom(editStateAtom);
     const setEditProfile = useSetAtom(editProfileAtom);
 
     useEffect(() => {
-        if (currentUser?.pubkey !== pubkey && editMode) {
-            setEditMode(false);
+        if (currentUser?.pubkey !== pubkey && editState === 'edit') {
+            setEditState(null);
             setEditProfile(null);
         }
-    }, [currentUser?.pubkey, editMode, pubkey])
+    }, [currentUser?.pubkey, editState, pubkey])
     
     const olasContent = useMemo(() => {
         return content.filter((e) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
@@ -233,9 +220,7 @@ export default function Profile() {
         return content.some((e) => e.kind === 30402);
     }, [content]);
     
-    if (!pubkey) {
-        return null;
-    }
+    if (!pubkey) return null;
     
     return (
         <>
@@ -312,23 +297,32 @@ function Banner({ pubkey }: { pubkey: string }) {
     const { userProfile } = useUserProfile(pubkey);
     const insets = useSafeAreaInsets();
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const editState = useAtomValue(editStateAtom);
 
     const width = Dimensions.get('window').width;
     const height = insets.top + headerStyles.leftContainer.height + 100;
+    const { ndk } = useNDK();
 
     const handleChooseImage = useCallback(() => {
         ImageCropPicker.openPicker({
             width: width,
             height: height,
             cropping: true,
-        }).then((image) => {
+        }).then(async (image) => {
             setEditProfile({ ...editProfile, banner: image.path });
+
+            // upload the image
+            const media = await prepareMedia([{ uris: [image.path], id: 'banner', mediaType: 'image', contentMode: 'landscape' }]);
+            const uploaded = await uploadMedia(media, ndk);
+            if (!uploaded[0].uploadedUri) {
+                toast.error('Failed to upload profile banner');
+                return;
+            }
+            setEditProfile({ ...editProfile, banner: uploaded[0].uploadedUri });
         });
     }, [editProfile, setEditProfile]);
     
-    
-    if (editMode) {
+    if (editState === 'edit') {
         return <TouchableOpacity onPress={handleChooseImage} style={{ width: '100%', height, backgroundColor: `#${pubkey.slice(0, 6)}`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <Image source={{ uri: editProfile?.banner }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: insets.top + headerStyles.leftContainer.height + 100, flex: 1}} contentFit="cover" />
             <View style={{ position: 'absolute', top: '50%', marginTop: 20, right: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000bb', borderRadius: 100, width: 40, height: 40 }} onPress={handleChooseImage}>
@@ -344,7 +338,8 @@ function Banner({ pubkey }: { pubkey: string }) {
 
 function Avatar({ pubkey, userProfile, flare, colors }: { pubkey: string, userProfile?: NDKUserProfile, flare?: NDKUserFlare, colors: Record<string, string> }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const editState = useAtomValue(editStateAtom);
+    const { ndk } = useNDK();
 
     const handleChooseImage = useCallback(() => {
         ImageCropPicker.openPicker({
@@ -354,14 +349,22 @@ function Avatar({ pubkey, userProfile, flare, colors }: { pubkey: string, userPr
             multiple: false,
             mediaType: 'photo',
             includeExif: false,
-        }).then((image) => {
-            console.log('image', image);
+        }).then(async (image) => {
             setEditProfile({ ...editProfile, picture: image.path });
 
+            // upload the image
+            const media = await prepareMedia([{ uris: [image.path], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
+            const uploaded = await uploadMedia(media, ndk);
+            if (!uploaded[0].uploadedUri) {
+                toast.error('Failed to upload profile picture');
+                return;
+            }
+
+            setEditProfile({ ...editProfile, picture: uploaded[0].uploadedUri });
         });
     }, []);
 
-    if (editMode) {
+    if (editState === 'edit') {
         return <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
             <User.Avatar pubkey={pubkey} userProfile={editProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} skipProxy={true} />
             <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000bb', borderRadius: 100, width: 40, height: 40, transform: [{ translateX: 5 }, { translateY: 5 }] }} onPress={handleChooseImage}>
@@ -370,18 +373,18 @@ function Avatar({ pubkey, userProfile, flare, colors }: { pubkey: string, userPr
         </View>
     }
     
-    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} borderMarginWidth={0} />
+    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} />
 }
 
 function About({ userProfile, colors }: { userProfile?: NDKUserProfile, colors: Record<string, string> }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const editState = useAtomValue(editStateAtom);
 
     const setAbout = useCallback((text: string) => {
         setEditProfile({ ...editProfile, about: text });
     }, [editProfile, setEditProfile]);
 
-    if (editMode) {
+    if (editState === 'edit') {
         return (
             <TextInput
                 value={editProfile?.about || ''}
@@ -405,13 +408,13 @@ function About({ userProfile, colors }: { userProfile?: NDKUserProfile, colors: 
 
 function Name({ userProfile, pubkey, colors }: { userProfile?: NDKUserProfile, pubkey: string, colors: Record<string, string> }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const editState = useAtomValue(editStateAtom);
 
     const setName = useCallback((text: string) => {
         setEditProfile({ ...editProfile, name: text });
     }, [editProfile, setEditProfile]);
     
-    if (editMode) {
+    if (editState === 'edit') {
         return (
             <TextInput
                 value={editProfile?.name || ''}
@@ -467,7 +470,7 @@ const profileContentViewAtom = atom<string>("photos");
 const knownKind1s = new Map<string, boolean>()
 
 const postFilterFn = (entry: FeedEntry) => {
-    if (entry.event.kind === 1) {
+    if (entry?.event?.kind === 1) {
         let val = knownKind1s.get(entry.event.id);
         if (val !== undefined) return val;
 

@@ -24,6 +24,7 @@ import { Bookmark, Code, Copy, Share as ShareIcon, Trash, UserX } from 'lucide-r
 import { useColorScheme } from '@/lib/useColorScheme';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { useFollowType } from '@/hooks/follows';
+import { useAppSettingsStore } from '@/stores/app';
 
 const deletePost = (event: NDKEvent) => {
     event.delete(undefined, false).then(async (e) => {
@@ -73,6 +74,8 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
     const user = event?.author;
 
+    const advancedMode = useAppSettingsStore(s => s.advancedMode);
+
     return (
         <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom + 20, flexDirection: 'column', gap: 20 }}>
             {showReport ? (
@@ -97,20 +100,22 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
                     </View>
 
                     <View className="flex-col items-start justify-start gap-2">
-                        <Button
-                            size="lg"
-                            variant="secondary"
-                            className="w-full flex-row gap-2 py-4"
-                            onPress={() => close(copyRaw)}>
-                            <Code size={24} color={colors.muted} />
-                            <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
-                        </Button>
+                        {advancedMode && (
+                            <Button
+                                size="lg"
+                                variant="secondary"
+                                className="w-full flex-row gap-2 py-4"
+                                onPress={() => close(copyRaw)}>
+                                <Code size={24} color={colors.muted} />
+                                <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
+                            </Button>
+                        )}
                 
                         <DeletePostButton event={event} currentUser={currentUser} closeFn={close} />
                         <View className="flex-row gap-2">
                             <MuteButton user={user} currentUser={currentUser} closeFn={close} />
 
-                            <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 bg-red-900/10 py-4" onPress={() => setShowReport(true)}>
+                            <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 py-4" onPress={() => setShowReport(true)}>
                                 <UserX size={24} color="red" />
                                 <Text className="flex-1 text-red-500">Report</Text>
                             </Button>

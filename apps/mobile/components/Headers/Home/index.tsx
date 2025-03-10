@@ -1,4 +1,4 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import Animated, { SlideOutUp, useSharedValue, withTiming, useAnimatedStyle, FadeIn } from "react-native-reanimated";
 import Feed from "./Feed";
 import NotificationsButton from "./NotificationsButton";
@@ -6,12 +6,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NDKNutzap, useNDKNutzapMonitor } from "@nostr-dev-kit/ndk-mobile";
 import { formatMoney } from "@/utils/bitcoin";
 import { Text } from "@/components/nativewindui/Text";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import AvatarGroup from "@/components/ui/user/AvatarGroup";
 import { useAtomValue } from "jotai";
 import { FadeOut } from "react-native-reanimated";
 import { scrollDirAtom } from "@/components/Feed/store";
 import { useColorScheme } from "@/lib/useColorScheme";
+import { Search, X } from "lucide-react-native";
+import { searchQueryAtom, useSearchQuery } from "./store";
+import { searchInputRefAtom } from "@/components/FeedType/store";
 
 export default function HomeHeader() {
     const insets = useSafeAreaInsets();
@@ -58,6 +61,22 @@ export default function HomeHeader() {
     }, [!!nutzapMonitor]);
 
     const { colors } = useColorScheme();
+    const setSearchQuery = useSearchQuery();
+    const searchInputRef = useAtomValue(searchInputRefAtom);
+    const searchQuery = useAtomValue(searchQueryAtom);
+    const showSearchInput = useMemo(() => (searchQuery !== null), [searchQuery])
+
+    const toggleSearch = useCallback(() => {
+        if (searchQuery !== null) {
+            setSearchQuery(null);
+            searchInputRef?.current?.blur();
+        } else {
+            setSearchQuery("");
+            if (!showSearchInput) {
+                searchInputRef?.current?.focus();
+            }
+        }
+    }, [searchQuery, setSearchQuery, showSearchInput])
 
     return (
         <Animated.View style={[
@@ -69,7 +88,16 @@ export default function HomeHeader() {
                 <Animated.View entering={FadeIn} exiting={FadeOut} style={{ width: '100%', marginTop: insets.top }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Feed />
-                        <NotificationsButton />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Pressable style={styles.searchButton} onPress={toggleSearch}>
+                            {showSearchInput ? (
+                                <X size={24} color={colors.foreground} />
+                            ) : (
+                                <Search size={24} color={colors.foreground} />
+                            )}
+                        </Pressable>
+                            <NotificationsButton />
+                        </View>
                     </View>
                 </Animated.View>
             ) : (
@@ -90,7 +118,10 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         justifyContent: 'center',
         width: '100%',
-    }
+    },
+    searchButton: {
+        paddingLeft: 10,
+    },
 });
 
 function IncomingZap({ nutzaps }: { nutzaps: NDKNutzap[] }) {

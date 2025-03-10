@@ -27,6 +27,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useStoriesView } from "@/lib/stories/store";
 import StoriesModal from "@/lib/stories/Modal";
+import BackButton from "@/components/buttons/back-button";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -217,10 +219,8 @@ export default function Wallpapers() {
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const { events } = useSubscribe<NDKImage>(
         [
-            { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365"], authors: [pubkey] },
-        ],
-        { wrap: true },
-        [pubkey]
+            { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365", "olas365"], authors: [pubkey] },
+        ], { wrap: true }, [pubkey]
     );
 
     const imageLoadStartedRef = useRef<Set<string>>(new Set());
@@ -231,12 +231,12 @@ export default function Wallpapers() {
             day: index + 1,
             event: null,
             imeta: null,
-        }));
+        })) as { day: number; event: NDKEvent | null; imeta: NDKImetaTag | null }[];
 
         for (const event of events) {
             const imeta = event?.imetas?.[0];
             if (!imeta?.url) continue;
-            const day = getDayOfYear(event.created_at);
+            const day = getDayOfYear(event.created_at!);
             if (!day) continue;
             days[day - 1].event = event;
             days[day - 1].imeta = imeta;
@@ -252,8 +252,6 @@ export default function Wallpapers() {
         return [days.filter((e) => !!e.event), days];
     }, [events]);
 
-    const { userProfile } = useUserProfile(pubkey);
-
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollX.value = event.contentOffset.x;
     });
@@ -262,11 +260,9 @@ export default function Wallpapers() {
         <>
             <Stack.Screen
                 options={{
+                    headerShown: true,
                     headerTransparent: true,
-                    headerTitle: userProfile?.name ? `${userProfile?.name}'s #olas365` : "#olas365",
-                    headerBackTitle: "Back",
-                    headerBackVisible: true,
-                    headerTintColor: "white",
+                    header: () => <Header />
                 }}
             />
             <ScrollView>
@@ -337,6 +333,23 @@ export default function Wallpapers() {
         </>
     );
 }
+
+function Header() {
+    const insets = useSafeAreaInsets();
+    
+    return <View style={[headerStyle.container, { paddingTop: insets.top }]}>
+        <BackButton />
+    </View>
+}
+
+const headerStyle = StyleSheet.create({
+    container: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    }
+})
 
 function EmptyDay() {
     return <View style={{ backgroundColor: "#ddd", flex: 1, width: "100%", height: "100%" }} />;

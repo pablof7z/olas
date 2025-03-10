@@ -17,63 +17,89 @@ import { Button } from '@/components/nativewindui/Button';
 import { scrollDirAtom } from '@/components/Feed/store';
 import { Animated, Platform, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
+import Reanimated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    interpolate,
+    runOnJS,
+} from 'react-native-reanimated';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
-    const tabBarAnim = useRef(new Animated.Value(0)).current;
+    const tabBarAnim = useSharedValue(0);
 
     const openPickerIfEmpty = usePostEditorStore(s => s.openPickerIfEmpty);
 
-    // Hook to handle scroll to top
-    useScrollToTop(scrollRef);
+    // Create a ref that we can safely pass to useScrollToTop
+    const safeScrollRef = useMemo(() => {
+        return scrollRef?.current ? { current: scrollRef.current } : null;
+    }, [scrollRef]);
+
+    // Only use useScrollToTop if we have a valid ref
+    if (safeScrollRef) {
+        useScrollToTop(safeScrollRef);
+    }
 
     const scrollDir = useAtomValue(scrollDirAtom);
 
+    // Use a worklet-friendly approach
     useEffect(() => {
-        Animated.timing(tabBarAnim, {
-            toValue: scrollDir === 'up' ? 0 : 1,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
+        // Use withSpring for a more natural animation
+        tabBarAnim.value = withSpring(scrollDir === 'up' ? 0 : 1, {
+            damping: 20,
+            stiffness: 200,
+            mass: 0.5, // Add a bit less mass for faster response
+        });
     }, [scrollDir]);
 
     const isReels = usePathname() === '/reels';
+    
+    // Create animated style using Reanimated
+    const animatedTabBarStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{
+                translateY: interpolate(
+                    tabBarAnim.value,
+                    [0, 1],
+                    [0, 100]
+                )
+            }],
+        };
+    });
+
     const screenOptions = useMemo(() => {
-        const commonStyle: ViewStyle = {
+        const baseStyle: ViewStyle = {
             position: 'absolute',
             left: 0,
             right: 0,
             bottom: 0,
-            transform: [{
-                translateY: tabBarAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 100]
-                })
-            }],
         };
 
         if (isReels) {
             return {
                 tabBarActiveTintColor: 'white',
                 tabBarInactiveTintColor: 'white',
-                tabBarStyle: {
-                    ...commonStyle,
-                    backgroundColor: 'black',
-                }
+                tabBarStyle: [
+                    baseStyle,
+                    { backgroundColor: 'black' },
+                    animatedTabBarStyle
+                ]
             }
         } else {
             return {
                 tabBarActiveTintColor: colors.foreground,
                 tabBarInactiveTintColor: colors.foreground,
-                tabBarStyle: {
-                    ...commonStyle,
-                    backgroundColor: colors.card,
-                }
+                tabBarStyle: [
+                    baseStyle,
+                    { backgroundColor: colors.card },
+                    animatedTabBarStyle
+                ]
             }
         }
-    }, [isReels, colors, tabBarAnim]);
+    }, [isReels, colors, animatedTabBarStyle]);
 
     return (
         <Tabs
@@ -89,7 +115,7 @@ export default function TabsLayout() {
                     headerTransparent: false,
                     title: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={2.5} />,
+                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />,
                 }}
                 listeners={{
                     // tabPress: (e) => {

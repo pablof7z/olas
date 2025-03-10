@@ -1,4 +1,5 @@
 import { Text } from "@/components/nativewindui/Text";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, ButtonState } from "@/components/nativewindui/Button";
@@ -8,6 +9,7 @@ import { SlideInLeft, SlideOutRight } from "react-native-reanimated";
 import Animated from "react-native-reanimated";
 import { router } from "expo-router";
 import { useAppSettingsStore } from "@/stores/app";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function DeleteAccountScreen() {
     const { ndk, } = useNDK();
@@ -40,7 +42,7 @@ export default function DeleteAccountScreen() {
         }
         
         const setIt = () => {
-            showRealInRef.current = 1;
+            showRealInRef.current = 6;
             showRealInTimeoutRef.current = setInterval(advanceCounter, 1000);
             advanceCounter();
         };
@@ -89,9 +91,11 @@ export default function DeleteAccountScreen() {
     }, []);
 
     const currentUser = useNDKCurrentUser();
+    const insets = useSafeAreaInsets();
+    const bottomHeight = useBottomTabBarHeight();
     
     return (
-        <View className="flex-1 p-4 flex-col justify-between gap-4">
+        <View className="flex-1 p-4 flex-col justify-between" style={{ paddingBottom: insets.bottom + bottomHeight + 20 }}>
             <Text variant="title1">Delete Account</Text>
 
             <Text variant="body" className="text-muted-foreground">
@@ -107,7 +111,7 @@ export default function DeleteAccountScreen() {
                     <Button onPress={deleteAccount} state={buttonStatus} variant="destructive" disabled={showRealIn > 0} style={{ flexDirection: 'column', alignItems: 'center' }}>
                         <Text style={{ fontSize: 18, lineHeight: 18 }} className="pt-2 text-white font-bold">Confirm Account Deletion {showRealIn > 0 ? `(${showRealIn})` : ""}</Text>
                         <Text style={{ lineHeight: 12, fontSize: 10, color: 'white' }}>
-                            {currentUser?.npub.slice(0, 6)}...{currentUser?.npub.slice(-4)}
+                            {currentUser?.npub.slice(0, 10)}...{currentUser?.npub.slice(-10)}
                         </Text>
                     </Button>
                 </Animated.View>
@@ -116,7 +120,7 @@ export default function DeleteAccountScreen() {
                     <Button onPress={confirmAccountDeletion} state={buttonStatus} variant="destructive" style={{ flexDirection: 'column', alignItems: 'center' }}>
                         <Text style={{ fontSize: 18, lineHeight: 18 }} className="pt-2 text-white font-bold">Permanently Delete Account</Text>
                         <Text style={{ lineHeight: 12, fontSize: 10, color: 'white' }}>
-                            {currentUser?.npub.slice(0, 6)}...{currentUser?.npub.slice(-4)}
+                            {currentUser?.npub.slice(0, 10)}...{currentUser?.npub.slice(-10)}
                         </Text>
                     </Button>
                 </Animated.View>

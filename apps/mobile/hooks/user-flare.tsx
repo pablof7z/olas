@@ -31,7 +31,8 @@ export const useUserFlareStore = create<UserFlareStore>((set, get) => ({
 }));
 
 
-export const useUserFlare = (pubkey: Hexpubkey) => {
+export const useUserFlare = (pubkey?: Hexpubkey) => {
     const { flares } = useUserFlareStore();
+    if (!pubkey) return undefined;
     return flares.get(pubkey);
 };

@@ -29,6 +29,8 @@ import UploadIndicator from '@/components/UploadIndicator';
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
+    const { colors } = useColorScheme();
+    
     return (
         <>
             <Stack.Screen
@@ -39,7 +41,7 @@ export default function HomeScreen() {
                 }}
             />
 
-            <View style={{ flex: 1, backgroundColor: 'blue' }}>
+            <View style={{ flex: 1, backgroundColor: colors.card }}>
                 <UploadIndicator />
                 <DataList />
             </View>
@@ -262,7 +264,7 @@ function DataList() {
     const { colors } = useColorScheme();
 
     return (
-        <View style={{ flex: 1, backgroundColor: colors.card, paddingTop: insets.top }}>
+        <View style={{ flex: 1, paddingTop: insets.top }}>
             <Feed
                 prepend={<Stories style={{ marginTop: headerHeight - insets.top }} />}
                 filters={filters}

@@ -1,16 +1,21 @@
-import { NDKEvent, NDKNutzap, NDKUser, useNDKCurrentUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { useMemo, useRef, useEffect, useState } from "react";
-import { View, StyleSheet, Animated, Pressable } from "react-native";
+import { NDKEvent, NDKUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { useMemo, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    withSpring,
+    withSequence,
+    interpolate,
+    Extrapolate
+} from 'react-native-reanimated';
 import { Text } from "@/components/nativewindui/Text";
 import UserAvatar from "@/components/ui/user/avatar";
 import { formatMoney } from "@/utils/bitcoin";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Payment, targetToId, usePaymentStore } from "@/stores/payments";
 import { colorWithOpacity } from "@/theme/colors";
-import { router } from "expo-router";
-import { activeEventAtom } from "@/stores/event";
-import { useSetAtom } from "jotai";
-import { useCommentBottomSheet } from "@/lib/comments/bottom-sheet";
 
 export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
     const id = targetToId(event);
@@ -22,35 +27,26 @@ export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
     }, [paymentEntry]);
 
     // Animation values for container
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(-20)).current;
+    const opacity = useSharedValue(0);
+    const translateY = useSharedValue(-20);
 
     // Animate when component mounts
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            })
-        ]).start();
+        opacity.value = withTiming(1, { duration: 500 });
+        translateY.value = withTiming(0, { duration: 500 });
     }, []);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: opacity.value,
+            transform: [{ translateY: translateY.value }]
+        };
+    });
 
     if (sortedZaps.length === 0) return null;
 
     return (
-        <Animated.View style={[
-            styles.container,
-            {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }]
-            }
-        ]}>
+        <Animated.View style={[styles.container, animatedStyle]}>
             {sortedZaps.length > 0 && (
                 <ZapPill zap={sortedZaps[0]} />
             )}
@@ -66,66 +62,40 @@ export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
 
 function ZapPill({ zap, withComment = true }: { zap: Payment, withComment?: boolean }) {
     const { userProfile } = useUserProfile(zap.sender);
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(5)).current;  // Start scaled up 5x
-    const rotateAnim = useRef(new Animated.Value(0)).current;
+    const opacity = useSharedValue(0);
+    const scale = useSharedValue(5);  // Start scaled up 5x
+    const rotate = useSharedValue(0);
 
     const { colors } = useColorScheme();
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.spring(scaleAnim, {
-                toValue: 1,
-                speed: 20,
-                bounciness: 12,
-                useNativeDriver: true,
-            }),
-            Animated.sequence([
-                Animated.timing(rotateAnim, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(rotateAnim, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                })
-            ])
-        ]).start();
+        opacity.value = withTiming(1, { duration: 500 });
+        scale.value = withSpring(1, { damping: 12, stiffness: 100 });
+        rotate.value = withSequence(
+            withTiming(1, { duration: 200 }),
+            withTiming(0, { duration: 300 })
+        );
     }, []);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: opacity.value,
+            transform: withComment ? [
+                { scale: scale.value },
+                { translateX: interpolate(scale.value, [5, 1], [200, 0], Extrapolate.CLAMP) },
+                { rotate: `${interpolate(rotate.value, [0, 1], [0, 15], Extrapolate.CLAMP)}deg` }
+            ] : [
+                { translateX: interpolate(scale.value, [5, 1], [-200, 0], Extrapolate.CLAMP) }
+            ]
+        };
+    });
 
     if (withComment) {
         return (
             <Animated.View style={[
                 styles.pill,
+                animatedStyle,
                 {
-                    opacity: fadeAnim,
-                    transform: [
-                        { 
-                            scale: scaleAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [5, 1]
-                            })
-                        },
-                        { 
-                            translateX: scaleAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [200, 0]
-                            }) 
-                        },
-                        { 
-                            rotate: rotateAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: ['0deg', '15deg']
-                            }) 
-                        },
-                    ],
                     backgroundColor: colorWithOpacity(colors.foreground, 0.1),
                     borderRadius: 100,
                     paddingVertical: 2,
@@ -140,16 +110,7 @@ function ZapPill({ zap, withComment = true }: { zap: Payment, withComment?: bool
     }
 
     return (
-        <Animated.View style={[
-            styles.pill,
-            {
-                opacity: fadeAnim,
-                transform: [{ translateX: scaleAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-200, 0]  // Adjust this value based on container width
-                })}]
-            }
-        ]}>
+        <Animated.View style={[styles.pill, animatedStyle]}>
             <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} />
         </Animated.View>
     );

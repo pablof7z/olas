@@ -119,7 +119,7 @@ export default function Feed({
 
     const handleGridPress = useCallback((event: NDKEvent) => {
         setActiveEvent(event);
-        router.push('/view');
+        router.push(`/view`);
     }, [])
 
     const renderItem = useCallback(({ item, index }: { item: FeedEntry | PrependEntry, index: number }) => {

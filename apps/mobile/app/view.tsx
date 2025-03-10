@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Text } from '@/components/nativewindui/Text';
-import { NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKUserProfile, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import RelativeTime from '@/components/relative-time';
@@ -15,6 +15,9 @@ import { activeEventAtom } from '@/stores/event';
 import { router, Stack } from 'expo-router';
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 import { useUserFlare } from '@/hooks/user-flare';
+import BackButton from '@/components/buttons/back-button';
+import { useReactionsStore } from '@/stores/reactions';
+import AvatarAndName from '@/components/ui/user/avatar-name';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -31,9 +34,52 @@ function getUrlFromEvent(event: NDKEvent) {
     return url;
 }
 
+function Header({ event }: { event: NDKEvent }) {
+    const { userProfile } = useUserProfile(event.pubkey);
+    const insets = useSafeAreaInsets();
+    const flare = useUserFlare(event.pubkey);
+
+    const viewProfile = useCallback(() => {
+        router.push(`/profile?pubkey=${event.pubkey}`);
+    }, [event.pubkey])
+    
+    return (
+        <View style={[headerStyles.container, { paddingTop: insets.top }]}>
+            <BackButton />
+
+            <AvatarAndName pubkey={event.pubkey} userProfile={userProfile} onPress={viewProfile} imageSize={24} borderColor='black' canSkipBorder={true} />
+
+            <Text style={headerStyles.timestamp}>
+                <RelativeTime timestamp={event.created_at!} />
+            </Text>
+        </View>
+    )
+}
+
+const headerStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    timestamp: {
+        fontSize: 12,
+        color: '#9CA3AF', // Tailwind 'text-gray-400'
+    },
+})
+
 export default function ViewScreen() {
     const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
-    const { userProfile } = useUserProfile(activeEvent.pubkey);
+    const reactions = useReactionsStore(state => state.reactions.get(activeEvent?.tagId() ?? ''));
+    const {events} = useSubscribe( activeEvent ? [
+        activeEvent.filter(),
+    ] : false, { groupable: false }, [activeEvent?.id]);
+
+    const height = useHeaderHeight(); 
+    const insets = useSafeAreaInsets();
+    const style = useMemo(() => ({
+            paddingTop: height,
+    }), [height]);
 
     if (!activeEvent) {
         return <Text style={styles.noActiveEvent}>No active event</Text>;
@@ -58,44 +104,17 @@ export default function ViewScreen() {
         content = content.replace(url, '');
     }
 
-    const height = useHeaderHeight(); 
-    const insets = useSafeAreaInsets();
-    const style = useMemo(() => ({
-            paddingTop: height,
-    }), [height]);
-    const flare = useUserFlare(activeEvent.pubkey);
-
-    const viewProfile = useCallback(() => {
-        router.push(`/profile?pubkey=${activeEvent.pubkey}`);
-    }, [activeEvent.pubkey])
-
-    const maxHeight = Math.floor(Dimensions.get('window').height * 0.7);
-
     return (
         <>
             <Stack.Screen
                 options={{
-                    contentStyle: { backgroundColor: 'black' },
                     headerShown: true,
-                    title: '',
                     headerTransparent: true,
-                    headerBackTitle: "Back",
-                    headerBackVisible: true,
                     headerTintColor: "white",
+                    header: () => <Header event={activeEvent} />
                 }}
             />
-        <View style={[styles.scrollView, style]}>
-            <View style={styles.container}>
-                <TouchableOpacity onPress={viewProfile} style={styles.header}>
-                    <User.Avatar pubkey={activeEvent.pubkey} userProfile={userProfile} imageSize={32} borderColor='black' canSkipBorder={true} flare={flare} />
-                    <View style={styles.userInfo}>
-                        <User.Name userProfile={userProfile} pubkey={activeEvent.pubkey} style={styles.userName} />
-                        <Text style={styles.timestamp}>
-                            <RelativeTime timestamp={activeEvent.created_at} />
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-
+            <View style={[styles.scrollView, style]}>
                 <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }}
                 contentContainerStyle={{ flex: 1 }}>
                     <EventMediaContainer
@@ -113,11 +132,9 @@ export default function ViewScreen() {
                     {price && <Text numberOfLines={1} variant="title1" className="text-white">{nicelyFormattedSatNumber(price)} {currency.toLowerCase()}</Text>}
                     {title && <Text numberOfLines={1} variant="title1" className="text-white">{title}</Text>}
                     <EventContent event={activeEvent} content={content} style={styles.eventContent} />
-                    <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' />
+                    <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' reactions={reactions} />
                 </View>
-
             </View>
-        </View>
         </>
     );
 }
@@ -129,13 +146,6 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderColor: '#ffffff33',
-        padding: 16,
     },
     userInfo: {
         marginLeft: 12,

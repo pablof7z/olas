@@ -21,10 +21,7 @@ export default function Feed() {
     const { show: showSheet } = useFeedTypeBottomSheet();
     const group = useGroup(feedType.kind === 'group' ? feedType.value : undefined, feedType.kind === 'group' ? feedType.relayUrls[0] : undefined);
     const currentUser = useNDKCurrentUser();
-    const searchInputRef = useAtomValue(searchInputRefAtom);
-    const searchQuery = useAtomValue(searchQueryAtom);
-    const setSearchQuery = useSearchQuery();
-
+    
     const feedTypeTitle = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'follows') return 'Follows';
         if (feedType.kind === 'discover' && feedType.value === 'for-you') {
@@ -37,18 +34,9 @@ export default function Feed() {
 
     const slideAnim = useRef(new Animated.Value(0)).current;
     
+    const searchQuery = useAtomValue(searchQueryAtom);
     const showSearchInput = useMemo(() => (searchQuery !== null), [searchQuery])
-
-    const toggleSearch = useCallback(() => {
-        if (searchQuery !== null) {
-            setSearchQuery(null);
-        } else {
-            setSearchQuery("");
-            if (!showSearchInput) {
-                searchInputRef?.current?.focus();
-            }
-        }
-    }, [searchQuery, setSearchQuery, showSearchInput])
+    
 
     useEffect(() => {
         Animated.timing(slideAnim, {
@@ -64,13 +52,6 @@ export default function Feed() {
 
     return (
         <View style={styles.container}>
-            <Pressable style={styles.searchButton} onPress={toggleSearch}>
-                {showSearchInput ? (
-                    <X size={24} color={colors.foreground} />
-                ) : (
-                    <Search size={24} color={colors.foreground} />
-                )}
-            </Pressable>
             <Animated.View style={[
                 styles.animatedContainer,
                 { 
@@ -163,9 +144,6 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
         flex: 1,
     },
-    searchButton: {
-        paddingLeft: 10,
-    },
     button: {
         flexDirection: 'row', alignItems: 'center', gap: 10,
         paddingHorizontal: 10,
@@ -174,7 +152,7 @@ const styles = StyleSheet.create({
     animatedContainer: {
         flexDirection: 'row', alignItems: 'center', gap: 10,
         position: 'absolute',
-        left: 40,
+        left: 10,
         right: 0,
     }
 })

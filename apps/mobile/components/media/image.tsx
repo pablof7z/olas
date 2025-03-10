@@ -1,7 +1,7 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
-import { Image, ImageSource, useImage } from 'expo-image';
-import { ActivityIndicator, Pressable, StyleProp, View, ViewStyle, StyleSheet, Dimensions } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Image, useImage } from 'expo-image';
+import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
+import React, { useMemo } from 'react';
 import { type MediaDimensions } from "./types";
 
 /**

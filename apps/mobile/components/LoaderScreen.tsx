@@ -7,7 +7,7 @@ import { usePaymentStore } from '@/stores/payments';
 import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useUsersStore } from '@/hooks/user-profile';
 import { useUserFlareStore } from '@/hooks/user-flare';
-import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming, ZoomIn, runOnJS } from 'react-native-reanimated';
 import { useAppSettingsStore } from '@/stores/app';
 
 export default function LoaderScreen({
@@ -26,6 +26,7 @@ export default function LoaderScreen({
     const [ignoreWot, setIgnoreWot] = useState(true);
     const { ndk, logout } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
+    const [shouldRender, setShouldRender] = useState(true);
     const initUserProfileStore = useUsersStore((state) => state.init);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
     useEffect(() => {
@@ -68,10 +69,22 @@ export default function LoaderScreen({
 
     const logo = require('../assets/logo.png');
 
+    const animatedStyles = useAnimatedStyle(() => {
+        return {
+            opacity: !renderApp ? withTiming(1, { duration: 300 }) : withTiming(0, { duration: 300 }, (finished) => {
+                if (finished) {
+                    runOnJS(setShouldRender)(false);
+                }
+            })
+        };
+    }, [renderApp]);
+
     return (
         <>
-            {(!renderApp) && (
-                <Animated.View exiting={FadeOut} className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
+            {shouldRender && (
+                <Animated.View
+                    style={[animatedStyles]}
+                    className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
                     <Animated.Image source={logo} entering={ZoomIn} style={[{ width: 300, height: 100, objectFit: 'contain' }]} />
 
                     <Text variant="largeTitle" className="mt-4 text-5xl font-black">

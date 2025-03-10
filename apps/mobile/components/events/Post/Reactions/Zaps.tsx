@@ -161,24 +161,22 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
     return (
         <View style={styles.container}>
             {showCancel ? (
-                <Animated.View entering={FadeIn.duration(500)} exiting={FadeOut.duration(100)}>
+                <View>
                     <Pressable onPress={cancel}>
                         <X color={inactiveColor} />
                     </Pressable>
-                </Animated.View>
+                </View>
             ) : (
                 <GestureDetector gesture={gestures} key="lightning">
-                    <Animated.View entering={FadeIn.duration(500)} exiting={FadeOut.duration(100)}>
-                        <Animated.View style={buttonIconStyle}>
-                            <Lightning
-                                style={{ transform: [{ rotate: '15deg' }] }}
-                                size={iconSize}
-                                stroke={color}
-                                strokeWidth={2}
-                                fill={paymentEntry?.zapCountByCurrentUser > 0 ? color : "none"}
-                            />
-                        </Animated.View>
-                    </Animated.View>
+                    <View style={buttonIconStyle}>
+                        <Lightning
+                            style={{ transform: [{ rotate: '15deg' }] }}
+                            size={iconSize}
+                            stroke={color}
+                            strokeWidth={2}
+                            fill={paymentEntry?.zapCountByCurrentUser > 0 ? color : "none"}
+                        />
+                    </View>
                 </GestureDetector>
             )}
             {modalVisible && (

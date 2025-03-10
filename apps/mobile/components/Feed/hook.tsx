@@ -152,7 +152,6 @@ export function useFeedEvents(
 
             // update the renderedIdsRef
             renderedEntryIdsRef.current = new Set(renderedEntries.map(entry => entry.id));
-            console.log('setting rendered entries', renderedEntries.length)
             setEntries(renderedEntries);
         // } else {
         //     console.log('no new entries to add, the slice is empty', newEntriesRef.current.size)
@@ -175,7 +174,7 @@ export function useFeedEvents(
         let changed = false;
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
+            if (isMutedEvent(entry?.event) || pubkeyBlacklist.has(entry?.event?.pubkey)) {
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -190,7 +189,7 @@ export function useFeedEvents(
         // same thing for new entries
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
-            if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) {
+            if (isMutedEvent(entry?.event) || pubkeyBlacklist.has(entry?.event?.pubkey)) {
                 // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry

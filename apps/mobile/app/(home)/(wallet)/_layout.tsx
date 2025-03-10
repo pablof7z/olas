@@ -20,6 +20,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return (
         <Stack screenOptions={{
             headerShown: true,
+            contentStyle: {
+                backgroundColor: colors.card,
+            }
         }}>
             <Stack.Screen
                 name="index"

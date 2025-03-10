@@ -229,12 +229,10 @@ export function ImageWithAppliedFilters({ image }: { image: ImageRef }) {
 
     return (
         <ViewShot ref={ref} options={{ format: 'jpg', quality: 1.0 }} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: -1, width: imageWidth, height: imageHeight, backgroundColor: 'transparent' }}>
-            {ActiveFilterComponent ? (
+            {ActiveFilterComponent && (
                 <ActiveFilterComponent amount={activeFilter?.amount} style={style}>
                     <RecursiveFilters index={0} filters={activeFilters} image={image} style={style} />
                 </ActiveFilterComponent>
-            ) : (
-                <Text>No filter</Text>
             )}
         </ViewShot>
     )
