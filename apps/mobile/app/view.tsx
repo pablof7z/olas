@@ -47,7 +47,7 @@ function Header({ event }: { event: NDKEvent }) {
         <View style={[headerStyles.container, { paddingTop: insets.top }]}>
             <BackButton />
 
-            <AvatarAndName pubkey={event.pubkey} userProfile={userProfile} onPress={viewProfile} imageSize={24} borderColor='black' canSkipBorder={true} />
+            <AvatarAndName pubkey={event.pubkey} userProfile={userProfile} onPress={viewProfile} imageSize={24} borderColor='black' canSkipBorder={true} pressableStyle={{ padding: 16 }} />
 
             <Text style={headerStyles.timestamp}>
                 <RelativeTime timestamp={event.created_at!} />

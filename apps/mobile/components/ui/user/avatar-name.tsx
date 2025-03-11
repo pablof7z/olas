@@ -1,5 +1,5 @@
 import { NDKUserProfile, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import { TouchableOpacity, StyleSheet, StyleProp, TextStyle, ViewStyle } from "react-native";
 import * as User from "@/components/ui/user";
 import { useCallback } from "react";
 import { useUserFlare } from "@/hooks/user-flare";
@@ -14,6 +14,9 @@ interface AvatarAndNameProps {
     canSkipBorder?: boolean;
 
     skipFlare?: boolean;
+
+    nameStyle?: StyleProp<TextStyle>;
+    pressableStyle?: StyleProp<ViewStyle>;
 }
 
 export default function AvatarAndName({
@@ -24,6 +27,8 @@ export default function AvatarAndName({
     borderColor,
     canSkipBorder,
     skipFlare,
+    nameStyle,
+    pressableStyle,
 }: AvatarAndNameProps) {
     const { userProfile: _userProfile, user, loading } = useUserProfile(!userProfile ? pubkey : undefined);
     const __userProfile = userProfile || _userProfile;
@@ -37,9 +42,9 @@ export default function AvatarAndName({
 
 
     return (
-        <TouchableOpacity onPress={viewProfile} style={styles.container}>
+        <TouchableOpacity onPress={viewProfile} style={[styles.container, pressableStyle]}>
             <User.Avatar pubkey={pubkey} userProfile={__userProfile} imageSize={imageSize} borderColor={borderColor} canSkipBorder={canSkipBorder} flare={flare} />
-            <User.Name userProfile={__userProfile} pubkey={pubkey} style={styles.userName} />
+            <User.Name userProfile={__userProfile} pubkey={pubkey} style={[styles.userName, nameStyle]} />
         </TouchableOpacity>
     )
 }
@@ -48,7 +53,6 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
     },
     userInfo: {
         marginLeft: 12,

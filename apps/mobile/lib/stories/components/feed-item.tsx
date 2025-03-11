@@ -1,18 +1,18 @@
 import UserAvatar from "@/components/ui/user/avatar";
 import { useStories } from "@/hooks/stories";
 import { activeEventAtom } from "@/stores/event";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { NDKEvent, useUserProfile, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import { Pressable, StyleSheet, View, Text, ViewStyle, StyleProp } from "react-native";
 import { FadeOut, SlideInRight } from "react-native-reanimated";
 import Animated from "react-native-reanimated";
-import StoriesModal from "../Modal";
 import { storiesAtom, showStoriesModalAtom } from "../store";
 import { useUserFlare } from "@/hooks/user-flare";
 import { useCallback } from "react";
 import { usePostEditorStore } from "@/lib/post-editor/store";
+
+const AVATAR_SIZE = 80;
 
 function StoryPrompt() {
     const currentUser = useNDKCurrentUser();
@@ -34,7 +34,7 @@ function StoryPrompt() {
         exiting={FadeOut}
     >
         <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}>
-            <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={90} borderWidth={3} />
+            <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} borderWidth={3} />
             <Text style={styles.name}>Your story</Text>
         </Pressable>
     </Animated.View>
@@ -112,7 +112,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                     router.push('/stories');
                 }
             }}>
-                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={live ? 'live' : flare} includeFlareLabel={false} borderWidth={3} />
+                <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} flare={live ? 'live' : flare} includeFlareLabel={false} borderWidth={3} />
                 <Text style={styles.name}>{userProfile?.name}</Text>
             </Pressable>
         </Animated.View>
@@ -122,12 +122,10 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
 
 const styles = StyleSheet.create({
     stories: {
-        marginTop: 5,
-        marginHorizontal: 5,
-        height: 120,
+        height: AVATAR_SIZE + 25,
     },
     name: {
         fontSize: 12,
-        marginTop: 5,
+        marginTop: 3,
     }
 })

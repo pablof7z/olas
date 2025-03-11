@@ -8,8 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Dimensions,
     FlatList,
-    Modal,
-    StyleSheet,
+    FlatListProps, StyleSheet,
     TouchableWithoutFeedback,
     View
 } from "react-native";
@@ -27,10 +26,9 @@ import Animated, {
     interpolate,
     Extrapolation,
     runOnJS,
+    SharedValue
 } from "react-native-reanimated";
 import { router } from "expo-router";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { Reactions } from "@/components/events/Post/Reactions";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -44,6 +42,16 @@ const isOverLandscapeThreshold = (width: number, height: number) => {
     return (width / height) > 1.1;
 };
 
+interface StoryProgressProps {
+    isLongPressed: boolean;
+    done: boolean;
+    activeIndex: number;
+    index: number;
+    onEnd: (index: number) => void;
+    active: boolean;
+    duration?: number;
+}
+
 const StoryProgress = ({
     isLongPressed,
     done,
@@ -52,10 +60,12 @@ const StoryProgress = ({
     onEnd,
     active,
     duration = 8000,
-}) => {
+}: StoryProgressProps) => {
     const progress = useSharedValue(-width / 3);
     const [progressWidth, setProgressWidth] = useState<number | null>(null);
     const longPressElapsedDuration = useRef(0);
+    const animationStarted = useRef(false);
+    const currentAnimation = useRef<any>(null);
 
     const animatedStyle = useAnimatedStyle(() => ({
         height: 4,
@@ -63,53 +73,65 @@ const StoryProgress = ({
         transform: [{ translateX: progress.value }],
     }));
 
-    const animation = (dur) => {
-        return withTiming(0, {
+    const startAnimation = useCallback((dur: number) => {
+        if (currentAnimation.current) {
+            progress.value = progress.value;
+            currentAnimation.current = null;
+        }
+        
+        progress.value = withTiming(0, {
             duration: dur,
             easing: Easing.linear,
         }, (finished) => {
-            if (finished) {
+            currentAnimation.current = null;
+            if (finished && active) {
                 runOnJS(onEnd)(index + 1);
             }
         });
-    };
+    }, [active, index, onEnd]);
 
+    // Update elapsed time during long press
     useEffect(() => {
+        if (!progressWidth || !active) return;
+        
         const updateElapsed = () => {
-            if (progressWidth) {
-                longPressElapsedDuration.current = Math.abs(
-                    (progress.value * duration) / progressWidth
-                );
-            }
+            longPressElapsedDuration.current = Math.abs(
+                (progress.value * duration) / progressWidth
+            );
         };
-        if (active) updateElapsed();
+        updateElapsed();
     }, [progress.value, progressWidth, active, duration]);
 
+    // Main animation effect
     useEffect(() => {
-        if (!progressWidth) return;
-        if (isLongPressed) {
-            progress.value = progress.value;
-        } else if (active) {
-            progress.value = animation(longPressElapsedDuration.current);
+        if (!progressWidth || duration <= 0) return;
+        
+        // Reset on inactive
+        if (!active) {
+            progress.value = -progressWidth;
+            animationStarted.current = false;
+            currentAnimation.current = null;
+            return;
         }
-    }, [isLongPressed, progressWidth, active]);
 
-    useEffect(() => {
-        if (!progressWidth) return;
-        progress.value = -progressWidth;
-        if (active && !isLongPressed) {
-            progress.value = withTiming(0, {
-                duration,
-                easing: Easing.linear,
-            }, (finished) => {
-                if (finished) {
-                    runOnJS(onEnd)(index + 1);
-                }
-            });
-        } else if (done) {
+        // Complete on done
+        if (done) {
             progress.value = 0;
+            return;
         }
-    }, [active, done, duration, progressWidth, isLongPressed]);
+
+        // Handle animation start/resume
+        if (active && !isLongPressed) {
+            if (!animationStarted.current) {
+                animationStarted.current = true;
+                progress.value = -progressWidth;
+                startAnimation(duration);
+            }
+        } else if (isLongPressed) {
+            // Pause animation by keeping current progress
+            progress.value = progress.value;
+        }
+    }, [active, done, duration, progressWidth, isLongPressed, startAnimation]);
 
     return (
         <View
@@ -178,13 +200,8 @@ function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
                     setIsLandscape(true);
                 }
             }}
-            onLoad={() => {
-                console.log('load', imageSource?.width, imageSource?.height);
-            }}
-            onLoadEnd={() => {
-                console.log('load end', imageSource?.width, imageSource?.height);
-                console.log('image width', imageSource.width, 'image height', imageSource.height);
-            }}
+            onLoad={() => {}}
+            onLoadEnd={() => {}}
         />
     );
 }
@@ -209,7 +226,6 @@ function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
     return (
         <VideoView
             player={player}
-            resizeMode='cover'
             style={{ flex: 1 }}
         />
     );
@@ -241,7 +257,7 @@ const Slide = ({
     }, [active]);
 
     const goPrev = useCallback(
-        (newSlide) => {
+        (newSlide: number) => {
             if (newSlide < 0) {
                 return onPrevSlide();
             }
@@ -252,8 +268,10 @@ const Slide = ({
     );
 
     const goNext = useCallback(
-        (newSlide) => {
+        (newSlide: number) => {
+            console.log('goNext', newSlide, item.imetas.length);
             if (newSlide > item.imetas.length - 1) {
+                console.log('onNextSlide', item.imetas.length);
                 return onNextSlide();
             }
             setLoading(true);
@@ -346,7 +364,18 @@ const Slide = ({
 const perspective = width;
 const angle = Math.atan(perspective / (width / 2));
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent<FlatListProps<NDKImage>>(FlatList);
+
+interface StoryItemProps {
+    item: NDKImage;
+    index: number;
+    scrollX: SharedValue<number>;
+    activeIndex: number;
+    storiesLength: number;
+    onClose: () => void;
+    isScrolling: boolean;
+    flatListRef: React.RefObject<FlatList<NDKImage>>;
+}
 
 const StoryItem = ({
     item,
@@ -356,8 +385,8 @@ const StoryItem = ({
     storiesLength,
     onClose,
     isScrolling,
-    flatListRef, // Pass the FlatList ref as a prop
-}) => {
+    flatListRef,
+}: StoryItemProps) => {
     const inputRange = [
         (index - 0.5) * width,
         index * width,
@@ -407,6 +436,7 @@ const StoryItem = ({
                 index={index}
                 active={index === activeIndex}
                 onNextSlide={() => {
+                    console.log('onNextSlide', index, storiesLength);
                     if (index + 1 >= storiesLength) {
                         onClose();
                     } else {
@@ -434,8 +464,8 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
     const scrollX = useSharedValue(0);
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolling, setIsScrolling] = useState(false);
-    const stories = useAtomValue(storiesAtom);
-    const ref = useRef<FlatList>(null);
+    const stories = useAtomValue(storiesAtom) as NDKImage[];
+    const ref = useRef<FlatList<NDKImage>>(null);
     const setIsLoading = useSetAtom(isLoadingAtom);
     const setDuration = useSetAtom(durationAtom);
 
@@ -469,12 +499,12 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
             <AnimatedFlatList
                 ref={ref}
                 data={stories}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: NDKImage) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 onScroll={scrollHandler}
                 pagingEnabled
-                renderItem={({ item, index }) => (
+                renderItem={({ item, index }: { item: NDKImage; index: number }) => (
                     <StoryItem
                         item={item}
                         index={index}
@@ -483,7 +513,7 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
                         storiesLength={stories.length}
                         onClose={close}
                         isScrolling={isScrolling}
-                        flatListRef={ref} // Pass the ref to StoryItem
+                        flatListRef={ref}
                     />
                 )}
             />

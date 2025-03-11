@@ -34,6 +34,11 @@ function RenderHashtag({ hashtag, onHashtagPress }: { hashtag: string; onHashtag
 }
 
 function RenderMention({ entity, onMentionPress }: { entity: string | null; onMentionPress?: (pubkey: string) => void }) {
+    const handlePress = useCallback((pubkey: string) => {
+        if (onMentionPress) onMentionPress(pubkey);
+        else router.push(`/profile?pubkey=${pubkey}`);
+    }, [onMentionPress]);
+    
     try {
         const { type, data } = nip19.decode(entity);
         let pubkey: string;
@@ -45,8 +50,8 @@ function RenderMention({ entity, onMentionPress }: { entity: string | null; onMe
         const { userProfile } = useUserProfile(pubkey);
 
         return (
-            <Text className="font-bold text-primary" onPress={() => onMentionPress?.(pubkey)}>
-                @<User.Name userProfile={userProfile} pubkey={pubkey} />
+            <Text className="font-bold text-primary" onPress={() => handlePress(pubkey)}>
+                @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare={true} />
             </Text>
         );
     } catch (e) {

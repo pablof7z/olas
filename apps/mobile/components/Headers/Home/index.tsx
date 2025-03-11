@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         justifyContent: 'center',
         width: '100%',
+        paddingBottom: 10
     },
     searchButton: {
         paddingLeft: 10,
@@ -153,7 +154,7 @@ const zapNotificationStyle = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         gap: 10,
-        paddingHorizontal: 10
+        paddingBottom: 100
     },
     amount: {
         fontSize: 24,

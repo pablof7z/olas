@@ -1,10 +1,17 @@
 import { View } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NDKCacheAdapterSqlite, useNDK, searchProfiles, NDKUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
+import AvatarAndName from "@/components/ui/user/avatar-name";
+import { useColorScheme } from "@/lib/useColorScheme";
 
-export default function MentionSuggestions({ query, FlashListComponent = FlashList }: { query: string, FlashListComponent: typeof FlashList}) {
+interface MentionSuggestionsProps {
+    query: string;
+    onPress: (profile: NDKUserProfile) => void;
+    FlashListComponent?: typeof FlashList;
+}
+
+export default function MentionSuggestions({ query, onPress, FlashListComponent = FlashList }: MentionSuggestionsProps) {
     const { ndk } = useNDK();
     const [profiles, setProfiles] = useState<NDKUserProfile[]>([]);
 
@@ -16,13 +23,23 @@ export default function MentionSuggestions({ query, FlashListComponent = FlashLi
     }, [query]);
     
     return (
-        <View style={{ flex: 1 }}>
-            <Text>{query} {profiles.length}</Text>
+        <View style={{ flex: 1, width: '100%' }}>
             <FlashListComponent
                 data={profiles}
-                renderItem={({ item }) => <Text>{item.name}</Text>}
+                renderItem={({ item }) => <SuggestionItem item={item} onPress={onPress} />}
             />
-            <Text>{query}</Text>
         </View>
     )
+}
+
+
+function SuggestionItem({ item, onPress }: { item: NDKUserProfile, onPress: (profile: NDKUserProfile) => void }) {
+    const { colors } = useColorScheme();
+    const handlePress = useCallback(() => {
+        onPress(item);
+    }, [item?.pubkey, onPress]);
+
+    if (!item.pubkey) return null;
+    
+    return <AvatarAndName onPress={handlePress} pubkey={item.pubkey} userProfile={item} imageSize={24} nameStyle={{ fontSize: 12, fontWeight: 'normal', color: colors.foreground }} />
 }

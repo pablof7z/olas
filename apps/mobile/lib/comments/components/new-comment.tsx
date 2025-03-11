@@ -1,11 +1,11 @@
-import { NDKEvent, NDKUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { NDKEvent, NDKUser, NDKUserProfile, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { useAtom, useSetAtom } from "jotai";
 import { Send } from "lucide-react-native";
-import { NativeSyntheticEvent, Text, TextInputKeyPressEventData } from "react-native";
-import { useState, useCallback } from "react";
+import { NativeSyntheticEvent, Text, TextInputKeyPressEventData, TextInputSelectionChangeEventData } from "react-native";
+import { useState, useCallback, useRef, RefObject, useMemo } from "react";
 import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { replyEventAtom, showMentionSuggestionsAtom } from "../store";
+import { mentionQueryAtom, replyEventAtom } from "../store";
 import { useColorScheme } from "@/lib/useColorScheme";
 import * as User from "@/components/ui/user";
 import { useUserFlare } from "@/hooks/user-flare";
@@ -17,11 +17,12 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();
-    const [replyEvent, setReplyEvent] = useAtom<NDKEvent | null>(replyEventAtom);
+    const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
     const flare = useUserFlare(currentUser?.pubkey);
-    const [showMentionSuggestions, setShowMentionSuggestions] = useAtom(showMentionSuggestionsAtom);
+    const [mentionQuery, setMentionQuery] = useAtom(mentionQueryAtom);
 
     const handleChangeText = useCallback((text: string) => {
+        commentRef.current = text;
         setComment(text);
     }, []);
 
@@ -36,49 +37,121 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
     //     }
     // }, [showMentionSuggestions]);
 
+    const { ndk } = useNDK();
+
+    const reset = useCallback(() => {
+        mentionRefs.current = {};
+        commentRef.current = '';
+        setMentionQuery(null);
+        setComment('');
+        setReplyEvent(null);
+    }, []);
+
     const handleSend = useCallback(async () => {
         const commentEvent = (replyEvent || event).reply();
         commentEvent.content = comment;
+
+        // replace the @ mentions with the nostr:npub1
+        for (const [key, value] of Object.entries(mentionRefs.current)) {
+            try {
+                const pubkey = value.pubkey as string;
+                const user = ndk.getUser({ pubkey });
+                commentEvent.content = commentEvent.content.replace(`@${key}`, `nostr:${user.nprofile}`);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        
         await commentEvent.sign();
         commentEvent.publish();
-        setComment('');
-        setReplyEvent(null);
+        reset();
     }, [event.id, comment, replyEvent]);
+
+    const commentRef = useRef<string>('');
+    const mentionBeginRef = useRef<number>(0);
+
+    const mentionRefs = useRef<{ [key: string]: NDKUserProfile }>({});
+
+    const handleSelectionChange = useCallback((nativeEvent: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
+        const startPos = nativeEvent.nativeEvent.selection.start;
+        const endPos = nativeEvent.nativeEvent.selection.end;
+        
+        // if the selection is 1 char long and the char is @, set the showMentionSuggestions to true
+        if (startPos === endPos) {
+            const text = commentRef.current;
+
+            // get the word at the current position
+            const beforeCursor = text.slice(0, startPos);
+            const words = beforeCursor.split(/\s/);
+            const currentWord = words[words.length - 1];
+
+            mentionBeginRef.current = text.lastIndexOf(currentWord);
+
+            // if the word starts with @, set the showMentionSuggestions to true and set the query to the word
+            if (currentWord.startsWith('@')) {
+                const query = currentWord.slice(1); // Remove the @ symbol
+                setMentionQuery(query);
+            } else {
+                // if it doesnt start with @, set the showMentionSuggestions to false
+                setMentionQuery('');
+            }
+        }
+    }, [setMentionQuery]);
+
+    const handleMentionPress = useCallback((profile: NDKUserProfile) => {
+        let text = commentRef.current;
+        let mention = profile.name?.trim?.();
+        mention ??= profile.nip05?.trim?.();
+        mention ??= profile.pubkey as string;
+        text = text.replace(`@${mentionQuery}`, `@${mention} `);
+        mentionRefs.current[mention] = profile;
+        setMentionQuery(null);
+        setComment(text);
+    }, [mentionQuery, setMentionQuery, setComment]);
+
+    const containerStyle = useMemo(() => {
+        return { paddingBottom: insets.bottom, flex: mentionQuery ? 1 : 0 };
+    }, [insets.bottom, mentionQuery]);
 
     return (
         <BottomSheetView
-            style={[styles.inputContainer, { paddingBottom: insets.bottom }]}
-            className="border-t border-border items-start"
+            style={[styles.container, containerStyle]}
+            className="border-t border-border"
         > 
-            {/* {showMentionSuggestions && <MentionSuggestions query={comment} />} */}
-            {!showMentionSuggestions && (
+            {mentionQuery && <MentionSuggestions query={mentionQuery} onPress={handleMentionPress} />}
+
+            <View style={styles.inputContainer}>
                 <User.Avatar pubkey={currentUser?.pubkey} userProfile={userProfile} imageSize={24} flare={flare} borderWidth={1} canSkipBorder={true} />
-            )}
                 <BottomSheetTextInput
                     style={styles.input}
                     className="text-foreground"
                     value={comment}
                     autoFocus={autoFocus}
                     enablesReturnKeyAutomatically={true}
+                    onSelectionChange={handleSelectionChange}
                     // onKeyPress={handleKeyPress}
                     onChangeText={handleChangeText}
                     onSubmitEditing={handleSend}
                     placeholder="Type a message..."
                     multiline
                     returnKeyType="send"
-                />
-            {!showMentionSuggestions && (
+                ></BottomSheetTextInput>
                 <TouchableOpacity style={styles.sendButton} disabled={!comment.trim()} onPress={handleSend}>
                     <Send size={20} color={colors.foreground} />
                 </TouchableOpacity>
-            )}
+            </View>
         </BottomSheetView>
     )
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'column',
+        padding: 10,
+    },
     inputContainer: {
         flexDirection: 'row',
+        alignItems: 'center',
         paddingTop: 10,
         paddingHorizontal: 10,
       },
