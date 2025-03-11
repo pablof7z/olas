@@ -23,7 +23,7 @@ const Name: React.FC<NameProps> = ({ userProfile, pubkey, flare, skipFlare, ...p
     }
 
     return (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[ props.style, ]} {...props}>{nameToDisplay}</Text>
             <FlareLabel flare={flare} pubkey={pubkey} />
         </View>

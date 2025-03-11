@@ -53,13 +53,19 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
 
     if (file.exists) size = file.size;
 
+    let duration = asset.duration ?? undefined;
+    if (duration) {
+        console.log('changing what is hopefully as duration in ms to seconds', duration, duration / 1000);
+        duration = duration / 1000;
+    }
+
     return {
         id: asset.uri,
         uris: [asset.uri],
         mediaType: imagePickerAssetTypeToPostType(asset.type),
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
-        duration: asset.duration,
+        duration,
         width: asset.width,
         height: asset.height,
     };

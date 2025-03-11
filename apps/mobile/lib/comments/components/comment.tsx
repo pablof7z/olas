@@ -24,10 +24,11 @@ import { Text } from "@/components/nativewindui/Text";
 import React from "@/components/events/React";
 import RelativeTime from "@/components/relative-time";
 import { useUserFlare } from "@/hooks/user-flare";
+import { colorWithOpacity } from "@/theme/colors";
 
 export function Comment({ item, style }: { item: NDKEvent, style?: StyleProp<ViewStyle> }) {
     const { userProfile } = useUserProfile(item.pubkey);
-    const [replyEvent, setReplyEvent] = useAtom<NDKEvent>(replyEventAtom);
+    const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
     const flare = useUserFlare(item.pubkey);
@@ -49,10 +50,16 @@ export function Comment({ item, style }: { item: NDKEvent, style?: StyleProp<Vie
         toast.success('Event ID copied to clipboard');
     }, [item.id]);
 
+    const containerStyle = useMemo<ViewStyle>(() => {
+        const s = [styles.container, style];
+        if (isReplying) s.push({ backgroundColor: colorWithOpacity(colors.primary, 0.1) });
+        return s;
+    }, [style, isReplying]);
+
     return (
-        <View style={[styles.container, style]} className={cn(
+        <View style={containerStyle} className={cn(
             "transition-all duration-300",
-            isReplying && "bg-accent/10"
+            isReplying && "!bg-accent/10"
         )}>
             <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)} style={styles.avatar}>
                 <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={32} flare={flare} borderWidth={1} />

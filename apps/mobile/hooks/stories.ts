@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useObserver } from "./observer";
-import { Hexpubkey, NDKEvent, NDKImage } from "@nostr-dev-kit/ndk-mobile";
+import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo } from "@nostr-dev-kit/ndk-mobile";
 
 type StoryEntry = {
     events: NDKEvent[],
@@ -12,10 +12,10 @@ export function useStories() {
     //     { kinds: [30311] }
     // ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
-    const events = useObserver(
-        [{ kinds: [20], since: twentyFourHoursAgo }],
+    const events = useObserver<NDKImage | NDKVideo>(
+        [{ kinds: [20, NDKKind.ShortVideo], since: twentyFourHoursAgo }],
         // [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
-        { cacheUnconstrainFilter: [] }
+        { wrap: true, cacheUnconstrainFilter: [] }
     )
 
     const [stories, setStories] = useState<Map<Hexpubkey, StoryEntry>>(new Map());
@@ -50,9 +50,11 @@ export function useStories() {
     return stories;
 }
 
-function isStory(event: NDKImage) {
+function isStory(event: NDKImage | NDKVideo) {
     const expiration = event.tagValue('expiration');
-    if (!expiration) return false;
+    const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
+    const videoInPast24Hours = event instanceof NDKVideo && event.created_at! > twentyFourHoursAgo;
+    if (!expiration && !videoInPast24Hours) return false;
 
     const firstImeta = event.imetas?.[0];
     if (!firstImeta) return false;

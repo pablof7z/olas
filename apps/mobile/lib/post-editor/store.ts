@@ -102,11 +102,14 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
 
     publish: async (ndk: NDK, blossomServer: string) => {
         set({ readyToPublish: true });
+        set({ state: 'Preparing' });
+        const media = await prepareMedia(get().media, (type, progress) => {
+            set({ state: type + ' ' + (progress * 100).toFixed(0) + '%' });
+        });
         set({ state: 'uploading' });
-        const media = await prepareMedia(get().media);
         let uploadedMedia: PostMedia[] = [];
         try {
-            uploadedMedia = await uploadMedia(media, ndk, blossomServer);
+            uploadedMedia = await uploadMedia(media, ndk, blossomServer );
         } catch (error) {
             set({ state: 'error', error: error.message });
             return;

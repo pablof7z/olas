@@ -75,6 +75,7 @@
     "expo-status-bar": "~2.0.1",
     "expo-system-ui": "~4.0.8",
     "expo-video": "~2.0.5",
+    "expo-video-thumbnails": "~9.0.3",
     "geohashing": "^2.0.1",
     "jotai": "^2.11.0",
     "lucide-react-native": "^0.459.0",

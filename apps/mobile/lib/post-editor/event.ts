@@ -1,34 +1,86 @@
-import NDK, { NDKEvent, NDKKind, NDKRelaySet, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { imetaTagToTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKRelaySet, NDKTag, NDKVideo, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 import { PostMedia, PostMetadata } from './types';
+
+function generateImageEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKImage {
+    const event = new NDKImage(ndk)
+    const imetas: NDKImetaTag[] = [];
+
+    for (const m of media) {
+        const imeta = mediaToImeta(m);
+        imetas.push(imeta);
+    }
+
+    event.imetas = imetas;
+
+    return event;
+}
+
+function mediaToImeta(media: PostMedia): NDKImetaTag {
+    const imeta: NDKImetaTag = {};
+
+    imeta.url = media.uploadedUri;
+    imeta.image = media.uploadedThumbnailUri;
+    imeta.x = media.uploadedSha256;
+    if (media.uploadedSha256 !== media.localSha256 && media.localSha256) imeta.ox = media.localSha256;
+    imeta.dim = `${media.width}x${media.height}`;
+    imeta.m = media.mimeType;
+    imeta.size = media.size?.toString?.();
+
+    console.log('translated media to imeta', { imeta: JSON.stringify(imeta, null, 4), media: JSON.stringify(media, null, 4) });
+
+    return imeta;
+}
+
+function generateVideoEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKVideo {
+    const event = new NDKVideo(ndk)
+    const imetas: NDKImetaTag[] = [];
+
+    for (const m of media) {
+        const imeta = mediaToImeta(m);
+        imetas.push(imeta);
+        event.duration ??= m.duration;
+        console.log('setting duration to', m.duration);
+    }
+
+    event.imetas = imetas;
+
+    return event;
+}
 
 export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]) {
     if (media.length === 0) return;
 
-    const event = new NDKEvent(ndk, {
-        kind: getKind(metadata, media[0]),
-        content: metadata.caption,
-    } as NostrEvent);
+    let event: NDKImage | NDKVideo;
 
-    if (event.kind === NDKKind.Text) {
-        let kind: NDKKind;
-
-        if (media[0].mediaType === 'image') kind = NDKKind.Image;
-        else if (media[0].contentMode === 'portrait') kind = NDKKind.VerticalVideo;
-        else kind = NDKKind.HorizontalVideo;
-
-        event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
-        event.tags = [['k', kind.toString()]];
+    switch (media[0].mediaType) {
+        case 'image':
+            event = generateImageEvent(ndk, metadata, media);
+            break;
+        case 'video':
+            event = generateVideoEvent(ndk, metadata, media);
+            break;
     }
+
+    event.content = metadata.caption;
+
+    // if (event.kind === NDKKind.Text) {
+    //     let kind: NDKKind;
+
+    //     if (media[0].mediaType === 'image') kind = NDKKind.Image;
+    //     else if (media[0].contentMode === 'portrait') kind = NDKKind.VerticalVideo;
+    //     else kind = NDKKind.HorizontalVideo;
+
+    //     event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
+    //     event.tags = [['k', kind.toString()]];
+    // }
 
     let relaySet: NDKRelaySet | undefined;
     
-    if (metadata.groups) {
+    if (metadata.groups?.[0]?.relayUrls) {
         event.tags.push(['h', metadata.groups[0].groupId, ...metadata.groups[0].relayUrls])
         relaySet = NDKRelaySet.fromRelayUrls(metadata.groups[0].relayUrls, ndk);
     }
-
-    event.tags.push(...media.flatMap(generateImeta));
 
     if (event.kind !== NDKKind.Text) {
         event.alt = `This is a ${media[0].mediaType} published via Olas.\n` + media.map((m) => m.uploadedUri).join('\n');
@@ -49,6 +101,8 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
 
     await event.sign();
 
+    console.log('signed media event', JSON.stringify(event.rawEvent(), null, 4));
+
     return {
         event,
         relaySet
@@ -63,29 +117,4 @@ function getKind(metadata: PostMetadata, media: PostMedia) {
     if (media.contentMode === 'portrait') return NDKKind.VerticalVideo;
 
     return NDKKind.HorizontalVideo;
-}
-
-function generateImeta(media: PostMedia): NDKTag[] {
-    const tags: NDKTag[] = [];
-    const imetaTag: NDKTag = ['imeta'];
-
-    imetaTag.push(['url', media.uploadedUri].join(' '));
-    if (media.sha256 && media.uploadedSha256 !== media.sha256) {
-        imetaTag.push(['ox', media.sha256].join(' '));
-        imetaTag.push(['x', media.uploadedSha256].join(' '));
-    } else if (media.sha256 || media.uploadedSha256) {
-        const sha256 = media.sha256 || media.uploadedSha256;
-        imetaTag.push(['x', sha256].join(' '));
-    }
-    if (media.width && media.height) imetaTag.push(['dim', `${media.width}x${media.height}`].join(' '));
-    if (media.mimeType) imetaTag.push(['m', media.mimeType].join(' '));
-    if (media.blurhash) imetaTag.push(['blurhash', media.blurhash].join(' '));
-    if (media.size) imetaTag.push(['size', media.size.toString()].join(' '));
-
-    tags.push(imetaTag);
-
-    if (media.uploadedSha256) tags.push(['x', media.uploadedSha256]);
-    if (media.mimeType) tags.push(['m', media.mimeType]);
-
-    return tags;
 }

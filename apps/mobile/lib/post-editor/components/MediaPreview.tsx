@@ -20,12 +20,14 @@ export function MediaPreview({
     withEdit = true,
     limit,
     maxWidth,
-    maxHeight
+    maxHeight,
+    forceImage = false
 }: {
     withEdit?: boolean;
     limit?: number;
     maxWidth?: number;
     maxHeight?: number;
+    forceImage?: boolean;
 }) {
     const media = usePostEditorStore(s => s.media);
     const mediaToRender = limit ? media.slice(0, limit) : media;
@@ -81,17 +83,24 @@ export function MediaPreview({
         }
     }, [media, setMedia, setEditingIndex]);
 
+    let mediaUri = mediaToRender[0]?.uris?.[0];
+    let mediaType = mediaToRender[0]?.mediaType;
+    if (mediaType === 'video' && forceImage && mediaToRender[0].localThumbnailUri) {
+        mediaUri = mediaToRender[0].localThumbnailUri;
+        mediaType = 'image';
+    }
+
     return (
         <Container>
             {mediaToRender.map((item, index) => (
                 <View key={item.id} className="flex-1 flex-row items-stretch justify-stretch" style={{ width: maxWidth, height: maxHeight }}>
                     {item.mediaType === 'video' ? (
-                        <VideoAlbumItem uri={item.uris[0]} style={{ flex: 1, width: '100%', height: '100%'}} />
+                        <VideoAlbumItem uri={mediaUri} style={{ flex: 1, width: '100%', height: '100%'}} />
                     ) : (
                         <View style={{...containerStyle}}>
                             <PhotoAlbumItem
                                 key={item.id}
-                                uri={item.uris[0]}
+                                uri={mediaUri}
                                 style={containerStyle}
                                 resizeMode="contain"
                             />

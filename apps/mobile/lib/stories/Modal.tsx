@@ -1,5 +1,5 @@
 import { showStoriesModalAtom, storiesAtom } from "@/lib/stories/store";
-import { NDKImage, NDKImetaTag } from "@nostr-dev-kit/ndk-mobile";
+import { NDKImage, NDKImetaTag, NDKVideo } from "@nostr-dev-kit/ndk-mobile";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { atom } from "jotai";
@@ -67,6 +67,8 @@ const StoryProgress = ({
     const animationStarted = useRef(false);
     const currentAnimation = useRef<any>(null);
 
+    console.log('duration in story progress', duration);
+
     const animatedStyle = useAnimatedStyle(() => ({
         height: 4,
         backgroundColor: "white",
@@ -74,6 +76,7 @@ const StoryProgress = ({
     }));
 
     const startAnimation = useCallback((dur: number) => {
+        console.log('starting animation', dur);
         if (currentAnimation.current) {
             progress.value = progress.value;
             currentAnimation.current = null;
@@ -209,6 +212,11 @@ function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
 function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
     const setLoading = useSetAtom(isLoadingAtom);
     const setDuration = useSetAtom(durationAtom);
+
+    useEffect(() => {
+        console.log('slide video setting loading', imeta.url);
+        setLoading(true);
+    }, [imeta.url]);
     
     const player = useVideoPlayer({
         uri: imeta.url,
@@ -217,8 +225,14 @@ function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
         player.loop = false;
         player.addListener('statusChange', () => {
             if (player.status === 'readyToPlay') {
+                console.log('slide video setting loading false', imeta.url, { duration: player.duration });
+                player.play();
                 setLoading(false);
-                setDuration(player.duration);
+            }
+        });
+        player.addListener('playingChange', (playing) => {
+            if (playing) {
+                setDuration(player.duration * 1000);
             }
         });
     });
@@ -226,6 +240,7 @@ function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
     return (
         <VideoView
             player={player}
+            contentFit="cover"
             style={{ flex: 1 }}
         />
     );
@@ -241,7 +256,7 @@ const Slide = ({
     onClose,
 }: {
     isScrolling: boolean;
-    item: NDKImage;
+    item: NDKImage | NDKVideo;
     index: number;
     active: boolean;
     onNextSlide: () => void;
@@ -281,8 +296,6 @@ const Slide = ({
     );
 
     const [isLongPressed, setIsLongPressed] = useState(false);
-
-    if (!(item instanceof NDKImage)) return null;
 
     const url = item.imetas[activeSlide].url;
 
@@ -364,17 +377,17 @@ const Slide = ({
 const perspective = width;
 const angle = Math.atan(perspective / (width / 2));
 
-const AnimatedFlatList = Animated.createAnimatedComponent<FlatListProps<NDKImage>>(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent<FlatListProps<NDKImage | NDKVideo>>(FlatList);
 
 interface StoryItemProps {
-    item: NDKImage;
+    item: NDKImage | NDKVideo;
     index: number;
     scrollX: SharedValue<number>;
     activeIndex: number;
     storiesLength: number;
     onClose: () => void;
     isScrolling: boolean;
-    flatListRef: React.RefObject<FlatList<NDKImage>>;
+    flatListRef: React.RefObject<FlatList<NDKImage | NDKVideo>>;
 }
 
 const StoryItem = ({
@@ -428,6 +441,8 @@ const StoryItem = ({
             },
         ],
     }));
+
+    console.log('story item', item.id);
 
     return (
         <Animated.View style={animatedStyle}>
@@ -499,12 +514,12 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
             <AnimatedFlatList
                 ref={ref}
                 data={stories}
-                keyExtractor={(item: NDKImage) => item.id}
+                keyExtractor={(item: NDKImage | NDKVideo) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 onScroll={scrollHandler}
                 pagingEnabled
-                renderItem={({ item, index }: { item: NDKImage; index: number }) => (
+                renderItem={({ item, index }: { item: NDKImage | NDKVideo; index: number }) => (
                     <StoryItem
                         item={item}
                         index={index}

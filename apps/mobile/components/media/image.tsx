@@ -1,7 +1,7 @@
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Image, useImage } from 'expo-image';
 import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { type MediaDimensions } from "./types";
 
 /**
@@ -57,12 +57,13 @@ export default function ImageComponent({
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
-    const useImgProxy = !dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000) || forceProxy;
+    const [useImgProxy, setUseImgProxy] = useState(!dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000) || forceProxy);
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
 
-    const sizeForProxy = forceDimensions?.width || maxDimensions?.width;
+    const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
 
-    const pUri = useImgProxy ? getProxiedImageUrl(url, sizeForProxy) : url;
+    let pUri = useImgProxy ? getProxiedImageUrl(url, sizeForProxy) : url;
+    pUri = url;
     const renderDimensions = forceDimensions || knownImageDimensions[url];
 
     // if we know the image dimensions but not the render, calculate
@@ -72,7 +73,6 @@ export default function ImageComponent({
 
     // Calculate dimensions only once
     const finalDimensions = useMemo(() => {
-        let resDim: MediaDimensions;
         if (dimensions && !renderDimensions) {
             return calcDimensions(dimensions, maxDimensions);
         }
@@ -90,7 +90,7 @@ export default function ImageComponent({
 
         return res.join('.');
     }, [url, sizeForProxy, useImgProxy]);
-    
+
     const imageSource = useImage({
         uri: pUri,
         cacheKey,
@@ -116,7 +116,7 @@ export default function ImageComponent({
                 placeholder={blurhashObj}
                 placeholderContentFit={contentFit}
                 priority={priority}
-                cachePolicy="disk"
+                cachePolicy="memory-disk"
                 source={imageSource}
                 contentFit={contentFit}
                 recyclingKey={url}
@@ -124,7 +124,10 @@ export default function ImageComponent({
                     console.log('onLoadStart', cacheKey)
                 }}
                 onError={(e) => {
-                    console.log('Image loading error', cacheKey, e)
+                    console.log('Image loading error', {cacheKey, url}, e)
+                    if (useImgProxy) {
+                        setUseImgProxy(false);
+                    }
                 }}
                 onLoadEnd={() => {
                     // console.log('onLoadEnd', cacheKey)

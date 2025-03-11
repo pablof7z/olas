@@ -19,10 +19,16 @@ export type PostMedia = {
     uris: string[];
 
     // Finalized metadata
-    sha256?: string;
+    localUri?: string;
+    localSha256?: string;
+
+    localThumbnailUri?: string;
+    localThumbnailSha256?: string;
     uploadedUri?: string;
+    uploadedThumbnailUri?: string;
     uploadedSha256?: string;
     blurhash?: string;
+    
     contentMode: 'portrait' | 'landscape' | 'square';
     duration?: number;
     size?: number;
@@ -41,4 +47,4 @@ export type PostMetadata = {
     groups?: GroupEntry[];
 };
 
-export type PostState = "editing" | "uploading" | "uploaded" | "publishing" | "error";
+export type PostState = "editing" | "uploading" | "uploaded" | "publishing" | "error" | string;

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Olas",
     "slug": "snapstr",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "scheme": "olas",
     "jsEngine": "hermes",
     "plugins": [
@@ -26,8 +26,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Threads to access your camera",
-          "microphonePermission": "Allow Threads to access your microphone",
+          "cameraPermission": "Allow Olas to access your camera",
+          "microphonePermission": "Allow Olas to access your microphone",
           "recordAudioAndroid": true
         }
       ],
