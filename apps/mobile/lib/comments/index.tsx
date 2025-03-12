@@ -1,24 +1,25 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { KeyboardAvoidingView, Platform, View, TouchableWithoutFeedback, Keyboard, StyleSheet, Text } from 'react-native';
-import { NDKEvent, useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import React from '@/components/events/React';
 import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { replyEventAtom, rootEventAtom, showMentionSuggestionsAtom } from './store';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { replyEventAtom, rootEventAtom } from './store';
 import { Comment } from './components/comment';
 import { Thread } from './components/thread';
 import NewComment from './components/new-comment';
 import { BottomSheetFlashList, BottomSheetView } from '@gorhom/bottom-sheet';
 
 export default function Comments() {
-    const rootEvent = useAtomValue<NDKEvent>(rootEventAtom);
+    const rootEvent = useAtomValue(rootEventAtom);
 
-    const { events } = useSubscribe([
+    const { events } = useSubscribe( rootEvent ? [
         { kinds: [NDKKind.Text, NDKKind.GenericReply], ...rootEvent.filter() },
         { kinds: [NDKKind.GenericReply], ...rootEvent.nip22Filter() },
-    ], { groupable: false, closeOnEose: false, subId: 'comments' }, [ rootEvent.id]);
+    ] : false, { groupable: false, closeOnEose: false, subId: 'comments' }, [ rootEvent?.id ]);
 
     const filteredComments = useMemo(() => {
+        if (!rootEvent) return [];
         const [tagKey, tagValue] = rootEvent.tagReference();
         return [
             rootEvent,
@@ -42,13 +43,13 @@ export default function Comments() {
                 <BottomSheetFlashList
                     data={filteredComments}
                     renderItem={({ item }) => {
-                        if (item.id === rootEvent.id) return <Comment item={item} />
+                        if (item.id === rootEvent?.id) return <Comment item={item} />
                         return <Thread event={item} indentLevel={0} isRoot={true} />
                     }}
                     estimatedItemSize={50}
                     keyExtractor={(item) => item.id}
                 />
-                    {currentUser && <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />}
+                    {currentUser && rootEvent && <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />}
                 </BottomSheetView>
         </View>
     );

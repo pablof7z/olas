@@ -68,11 +68,11 @@ export function Comment({ item, style }: { item: NDKEvent, style?: StyleProp<Vie
             <View className="flex-col flex-1">
                 <View className="flex-row items-center gap-1">
                     <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-semibold text-foreground" />
-                    <RelativeTime timestamp={item.created_at} className="text-xs text-muted-foreground" />
+                    <RelativeTime timestamp={item.created_at!} className="text-xs text-muted-foreground" />
                 </View>
 
                 <Pressable onPress={onReplyPress} onLongPress={copyEventId}>
-                    <EventContent event={item} className="text-sm text-foreground pb-2" />
+                    <EventContent event={item} style={{ color: colors.foreground, paddingBottom: 8, fontSize: 13 }} />
                     <Text className="text-xs text-muted-foreground">Reply</Text>
                 </Pressable>
             </View>

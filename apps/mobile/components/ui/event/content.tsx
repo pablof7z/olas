@@ -23,7 +23,7 @@ function RenderEmoji({ shortcode, event, fontSize }: { shortcode: string; event?
     const emojiTag = event.tags.find(tag => tag[0] === 'emoji' && tag[1] === shortcode);
     if (!emojiTag || !emojiTag[2]) return <Text style={{ fontSize }}>:{shortcode}:</Text>;
     
-    const emojiSize = fontSize ? fontSize * 1.2 : 20; // Make emoji slightly larger than text
+    const emojiSize = fontSize || 14;
     
     return (
         <Image
@@ -137,7 +137,7 @@ function RenderPart({
         return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress || defaultHashtagPress} fontSize={fontSize} />;
     }
 
-    return <Text style={style} {...props}>{part}</Text>;
+    return <Text style={{...style, fontSize}} {...props}>{part}</Text>;
 }
 
 const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Text>> = ({ event, numberOfLines, content, style, ...props }: EventContentProps & React.ComponentProps<typeof Text>) => {
