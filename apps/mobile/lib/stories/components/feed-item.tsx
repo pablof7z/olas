@@ -11,6 +11,7 @@ import { storiesAtom, showStoriesModalAtom } from "../store";
 import { useUserFlare } from "@/hooks/user-flare";
 import { useCallback } from "react";
 import { usePostEditorStore } from "@/lib/post-editor/store";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 const AVATAR_SIZE = 80;
 
@@ -18,7 +19,7 @@ function StoryPrompt() {
     const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const setPostMetadata = usePostEditorStore((s) => s.setMetadata);
-    const { openPickerIfEmpty } = usePostEditorStore();
+    const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
         openPickerIfEmpty();
@@ -35,7 +36,7 @@ function StoryPrompt() {
     >
         <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}>
             <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} borderWidth={3} />
-            <Text style={styles.name}>Your story</Text>
+            <Text style={[styles.name, { color: colors.foreground }]}>Your story</Text>
         </Pressable>
     </Animated.View>
 }
@@ -93,7 +94,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
     const setActiveEvent = useSetAtom(activeEventAtom);
 
     const setShowStoriesModal = useSetAtom(showStoriesModalAtom);
-
+    const { colors } = useColorScheme();
     if (userProfile?.name === 'deleted-account') return null;
 
     return (
@@ -113,7 +114,7 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                 }
             }}>
                 <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} flare={live ? 'live' : flare} includeFlareLabel={false} borderWidth={3} />
-                <Text style={styles.name}>{userProfile?.name}</Text>
+                <Text style={[styles.name, { color: colors.foreground }]}>{userProfile?.name}</Text>
             </Pressable>
         </Animated.View>
     );
