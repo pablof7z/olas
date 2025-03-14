@@ -1,0 +1,33 @@
+appId: com.pablof7z.snapstr
+---
+- runFlow: ../common/wait_for_app_launch.yaml
+
+# Navigate to Search screen
+- tapOn:
+    id: "search-tab"
+    fallback:
+      - tapOn: "Search"
+- assertVisible: "Search"
+- takeScreenshot: search-screen-initial
+
+# Perform search
+- tapOn:
+    id: "search-input"
+    fallback:
+      - tapOn:
+          text: "Search"
+          type: "EditText"
+
+# Enter search query
+- inputText: "test"
+- pressKey: "Enter"
+- assertVisible: "test" # Assuming the search term is visible in results
+- takeScreenshot: search-results
+
+# Clear search and verify
+- tapOn:
+    id: "clear-search"
+    fallback:
+      - tapOn: "✕" # Common clear search icon
+- assertNotVisible: "test" # Verify results are cleared
+- takeScreenshot: search-cleared 

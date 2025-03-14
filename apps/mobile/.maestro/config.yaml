@@ -1,0 +1,13 @@
+name: Olas Mobile App Tests
+description: End-to-end tests for Olas mobile app
+
+appId:
+    android: com.pablof7z.snapstr
+    ios: com.pablof7z.snapstr
+
+config:
+    screenshotsPath: "./.maestro/screenshots"
+    reportPath: "./.maestro/report"
+    deviceCapabilities:
+        - "SCREENSHOTS"
+        - "VIDEO" 

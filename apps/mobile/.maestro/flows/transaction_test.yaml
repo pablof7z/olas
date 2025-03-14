@@ -1,0 +1,50 @@
+appId: com.pablof7z.snapstr
+---
+- runFlow: ../common/wait_for_app_launch.yaml
+
+# Test Send Flow (assuming there's a way to navigate to Send screen)
+- tapOn:
+    id: "wallet-tab"
+    fallback:
+      - tapOn: "Wallet"
+      - tapOn: "Send"
+- assertVisible: "Send"
+- takeScreenshot: send-screen-initial
+
+# Assuming there might be form fields for sending
+- scrollUntilVisible:
+    element:
+      id: "amount-input"
+      fallback:
+        text: "Amount"
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: "amount-input"
+    fallback:
+      text: "Amount"
+- inputText: "100"
+- takeScreenshot: send-amount-entered
+
+# Cancel the send operation (to avoid actual transactions during testing)
+- tapOn:
+    id: "cancel-button"
+    fallback:
+      - tapOn: "Cancel"
+      - tapOn: "Back"
+
+# Test Receive Flow
+- tapOn:
+    id: "receive-tab"
+    fallback:
+      - tapOn: "Receive"
+- assertVisible: "Receive"
+- takeScreenshot: receive-screen
+
+# Verify QR code is displayed (assumes there's a QR code on receive screen)
+- assertVisible:
+    id: "qr-code"
+    fallback:
+      - assertVisible:
+          type: "Image"
+- takeScreenshot: receive-qr-code 

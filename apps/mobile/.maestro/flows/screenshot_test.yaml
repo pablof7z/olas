@@ -1,0 +1,6 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: app-initial-screen 

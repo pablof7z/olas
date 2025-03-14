@@ -1,0 +1,21 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Navigate to Profile - try text first, then try by id if needed
+- tapOn: "Profile"
+- takeScreenshot: profile-screen
+
+# Navigate to Search
+- tapOn: "Search"
+- takeScreenshot: search-screen
+
+# Navigate to Notifications
+- tapOn: "Notifications"
+- takeScreenshot: notifications-screen
+
+# Return to Home/Everything
+- tapOn: "Everything"
+- takeScreenshot: home-screen 

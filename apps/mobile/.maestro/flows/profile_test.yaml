@@ -1,0 +1,37 @@
+appId: com.pablof7z.snapstr
+---
+- runFlow: ../common/wait_for_app_launch.yaml
+
+# Navigate to Profile screen
+- tapOn:
+    id: "profile-tab"
+    fallback:
+      - tapOn: "Profile"
+- assertVisible: "Profile"
+- takeScreenshot: profile-screen-initial
+
+# Test profile sections - assuming these exist based on profile.tsx
+# These would need adjustment based on actual UI elements
+- scrollUntilVisible:
+    element:
+      text: "Posts"
+    direction: DOWN
+    timeout: 5000
+- tapOn: "Posts"
+- takeScreenshot: profile-posts
+
+- scrollUntilVisible:
+    element:
+      text: "Replies"
+    direction: DOWN
+    timeout: 5000
+- tapOn: "Replies"
+- takeScreenshot: profile-replies
+
+- scrollUntilVisible:
+    element: 
+      text: "Media"
+    direction: DOWN
+    timeout: 5000
+- tapOn: "Media"
+- takeScreenshot: profile-media 
