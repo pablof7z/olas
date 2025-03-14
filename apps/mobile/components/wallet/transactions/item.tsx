@@ -165,13 +165,15 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
 
     const eTag = useMemo(() => walletChange?.getMatchingTags('e', 'redeemed')[0], [walletChange?.id]);
 
-    const nutzapCounterpart = useMemo(() => {
+    const nutzapCounterparts = useMemo(() => {
         if (!walletChange) return null;
         if (walletChange.direction === 'out') {
-            return walletChange.tagValue('p');
+            return [walletChange.tagValue('p')];
         } else if (walletChange.direction === 'in') {
-            const eTag = walletChange.getMatchingTags('e', 'redeemed')[0];
-            return eTag ? (nutzap?.pubkey ?? eTag[4]) : null;
+            const eTags = walletChange.getMatchingTags('e', 'redeemed');
+            const pubkeys = eTags.map((eTag) => eTag[4]);
+
+            return pubkeys.length > 0 ? Array.from(new Set(pubkeys)) : null;
         }
     }, [walletChange?.id]);
 
@@ -195,6 +197,10 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
         }
     }, [eTag, ndk]);
 
+    const handleLongPress = () => {
+        console.log('long press', JSON.stringify(walletChange?.rawEvent(), null, 4));
+    }
+
     if (!walletChange) return <></>
     if (walletChange.amount < 0) return <Text>invalid item {item.id}</Text>;
 
@@ -203,19 +209,24 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
             <ListItem
                 className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 target={target}
-                leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterpart} />}
+                leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterparts?.[0]} />}
                 item={{
                     id: item.id,
+                    title: nutzapCounterparts && nutzapCounterparts.length > 1 ? `${nutzapCounterparts.length} zappers` : undefined
                 }}
                 titleClassName="font-bold"
                 rightView={<ItemRightColumn mint={walletChange.mint} amount={walletChange.amount} unit={walletChange.unit} isPending={false} />}
                 index={index}
                 onPress={onPress}
+                onLongPress={handleLongPress}
             >
-                {nutzapCounterpart && (
-                    <Counterparty pubkey={nutzapCounterpart} timestamp={item.created_at}>
+                {nutzapCounterparts && nutzapCounterparts.length === 1 && (
+                    <Counterparty pubkey={nutzapCounterparts[0]} timestamp={item.created_at}>
                         <Text className="text-sm text-muted-foreground">{walletChange.description}</Text>
                     </Counterparty>
+                )}
+                {nutzapCounterparts && nutzapCounterparts.length > 1 && (
+                    <Text className="text-sm text-muted-foreground">{walletChange.description}</Text>
                 )}
             </ListItem>  
         </Animated.View>

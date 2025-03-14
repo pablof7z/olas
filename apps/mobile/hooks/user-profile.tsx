@@ -1,6 +1,6 @@
-import {SQLiteDatabase} from "expo-sqlite";
+import { SQLiteDatabase } from "expo-sqlite";
 import { useEffect } from "react";
-import NDK, { NDKCacheAdapterSqlite, NDKSqliteProfileRecord, NDKUserProfile, useNDK } from "@nostr-dev-kit/ndk-mobile";
+import NDK, { NDKSqliteProfileRecord, NDKUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { create } from "zustand";
 import { getAllPubkeyFlares } from "@/stores/db/pubkeyFlare";
 import { db } from "@/stores/db";

@@ -21,7 +21,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { NDKKind, NDKList } from '@nostr-dev-kit/ndk-mobile';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
 import { useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
@@ -34,8 +34,7 @@ import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { COMMUNITIES_ENABLED, DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import NutzapMonitor from '@/components/cashu/nutzap-monitor';
-import { useWalletMonitor } from '@/hooks/wallet';
+import { useNutzapMonitor, useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
 import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
@@ -50,7 +49,7 @@ import { useAppSub } from '@/hooks/app-sub';
 
 // LogBox.ignoreAllLogs();
 
-const currentUserInSettings = SecureStore.getItem('currentUser');
+const currentUserInSettings = SecureStore.getItem('currentUser') ?? undefined;
 const ndk = initializeNDK(currentUserInSettings);
 
 const sessionKinds = new Map([
@@ -105,7 +104,7 @@ export default function RootLayout() {
                     feedType = { kind: 'discover', value: storedFeed };
                 }
 
-                if (feedType.kind as string === 'hashtag') {
+                if (feedType.kind as string === 'hashtag' && feedType.value) {
                     feedType.hashtags = [feedType.value.slice(1, 999)];
                 }
             }
@@ -199,6 +198,7 @@ export default function RootLayout() {
     }, []);
 
     useWalletMonitor();
+    useNutzapMonitor();
 
     return (
         <>
@@ -206,7 +206,6 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
                     <LoaderScreen appReady={appReady} wotReady={true}>
-                        <NutzapMonitor />
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <ActionSheetProvider>
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -236,6 +235,7 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="view" />
                                         <Stack.Screen name="eula" options={modalPresentation()} />
+                                        <Stack.Screen name="everything" />
 
                                         <Stack.Screen name="stories" options={{ headerShown: false, }} />
                                         <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }}

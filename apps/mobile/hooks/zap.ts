@@ -35,8 +35,8 @@ export const useZap = () => {
                 return;
             }
 
-            const balance = activeWallet.balance();
-            const balanceInSats = balance.amount;
+            const balance = activeWallet.balance;
+            const balanceInSats = balance?.amount ?? 0;
             if (balanceInSats < sats) {
                 toast.error("You don't have enough balance to zap.");
                 return;

@@ -33,8 +33,7 @@ export default function WalletsScreen() {
     const nip60Wallet = useNip60Wallet();
     
     const [primalSupported, setPrimalSupported] = useState(false);
-    const [albySupported, setAlbySupported] = useState(true);
-    const [nwcSupported, setNwcSupported] = useState(false);
+    const [albySupported, setAlbySupported] = useState(false);
 
     useEffect(() => {
         Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
@@ -43,7 +42,7 @@ export default function WalletsScreen() {
             setPrimalSupported(false);
         });
 
-        Linking.canOpenURL('nostrnwc://').then((supported) => {
+        Linking.canOpenURL('nostrnwc+alby://').then((supported) => {
             setAlbySupported(supported);
         }).catch((e) => {
             setAlbySupported(false);
@@ -114,7 +113,7 @@ export default function WalletsScreen() {
                     leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
                     subTitle: `Alby Wallet`,
                     onPress: () => {
-                        Linking.openURL('nostrnwc://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                        Linking.openURL('nostrnwc+alby://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
                     },
                 });
             }

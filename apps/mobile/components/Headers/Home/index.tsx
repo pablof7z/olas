@@ -12,10 +12,10 @@ import { useAtomValue } from "jotai";
 import { FadeOut } from "react-native-reanimated";
 import { scrollDirAtom } from "@/components/Feed/store";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { Search, X } from "lucide-react-native";
+import { Search, Sun, X } from "lucide-react-native";
 import { searchQueryAtom, useSearchQuery } from "./store";
 import { searchInputRefAtom } from "@/components/FeedType/store";
-
+import { router } from "expo-router";
 export default function HomeHeader() {
     const insets = useSafeAreaInsets();
     const [showZap, setShowZap] = useState(false);
@@ -89,14 +89,17 @@ export default function HomeHeader() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Feed />
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <Pressable style={styles.searchButton} onPress={toggleSearch}>
-                            {showSearchInput ? (
-                                <X size={24} color={colors.foreground} />
-                            ) : (
-                                <Search size={24} color={colors.foreground} />
-                            )}
-                        </Pressable>
+                            <Pressable style={styles.searchButton} onPress={toggleSearch}>
+                                {showSearchInput ? (
+                                    <X size={24} color={colors.foreground} />
+                                ) : (
+                                    <Search size={24} color={colors.foreground} />
+                                )}
+                            </Pressable>
                             <NotificationsButton />
+                            <Pressable onPress={() => router.push('/everything')}>
+                                <Sun size={24} color={colors.foreground} />
+                            </Pressable>
                         </View>
                     </View>
                 </Animated.View>

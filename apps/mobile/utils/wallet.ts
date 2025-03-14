@@ -12,6 +12,7 @@ export async function createNip60Wallet(ndk: NDK) {
     wallet.mints = ['https://mint.coinos.io', 'https://stablenut.umint.cash', 'https://mint.minibits.cash/Bitcoin'];
     await wallet.getP2pk();
     await wallet.publish();
+    wallet.backup();
     const mintList = new NDKCashuMintList(ndk);
     mintList.mints = wallet.mints;
     mintList.p2pk = wallet.p2pk;
