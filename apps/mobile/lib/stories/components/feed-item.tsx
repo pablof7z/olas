@@ -114,7 +114,11 @@ function StoryEntry({ events, live }: { events: NDKEvent[], live: boolean }) {
                 }
             }}>
                 <UserAvatar pubkey={pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} flare={live ? 'live' : flare} includeFlareLabel={false} borderWidth={3} />
-                <Text style={[styles.name, { color: colors.foreground }]}>{userProfile?.name}</Text>
+                <Text 
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[styles.name, { color: colors.foreground }]}
+                >{userProfile?.name}</Text>
             </Pressable>
         </Animated.View>
     );
@@ -128,5 +132,7 @@ const styles = StyleSheet.create({
     name: {
         fontSize: 12,
         marginTop: 3,
+        maxWidth: AVATAR_SIZE,
+        textAlign: 'center'
     }
 })
