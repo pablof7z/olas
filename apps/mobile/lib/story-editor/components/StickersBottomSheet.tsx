@@ -11,6 +11,7 @@ import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
 import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useColorScheme } from '@/lib/useColorScheme';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface StickerOptionProps {
     name: string;
@@ -37,7 +38,7 @@ function StickerOption({ name, icon, onPress, description }: StickerOptionProps)
     );
 }
 
-type StickerSelectionMode = 'options' | 'mention' | 'event';
+type StickerSelectionMode = 'options' | 'mention' | 'event' | 'countdown';
 
 interface EventItem {
     id: string;
@@ -50,13 +51,19 @@ export default function StickersBottomSheet() {
     const sheetRef = useSheetRef();
     const setBottomSheetRef = useSetAtom(stickersSheetRefAtom);
     const insets = useSafeAreaInsets();
-    const { addMentionSticker, addNostrEventSticker } = useStickers();
+    const { addMentionSticker, addNostrEventSticker, addCountdownSticker } = useStickers();
     const [mode, setMode] = useState<StickerSelectionMode>('options');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     
     // Replace events array with a single event ID input
     const [eventIdInput, setEventIdInput] = useState('');
+    
+    // Countdown sticker state
+    const [countdownName, setCountdownName] = useState('');
+    const [countdownDate, setCountdownDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     useEffect(() => {
         setBottomSheetRef(sheetRef);
@@ -72,10 +79,17 @@ export default function StickersBottomSheet() {
         setEventIdInput('');
     };
     
+    const handleCountdownSelect = () => {
+        setMode('countdown');
+        setCountdownName('');
+        setCountdownDate(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Default to tomorrow
+    };
+    
     const handleBackToOptions = () => {
         setMode('options');
         setSearchQuery('');
         setEventIdInput('');
+        setCountdownName('');
     };
     
     const handleSearch = (text: string) => {
@@ -113,6 +127,38 @@ export default function StickersBottomSheet() {
         }
     };
 
+    const handleAddCountdownSticker = () => {
+        if (countdownName.trim()) {
+            addCountdownSticker(countdownName, countdownDate);
+            sheetRef.current?.dismiss();
+            setMode('options');
+        }
+    };
+    
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        const currentDate = selectedDate || countdownDate;
+        setShowDatePicker(false);
+        
+        // Preserve the time from the current countdownDate
+        const newDate = new Date(currentDate);
+        newDate.setHours(countdownDate.getHours());
+        newDate.setMinutes(countdownDate.getMinutes());
+        
+        setCountdownDate(newDate);
+    };
+    
+    const onTimeChange = (event: any, selectedTime?: Date) => {
+        const currentTime = selectedTime || countdownDate;
+        setShowTimePicker(false);
+        
+        // Preserve the date but update the time
+        const newDate = new Date(countdownDate);
+        newDate.setHours(currentTime.getHours());
+        newDate.setMinutes(currentTime.getMinutes());
+        
+        setCountdownDate(newDate);
+    };
+
     const renderOptions = () => (
         <>
             <View style={styles.headerContainer}>
@@ -136,6 +182,12 @@ export default function StickersBottomSheet() {
                     icon="document-text" 
                     onPress={handleEventSelect}
                     description="Link to a Nostr post or note"
+                />
+                <StickerOption 
+                    name="Countdown" 
+                    icon="timer-outline" 
+                    onPress={handleCountdownSelect}
+                    description="Add a countdown timer to your story"
                 />
             </View>
         </>
@@ -222,6 +274,73 @@ export default function StickersBottomSheet() {
         </View>
     );
     
+    const renderCountdownSetup = () => (
+        <View style={styles.countdownContainer}>
+            <Text style={styles.eventInputLabel}>Countdown Name:</Text>
+            <TextInput
+                style={[styles.eventInput, { color: colors.foreground }]}
+                placeholder="Enter name for countdown"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={countdownName}
+                onChangeText={setCountdownName}
+                autoFocus
+                autoCapitalize="sentences"
+            />
+            
+            <Text style={[styles.eventInputLabel, { marginTop: 16 }]}>End Date:</Text>
+            <TouchableOpacity 
+                style={styles.datePickerButton}
+                onPress={() => setShowDatePicker(true)}
+            >
+                <Text style={styles.datePickerText}>
+                    {countdownDate.toLocaleDateString()}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color="white" />
+            </TouchableOpacity>
+            
+            {showDatePicker && (
+                <DateTimePicker
+                    value={countdownDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                    minimumDate={new Date()}
+                />
+            )}
+            
+            <Text style={[styles.eventInputLabel, { marginTop: 16 }]}>End Time:</Text>
+            <TouchableOpacity 
+                style={styles.datePickerButton}
+                onPress={() => setShowTimePicker(true)}
+            >
+                <Text style={styles.datePickerText}>
+                    {countdownDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+                <Ionicons name="time-outline" size={20} color="white" />
+            </TouchableOpacity>
+            
+            {showTimePicker && (
+                <DateTimePicker
+                    value={countdownDate}
+                    mode="time"
+                    display="default"
+                    onChange={onTimeChange}
+                />
+            )}
+            
+            <TouchableOpacity 
+                style={[
+                    styles.addEventButton,
+                    { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 }
+                ]}
+                onPress={handleAddCountdownSticker}
+                disabled={!countdownName.trim()}
+            >
+                <Text style={styles.addEventButtonText}>Add Countdown</Text>
+            </TouchableOpacity>
+        </View>
+    );
+    
     const getSnapPoints = () => {
         if (mode === 'options') return ['45%'];
         return ['75%'];
@@ -246,6 +365,12 @@ export default function StickersBottomSheet() {
                     <>
                         {renderSearchHeader('Enter Event ID')}
                         {renderEventList()}
+                    </>
+                )}
+                {mode === 'countdown' && (
+                    <>
+                        {renderSearchHeader('Create Countdown')}
+                        {renderCountdownSetup()}
                     </>
                 )}
             </BottomSheetView>
@@ -373,5 +498,20 @@ const styles = StyleSheet.create({
     },
     loader: {
         marginTop: 20,
+    },
+    countdownContainer: {
+        padding: 16,
+    },
+    datePickerButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 8,
+        padding: 12,
+    },
+    datePickerText: {
+        color: 'white',
+        fontSize: 16,
     },
 }); 

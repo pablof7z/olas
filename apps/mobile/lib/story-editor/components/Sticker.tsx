@@ -24,7 +24,7 @@ import {
 import {
     DancingScript_700Bold,
 } from '@expo-google-fonts/dancing-script';
-import { MentionSticker, NostrEventSticker, TextSticker } from './sticker-types';
+import { MentionSticker, NostrEventSticker, TextSticker, CountdownSticker } from './sticker-types';
 
 interface StickerProps {
     sticker: StickerType;
@@ -194,6 +194,8 @@ export default function Sticker({
                 return <MentionSticker sticker={sticker} textStyle={textStyle} />;
             case 'nostrEvent':
                 return <NostrEventSticker sticker={sticker} textStyle={textStyle} />;
+            case 'countdown':
+                return <CountdownSticker sticker={sticker} textStyle={textStyle} />;
             case 'text':
             default:
                 return <TextSticker sticker={sticker} textStyle={textStyle} />;

@@ -7,7 +7,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface Sticker {
     id: string;
-    type: 'text' | 'mention' | 'nostrEvent';
+    type: 'text' | 'mention' | 'nostrEvent' | 'countdown';
     content: string;
     styleId: string;
     transform: {
@@ -19,6 +19,7 @@ export interface Sticker {
     metadata?: {
         profile?: NDKUserProfile;
         eventId?: string;
+        endTime?: Date;
     };
 }
 
@@ -27,6 +28,7 @@ interface StickerContextType {
     addTextSticker: (text: string) => string;
     addMentionSticker: (profile: NDKUserProfile) => string;
     addNostrEventSticker: (eventId: string, title: string) => string;
+    addCountdownSticker: (name: string, endTime: Date) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
     updateStickerStyle: (id: string, styleId: string) => void;
     removeSticker: (id: string) => void;
@@ -98,6 +100,27 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
         return id;
     };
 
+    const addCountdownSticker = (name: string, endTime: Date) => {
+        const id = Math.random().toString();
+        const newSticker: Sticker = {
+            id,
+            type: 'countdown',
+            content: name || 'Countdown',
+            styleId: 'neon-glow',
+            transform: {
+                translateX: SCREEN_WIDTH / 2 - 50,
+                translateY: SCREEN_HEIGHT / 2 - 50,
+                scale: 1,
+                rotate: 0,
+            },
+            metadata: {
+                endTime,
+            },
+        };
+        setStickers(prev => [...prev, newSticker]);
+        return id;
+    };
+
     const updateSticker = (id: string, transform: Sticker['transform']) => {
         setStickers(prev =>
             prev.map(sticker =>
@@ -129,6 +152,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
                 addTextSticker,
                 addMentionSticker,
                 addNostrEventSticker,
+                addCountdownSticker,
                 updateSticker,
                 updateStickerStyle,
                 removeSticker,
