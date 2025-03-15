@@ -24,6 +24,12 @@ import {
     Gesture,
     TouchableOpacity,
 } from 'react-native-gesture-handler';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    runOnJS,
+    withSpring,
+} from 'react-native-reanimated';
 import StoryTextInput from './StoryTextInput';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -41,30 +47,37 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
     const font = useFont(require('../../../assets/fonts/InterVariable.ttf'), 48);
     const [storyText, setStoryText] = useState("Hello world");
     const [isEditingText, setIsEditingText] = useState(false);
-    const [textPosition, setTextPosition] = useState<Vector>(vec(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
-    const [isDragging, setIsDragging] = useState(false);
+    
+    // Use shared values for gesture handling
+    const textX = useSharedValue(SCREEN_WIDTH / 2);
+    const textY = useSharedValue(SCREEN_HEIGHT / 2);
+    const isDragging = useSharedValue(false);
     
     // Load image for Skia
     const image = useImage(path);
 
+    const updateTextPosition = (x: number, y: number) => {
+        textX.value = x;
+        textY.value = y;
+    };
+
     const panGesture = Gesture.Pan()
         .onBegin(() => {
-            setIsDragging(true);
+            isDragging.value = true;
         })
         .onChange((event) => {
-            setTextPosition(prev => vec(
-                prev.x + event.changeX,
-                prev.y + event.changeY
-            ));
+            textX.value += event.changeX;
+            textY.value += event.changeY;
+            runOnJS(updateTextPosition)(textX.value, textY.value);
         })
         .onFinalize(() => {
-            setIsDragging(false);
+            isDragging.value = false;
         });
 
     const tapGesture = Gesture.Tap()
         .onEnd(() => {
-            if (!isDragging) {
-                setIsEditingText(true);
+            if (!isDragging.value) {
+                runOnJS(setIsEditingText)(true);
             }
         });
 
@@ -123,8 +136,8 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                             </RoundedRect>
                             {font && (
                                 <Text
-                                    x={textPosition.x - (font.getTextWidth(storyText) / 2)}
-                                    y={textPosition.y}
+                                    x={textX.value - (font.getTextWidth(storyText) / 2)}
+                                    y={textY.value}
                                     text={storyText}
                                     font={font}
                                     color="white"
@@ -134,7 +147,7 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                     )}
                 </Canvas>
                 <GestureDetector gesture={gesture}>
-                    <View style={styles.textOverlay} />
+                    <Animated.View style={styles.textOverlay} />
                 </GestureDetector>
             </View>
 
