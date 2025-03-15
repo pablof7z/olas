@@ -165,6 +165,7 @@ export default function Sticker({
     // Animated style for transformations
     const animatedStyle = useAnimatedStyle(() => {
         return {
+            position: 'absolute',
             transform: [
                 { translateX: translateX.value },
                 { translateY: translateY.value },
@@ -172,7 +173,7 @@ export default function Sticker({
                 { rotate: `${rotate.value}rad` },
             ],
             padding: isSelected ? 10 : 0,
-            ...currentStyle.style.container,
+            ...(currentStyle.style.container || {}),
         };
     });
 
@@ -181,8 +182,8 @@ export default function Sticker({
     }
 
     const textStyle = {
-        ...styles.text,
-        ...currentStyle.style.text,
+        fontSize: 32,
+        ...(currentStyle.style.text || {}),
         ...(currentStyle.fontFamily ? { fontFamily: currentStyle.fontFamily } : {}),
     };
 
@@ -194,7 +195,7 @@ export default function Sticker({
 
     return (
         <GestureDetector gesture={gesture}>
-            <Animated.View style={[styles.container, animatedStyle]}>
+            <Animated.View style={animatedStyle}>
                 {currentStyle.style.gradient ? (
                     <LinearGradient
                         colors={currentStyle.style.gradient.colors}
@@ -207,13 +208,4 @@ export default function Sticker({
             </Animated.View>
         </GestureDetector>
     );
-}
-
-const styles = StyleSheet.create({
-    container: {
-        position: 'absolute',
-    },
-    text: {
-        fontSize: 32,
-    },
-}); 
+} 
