@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Image as RNImage } from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { VideoView } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as MediaLibrary from 'expo-media-library';
 import {
     Canvas,
     Image as SkiaImage,
@@ -11,26 +10,11 @@ import {
     Fill,
     Group,
     RoundedRect,
-    Skia,
     useCanvasRef,
-    Text,
-    useFont,
-    vec,
-    type Vector,
 } from '@shopify/react-native-skia';
-import { Platform } from 'react-native';
-import {
-    GestureDetector,
-    Gesture,
-    TouchableOpacity,
-} from 'react-native-gesture-handler';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    runOnJS,
-    withSpring,
-} from 'react-native-reanimated';
 import StoryTextInput from './StoryTextInput';
+import { StickerProvider, useStickers } from '../context/StickerContext';
+import Sticker from './Sticker';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -40,69 +24,39 @@ interface StoryPreviewScreenProps {
     onClose: () => void;
 }
 
-export default function StoryPreview({ path, type, onClose }: StoryPreviewScreenProps) {
+function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const canvasRef = useCanvasRef();
     const [canvasSize, setCanvasSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
-    const font = useFont(require('../../../assets/fonts/InterVariable.ttf'), 48);
-    const [storyText, setStoryText] = useState("Hello world");
-    const [isEditingText, setIsEditingText] = useState(false);
-    
-    // Use shared values for gesture handling
-    const textX = useSharedValue(SCREEN_WIDTH / 2);
-    const textY = useSharedValue(SCREEN_HEIGHT / 2);
-    const isDragging = useSharedValue(false);
-    
-    // Load image for Skia
     const image = useImage(path);
+    const [isEditingText, setIsEditingText] = useState(false);
+    const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
+    
+    const { stickers, addTextSticker, updateSticker, removeSticker } = useStickers();
 
-    const updateTextPosition = (x: number, y: number) => {
-        textX.value = x;
-        textY.value = y;
+    const handleTextEditDone = (text: string) => {
+        if (text.trim()) {
+            addTextSticker(text);
+        }
+        setIsEditingText(false);
     };
 
-    const panGesture = Gesture.Pan()
-        .onBegin(() => {
-            isDragging.value = true;
-        })
-        .onChange((event) => {
-            textX.value += event.changeX;
-            textY.value += event.changeY;
-            runOnJS(updateTextPosition)(textX.value, textY.value);
-        })
-        .onFinalize(() => {
-            isDragging.value = false;
-        });
-
-    const tapGesture = Gesture.Tap()
-        .onEnd(() => {
-            if (!isDragging.value) {
-                runOnJS(setIsEditingText)(true);
-            }
-        });
-
-    const gesture = Gesture.Race(panGesture, tapGesture);
-    
     const handleTextEditCancel = () => {
         setIsEditingText(false);
     };
 
-    const handleTextEditDone = (newText: string) => {
-        setStoryText(newText);
-        setIsEditingText(false);
+    const handleStickerUpdate = (id: string, transform: any) => {
+        updateSticker(id, transform);
     };
 
-    const onShare = () => {
-        if (canvasRef.current) {
-            // Create a snapshot of the canvas
-            const snapshot = canvasRef.current.makeImageSnapshot();
-            if (snapshot) {
-                // Convert to base64 for sharing
-                const data = snapshot.encodeToBase64();
-                
-                // TODO: Implement proper sharing
-                console.log('Share story with image:', data.substring(0, 50) + '...');
-            }
+    const handleStickerSelect = (id: string) => {
+        setSelectedStickerId(id);
+    };
+
+    const handleDeleteSelected = () => {
+        if (selectedStickerId) {
+            removeSticker(selectedStickerId);
+            setSelectedStickerId(null);
         }
     };
 
@@ -134,21 +88,20 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                                     height={canvasSize.height}
                                 />
                             </RoundedRect>
-                            {font && (
-                                <Text
-                                    x={textX.value - (font.getTextWidth(storyText) / 2)}
-                                    y={textY.value}
-                                    text={storyText}
-                                    font={font}
-                                    color="white"
-                                />
-                            )}
                         </Group>
                     )}
                 </Canvas>
-                <GestureDetector gesture={gesture}>
-                    <Animated.View style={styles.textOverlay} />
-                </GestureDetector>
+
+                {/* Stickers Layer */}
+                {stickers.map((sticker) => (
+                    <Sticker
+                        key={sticker.id}
+                        sticker={sticker}
+                        onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
+                        onSelect={() => handleStickerSelect(sticker.id)}
+                        isSelected={selectedStickerId === sticker.id}
+                    />
+                ))}
             </View>
 
             <View style={[styles.header]}>
@@ -160,16 +113,26 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                     <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
                 <TouchableOpacity 
+                    onPress={() => setIsEditingText(true)}
                     style={[styles.button, styles.textButton]}
                     testID="add-text-button"
                 >
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
+                {selectedStickerId && (
+                    <TouchableOpacity 
+                        onPress={handleDeleteSelected}
+                        style={[styles.button, styles.deleteButton]}
+                        testID="delete-button"
+                    >
+                        <Ionicons name="trash" size={20} color="white" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {isEditingText && (
                 <StoryTextInput
-                    initialText={storyText}
+                    initialText=""
                     onCancel={handleTextEditCancel}
                     onDone={handleTextEditDone}
                 />
@@ -177,7 +140,6 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
 
             <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
                 <TouchableOpacity 
-                    onPress={onShare} 
                     style={styles.shareButton}
                     testID="share-button"
                 >
@@ -185,6 +147,14 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                 </TouchableOpacity>
             </View>
         </View>
+    );
+}
+
+export default function StoryPreview(props: StoryPreviewScreenProps) {
+    return (
+        <StickerProvider>
+            <StoryPreviewContent {...props} />
+        </StickerProvider>
     );
 }
 
@@ -224,6 +194,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    deleteButton: {
+        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+    },
     previewContainer: {
         flex: 1,
         position: 'absolute',
@@ -255,9 +228,5 @@ const styles = StyleSheet.create({
         height: 60,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    textOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'transparent',
     },
 }); 
