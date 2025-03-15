@@ -171,8 +171,6 @@ export default function Sticker({
                 { scale: scale.value },
                 { rotate: `${rotate.value}rad` },
             ],
-            borderWidth: isSelected ? 1 : 0,
-            borderColor: 'white',
             padding: isSelected ? 10 : 0,
             ...currentStyle.style.container,
         };
