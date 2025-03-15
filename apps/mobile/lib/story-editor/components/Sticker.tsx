@@ -24,6 +24,7 @@ import {
 import {
     DancingScript_700Bold,
 } from '@expo-google-fonts/dancing-script';
+import { MentionSticker, NostrEventSticker, TextSticker } from './sticker-types';
 
 interface StickerProps {
     sticker: StickerType;
@@ -187,11 +188,17 @@ export default function Sticker({
         ...(currentStyle.fontFamily ? { fontFamily: currentStyle.fontFamily } : {}),
     };
 
-    const renderContent = () => (
-        <Animated.Text style={textStyle}>
-            {sticker.content}
-        </Animated.Text>
-    );
+    const renderContent = () => {
+        switch (sticker.type) {
+            case 'mention':
+                return <MentionSticker sticker={sticker} textStyle={textStyle} />;
+            case 'nostrEvent':
+                return <NostrEventSticker sticker={sticker} textStyle={textStyle} />;
+            case 'text':
+            default:
+                return <TextSticker sticker={sticker} textStyle={textStyle} />;
+        }
+    };
 
     return (
         <GestureDetector gesture={gesture}>

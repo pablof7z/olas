@@ -41,5 +41,5 @@ function SuggestionItem({ item, onPress }: { item: NDKUserProfile, onPress: (pro
 
     if (!item.pubkey) return null;
     
-    return <AvatarAndName onPress={handlePress} pubkey={item.pubkey} userProfile={item} imageSize={24} nameStyle={{ fontSize: 12, fontWeight: 'normal', color: colors.foreground }} />
+    return <AvatarAndName onPress={handlePress} pubkey={String(item.pubkey)} userProfile={item} imageSize={24} nameStyle={{ fontSize: 12, fontWeight: 'normal', color: colors.foreground }} />
 }

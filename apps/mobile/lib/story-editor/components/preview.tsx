@@ -15,6 +15,9 @@ import {
 import StoryTextInput from './StoryTextInput';
 import { StickerProvider, useStickers } from '../context/StickerContext';
 import Sticker from './Sticker';
+import StickersBottomSheet from './StickersBottomSheet';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -33,6 +36,7 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
     
     const { stickers, addTextSticker, updateSticker, updateStickerStyle, removeSticker } = useStickers();
+    const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
 
     const handleTextEditDone = (text: string) => {
         if (text.trim()) {
@@ -58,6 +62,10 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
             removeSticker(selectedStickerId);
             setSelectedStickerId(null);
         }
+    };
+    
+    const openStickersDrawer = () => {
+        stickersSheetRef?.current?.present();
     };
 
     return (
@@ -120,6 +128,13 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                 >
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
+                <TouchableOpacity 
+                    onPress={openStickersDrawer}
+                    style={[styles.button, styles.stickersButton]}
+                    testID="add-stickers-button"
+                >
+                    <Ionicons name="pricetag" size={20} color="white" />
+                </TouchableOpacity>
                 {selectedStickerId && (
                     <TouchableOpacity 
                         onPress={handleDeleteSelected}
@@ -143,6 +158,8 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                     <Ionicons name="arrow-forward-circle" size={60} color="white" />
                 </TouchableOpacity>
             </View>
+            
+            <StickersBottomSheet />
         </View>
     );
 }
@@ -186,6 +203,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     textButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stickersButton: {
         width: 40,
         height: 40,
         alignItems: 'center',
