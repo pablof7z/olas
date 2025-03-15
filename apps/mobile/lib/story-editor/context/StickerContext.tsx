@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Dimensions } from 'react-native';
+import { EnhancedTextStyle, getEnhancedStyleById } from '../styles/enhancedTextStyles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -7,6 +8,7 @@ export interface Sticker {
     id: string;
     type: 'text';
     content: string;
+    styleId: string;
     transform: {
         translateX: number;
         translateY: number;
@@ -19,29 +21,31 @@ interface StickerContextType {
     stickers: Sticker[];
     addTextSticker: (text: string) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
+    updateStickerStyle: (id: string, styleId: string) => void;
     removeSticker: (id: string) => void;
     getSticker: (id: string) => Sticker | undefined;
 }
 
-const StickerContext = createContext<StickerContextType | null>(null);
+const StickerContext = createContext<StickerContextType | undefined>(undefined);
 
 export function StickerProvider({ children }: { children: React.ReactNode }) {
     const [stickers, setStickers] = useState<Sticker[]>([]);
 
     const addTextSticker = (text: string) => {
-        const id = `sticker-${Date.now()}`;
+        const id = Math.random().toString();
         const newSticker: Sticker = {
             id,
             type: 'text',
             content: text,
+            styleId: 'neon-glow', // Default to our first enhanced style
             transform: {
-                translateX: SCREEN_WIDTH / 2,
-                translateY: SCREEN_HEIGHT / 2,
+                translateX: SCREEN_WIDTH / 2 - 50,
+                translateY: SCREEN_HEIGHT / 2 - 50,
                 scale: 1,
                 rotate: 0,
             },
         };
-        setStickers((prev) => [...prev, newSticker]);
+        setStickers(prev => [...prev, newSticker]);
         return id;
     };
 
@@ -49,6 +53,14 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
         setStickers((prev) =>
             prev.map((sticker) =>
                 sticker.id === id ? { ...sticker, transform } : sticker
+            )
+        );
+    };
+
+    const updateStickerStyle = (id: string, styleId: string) => {
+        setStickers((prev) =>
+            prev.map((sticker) =>
+                sticker.id === id ? { ...sticker, styleId } : sticker
             )
         );
     };
@@ -67,6 +79,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
                 stickers,
                 addTextSticker,
                 updateSticker,
+                updateStickerStyle,
                 removeSticker,
                 getSticker,
             }}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     StyleSheet,
@@ -9,16 +9,50 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native';
+import { useStickers } from '../context/StickerContext';
+import { enhancedTextStyles } from '../styles/enhancedTextStyles';
+import {
+    useFonts,
+    Inter_900Black,
+    Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import {
+    Pacifico_400Regular,
+} from '@expo-google-fonts/pacifico';
+import {
+    PermanentMarker_400Regular,
+} from '@expo-google-fonts/permanent-marker';
+import {
+    DancingScript_700Bold,
+} from '@expo-google-fonts/dancing-script';
 
 interface StoryTextInputProps {
-    initialText: string;
-    onCancel: () => void;
-    onDone: (text: string) => void;
+    onClose: () => void;
 }
 
-export default function StoryTextInput({ initialText, onCancel, onDone }: StoryTextInputProps) {
-    const [text, setText] = React.useState(initialText);
+export default function StoryTextInput({ onClose }: StoryTextInputProps) {
+    const [text, setText] = useState('');
+    const { addTextSticker } = useStickers();
     const insets = useSafeAreaInsets();
+    const [fontsLoaded] = useFonts({
+        Inter_900Black,
+        Inter_700Bold,
+        Pacifico_400Regular,
+        PermanentMarker_400Regular,
+        DancingScript_700Bold,
+    });
+
+    const handleDone = () => {
+        if (text.trim()) {
+            addTextSticker(text.trim());
+            setText('');
+        }
+        onClose();
+    };
+
+    if (!fontsLoaded) {
+        return null;
+    }
 
     return (
         <KeyboardAvoidingView
@@ -26,22 +60,26 @@ export default function StoryTextInput({ initialText, onCancel, onDone }: StoryT
             style={styles.container}
         >
             <View style={[styles.header, { paddingTop: insets.top }]}>
-                <TouchableOpacity onPress={onCancel} style={styles.headerButton}>
+                <TouchableOpacity onPress={onClose} style={styles.headerButton}>
                     <Text style={styles.headerButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => onDone(text)} style={styles.headerButton}>
+                <TouchableOpacity onPress={handleDone} style={styles.headerButton}>
                     <Text style={styles.headerButtonText}>Done</Text>
                 </TouchableOpacity>
             </View>
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={styles.input}
+                    style={[
+                        styles.input,
+                        { fontFamily: enhancedTextStyles[0].fontFamily }
+                    ]}
                     value={text}
                     onChangeText={setText}
+                    placeholder="Type something..."
+                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     multiline
                     autoFocus
-                    placeholder="Enter text..."
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    maxLength={100}
                 />
             </View>
         </KeyboardAvoidingView>

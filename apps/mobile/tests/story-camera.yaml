@@ -1,0 +1,82 @@
+appId: com.olas.app
+name: Story Camera Test Flow
+tags:
+    - story
+    - camera
+
+env:
+    TIMEOUT: 10000
+
+onFlowStart:
+    - runFlow:
+        file: ./flows/permissions.yaml
+        env:
+            PERMISSION_TYPE: camera
+
+---
+# Navigate to stories screen
+- launchApp:
+    clearState: true
+    clearKeychain: true
+    permissions:
+        camera: true
+        microphone: true
+        photos: true
+
+- assertVisible: "Your story"
+- tapOn: "Your story"
+
+# Test camera screen elements
+- assertVisible:
+    id: "camera-view"
+    timeout: ${TIMEOUT}
+
+# Verify camera controls
+- assertVisible:
+    id: "gallery-button"
+- assertVisible:
+    id: "capture-button"
+- assertVisible:
+    id: "flip-button"
+
+# Test photo capture
+- tapOn:
+    id: "capture-button"
+- assertVisible:
+    id: "preview-container"
+    timeout: ${TIMEOUT}
+
+# Test preview screen controls
+- assertVisible:
+    id: "close-button"
+- assertVisible:
+    id: "share-button"
+
+# Go back to camera
+- tapOn:
+    id: "close-button"
+
+# Test camera flip
+- tapOn:
+    id: "flip-button"
+- wait: 1000
+
+# Test gallery picker
+- tapOn:
+    id: "gallery-button"
+- assertVisible:
+    text: "Allow access to photos?"
+- tapOn:
+    text: "Allow"
+
+# Test video recording
+- longPress:
+    id: "capture-button"
+    duration: 3000
+- assertVisible:
+    id: "preview-container"
+    timeout: ${TIMEOUT}
+
+# Verify video playback
+- assertVisible:
+    id: "video-player" 

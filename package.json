@@ -41,7 +41,11 @@
   ],
   "packageManager": "pnpm@10.5.2",
   "dependencies": {
-    "react-native-gesture-handler": "~2.20.2",
-    "react-native-reanimated": "~3.17.1"
+    "@expo-google-fonts/dancing-script": "^0.2.3",
+    "@expo-google-fonts/inter": "^0.2.3",
+    "@expo-google-fonts/pacifico": "^0.2.3",
+    "@expo-google-fonts/permanent-marker": "^0.2.3",
+    "expo-font": "^13.0.4",
+    "expo-linear-gradient": "~14.0.2"
   }
 }

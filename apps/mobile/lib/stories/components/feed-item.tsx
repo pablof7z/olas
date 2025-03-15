@@ -22,10 +22,8 @@ function StoryPrompt() {
     const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
-        openPickerIfEmpty();
         setPostMetadata({ caption: '', expiration: Date.now() + (24 * 60 * 60 * 1000) });
-        router.push('/(publish)');
-        // router.push('/(camera)/CameraPage');
+        router.push('/story');
     }, [])
 
     if (!currentUser) return null;

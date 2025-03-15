@@ -1,0 +1,73 @@
+# Cursor Rules for TypeScript, Expo 52, Managed Workflow, Nostr/NDK Project
+mobile app: apps/mobile
+ndk-core: packages/ndk/core
+ndk-mobile: packages/ndk/ndk-mobile
+
+
+# Package Management
+use_pnpm: true
+monorepo: true
+
+# Formatting
+indent_style: space
+indent_size: 4
+end_of_line: lf
+charset: utf-8
+trim_trailing_whitespace: true
+insert_final_newline: true
+
+# TypeScript
+typescript:
+    strict: true
+    esModuleInterop: true
+    jsx: react-native
+
+# Expo
+expo:
+    version: 52
+    managed_workflow: true
+    
+# Dependencies
+dependencies:
+    nostr: true
+    ndk: "@nostr-dev-kit/ndk"
+    
+# NDK Configuration
+ndk:
+    singleton_instance: true
+    debug_mode: "localStorage.debug = 'ndk:*'"
+    
+# Nostr NIPs
+nips:
+    supported:
+        - NIP-01  # Basic protocol flow
+        - NIP-05  # DNS identifiers
+        - NIP-19  # bech32-encoded entities
+        - NIP-21  # nostr: URI scheme
+        - NIP-44  # Versioned Encryption
+        - NIP-46  # Nostr Connect
+        - NIP-57  # Lightning Zaps
+        - NIP-65  # Relay List Metadata
+        - NIP-89  # Recommended Application Handlers
+    deprecated:
+        - NIP-04  # Encrypted Direct Message (use NIP-17 instead)
+        - NIP-08  # Handling Mentions (use NIP-27 instead)
+    
+# Testing
+testing:
+    maestro: true
+    
+# Editor Settings
+editor:
+    tab_width: 4
+    use_spaces: true
+    max_line_length: 100
+    
+# Git
+git:
+    ignore_patterns:
+        - node_modules
+        - .expo
+        - dist
+        - .env
+

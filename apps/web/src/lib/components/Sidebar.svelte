@@ -24,11 +24,13 @@
 	import Settings from './icons/Settings.svelte';
 	import { mode, toggleMode } from 'mode-watcher';
 	import ndk from '$lib/stores/ndk.svelte';
-	import { NDKNip07Signer } from '@nostr-dev-kit/ndk';
+	import { NDKNip07Signer, NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 	import { getCurrentUser, setCurrentUser } from '$lib/stores/currentUser.svelte';
 	import { onMount } from 'svelte';
 	import CurrentUserAvatar from './CurrentUserAvatar.svelte';
 	import { page } from '$app/state';
+	import { createAccount, connectExtension } from '$lib/utils/auth';
+	import PostEditor from './PostEditor/index.svelte';
 
 	type SidebarItem = {
 		text: string;
@@ -43,13 +45,22 @@
 
 	function login() {
 		if (window.nostr) {
-			ndk.signer = new NDKNip07Signer();
-			ndk.signer.user().then((user) => {
-				console.log('user', user);
-				setCurrentUser(user);
+			connectExtension().then(success => {
+				if (!success) {
+					// If extension is available but connection failed, show modal
+					openLoginModal = true;
+				}
 			});
 		} else {
 			openLoginModal = true;
+		}
+	}
+
+	async function handleCreateAccount() {
+		const user = await createAccount();
+		if (user) {
+			// Close modal after successful account creation
+			openLoginModal = false;
 		}
 	}
 
@@ -75,8 +86,7 @@
 		},
 		{
 			text: 'create',
-			icon: NewPost,
-			disabled: true
+			icon: NewPost
 		}
 	]);
 
@@ -217,49 +227,82 @@
 </aside>
 
 <Dialog.Root bind:open={openModal}>
-	<Dialog.Content class="max-w-[450px]">
+	<Dialog.Content class="max-w-[600px]">
 		<Dialog.Header>
-			<Dialog.Title>Create a new post</Dialog.Title>
-			<form action="/?/createPost" enctype="multipart/form-data">
-				<div class="grid h-fit place-items-center">
-					<div class="absolute space-y-3 text-center">
-						<div class="max-auto w-fit">
-							<Media />
-						</div>
-						<p>Drag Photos and Videos Here</p>
-						<Button size="sm" class="bg-blue-500">select from computer</Button>
-					</div>
-					<input
-						class="h-[350px] w-full bg-transparent text-transparent file:hidden"
-						type="file"
-						accept="image/png, image/jpeg"
-						name="imageUrl"
-					/>
-				</div>
-
-				<Form.Button class="bg-blue-500">Submit</Form.Button>
-			</form>
+			<Dialog.Title>Create new post</Dialog.Title>
 		</Dialog.Header>
+		<div class="mt-4">
+			<PostEditor on:completed={() => openModal = false}/>
+		</div>
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={openLoginModal}>
-	<Dialog.Content class="max-w-[450px]">
+	<Dialog.Content class="max-w-[550px]">
 		<Dialog.Header>
-			<Dialog.Title>Use a nostr extension for login</Dialog.Title>
-			<ul class="m-4 list-disc">
-				<li class="my-2">
-					<a href="https://getalby.com/" target="_blank" class="text-blue-500">Alby</a>
-				</li>
-				<li class="my-2">
-					<a
-						href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp"
-						target="_blank"
-						class="text-blue-500"
-						>nos2x
-					</a>
-				</li>
-			</ul>
+			<Dialog.Title class="text-xl font-bold">Get Started with Olas</Dialog.Title>
+			<Dialog.Description class="mt-2 text-muted-foreground">
+				Connect to the decentralized Nostr network and own your social data.
+			</Dialog.Description>
 		</Dialog.Header>
+		<div class="mt-4 grid gap-6 sm:grid-cols-2">
+			<!-- Create Account Path -->
+			<div class="rounded-lg border bg-primary/5 p-5 shadow-sm">
+				<h3 class="mb-3 text-lg font-medium">Create New Account</h3>
+				<p class="mb-4 text-sm text-muted-foreground">
+					Quick and easy. We'll generate a secure identity for you that you can backup later.
+				</p>
+				<div class="space-y-4">
+					<Button 
+						onclick={handleCreateAccount} 
+						class="w-full bg-primary font-medium"
+					>
+						Create Account
+					</Button>
+					<div class="text-xs text-muted-foreground">
+						<p>A private key will be generated for you.</p>
+						<p class="mt-1">Make sure to back it up once you're logged in!</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Extension Path -->
+			<div class="rounded-lg border p-5">
+				<h3 class="mb-3 text-lg font-medium">Use Nostr Extension</h3>
+				<p class="mb-4 text-sm text-muted-foreground">
+					Already using Nostr? Connect with your existing extension.
+				</p>
+				<div class="space-y-4">
+					<Button 
+						onclick={connectExtension} 
+						variant="outline" 
+						class="w-full border-2"
+					>
+						Connect Extension
+					</Button>
+					<div class="grid gap-2">
+						<a href="https://getalby.com/" target="_blank" class="flex items-center gap-2 rounded-md border p-2 text-sm transition-colors hover:bg-muted">
+							<div class="flex h-8 w-8 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-950">
+								<Smartphone class="h-4 w-4 text-amber-600 dark:text-amber-400" />
+							</div>
+							<div>Alby</div>
+						</a>
+						<a href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp" target="_blank" class="flex items-center gap-2 rounded-md border p-2 text-sm transition-colors hover:bg-muted">
+							<div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-950">
+								<Command class="h-4 w-4 text-blue-600 dark:text-blue-400" />
+							</div>
+							<div>nos2x</div>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="mt-6 text-center text-xs text-muted-foreground">
+			<a href="https://nostr.how" target="_blank" class="inline-flex items-center gap-1 underline">
+				Learn more about Nostr
+				<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+			</a>
+		</div>
 	</Dialog.Content>
 </Dialog.Root>

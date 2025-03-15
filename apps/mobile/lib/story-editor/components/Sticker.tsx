@@ -7,12 +7,29 @@ import Animated, {
     withSpring,
     runOnJS,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { Sticker as StickerType } from '../context/StickerContext';
+import { getEnhancedStyleById, enhancedTextStyles } from '../styles/enhancedTextStyles';
+import {
+    useFonts,
+    Inter_900Black,
+    Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import {
+    Pacifico_400Regular,
+} from '@expo-google-fonts/pacifico';
+import {
+    PermanentMarker_400Regular,
+} from '@expo-google-fonts/permanent-marker';
+import {
+    DancingScript_700Bold,
+} from '@expo-google-fonts/dancing-script';
 
 interface StickerProps {
     sticker: StickerType;
     onUpdate: (transform: StickerType['transform']) => void;
     onSelect: () => void;
+    onStyleChange: (styleId: string) => void;
     isSelected: boolean;
 }
 
@@ -22,7 +39,30 @@ const SPRING_CONFIG = {
     stiffness: 150,
 };
 
-export default function Sticker({ sticker, onUpdate, onSelect, isSelected }: StickerProps) {
+// Worklet-safe function to get next style ID
+const getNextStyleId = (currentStyleId: string): string => {
+    'worklet';
+    const styles = enhancedTextStyles;
+    const currentIndex = styles.findIndex(style => style.id === currentStyleId);
+    const nextIndex = (currentIndex + 1) % styles.length;
+    return styles[nextIndex].id;
+};
+
+export default function Sticker({ 
+    sticker, 
+    onUpdate, 
+    onSelect, 
+    onStyleChange,
+    isSelected 
+}: StickerProps) {
+    const [fontsLoaded] = useFonts({
+        Inter_900Black,
+        Inter_700Bold,
+        Pacifico_400Regular,
+        PermanentMarker_400Regular,
+        DancingScript_700Bold,
+    });
+
     // Shared values for transformations
     const translateX = useSharedValue(sticker.transform.translateX);
     const translateY = useSharedValue(sticker.transform.translateY);
@@ -32,6 +72,8 @@ export default function Sticker({ sticker, onUpdate, onSelect, isSelected }: Sti
     const savedTranslateY = useSharedValue(sticker.transform.translateY);
     const savedScale = useSharedValue(sticker.transform.scale);
     const savedRotate = useSharedValue(sticker.transform.rotate);
+
+    const currentStyle = getEnhancedStyleById(sticker.styleId);
 
     // Pan gesture for translation
     const panGesture = Gesture.Pan()
@@ -93,17 +135,30 @@ export default function Sticker({ sticker, onUpdate, onSelect, isSelected }: Sti
             });
         });
 
-    // Tap gesture for selection
-    const tapGesture = Gesture.Tap().onEnd(() => {
-        runOnJS(onSelect)();
-    });
+    // Double tap gesture for style cycling
+    const doubleTapGesture = Gesture.Tap()
+        .numberOfTaps(2)
+        .onEnd(() => {
+            const nextStyleId = getNextStyleId(sticker.styleId);
+            runOnJS(onStyleChange)(nextStyleId);
+        });
+
+    // Single tap gesture for selection
+    const tapGesture = Gesture.Tap()
+        .maxDuration(250)
+        .onEnd(() => {
+            runOnJS(onSelect)();
+        });
 
     // Compose gestures
-    const gesture = Gesture.Simultaneous(
-        tapGesture,
+    const gesture = Gesture.Exclusive(
+        doubleTapGesture,
         Gesture.Simultaneous(
-            panGesture,
-            Gesture.Simultaneous(pinchGesture, rotationGesture)
+            tapGesture,
+            Gesture.Simultaneous(
+                panGesture,
+                Gesture.Simultaneous(pinchGesture, rotationGesture)
+            )
         )
     );
 
@@ -119,13 +174,38 @@ export default function Sticker({ sticker, onUpdate, onSelect, isSelected }: Sti
             borderWidth: isSelected ? 1 : 0,
             borderColor: 'white',
             padding: isSelected ? 10 : 0,
+            ...currentStyle.style.container,
         };
     });
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
+    const textStyle = {
+        ...styles.text,
+        ...currentStyle.style.text,
+        ...(currentStyle.fontFamily ? { fontFamily: currentStyle.fontFamily } : {}),
+    };
+
+    const renderContent = () => (
+        <Animated.Text style={textStyle}>
+            {sticker.content}
+        </Animated.Text>
+    );
 
     return (
         <GestureDetector gesture={gesture}>
             <Animated.View style={[styles.container, animatedStyle]}>
-                <Animated.Text style={styles.text}>{sticker.content}</Animated.Text>
+                {currentStyle.style.gradient ? (
+                    <LinearGradient
+                        colors={currentStyle.style.gradient.colors}
+                        start={currentStyle.style.gradient.start}
+                        end={currentStyle.style.gradient.end}
+                        style={StyleSheet.absoluteFill}
+                    />
+                ) : null}
+                {renderContent()}
             </Animated.View>
         </GestureDetector>
     );
@@ -134,13 +214,8 @@ export default function Sticker({ sticker, onUpdate, onSelect, isSelected }: Sti
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        padding: 10,
     },
     text: {
-        color: 'white',
         fontSize: 32,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
     },
 }); 

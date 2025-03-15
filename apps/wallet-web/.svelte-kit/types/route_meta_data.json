@@ -1,0 +1,30 @@
+{
+	"/(app)": [
+		"src/routes/(app)/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/": [
+		"src/routes/+page.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/(app)/dashboard": [
+		"src/routes/(app)/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/(app)/deposit": [
+		"src/routes/(app)/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/(auth)/login": [
+		"src/routes/+layout.ts"
+	],
+	"/(app)/send": [
+		"src/routes/(app)/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/(app)/transactions": [
+		"src/routes/(app)/+layout.ts",
+		"src/routes/+layout.ts"
+	]
+}

@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Nostr Wallet",
+    "slug": "nostr-wallet",
+    "scheme": "nostr-wallet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.olas.nostrwallet"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#121212"
+      },
+      "package": "com.olas.nostrwallet"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-dev-client",
+      "expo-system-ui",
+      "expo-sqlite"
+    ]
+  }
+}

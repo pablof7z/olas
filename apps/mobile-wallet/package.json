@@ -1,0 +1,44 @@
+{
+    "name": "mobile-wallet",
+    "version": "1.0.0",
+    "main": "app/expo/index.js",
+    "scripts": {
+        "start": "expo start",
+        "android": "expo run:android",
+        "ios": "expo run:ios",
+        "web": "expo start --web",
+        "dev": "expo start",
+        "dev:client": "expo start --dev-client",
+        "dev:clear": "expo start --clear",
+        "prebuild": "expo prebuild",
+        "build:dev:android": "eas build --profile development --platform android --local",
+        "build:dev:ios": "eas build --profile development --platform ios --local",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "lint": "eslint ."
+    },
+    "dependencies": {
+        "@expo/vector-icons": "^14.0.0",
+        "expo": "~52.0.38",
+        "expo-dev-client": "~5.0.14",
+        "expo-font": "~13.0.4",
+        "expo-linking": "~7.0.5",
+        "expo-router": "~4.0.18",
+        "expo-sqlite": "~15.1.2",
+        "expo-status-bar": "~2.0.1",
+        "expo-system-ui": "~4.0.8",
+        "react": "18.3.1",
+        "react-native": "0.76.7",
+        "react-native-gesture-handler": "~2.20.2",
+        "react-native-reanimated": "~3.16.7",
+        "react-native-safe-area-context": "4.12.0",
+        "react-native-screens": "~4.4.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.20.0",
+        "@expo/webpack-config": "^19.0.0",
+        "@types/react": "~18.3.18",
+        "maestro-cli": "^1.1.10",
+        "typescript": "^5.3.0"
+    },
+    "private": true
+}

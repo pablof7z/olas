@@ -32,7 +32,7 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
     const [isEditingText, setIsEditingText] = useState(false);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
     
-    const { stickers, addTextSticker, updateSticker, removeSticker } = useStickers();
+    const { stickers, addTextSticker, updateSticker, updateStickerStyle, removeSticker } = useStickers();
 
     const handleTextEditDone = (text: string) => {
         if (text.trim()) {
@@ -99,6 +99,7 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                         sticker={sticker}
                         onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
                         onSelect={() => handleStickerSelect(sticker.id)}
+                        onStyleChange={(styleId) => updateStickerStyle(sticker.id, styleId)}
                         isSelected={selectedStickerId === sticker.id}
                     />
                 ))}
@@ -131,11 +132,7 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
             </View>
 
             {isEditingText && (
-                <StoryTextInput
-                    initialText=""
-                    onCancel={handleTextEditCancel}
-                    onDone={handleTextEditDone}
-                />
+                <StoryTextInput onClose={() => setIsEditingText(false)} />
             )}
 
             <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>

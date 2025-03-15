@@ -1,10 +1,7 @@
 packages:
-    - 'apps/*'
+    - 'apps/mobile'
     - 'packages/eslint-config'
-    - 'packages/ndk/ndk'
-    - 'packages/ndk/ndk-test'
-    - 'packages/ndk/ndk-cache-dexie'
-    - 'packages/ndk/ndk-svelte'
+    - 'packages/ndk/core'
     - 'packages/ndk/ndk-mobile'
     - 'packages/ndk/ndk-wallet'
     - 'packages/ndk/packages/*'
