@@ -10,6 +10,7 @@ import { useStickers } from '../context/StickerContext';
 import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
 import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 interface StickerOptionProps {
     name: string;
@@ -43,12 +44,7 @@ interface EventItem {
     title: string;
 }
 
-// Only keep mock data for events, we'll use real data for users
-const MOCK_EVENTS: EventItem[] = [
-    { id: 'note1event1', title: 'Latest update about my project' },
-    { id: 'note1event2', title: 'Thoughts on the new Nostr protocol' },
-    { id: 'note1event3', title: 'Check out this amazing post' },
-];
+// Remove mock events since we'll use direct input instead
 
 export default function StickersBottomSheet() {
     const sheetRef = useSheetRef();
@@ -59,8 +55,8 @@ export default function StickersBottomSheet() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     
-    // Only keep events state, users will come from MentionSuggestions
-    const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS);
+    // Replace events array with a single event ID input
+    const [eventIdInput, setEventIdInput] = useState('');
 
     useEffect(() => {
         setBottomSheetRef(sheetRef);
@@ -73,28 +69,21 @@ export default function StickersBottomSheet() {
 
     const handleEventSelect = () => {
         setMode('event');
-        setSearchQuery('');
+        setEventIdInput('');
     };
     
     const handleBackToOptions = () => {
         setMode('options');
         setSearchQuery('');
+        setEventIdInput('');
     };
     
     const handleSearch = (text: string) => {
         setSearchQuery(text);
         setLoading(true);
         
-        // Only handle event search here
-        if (mode === 'event') {
-            // Simulate search delay
-            setTimeout(() => {
-                const filtered = MOCK_EVENTS.filter(event => 
-                    event.title.toLowerCase().includes(text.toLowerCase()));
-                setEvents(filtered);
-                setLoading(false);
-            }, 300);
-        } else {
+        // Only handle mention search, we don't search for events anymore
+        if (mode === 'mention') {
             // For mentions, we don't need to do anything here
             // as MentionSuggestions handles its own data fetching
             setLoading(false);
@@ -107,11 +96,21 @@ export default function StickersBottomSheet() {
         sheetRef.current?.dismiss();
         setMode('options');
     };
+
+    const { colors } = useColorScheme();
     
-    const selectEvent = (event: EventItem) => {
-        addNostrEventSticker(event.id, event.title);
-        sheetRef.current?.dismiss();
-        setMode('options');
+    const handleEventIdChange = (text: string) => {
+        setEventIdInput(text);
+    };
+    
+    const handleAddEventSticker = () => {
+        if (eventIdInput.trim()) {
+            const id = eventIdInput.trim();
+            const title = `Event: ${id.substring(0, 8)}...`;
+            addNostrEventSticker(id, title);
+            sheetRef.current?.dismiss();
+            setMode('options');
+        }
     };
 
     const renderOptions = () => (
@@ -161,18 +160,20 @@ export default function StickersBottomSheet() {
                     {mode === 'event' && (
                         <Ionicons name="search" size={20} color="rgba(255,255,255,0.6)" style={styles.searchIcon} />
                     )}
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder={mode === 'mention' ? "@username" : "Search events..."}
-                        placeholderTextColor="rgba(255,255,255,0.6)"
-                        value={searchQuery}
-                        onChangeText={handleSearch}
-                        autoFocus
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                    {searchQuery.length > (mode === 'mention' ? 1 : 0) && (
-                        <TouchableOpacity onPress={() => handleSearch(mode === 'mention' ? '@' : '')}>
+                    {mode === 'mention' && (
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="@username"
+                            placeholderTextColor="rgba(255,255,255,0.6)"
+                            value={searchQuery}
+                            onChangeText={handleSearch}
+                            autoFocus
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    )}
+                    {mode === 'mention' && searchQuery.length > 1 && (
+                        <TouchableOpacity onPress={() => handleSearch('@')}>
                             <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.6)" />
                         </TouchableOpacity>
                     )}
@@ -196,29 +197,29 @@ export default function StickersBottomSheet() {
     );
     
     const renderEventList = () => (
-        <BottomSheetScrollView contentContainerStyle={styles.listContainer}>
-            {loading ? (
-                <ActivityIndicator color="white" style={styles.loader} />
-            ) : events.length === 0 ? (
-                <Text style={styles.emptyMessage}>No events found</Text>
-            ) : (
-                events.map(event => (
-                    <TouchableOpacity 
-                        key={event.id} 
-                        style={styles.listItem}
-                        onPress={() => selectEvent(event)}
-                    >
-                        <View style={[styles.iconContainer, styles.eventIcon]}>
-                            <Ionicons name="document-text" size={20} color="white" />
-                        </View>
-                        <View style={styles.listItemTextContainer}>
-                            <Text style={styles.listItemTitle}>{event.title}</Text>
-                            <Text style={styles.listItemSubtitle}>{event.id.substring(0, 12)}...</Text>
-                        </View>
-                    </TouchableOpacity>
-                ))
-            )}
-        </BottomSheetScrollView>
+        <View style={styles.eventInputContainer}>
+            <Text style={styles.eventInputLabel}>Enter Nostr Event ID:</Text>
+            <TextInput
+                style={[styles.eventInput, { color: colors.foreground }]}
+                placeholder="Event ID"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={eventIdInput}
+                onChangeText={handleEventIdChange}
+                autoFocus
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+            <TouchableOpacity 
+                style={[
+                    styles.addEventButton,
+                    { opacity: eventIdInput.trim() ? 1 : 0.5 }
+                ]}
+                onPress={handleAddEventSticker}
+                disabled={!eventIdInput.trim()}
+            >
+                <Text style={styles.addEventButtonText}>Done</Text>
+            </TouchableOpacity>
+        </View>
     );
     
     const getSnapPoints = () => {
@@ -243,7 +244,7 @@ export default function StickersBottomSheet() {
                 )}
                 {mode === 'event' && (
                     <>
-                        {renderSearchHeader('Select Event')}
+                        {renderSearchHeader('Enter Event ID')}
                         {renderEventList()}
                     </>
                 )}
@@ -345,57 +346,32 @@ const styles = StyleSheet.create({
         fontSize: 16,
         padding: 4,
     },
-    listContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 20,
+    eventInputContainer: {
+        padding: 16,
     },
-    listItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        marginVertical: 4,
-        borderRadius: 12,
-        backgroundColor: 'rgba(50, 50, 50, 0.4)',
-    },
-    userIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(100, 100, 100, 0.6)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    eventIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-    },
-    userInitial: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    listItemTextContainer: {
-        flex: 1,
-    },
-    listItemTitle: {
+    eventInputLabel: {
         color: 'white',
         fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        marginBottom: 8,
     },
-    listItemSubtitle: {
-        color: 'rgba(255, 255, 255, 0.7)',
-        fontSize: 14,
+    eventInput: {
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 8,
+        padding: 12,
+        color: 'white',
+        marginBottom: 16,
+    },
+    addEventButton: {
+        backgroundColor: '#5b21b6',
+        borderRadius: 8,
+        padding: 12,
+        alignItems: 'center',
+    },
+    addEventButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
     loader: {
         marginTop: 20,
-    },
-    emptyMessage: {
-        color: 'rgba(255, 255, 255, 0.7)',
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 16,
     },
 }); 
