@@ -29,13 +29,18 @@
     "trailingComma": "es5"
   },
   "workspaces": [
-    "apps/*",
+    "apps/mobile",
     "packages/eslint-config",
-    "packages/ndk/ndk",
+    "packages/ndk/core",
     "packages/ndk/ndk-wallet",
     "packages/ndk/ndk-mobile",
+    "packages/ndk/ndk-svelte",
+    "packages/ndk/ndk-svelte-components",
     "packages/ndk/packages/eslint-config-custom",
     "packages/ndk/packages/tsconfig"
   ],
-  "packageManager": "pnpm@10.5.2"
+  "packageManager": "pnpm@10.5.2",
+  "dependencies": {
+    "react-native-gesture-handler": "~2.20.2"
+  }
 }

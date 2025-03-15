@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Image as RNImage, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, Image as RNImage } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +19,11 @@ import {
     type Vector,
 } from '@shopify/react-native-skia';
 import { Platform } from 'react-native';
+import {
+    GestureDetector,
+    Gesture,
+    TouchableOpacity,
+} from 'react-native-gesture-handler';
 import StoryTextInput from './StoryTextInput';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -41,37 +46,30 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
     
     // Load image for Skia
     const image = useImage(path);
-    
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: () => {
-                setIsDragging(true);
-            },
-            onPanResponderMove: (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-                if (isDragging) {
-                    setTextPosition(prev => vec(
-                        prev.x + gestureState.dx,
-                        prev.y + gestureState.dy
-                    ));
-                }
-            },
-            onPanResponderRelease: () => {
-                setIsDragging(false);
-            },
-            onPanResponderTerminate: () => {
-                setIsDragging(false);
-            },
-        })
-    ).current;
-    
-    const handleTextPress = () => {
-        if (!isDragging) {
-            setIsEditingText(true);
-        }
-    };
 
+    const panGesture = Gesture.Pan()
+        .onBegin(() => {
+            setIsDragging(true);
+        })
+        .onChange((event) => {
+            setTextPosition(prev => vec(
+                prev.x + event.changeX,
+                prev.y + event.changeY
+            ));
+        })
+        .onFinalize(() => {
+            setIsDragging(false);
+        });
+
+    const tapGesture = Gesture.Tap()
+        .onEnd(() => {
+            if (!isDragging) {
+                setIsEditingText(true);
+            }
+        });
+
+    const gesture = Gesture.Race(panGesture, tapGesture);
+    
     const handleTextEditCancel = () => {
         setIsEditingText(false);
     };
@@ -135,18 +133,9 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                         </Group>
                     )}
                 </Canvas>
-                <View 
-                    style={styles.textOverlay}
-                    {...panResponder.panHandlers}
-                >
-                    <TouchableOpacity
-                        onPress={handleTextPress}
-                        style={StyleSheet.absoluteFill}
-                        testID="text-overlay"
-                    >
-                        <View />
-                    </TouchableOpacity>
-                </View>
+                <GestureDetector gesture={gesture}>
+                    <View style={styles.textOverlay} />
+                </GestureDetector>
             </View>
 
             <View style={[styles.header]}>
