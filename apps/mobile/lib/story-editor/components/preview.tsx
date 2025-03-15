@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Image as RNImage } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Image as RNImage, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,8 @@ import {
     useCanvasRef,
     Text,
     useFont,
+    vec,
+    type Vector,
 } from '@shopify/react-native-skia';
 import { Platform } from 'react-native';
 import StoryTextInput from './StoryTextInput';
@@ -34,12 +36,40 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
     const font = useFont(require('../../../assets/fonts/InterVariable.ttf'), 48);
     const [storyText, setStoryText] = useState("Hello world");
     const [isEditingText, setIsEditingText] = useState(false);
+    const [textPosition, setTextPosition] = useState<Vector>(vec(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+    const [isDragging, setIsDragging] = useState(false);
     
     // Load image for Skia
     const image = useImage(path);
     
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => {
+                setIsDragging(true);
+            },
+            onPanResponderMove: (event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+                if (isDragging) {
+                    setTextPosition(prev => vec(
+                        prev.x + gestureState.dx,
+                        prev.y + gestureState.dy
+                    ));
+                }
+            },
+            onPanResponderRelease: () => {
+                setIsDragging(false);
+            },
+            onPanResponderTerminate: () => {
+                setIsDragging(false);
+            },
+        })
+    ).current;
+    
     const handleTextPress = () => {
-        setIsEditingText(true);
+        if (!isDragging) {
+            setIsEditingText(true);
+        }
     };
 
     const handleTextEditCancel = () => {
@@ -95,8 +125,8 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                             </RoundedRect>
                             {font && (
                                 <Text
-                                    x={canvasSize.width / 2 - (font.getTextWidth(storyText) / 2)}
-                                    y={canvasSize.height / 2}
+                                    x={textPosition.x - (font.getTextWidth(storyText) / 2)}
+                                    y={textPosition.y}
                                     text={storyText}
                                     font={font}
                                     color="white"
@@ -105,13 +135,18 @@ export default function StoryPreview({ path, type, onClose }: StoryPreviewScreen
                         </Group>
                     )}
                 </Canvas>
-                <TouchableOpacity
+                <View 
                     style={styles.textOverlay}
-                    onPress={handleTextPress}
-                    testID="text-overlay"
+                    {...panResponder.panHandlers}
                 >
-                    <View />
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={handleTextPress}
+                        style={StyleSheet.absoluteFill}
+                        testID="text-overlay"
+                    >
+                        <View />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View style={[styles.header]}>
