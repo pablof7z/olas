@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Dimensions } from 'react-native';
-import { EnhancedTextStyle, getEnhancedStyleById } from '../styles/enhancedTextStyles';
 import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { getDefaultStyleIdForStickerType } from '../styles/stickerStyles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface Sticker {
     id: string;
-    type: 'text' | 'mention' | 'nostrEvent' | 'countdown';
+    type: 'text' | 'mention' | 'nostrEvent' | 'countdown' | 'nostrFilter' | 'prompt';
     content: string;
     styleId: string;
     transform: {
@@ -29,6 +29,8 @@ interface StickerContextType {
     addMentionSticker: (profile: NDKUserProfile) => string;
     addNostrEventSticker: (eventId: string, title: string) => string;
     addCountdownSticker: (name: string, endTime: Date) => string;
+    addNostrFilterSticker: (filter: string) => string;
+    addPromptSticker: (prompt: string) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
     updateStickerStyle: (id: string, styleId: string) => void;
     removeSticker: (id: string) => void;
@@ -46,7 +48,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
             id,
             type: 'text',
             content: text,
-            styleId: 'neon-glow', // Default to our first enhanced style
+            styleId: getDefaultStyleIdForStickerType('text'),
             transform: {
                 translateX: SCREEN_WIDTH / 2 - 50,
                 translateY: SCREEN_HEIGHT / 2 - 50,
@@ -63,8 +65,8 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
         const newSticker: Sticker = {
             id,
             type: 'mention',
-            content: profile.name || profile.displayName || profile.pubkey,
-            styleId: 'neon-glow',
+            content: profile.displayName || profile.name || 'Unknown',
+            styleId: getDefaultStyleIdForStickerType('mention'),
             transform: {
                 translateX: SCREEN_WIDTH / 2 - 50,
                 translateY: SCREEN_HEIGHT / 2 - 50,
@@ -85,7 +87,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
             id,
             type: 'nostrEvent',
             content: title,
-            styleId: 'neon-glow',
+            styleId: getDefaultStyleIdForStickerType('nostrEvent'),
             transform: {
                 translateX: SCREEN_WIDTH / 2 - 50,
                 translateY: SCREEN_HEIGHT / 2 - 50,
@@ -106,7 +108,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
             id,
             type: 'countdown',
             content: name || 'Countdown',
-            styleId: 'neon-glow',
+            styleId: getDefaultStyleIdForStickerType('countdown'),
             transform: {
                 translateX: SCREEN_WIDTH / 2 - 50,
                 translateY: SCREEN_HEIGHT / 2 - 50,
@@ -115,6 +117,42 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
             },
             metadata: {
                 endTime,
+            },
+        };
+        setStickers(prev => [...prev, newSticker]);
+        return id;
+    };
+
+    const addNostrFilterSticker = (filter: string) => {
+        const id = Math.random().toString();
+        const newSticker: Sticker = {
+            id,
+            type: 'nostrFilter',
+            content: filter,
+            styleId: getDefaultStyleIdForStickerType('nostrFilter'),
+            transform: {
+                translateX: SCREEN_WIDTH / 2 - 50,
+                translateY: SCREEN_HEIGHT / 2 - 50,
+                scale: 1,
+                rotate: 0,
+            },
+        };
+        setStickers(prev => [...prev, newSticker]);
+        return id;
+    };
+
+    const addPromptSticker = (prompt: string) => {
+        const id = Math.random().toString();
+        const newSticker: Sticker = {
+            id,
+            type: 'prompt',
+            content: prompt,
+            styleId: getDefaultStyleIdForStickerType('prompt'),
+            transform: {
+                translateX: SCREEN_WIDTH / 2 - 50,
+                translateY: SCREEN_HEIGHT / 2 - 50,
+                scale: 1,
+                rotate: 0,
             },
         };
         setStickers(prev => [...prev, newSticker]);
@@ -153,6 +191,8 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
                 addMentionSticker,
                 addNostrEventSticker,
                 addCountdownSticker,
+                addNostrFilterSticker,
+                addPromptSticker,
                 updateSticker,
                 updateStickerStyle,
                 removeSticker,
@@ -166,7 +206,7 @@ export function StickerProvider({ children }: { children: React.ReactNode }) {
 
 export function useStickers() {
     const context = useContext(StickerContext);
-    if (!context) {
+    if (context === undefined) {
         throw new Error('useStickers must be used within a StickerProvider');
     }
     return context;

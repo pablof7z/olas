@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { BottomSheetModal, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSetAtom } from 'jotai';
 import { Ionicons } from '@expo/vector-icons';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { useStickers } from '../context/StickerContext';
-import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { FlashList } from '@shopify/flash-list';
-import { useColorScheme } from '@/lib/useColorScheme';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import {
+    TextStickerInput,
+    MentionStickerInput,
+    EventStickerInput,
+    CountdownStickerInput,
+    NostrFilterStickerInput,
+    PromptStickerInput,
+} from './story-type';
 
 interface StickerOptionProps {
     name: string;
@@ -38,161 +41,80 @@ function StickerOption({ name, icon, onPress, description }: StickerOptionProps)
     );
 }
 
-type StickerSelectionMode = 'options' | 'mention' | 'event' | 'countdown';
-
-interface EventItem {
-    id: string;
-    title: string;
-}
-
-// Remove mock events since we'll use direct input instead
+type StickerSelectionMode = 'options' | 'mention' | 'event' | 'countdown' | 'nostrFilter' | 'text' | 'prompt';
 
 export default function StickersBottomSheet() {
     const sheetRef = useSheetRef();
-    const setBottomSheetRef = useSetAtom(stickersSheetRefAtom);
+    const setStickersSheetRef = useSetAtom(stickersSheetRefAtom);
     const insets = useSafeAreaInsets();
-    const { addMentionSticker, addNostrEventSticker, addCountdownSticker } = useStickers();
     const [mode, setMode] = useState<StickerSelectionMode>('options');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [loading, setLoading] = useState(false);
-    
-    // Replace events array with a single event ID input
-    const [eventIdInput, setEventIdInput] = useState('');
-    
-    // Countdown sticker state
-    const [countdownName, setCountdownName] = useState('');
-    const [countdownDate, setCountdownDate] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showTimePicker, setShowTimePicker] = useState(false);
+    const { 
+        addTextSticker, 
+        addMentionSticker, 
+        addNostrEventSticker, 
+        addCountdownSticker,
+        addNostrFilterSticker,
+        addPromptSticker
+    } = useStickers();
 
     useEffect(() => {
-        setBottomSheetRef(sheetRef);
-    }, [sheetRef, setBottomSheetRef]);
+        setStickersSheetRef(sheetRef);
+    }, [sheetRef, setStickersSheetRef]);
 
-    const handleMentionSelect = () => {
-        setMode('mention');
-        setSearchQuery('@');
-    };
-
-    const handleEventSelect = () => {
-        setMode('event');
-        setEventIdInput('');
-    };
-    
-    const handleCountdownSelect = () => {
-        setMode('countdown');
-        setCountdownName('');
-        setCountdownDate(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Default to tomorrow
-    };
-    
     const handleBackToOptions = () => {
         setMode('options');
-        setSearchQuery('');
-        setEventIdInput('');
-        setCountdownName('');
     };
-    
-    const handleSearch = (text: string) => {
-        setSearchQuery(text);
-        setLoading(true);
-        
-        // Only handle mention search, we don't search for events anymore
-        if (mode === 'mention') {
-            // For mentions, we don't need to do anything here
-            // as MentionSuggestions handles its own data fetching
-            setLoading(false);
-        }
-    };
-    
-    const selectUser = (profile: NDKUserProfile) => {
-        // Use the real NDKUserProfile
-        addMentionSticker(profile);
+
+    const handleStickerAdded = useCallback(() => {
         sheetRef.current?.dismiss();
         setMode('options');
-    };
-
-    const { colors } = useColorScheme();
-    
-    const handleEventIdChange = (text: string) => {
-        setEventIdInput(text);
-    };
-    
-    const handleAddEventSticker = () => {
-        if (eventIdInput.trim()) {
-            const id = eventIdInput.trim();
-            const title = `Event: ${id.substring(0, 8)}...`;
-            addNostrEventSticker(id, title);
-            sheetRef.current?.dismiss();
-            setMode('options');
-        }
-    };
-
-    const handleAddCountdownSticker = () => {
-        if (countdownName.trim()) {
-            addCountdownSticker(countdownName, countdownDate);
-            sheetRef.current?.dismiss();
-            setMode('options');
-        }
-    };
-    
-    const onDateChange = (event: any, selectedDate?: Date) => {
-        const currentDate = selectedDate || countdownDate;
-        setShowDatePicker(false);
-        
-        // Preserve the time from the current countdownDate
-        const newDate = new Date(currentDate);
-        newDate.setHours(countdownDate.getHours());
-        newDate.setMinutes(countdownDate.getMinutes());
-        
-        setCountdownDate(newDate);
-    };
-    
-    const onTimeChange = (event: any, selectedTime?: Date) => {
-        const currentTime = selectedTime || countdownDate;
-        setShowTimePicker(false);
-        
-        // Preserve the date but update the time
-        const newDate = new Date(countdownDate);
-        newDate.setHours(currentTime.getHours());
-        newDate.setMinutes(currentTime.getMinutes());
-        
-        setCountdownDate(newDate);
-    };
+    }, [sheetRef]);
 
     const renderOptions = () => (
-        <>
+        <BottomSheetScrollView style={styles.optionsContainer}>
             <View style={styles.headerContainer}>
-                <View style={styles.handleContainer}>
-                    <View style={styles.handle} />
-                </View>
                 <Text style={styles.title}>Add Sticker</Text>
             </View>
-            
             <View style={styles.divider} />
-            
-            <View style={styles.optionsContainer}>
-                <StickerOption 
-                    name="Mention" 
-                    icon="person-circle" 
-                    onPress={handleMentionSelect}
-                    description="Tag a Nostr user in your story"
-                />
-                <StickerOption 
-                    name="Nostr Event" 
-                    icon="document-text" 
-                    onPress={handleEventSelect}
-                    description="Link to a Nostr post or note"
-                />
-                <StickerOption 
-                    name="Countdown" 
-                    icon="timer-outline" 
-                    onPress={handleCountdownSelect}
-                    description="Add a countdown timer to your story"
-                />
-            </View>
-        </>
+            <StickerOption
+                name="Text"
+                icon="text"
+                onPress={() => setMode('text')}
+                description="Add a simple text sticker"
+            />
+            <StickerOption
+                name="Mention"
+                icon="person"
+                onPress={() => setMode('mention')}
+                description="Tag another user"
+            />
+            <StickerOption
+                name="Event"
+                icon="link"
+                onPress={() => setMode('event')}
+                description="Link to a Nostr event"
+            />
+            <StickerOption
+                name="Countdown"
+                icon="time"
+                onPress={() => setMode('countdown')}
+                description="Add a countdown timer"
+            />
+            <StickerOption
+                name="Nostr Filter"
+                icon="filter"
+                onPress={() => setMode('nostrFilter')}
+                description="Add a Nostr filter"
+            />
+            <StickerOption
+                name="Prompt"
+                icon="chatbubble-outline"
+                onPress={() => setMode('prompt')}
+                description="Add an interactive question or prompt"
+            />
+        </BottomSheetScrollView>
     );
-    
+
     const renderSearchHeader = (title: string) => (
         <>
             <View style={styles.searchHeaderContainer}>
@@ -203,146 +125,13 @@ export default function StickersBottomSheet() {
             </View>
             
             <View style={styles.divider} />
-            
-            <View style={styles.searchContainer}>
-                <View style={styles.searchInputContainer}>
-                    {mode === 'mention' && (
-                        <Ionicons name="at" size={20} color="rgba(255,255,255,0.6)" style={styles.searchIcon} />
-                    )}
-                    {mode === 'event' && (
-                        <Ionicons name="search" size={20} color="rgba(255,255,255,0.6)" style={styles.searchIcon} />
-                    )}
-                    {mode === 'mention' && (
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="@username"
-                            placeholderTextColor="rgba(255,255,255,0.6)"
-                            value={searchQuery}
-                            onChangeText={handleSearch}
-                            autoFocus
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    )}
-                    {mode === 'mention' && searchQuery.length > 1 && (
-                        <TouchableOpacity onPress={() => handleSearch('@')}>
-                            <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.6)" />
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
         </>
-    );
-    
-    const renderMentionList = () => (
-        <View style={{ flex: 1, paddingHorizontal: 16 }}>
-            {loading ? (
-                <ActivityIndicator color="white" style={styles.loader} />
-            ) : (
-                <MentionSuggestions
-                    query={searchQuery}
-                    onPress={selectUser}
-                    FlashListComponent={FlashList}
-                />
-            )}
-        </View>
-    );
-    
-    const renderEventList = () => (
-        <View style={styles.eventInputContainer}>
-            <Text style={styles.eventInputLabel}>Enter Nostr Event ID:</Text>
-            <TextInput
-                style={[styles.eventInput, { color: colors.foreground }]}
-                placeholder="Event ID"
-                placeholderTextColor="rgba(255,255,255,0.6)"
-                value={eventIdInput}
-                onChangeText={handleEventIdChange}
-                autoFocus
-                autoCapitalize="none"
-                autoCorrect={false}
-            />
-            <TouchableOpacity 
-                style={[
-                    styles.addEventButton,
-                    { opacity: eventIdInput.trim() ? 1 : 0.5 }
-                ]}
-                onPress={handleAddEventSticker}
-                disabled={!eventIdInput.trim()}
-            >
-                <Text style={styles.addEventButtonText}>Done</Text>
-            </TouchableOpacity>
-        </View>
-    );
-    
-    const renderCountdownSetup = () => (
-        <View style={styles.countdownContainer}>
-            <Text style={styles.eventInputLabel}>Countdown Name:</Text>
-            <TextInput
-                style={[styles.eventInput, { color: colors.foreground }]}
-                placeholder="Enter name for countdown"
-                placeholderTextColor="rgba(255,255,255,0.6)"
-                value={countdownName}
-                onChangeText={setCountdownName}
-                autoFocus
-                autoCapitalize="sentences"
-            />
-            
-            <Text style={[styles.eventInputLabel, { marginTop: 16 }]}>End Date:</Text>
-            <TouchableOpacity 
-                style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}
-            >
-                <Text style={styles.datePickerText}>
-                    {countdownDate.toLocaleDateString()}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color="white" />
-            </TouchableOpacity>
-            
-            {showDatePicker && (
-                <DateTimePicker
-                    value={countdownDate}
-                    mode="date"
-                    display="default"
-                    onChange={onDateChange}
-                    minimumDate={new Date()}
-                />
-            )}
-            
-            <Text style={[styles.eventInputLabel, { marginTop: 16 }]}>End Time:</Text>
-            <TouchableOpacity 
-                style={styles.datePickerButton}
-                onPress={() => setShowTimePicker(true)}
-            >
-                <Text style={styles.datePickerText}>
-                    {countdownDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-                <Ionicons name="time-outline" size={20} color="white" />
-            </TouchableOpacity>
-            
-            {showTimePicker && (
-                <DateTimePicker
-                    value={countdownDate}
-                    mode="time"
-                    display="default"
-                    onChange={onTimeChange}
-                />
-            )}
-            
-            <TouchableOpacity 
-                style={[
-                    styles.addEventButton,
-                    { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 }
-                ]}
-                onPress={handleAddCountdownSticker}
-                disabled={!countdownName.trim()}
-            >
-                <Text style={styles.addEventButtonText}>Add Countdown</Text>
-            </TouchableOpacity>
-        </View>
     );
     
     const getSnapPoints = () => {
         if (mode === 'options') return ['45%'];
+        if (mode === 'nostrFilter') return ['75%'];
+        if (mode === 'prompt') return ['60%'];
         return ['75%'];
     };
 
@@ -355,22 +144,64 @@ export default function StickersBottomSheet() {
                 ]}
             >
                 {mode === 'options' && renderOptions()}
+                
+                {mode === 'text' && (
+                    <>
+                        {renderSearchHeader('Add Text')}
+                        <TextStickerInput 
+                            onStickerAdded={handleStickerAdded}
+                            addTextSticker={addTextSticker}
+                        />
+                    </>
+                )}
+                
                 {mode === 'mention' && (
                     <>
                         {renderSearchHeader('Select User')}
-                        {renderMentionList()}
+                        <MentionStickerInput 
+                            onStickerAdded={handleStickerAdded} 
+                            addMentionSticker={addMentionSticker}
+                        />
                     </>
                 )}
+                
                 {mode === 'event' && (
                     <>
                         {renderSearchHeader('Enter Event ID')}
-                        {renderEventList()}
+                        <EventStickerInput 
+                            onStickerAdded={handleStickerAdded}
+                            addNostrEventSticker={addNostrEventSticker}
+                        />
                     </>
                 )}
+                
                 {mode === 'countdown' && (
                     <>
                         {renderSearchHeader('Create Countdown')}
-                        {renderCountdownSetup()}
+                        <CountdownStickerInput 
+                            onStickerAdded={handleStickerAdded}
+                            addCountdownSticker={addCountdownSticker}
+                        />
+                    </>
+                )}
+                
+                {mode === 'nostrFilter' && (
+                    <>
+                        {renderSearchHeader('Create Nostr Filter')}
+                        <NostrFilterStickerInput 
+                            onStickerAdded={handleStickerAdded}
+                            addNostrFilterSticker={addNostrFilterSticker}
+                        />
+                    </>
+                )}
+                
+                {mode === 'prompt' && (
+                    <>
+                        {renderSearchHeader('Create Prompt')}
+                        <PromptStickerInput 
+                            onStickerAdded={handleStickerAdded}
+                            addPromptSticker={addPromptSticker}
+                        />
                     </>
                 )}
             </BottomSheetView>
@@ -449,69 +280,5 @@ const styles = StyleSheet.create({
     },
     backButton: {
         marginRight: 16,
-    },
-    searchContainer: {
-        paddingHorizontal: 16,
-        marginBottom: 16,
-    },
-    searchInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(50, 50, 50, 0.4)',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-    },
-    searchIcon: {
-        marginRight: 8,
-    },
-    searchInput: {
-        flex: 1,
-        color: 'white',
-        fontSize: 16,
-        padding: 4,
-    },
-    eventInputContainer: {
-        padding: 16,
-    },
-    eventInputLabel: {
-        color: 'white',
-        fontSize: 16,
-        marginBottom: 8,
-    },
-    eventInput: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 8,
-        padding: 12,
-        color: 'white',
-        marginBottom: 16,
-    },
-    addEventButton: {
-        backgroundColor: '#5b21b6',
-        borderRadius: 8,
-        padding: 12,
-        alignItems: 'center',
-    },
-    addEventButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    loader: {
-        marginTop: 20,
-    },
-    countdownContainer: {
-        padding: 16,
-    },
-    datePickerButton: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 8,
-        padding: 12,
-    },
-    datePickerText: {
-        color: 'white',
-        fontSize: 16,
     },
 }); 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     useAnimatedStyle,
@@ -9,11 +9,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { Sticker as StickerType } from '../context/StickerContext';
-import { getEnhancedStyleById, enhancedTextStyles } from '../styles/enhancedTextStyles';
+import { getStickerStyleById, getNextStickerStyleId } from '../styles/stickerStyles';
 import {
     useFonts,
-    Inter_900Black,
+    Inter_400Regular,
     Inter_700Bold,
+    Inter_900Black,
 } from '@expo-google-fonts/inter';
 import {
     Pacifico_400Regular,
@@ -22,9 +23,22 @@ import {
     PermanentMarker_400Regular,
 } from '@expo-google-fonts/permanent-marker';
 import {
+    DancingScript_400Regular,
     DancingScript_700Bold,
 } from '@expo-google-fonts/dancing-script';
-import { MentionSticker, NostrEventSticker, TextSticker, CountdownSticker } from './sticker-types';
+import {
+    Anton_400Regular,
+} from '@expo-google-fonts/anton';
+import {
+    Caveat_400Regular,
+    Caveat_700Bold,
+} from '@expo-google-fonts/caveat';
+import {
+    Oswald_400Regular,
+    Oswald_700Bold,
+} from '@expo-google-fonts/oswald';
+import { MentionSticker, NostrEventSticker, TextSticker, CountdownSticker, NostrFilterSticker } from './sticker-types';
+import PromptSticker from './sticker-types/PromptSticker';
 
 interface StickerProps {
     sticker: StickerType;
@@ -40,14 +54,38 @@ const SPRING_CONFIG = {
     stiffness: 150,
 };
 
-// Worklet-safe function to get next style ID
-const getNextStyleId = (currentStyleId: string): string => {
-    'worklet';
-    const styles = enhancedTextStyles;
-    const currentIndex = styles.findIndex(style => style.id === currentStyleId);
-    const nextIndex = (currentIndex + 1) % styles.length;
-    return styles[nextIndex].id;
-};
+// Define styles using StyleSheet.create
+const styles = StyleSheet.create({
+    container: {
+        position: 'absolute',
+    },
+    selectionIndicator: {
+        position: 'absolute',
+        top: -4,
+        left: -4,
+        right: -4,
+        bottom: -4,
+        borderWidth: 2,
+        borderColor: '#4a8cff',
+        borderRadius: 20,
+        borderStyle: 'dashed',
+    },
+    debugLabel: {
+        position: 'absolute',
+        top: 5,
+        left: 5,
+        right: 5,
+        backgroundColor: '#FF3B30',
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4,
+        fontSize: 9,
+        color: '#fff',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        zIndex: 9999,
+    },
+});
 
 export default function Sticker({ 
     sticker, 
@@ -57,11 +95,18 @@ export default function Sticker({
     isSelected 
 }: StickerProps) {
     const [fontsLoaded] = useFonts({
-        Inter_900Black,
+        Inter_400Regular,
         Inter_700Bold,
+        Inter_900Black,
         Pacifico_400Regular,
         PermanentMarker_400Regular,
+        DancingScript_400Regular,
         DancingScript_700Bold,
+        Anton_400Regular,
+        Caveat_400Regular,
+        Caveat_700Bold,
+        Oswald_400Regular,
+        Oswald_700Bold,
     });
 
     // Shared values for transformations
@@ -74,7 +119,19 @@ export default function Sticker({
     const savedScale = useSharedValue(sticker.transform.scale);
     const savedRotate = useSharedValue(sticker.transform.rotate);
 
-    const currentStyle = getEnhancedStyleById(sticker.styleId);
+    const currentStyle = getStickerStyleById(sticker.type, sticker.styleId);
+    
+    // Create custom font style if there's a fontFamily
+    const customFontStyle = currentStyle.fontFamily 
+        ? { fontFamily: currentStyle.fontFamily }
+        : {};
+
+    // Handle style change outside of the gesture handler
+    const handleStyleChange = useCallback(() => {
+        onSelect();
+        const nextStyleId = getNextStickerStyleId(sticker.type, sticker.styleId);
+        onStyleChange(nextStyleId);
+    }, [sticker.type, sticker.styleId, onSelect, onStyleChange]);
 
     // Pan gesture for translation
     const panGesture = Gesture.Pan()
@@ -140,8 +197,7 @@ export default function Sticker({
     const doubleTapGesture = Gesture.Tap()
         .numberOfTaps(2)
         .onEnd(() => {
-            const nextStyleId = getNextStyleId(sticker.styleId);
-            runOnJS(onStyleChange)(nextStyleId);
+            runOnJS(handleStyleChange)();
         });
 
     // Single tap gesture for selection
@@ -173,8 +229,7 @@ export default function Sticker({
                 { scale: scale.value },
                 { rotate: `${rotate.value}rad` },
             ],
-            padding: isSelected ? 10 : 0,
-            ...(currentStyle.style.container || {}),
+            ...(currentStyle && currentStyle.style && currentStyle.style.container ? currentStyle.style.container : {}),
         };
     });
 
@@ -182,39 +237,50 @@ export default function Sticker({
         return null;
     }
 
-    const textStyle = {
-        fontSize: 32,
-        ...(currentStyle.style.text || {}),
-        ...(currentStyle.fontFamily ? { fontFamily: currentStyle.fontFamily } : {}),
-    };
-
+    // Get the content component based on sticker type
     const renderContent = () => {
         switch (sticker.type) {
-            case 'mention':
-                return <MentionSticker sticker={sticker} textStyle={textStyle} />;
-            case 'nostrEvent':
-                return <NostrEventSticker sticker={sticker} textStyle={textStyle} />;
-            case 'countdown':
-                return <CountdownSticker sticker={sticker} textStyle={textStyle} />;
             case 'text':
+                return <TextSticker sticker={sticker} textStyle={customFontStyle} />;
+            case 'mention':
+                return <MentionSticker sticker={sticker} textStyle={customFontStyle} />;
+            case 'nostrEvent':
+                return <NostrEventSticker sticker={sticker} textStyle={customFontStyle} />;
+            case 'countdown':
+                return <CountdownSticker sticker={sticker} />;
+            case 'nostrFilter':
+                return <NostrFilterSticker sticker={sticker} textStyle={customFontStyle} />;
+            case 'prompt':
+                return <PromptSticker sticker={sticker} textStyle={customFontStyle} />;
             default:
-                return <TextSticker sticker={sticker} textStyle={textStyle} />;
+                return null;
         }
     };
 
     return (
         <GestureDetector gesture={gesture}>
-            <Animated.View style={animatedStyle}>
-                {currentStyle.style.gradient ? (
-                    <LinearGradient
-                        colors={currentStyle.style.gradient.colors}
-                        start={currentStyle.style.gradient.start}
-                        end={currentStyle.style.gradient.end}
-                        style={StyleSheet.absoluteFill}
-                    />
-                ) : null}
-                {renderContent()}
-            </Animated.View>
+            <View style={styles.container}>
+                {isSelected && <View style={styles.selectionIndicator} />}
+                
+                <Animated.View style={animatedStyle}>
+                    {currentStyle && currentStyle.style && currentStyle.style.gradient ? (
+                        <LinearGradient
+                            colors={currentStyle.style.gradient.colors}
+                            start={currentStyle.style.gradient.start}
+                            end={currentStyle.style.gradient.end}
+                            style={StyleSheet.absoluteFill}
+                        />
+                    ) : null}
+                    {renderContent()}
+                    
+                    {/* Debug label inside the sticker at the top */}
+                    {currentStyle && (
+                        <Text style={styles.debugLabel}>
+                            {sticker.type}: {currentStyle.name || currentStyle.id}
+                        </Text>
+                    )}
+                </Animated.View>
+            </View>
         </GestureDetector>
     );
 } 
