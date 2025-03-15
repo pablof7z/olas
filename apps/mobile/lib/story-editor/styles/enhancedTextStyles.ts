@@ -45,6 +45,7 @@ export const enhancedTextStyles: EnhancedTextStyle[] = [
             },
             container: {
                 padding: 15,
+                borderWidth: 0,
             },
             gradient: {
                 colors: ['rgba(0, 255, 0, 0.2)', 'transparent'] as [string, string],
@@ -65,6 +66,7 @@ export const enhancedTextStyles: EnhancedTextStyle[] = [
             container: {
                 padding: 15,
                 borderRadius: 10,
+                borderWidth: 0,
             },
             gradient: {
                 colors: ['#FF512F', '#F09819'] as [string, string],
@@ -84,6 +86,7 @@ export const enhancedTextStyles: EnhancedTextStyle[] = [
             },
             container: {
                 padding: 15,
+                borderWidth: 0,
             },
             gradient: {
                 colors: ['rgba(255, 255, 255, 0.2)', 'transparent'] as [string, string],
@@ -130,6 +133,7 @@ export const enhancedTextStyles: EnhancedTextStyle[] = [
             container: {
                 padding: 15,
                 borderRadius: 5,
+                borderWidth: 0,
             },
             gradient: {
                 colors: ['#ff0080', '#7928ca'] as [string, string],
