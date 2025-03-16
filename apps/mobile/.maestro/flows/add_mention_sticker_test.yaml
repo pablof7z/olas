@@ -1,0 +1,148 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Navigate to story creation by tapping the + button
+- tapOn:
+    id: "new-post-button"
+    fallback:
+        point: 50%,95%
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Take a photo or select from gallery
+- tapOn:
+    id: "camera-button"
+    fallback:
+        point: 50%,50%
+- waitForAnimationToEnd:
+    timeout: 3000
+    
+# Mock selecting an image from gallery
+- tapOn:
+    id: "select-gallery-image"
+    fallback:
+        point: 25%,95%
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Take screenshot of the editor screen
+- takeScreenshot: story-editor-screen
+
+# Open sticker menu
+- tapOn:
+    id: "add-stickers-button"
+    fallback:
+        point: 85%,95%
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot of sticker options
+- takeScreenshot: sticker-options-menu
+
+# Select the mention sticker option
+- tapOn:
+    id: "sticker-option-mention"
+    fallback:
+        point: 50%,35%
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot of mention search screen
+- takeScreenshot: mention-search-screen
+
+# Enter search query for a user
+- tapOn:
+    id: "mention-search-input"
+    fallback:
+        point: 50%,20%
+- inputText: "nostr"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Take screenshot of search results
+- takeScreenshot: mention-search-results
+
+# Select the first user from search results
+- tapOn:
+    id: "mention-suggestion-item-0"
+    fallback:
+        point: 50%,30%
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot of added mention sticker
+- takeScreenshot: mention-sticker-added
+
+# Verify sticker is selectable by tapping on it
+- tapOn:
+    point: 50%,50%
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Take screenshot of selected sticker
+- takeScreenshot: mention-sticker-selected
+
+# Move the sticker
+- swipe:
+    direction: RIGHT
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Take screenshot of moved sticker
+- takeScreenshot: mention-sticker-moved
+
+# Double tap to change style
+- tapOn:
+    point: 50%,60%
+- tapOn:
+    point: 50%,60%
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Take screenshot of sticker with new style
+- takeScreenshot: mention-sticker-styled
+
+# Preview the story
+- tapOn:
+    id: "share-button"
+    fallback:
+        point: 90%,95%
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Take screenshot of preview screen
+- takeScreenshot: story-preview-screen
+
+# Go back to the editor
+- tapOn:
+    id: "close-button"
+    fallback:
+        point: 10%,10%
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Delete the sticker
+- tapOn:
+    point: 50%,60%
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    id: "delete-button"
+    fallback:
+        point: 90%,10%
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot after sticker deletion
+- takeScreenshot: sticker-deleted
+
+# Cancel creating the story
+- tapOn:
+    id: "close-button"
+    fallback:
+        point: 10%,95%
+- waitForAnimationToEnd:
+    timeout: 2000 

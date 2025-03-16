@@ -15,9 +15,6 @@ export default function StoryPreviewScreen() {
         router.back();
     };
 
-    console.log('path', path);
-    console.log('type', type);
-
     const insets = useSafeAreaInsets();
     
     if (!path || !type) {

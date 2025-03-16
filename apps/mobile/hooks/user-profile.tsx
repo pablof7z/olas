@@ -5,13 +5,15 @@ import { create } from "zustand";
 import { getAllPubkeyFlares } from "@/stores/db/pubkeyFlare";
 import { db } from "@/stores/db";
 
+export type UserProfile = NDKUserProfile & { pubkey: string };
+
 type UserEntry = {
-    profile: NDKUserProfile,
-    flare: string,
+    profile: UserProfile,
+    flare: string | null,
 }
 
 interface UserStoreProps {
-    ndk: NDK,
+    ndk: NDK | null,
     entries: Map<string, UserEntry>,
     used: Set<string>,
 }
@@ -38,6 +40,7 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
         for (const entry of entries) {
             map.set(entry.pubkey, {
                 profile: {
+                    pubkey: entry.pubkey,
                     name: entry.name,
                     about: entry.about,
                     picture: entry.picture,
@@ -49,7 +52,7 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
                     website: entry.website,
                     created_at: entry.created_at,
                 },
-                flare: userFlare.get(entry.pubkey) ?? undefined,
+                flare: userFlare.get(entry.pubkey) ?? null,
             });
         }
         set({ entries: map, ndk });
@@ -65,9 +68,9 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
 
         const entry = entries.get(pubkey);
         const hasIt = !!entry;
-        let flare: string | undefined;
+        let flare: string | null = null;
 
-        if (entry?.flare === undefined) {
+        if (entry?.flare === undefined || entry?.flare === null) {
             const result = db.getFirstSync(`SELECT flare_type FROM pubkey_flares WHERE pubkey = ?`, [pubkey]) as { flare_type: string } | undefined;
             flare = result?.flare_type ?? null;
         }
@@ -86,9 +89,14 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
                 console.log('loading profile', pubkey);
                 set(s => {
                     const _entries = new Map(s.entries);
-                    const current = _entries.get(pubkey) ?? { profile: null, flare };
-                    current.profile = profile;
-                    current.flare = flare;
+                    const userProfile: UserProfile = {
+                        ...profile,
+                        pubkey
+                    };
+                    const current = {
+                        profile: userProfile,
+                        flare
+                    };
                     _entries.set(pubkey, current);
                     return { entries: _entries };
                 })
@@ -98,9 +106,11 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
         } else {
             set(s => {
                 const _entries = new Map(s.entries);
-                const current = _entries.get(pubkey) ?? { profile: null, flare };
-                current.flare = flare;
-                _entries.set(pubkey, current);
+                const current = entries.get(pubkey);
+                if (current) {
+                    current.flare = flare;
+                    _entries.set(pubkey, current);
+                }
                 return { entries: _entries };
             })
         }
@@ -115,13 +125,21 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
     update: (pubkey: string, profile: NDKUserProfile) => {
         set(s => {
             const _entries = new Map(s.entries);
-            const entry = _entries.get(pubkey) ?? { profile: null, flare: null };
-            const current = { ...entry };
-            current.profile = profile;
-            if (current.profile) {
-                _entries.set(pubkey, current);
-            } else {
-                _entries.delete(pubkey);
+            const entry = _entries.get(pubkey);
+            if (entry) {
+                const userProfile: UserProfile = {
+                    ...profile,
+                    pubkey
+                };
+                const current = {
+                    ...entry,
+                    profile: userProfile
+                };
+                if (current.profile) {
+                    _entries.set(pubkey, current);
+                } else {
+                    _entries.delete(pubkey);
+                }
             }
             return { entries: _entries };
         });
@@ -130,7 +148,7 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
 
 
 export const useUserProfile = (pubkey?: string) => {
-    const entry = useUsersStore(s => s.entries.get(pubkey));
+    const entry = useUsersStore(s => pubkey ? s.entries.get(pubkey) : undefined);
     const setUsed = useUsersStore(s => s.setUsed);
     let flare: string | null = null;
 
@@ -138,5 +156,5 @@ export const useUserProfile = (pubkey?: string) => {
         if (pubkey) setUsed(pubkey);
     }, [pubkey]);
 
-    return { userProfile: entry?.profile, flare };
+    return { userProfile: entry?.profile, flare: entry?.flare };
 }

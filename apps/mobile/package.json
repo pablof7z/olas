@@ -25,6 +25,9 @@
     "@backpackapp-io/react-native-toast": "^0.13.0",
     "@bacons/text-decoder": "^0.0.0",
     "@cashu/cashu-ts": "^2.0.0",
+    "@expo-google-fonts/anton": "^0.2.3",
+    "@expo-google-fonts/caveat": "^0.2.3",
+    "@expo-google-fonts/oswald": "^0.2.3",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^14.0.4",
     "@gorhom/bottom-sheet": "^5.1.2",
@@ -116,7 +119,8 @@
     "react-native-vision-camera": "^4.6.4",
     "sweet-sfsymbols": "^0.7.2",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

@@ -73,13 +73,13 @@ describe('StoryPreview', () => {
         // Create a spy on the addTextSticker function
         const addTextStickerMock = jest.fn().mockReturnValue('test-sticker-id');
         
-        // Mock the useStickers hook to return our mock function
-        jest.spyOn(require('../components/story/StickerContext'), 'useStickers')
+        // Mock the useStickerStore hook to return our mock function
+        jest.spyOn(require('../lib/story-editor/store'), 'useStickerStore')
             .mockReturnValue({
                 stickers: [],
-                addTextSticker: addTextStickerMock,
-                updateTextSticker: jest.fn(),
+                addSticker: addTextStickerMock,
                 updateSticker: jest.fn(),
+                updateStickerStyle: jest.fn(),
                 removeSticker: jest.fn(),
                 getSticker: jest.fn()
             });
@@ -101,7 +101,7 @@ describe('StoryPreview', () => {
         // Call onSave with test text
         onSave('Test sticker text');
         
-        // Check that addTextSticker was called
+        // Check that addSticker was called
         expect(addTextStickerMock).toHaveBeenCalled();
     });
 

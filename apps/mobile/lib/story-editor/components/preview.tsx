@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { VideoView } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,12 +12,13 @@ import {
     RoundedRect,
     useCanvasRef,
 } from '@shopify/react-native-skia';
-import StoryTextInput from './StoryTextInput';
-import { StickerProvider, useStickers } from '../context/StickerContext';
+import { useStickerStore, Sticker as StickerType, editStickerAtom } from '../store';
+import { NDKStoryStickerType } from '../types';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
+import { TextStickerInput } from './sticker-types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -27,27 +28,18 @@ interface StoryPreviewScreenProps {
     onClose: () => void;
 }
 
-function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
+export default function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const canvasRef = useCanvasRef();
     const [canvasSize, setCanvasSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     const image = useImage(path);
-    const [isEditingText, setIsEditingText] = useState(false);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
     
-    const { stickers, addTextSticker, updateSticker, updateStickerStyle, removeSticker } = useStickers();
+    const { stickers, updateSticker, updateStickerStyle, removeSticker, addSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
+    const [editSticker, setEditSticker] = useAtom(editStickerAtom);
 
-    const handleTextEditDone = (text: string) => {
-        if (text.trim()) {
-            addTextSticker(text);
-        }
-        setIsEditingText(false);
-    };
-
-    const handleTextEditCancel = () => {
-        setIsEditingText(false);
-    };
+    const isEditingText = useMemo(() => editSticker?.type === NDKStoryStickerType.Text, [editSticker]);
 
     const handleStickerUpdate = (id: string, transform: any) => {
         updateSticker(id, transform);
@@ -69,9 +61,9 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
     };
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, borderRadius: 20, overflow: 'hidden' }]}>
             <View 
-                style={[styles.previewContainer, { paddingBottom: insets.bottom }]} 
+                style={[styles.previewContainer, { borderRadius: 20, overflow: 'hidden' }]} 
                 testID="preview-container"
                 onLayout={(event) => {
                     const { width, height } = event.nativeEvent.layout;
@@ -104,11 +96,11 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                 {stickers.map((sticker) => (
                     <Sticker
                         key={sticker.id}
-                        sticker={sticker}
-                        onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
-                        onSelect={() => handleStickerSelect(sticker.id)}
-                        onStyleChange={(styleId) => updateStickerStyle(sticker.id, styleId)}
+                        sticker={sticker as any}
                         isSelected={selectedStickerId === sticker.id}
+                        onSelect={() => handleStickerSelect(sticker.id)}
+                        onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
+                        onStyleChange={(styleId) => updateStickerStyle(sticker.id, styleId)}
                     />
                 ))}
             </View>
@@ -122,9 +114,14 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                     <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
                 <TouchableOpacity 
-                    onPress={() => setIsEditingText(true)}
                     style={[styles.button, styles.textButton]}
                     testID="add-text-button"
+                    onPress={() => setEditSticker({ 
+                        id: '', 
+                        type: NDKStoryStickerType.Text, 
+                        content: '', 
+                        transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 } 
+                    })}
                 >
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
@@ -146,11 +143,7 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
                 )}
             </View>
 
-            {isEditingText && (
-                <StoryTextInput onClose={() => setIsEditingText(false)} />
-            )}
-
-            <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+            <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
                 <TouchableOpacity 
                     style={styles.shareButton}
                     testID="share-button"
@@ -160,15 +153,13 @@ function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
             </View>
             
             <StickersBottomSheet />
+            
+            {isEditingText && (
+                <View style={styles.textInputOverlay}>
+                    <TextStickerInput />
+                </View>
+            )}
         </View>
-    );
-}
-
-export default function StoryPreview(props: StoryPreviewScreenProps) {
-    return (
-        <StickerProvider>
-            <StoryPreviewContent {...props} />
-        </StickerProvider>
     );
 }
 
@@ -235,11 +226,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     footer: {
+        padding: 20,
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        padding: 20,
         alignItems: 'flex-end',
         zIndex: 2,
     },
@@ -248,5 +239,13 @@ const styles = StyleSheet.create({
         height: 60,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    textInputOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
     },
 }); 

@@ -1,114 +1,79 @@
-import { 
-    textStickerStyles, 
-    getTextStickerStyleById,
-    getNextTextStickerStyle,
-    TextStickerStyle
-} from './textStickerStyles';
+import { StickerStyle } from '../types';
 
-import { 
-    mentionStickerStyles, 
-    getMentionStickerStyleById,
-    getNextMentionStickerStyle,
-    MentionStickerStyle
-} from './mentionStickerStyles';
+// Map of sticker type to its available styles
+const stickerStylesMap: Record<string, Record<string, StickerStyle>> = {};
 
-import { 
-    nostrEventStickerStyles, 
-    getNostrEventStickerStyleById,
-    getNextNostrEventStickerStyle,
-    NostrEventStickerStyle
-} from './nostrEventStickerStyles';
-
-import { 
-    countdownStickerStyles, 
-    getCountdownStickerStyleById,
-    getNextCountdownStickerStyle,
-    CountdownStickerStyle
-} from './countdownStickerStyles';
-
-import {
-    nostrFilterStickerStyles,
-    getNostrFilterStickerStyleById,
-    getNextNostrFilterStickerStyle,
-    NostrFilterStickerStyle
-} from './nostrFilterStickerStyles';
-
-import {
-    promptStickerStyles,
-    getPromptStickerStyleById,
-    getNextPromptStickerStyle,
-    PromptStickerStyle
-} from './promptStickerStyles';
-
-// Function to get the style by ID based on sticker type
-export function getStickerStyleById(type: string, styleId: string): any {
-    switch (type) {
-        case 'text':
-            return getTextStickerStyleById(styleId);
-        case 'mention':
-            return getMentionStickerStyleById(styleId);
-        case 'nostrEvent':
-            return getNostrEventStickerStyleById(styleId);
-        case 'countdown':
-            return getCountdownStickerStyleById(styleId);
-        case 'nostrFilter':
-            return getNostrFilterStickerStyleById(styleId);
-        case 'prompt':
-            return getPromptStickerStyleById(styleId);
-        default:
-            return getTextStickerStyleById(styleId);
+/**
+ * Get all styles for a specific sticker type
+ * @param stickerType The type of sticker
+ * @returns Array of styles for the sticker type
+ */
+export const getStickerStyles = (stickerType: string): StickerStyle[] => {
+    // If styles exist for this sticker type, return them
+    if (stickerStylesMap[stickerType]) {
+        return Object.values(stickerStylesMap[stickerType]);
     }
-}
+    
+    // Default to empty array if no styles found
+    return [];
+};
 
-// Function to get the next style ID based on sticker type and current style ID
-export function getNextStickerStyleId(type: string, currentStyleId: string): string {
-    switch (type) {
-        case 'text':
-            return getNextTextStickerStyle(currentStyleId).id;
-        case 'mention':
-            return getNextMentionStickerStyle(currentStyleId).id;
-        case 'nostrEvent':
-            return getNextNostrEventStickerStyle(currentStyleId).id;
-        case 'countdown':
-            return getNextCountdownStickerStyle(currentStyleId).id;
-        case 'nostrFilter':
-            return getNextNostrFilterStickerStyle(currentStyleId).id;
-        case 'prompt':
-            return getNextPromptStickerStyle(currentStyleId).id;
-        default:
-            return getNextTextStickerStyle(currentStyleId).id;
+/**
+ * Register styles for a specific sticker type
+ * @param stickerType The type of sticker
+ * @param styles The styles to register
+ */
+export const registerStickerStyles = (stickerType: string, styles: StickerStyle[]): void => {
+    // Create an object map for faster lookups
+    const stylesMap: Record<string, StickerStyle> = {};
+    styles.forEach(style => {
+        stylesMap[style.id] = style;
+    });
+    
+    stickerStylesMap[stickerType] = stylesMap;
+};
+
+/**
+ * Get the next style for a sticker
+ * @param stickerType The type of sticker
+ * @param currentStyleId The current style id (can be undefined)
+ * @returns The next style id
+ */
+export const getNextStyleId = (stickerType: string, currentStyleId?: string): string => {
+    const styles = getStickerStyles(stickerType);
+    
+    // If no styles registered or empty array, return empty string
+    if (!styles.length) {
+        return '';
     }
-}
-
-// Function to get a default style ID for a given sticker type
-export function getDefaultStyleIdForStickerType(type: string): string {
-    switch (type) {
-        case 'text':
-            return textStickerStyles[0].id;
-        case 'mention':
-            return mentionStickerStyles[0].id;
-        case 'nostrEvent':
-            return nostrEventStickerStyles[0].id;
-        case 'countdown':
-            return countdownStickerStyles[0].id;
-        case 'nostrFilter':
-            return nostrFilterStickerStyles[0].id;
-        case 'prompt':
-            return promptStickerStyles[0].id;
-        default:
-            return textStickerStyles[0].id;
+    
+    // If no current style, return the first style
+    if (!currentStyleId) {
+        return styles[0].id;
     }
-}
+    
+    // Find the index of the current style
+    const currentIndex = styles.findIndex(style => style.id === currentStyleId);
+    
+    // If not found or it's the last one, return the first style
+    if (currentIndex === -1 || currentIndex === styles.length - 1) {
+        return styles[0].id;
+    }
+    
+    // Return the next style
+    return styles[currentIndex + 1].id;
+};
 
-export {
-    TextStickerStyle,
-    MentionStickerStyle,
-    NostrEventStickerStyle,
-    CountdownStickerStyle,
-    textStickerStyles,
-    mentionStickerStyles,
-    nostrEventStickerStyles,
-    countdownStickerStyles,
-    nostrFilterStickerStyles,
-    promptStickerStyles
+/**
+ * Get a specific style by id
+ * @param stickerType The type of sticker
+ * @param styleId The style id
+ * @returns The style object or undefined if not found
+ */
+export const getStickerStyle = (stickerType: string, styleId?: string): StickerStyle | undefined => {
+    if (!styleId || !stickerStylesMap[stickerType]) {
+        return undefined;
+    }
+    
+    return stickerStylesMap[stickerType][styleId];
 }; 
