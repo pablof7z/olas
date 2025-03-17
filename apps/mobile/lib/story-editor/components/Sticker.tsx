@@ -129,18 +129,11 @@ export default function Sticker({ sticker, onUpdate, onSelect }: StickerProps) {
         if (sticker.type === NDKStoryStickerType.Countdown) scaleFactor = scale.value * 0.4;
         if (sticker.type === NDKStoryStickerType.Event) scaleFactor = scale.value;
 
-        console.log('animatedStyle', {
-            translateX: translateX.value * (1-scaleFactor),
-            translateY: translateY.value * (1-scaleFactor),
-            scale: scaleFactor,
-            rotate: rotate.value,
-        });
-
         return {
             position: 'absolute',
             transform: [
-                { translateX: translateX.value * scaleFactor },
-                { translateY: translateY.value * scaleFactor },
+                { translateX: translateX.value },
+                { translateY: translateY.value },
                 { scale: scaleFactor },
                 { rotate: `${rotate.value}rad` },
             ],

@@ -16,7 +16,6 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Reanimated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import StoryPreview from '@/lib/story-editor/components/preview';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -63,11 +62,6 @@ export default function StoryCameraScreen() {
     const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
     const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } = useMicrophonePermission();
     const router = useRouter();
-
-    // States for the preview mode
-    const [showPreview, setShowPreview] = useState(false);
-    const [mediaPath, setMediaPath] = useState<string | undefined>();
-    const [mediaType, setMediaType] = useState<'photo' | 'video'>('photo');
 
     // Map available devices to front/back
     const devices: Devices = {};
@@ -159,14 +153,17 @@ export default function StoryCameraScreen() {
 
     const onMediaCaptured = useCallback((media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
         console.log('Media captured:', { path: media.path, type });
-        setMediaPath(media.path);
-        setMediaType(type);
-        setShowPreview(true);
-    }, []);
+        router.push({
+            pathname: '/story/preview',
+            params: {
+                path: media.path,
+                type: type
+            }
+        });
+    }, [router]);
 
     const handleBackToCamera = useCallback(() => {
-        setShowPreview(false);
-        setMediaPath(undefined);
+        setIsRecording(false);
     }, []);
 
     const onShortPress = useCallback(async () => {
@@ -212,11 +209,6 @@ export default function StoryCameraScreen() {
 
     if (!hasMicPermission) {
         return <PermissionRequest type="microphone" onRequestPermission={requestMicPermission} />;
-    }
-
-    // If we're in preview mode, render the preview screen
-    if (showPreview && mediaPath) {
-        return <StoryPreview path={mediaPath} type={mediaType} onClose={handleBackToCamera} />;
     }
 
     return (
