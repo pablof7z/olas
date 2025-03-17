@@ -39,7 +39,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
     const image = useImage(path);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
     
-    const { stickers, updateSticker, updateStickerStyle, removeSticker, addSticker } = useStickerStore();
+    const { stickers, updateSticker, removeSticker, addSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
     const [isUploading, setIsUploading] = useState(false);
@@ -154,16 +154,17 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                 </Canvas>
 
                 {/* Stickers Layer */}
-                {stickers.map((sticker) => (
-                    <Sticker
-                        key={sticker.id}
-                        sticker={sticker as any}
-                        isSelected={selectedStickerId === sticker.id}
-                        onSelect={() => handleStickerSelect(sticker.id)}
-                        onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
-                        onStyleChange={(styleId) => updateStickerStyle(sticker.id, styleId)}
-                    />
-                ))}
+                {stickers.map((sticker) => {
+                    console.log('Mapping sticker in preview:', sticker);
+                    return (
+                        <Sticker
+                            key={sticker.id}
+                            sticker={sticker as any}
+                            onSelect={() => handleStickerSelect(sticker.id)}
+                            onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
+                        />
+                    );
+                })}
             </View>
 
             <View style={[styles.header]}>
@@ -180,7 +181,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                     onPress={() => setEditSticker({ 
                         id: '', 
                         type: NDKStoryStickerType.Text, 
-                        content: '', 
+                        value: '', 
                         transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 } 
                     })}
                 >

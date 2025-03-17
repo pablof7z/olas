@@ -1,4 +1,4 @@
-import { NDKEvent, NDKUser, NDKUserProfile, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { Hexpubkey, NDKEvent, NDKUser, NDKUserProfile, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { useAtom, useSetAtom } from "jotai";
 import { Send } from "lucide-react-native";
 import { NativeSyntheticEvent, Text, TextInputKeyPressEventData, TextInputSelectionChangeEventData } from "react-native";
@@ -98,7 +98,7 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
         }
     }, [setMentionQuery]);
 
-    const handleMentionPress = useCallback((profile: NDKUserProfile) => {
+    const handleMentionPress = useCallback((pubkey: Hexpubkey, profile: NDKUserProfile) => {
         let text = commentRef.current;
         let mention = profile.name?.trim?.();
         mention ??= profile.nip05?.trim?.();

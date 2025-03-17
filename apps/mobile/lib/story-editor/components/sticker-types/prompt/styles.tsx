@@ -1,9 +1,8 @@
-import { BaseStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import { registerStickerStyles } from '@/lib/story-editor/styles/stickerStyles';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
 // Define PromptStickerStyle interface
-export interface PromptStickerStyle extends BaseStickerStyle {
+export interface PromptStickerStyle {
     // Flat properties for backward compatibility
     backgroundColor?: string;
     backgroundOpacity?: number;

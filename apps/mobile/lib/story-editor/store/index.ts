@@ -5,6 +5,7 @@ import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { UserProfile } from '@/hooks/user-profile';
 import { atom } from 'jotai';
 import { getNextStyleName as getNextTextStyleName } from '../components/sticker-types/text/styles';
+import { getNextStyleName as getNextMentionStyleName } from '../components/sticker-types/mention/styles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -42,6 +43,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     stickers: [],
     
     addSticker: (stickerData) => {
+        console.log('In useStickerStore.addSticker with data:', stickerData);
         const id = Math.random().toString();
         const defaultTransform = {
             translateX: SCREEN_WIDTH / 2 - 50,
@@ -62,7 +64,12 @@ export const useStickerStore = create<StickerState>((set, get) => ({
             metadata: stickerData.metadata,
         };
         
-        set((state) => ({ stickers: [...state.stickers, newSticker] }));
+        console.log('Creating new sticker:', newSticker);
+        set((state) => {
+            const newState = { stickers: [...state.stickers, newSticker] };
+            console.log('New stickers state:', newState.stickers);
+            return newState;
+        });
         return id;
     },
 
@@ -101,6 +108,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     },
     
     nextStyle: (id: string) => {
+        console.log('nextStyle', id);
         set((state) => {
             const stickers = state.stickers;
             const stickerIndex = stickers.findIndex(sticker => sticker.id === id);
@@ -108,6 +116,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
 
             const sticker = stickers[stickerIndex];
             const nextStyle = getNextStyleId(sticker.type, sticker.style);
+            console.log('nextStyle', nextStyle);
             stickers[stickerIndex] = { ...sticker, style: nextStyle };
             
             return { stickers };
@@ -123,6 +132,7 @@ export const editStickerAtom = atom<Sticker | null>(null);
 function getNextStyleId(type: NDKStoryStickerType, style?: string): string {
     switch (type) {
         case NDKStoryStickerType.Text: return getNextTextStyleName(style)
+        case NDKStoryStickerType.Pubkey: return getNextMentionStyleName(style)
         default: return '';
     }
 }

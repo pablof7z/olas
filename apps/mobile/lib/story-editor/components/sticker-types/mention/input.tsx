@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, TextInput, StyleSheet, Text } from 'react-native';
-import { NDKUser } from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
@@ -25,20 +25,29 @@ export default function MentionStickerInput({
         setShowSuggestions(true);
     };
 
-    const handleProfileSelect = useCallback((user: NDKUser) => {
-        if (user.profile && user.pubkey) {
-            const profile: UserProfile = {
-                ...user.profile,
-                pubkey: user.pubkey
-            };
-            
-            addSticker({
+    const handleProfileSelect = useCallback((pubkey: Hexpubkey, profile: NDKUserProfile) => {
+        console.log('Profile selected:', profile);
+        console.log('User pubkey:', pubkey);
+        console.log('User profile:', profile);
+        
+        if (profile && pubkey) {
+            const stickerData = {
                 type: NDKStoryStickerType.Pubkey,
-                value: user.pubkey,
-                styleId: 'default',
-                metadata: { profile }
-            });
+                value: pubkey,
+                metadata: { profile: {...profile, pubkey} }
+            };
+            console.log('Creating mention sticker with profile:', profile);
+            
+            console.log('Adding sticker with data:', stickerData);
+            const stickerId = addSticker(stickerData);
+            console.log('Sticker added with ID:', stickerId);
+            
             onStickerAdded();
+        } else {
+            console.error('Cannot create mention sticker: missing profile or pubkey', {
+                hasProfile: !!profile,
+                hasPubkey: !!pubkey
+            });
         }
     }, [addSticker, onStickerAdded]);
 

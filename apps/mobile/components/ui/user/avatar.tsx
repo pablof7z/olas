@@ -1,12 +1,12 @@
 import React, { ForwardedRef, forwardRef, useMemo } from 'react';
-import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle } from 'react-native';
+import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle, StyleProp } from 'react-native';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageProps, useImage } from 'expo-image';
 import FlareLabel, { FlareElement } from './flare';
 import { useColorScheme } from '@/lib/useColorScheme';
 
-interface AvatarProps extends ImageProps {
+interface AvatarProps extends Omit<ImageProps, 'style'> {
     pubkey: Hexpubkey;
     userProfile?: NDKUserProfile | null;
     imageSize?: number;
@@ -28,6 +28,11 @@ interface AvatarProps extends ImageProps {
      * Whether to skip proxying the image.
      */
     skipProxy?: boolean;
+    
+    /**
+     * Style prop for the container View
+     */
+    style?: StyleProp<ViewStyle>;
 }
 
 const UserAvatar = forwardRef(function UserAvatar({
@@ -40,6 +45,7 @@ const UserAvatar = forwardRef(function UserAvatar({
     canSkipBorder = false,
     skipProxy = false,
     borderColor,
+    style: externalStyle,
     ...props
 }: AvatarProps, ref: ForwardedRef<View>) {
     const { colors } = useColorScheme();
@@ -89,7 +95,7 @@ const UserAvatar = forwardRef(function UserAvatar({
         overflow: 'hidden',
     }), [imageSize, borderWidth, borderColor])
 
-    return (<View ref={ref} style={style}>
+    return (<View ref={ref} style={[style, externalStyle]}>
         {flare && <View style={flareBorderContainerStyle}><FlareElement flare={flare} size={imageSize} borderWidth={borderWidth} /></View>}
         <AvatarInner
             image={imageSource}
@@ -100,6 +106,7 @@ const UserAvatar = forwardRef(function UserAvatar({
             flare={flare}
             borderColor={borderColor}
             includeFlareLabel={includeFlareLabel}
+            style={externalStyle}
             {...props}
         />
     </View>)
@@ -114,9 +121,10 @@ type AvatarInnerProps = {
     canSkipBorder: boolean;
     flare: string | null | undefined;
     borderColor: string;
+    style?: StyleProp<ViewStyle>;
 }
 
-function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, includeFlareLabel, ...props }: AvatarInnerProps) {
+function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, flare, borderColor, includeFlareLabel, style: externalStyle, ...props }: AvatarInnerProps) {
     let imageMargin = borderWidth;
     let realImageSize = imageSize - borderWidth * 2 - imageMargin * 2;
 
@@ -144,7 +152,7 @@ function AvatarInner({ image, pubkey, imageSize, borderWidth, canSkipBorder, fla
 
     return (
         <>
-            <View style={innerContainerStyle}>
+            <View style={[innerContainerStyle, externalStyle]}>
                 {image ? (
                     <Image
                         source={image}

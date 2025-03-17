@@ -143,12 +143,15 @@ export default function Sticker({
 
     // Animated style for transformations
     const animatedStyle = useAnimatedStyle(() => {
+        let scaleFactor = scale.value;
+        if (sticker.type === NDKStoryStickerType.Text) scaleFactor = scale.value * 0.4;
+        if (sticker.type === NDKStoryStickerType.Pubkey) scaleFactor = scale.value * 0.4;
         return {
             position: 'absolute',
             transform: [
                 { translateX: translateX.value },
                 { translateY: translateY.value },
-                { scale: scale.value },
+                { scale: scaleFactor },
                 { rotate: `${rotate.value}rad` },
             ],
         };
@@ -156,18 +159,26 @@ export default function Sticker({
 
     // Get the content component based on sticker type
     const renderContent = () => {
+        console.log('Rendering sticker content:', sticker);
+        
         switch (sticker.type) {
             case NDKStoryStickerType.Text:
+                console.log('Rendering text sticker');
                 return <TextStickerView sticker={sticker} />;
             case NDKStoryStickerType.Pubkey:
+                console.log('Rendering pubkey sticker with metadata:', sticker.metadata);
                 return <MentionStickerView sticker={sticker} />;
             case NDKStoryStickerType.Event:
+                console.log('Rendering event sticker');
                 return <EventStickerView sticker={sticker} />;
             case NDKStoryStickerType.Countdown:
+                console.log('Rendering countdown sticker');
                 return <CountdownStickerView sticker={sticker} />;
             case NDKStoryStickerType.Prompt:
+                console.log('Rendering prompt sticker');
                 return <PromptStickerView sticker={sticker} />;
             default:
+                console.log('Unknown sticker type:', sticker.type);
                 return null;
         }
     };

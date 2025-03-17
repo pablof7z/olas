@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/useColorScheme";
 import MentionSuggestions from "./mention-suggestions";
-import { NDKUserProfile } from "@nostr-dev-kit/ndk-mobile";
+import { Hexpubkey, NDKUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import { FlashList } from "@shopify/flash-list";
 
 interface MentionSelectorProps {
@@ -13,8 +13,8 @@ export default function MentionSelector({ onSelectUser }: MentionSelectorProps) 
     const [searchQuery, setSearchQuery] = useState<string>("@");
     const { colors } = useColorScheme();
 
-    const handleProfileSelected = (profile: NDKUserProfile) => {
-        onSelectUser(profile);
+    const handleProfileSelected = (pubkey: Hexpubkey, profile: NDKUserProfile) => {
+        onSelectUser({ ...profile, pubkey });
     };
 
     return (

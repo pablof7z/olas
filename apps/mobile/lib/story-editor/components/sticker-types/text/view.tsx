@@ -1,10 +1,19 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Sticker } from "@/lib/story-editor/store";
 import { getStyleFromName } from './styles';
 import { useSetAtom } from 'jotai';
 import { editStickerAtom } from '@/lib/story-editor/store';
-import { LinearGradient } from 'expo-linear-gradient';
+
+// Extend ViewStyle with backgroundGradient property
+interface ExtendedViewStyle extends ViewStyle {
+    backgroundGradient?: {
+        colors: string[];
+        start?: { x: number; y: number };
+        end?: { x: number; y: number };
+    };
+}
 
 interface TextStickerViewProps {
     sticker: Sticker;
@@ -12,98 +21,112 @@ interface TextStickerViewProps {
 
 export default function TextStickerView({ sticker }: TextStickerViewProps) {
     const setEditSticker = useSetAtom(editStickerAtom);
-    
+
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
     
     // Create container styles based on the selected style
-    const containerStyle = selectedStyle.container;
+    const containerStyle = selectedStyle.container as ExtendedViewStyle;
     
-    containerStyle.padding ??= 12;
-    containerStyle.backgroundColor ??= 'rgba(0, 0, 0, 0.7)';
-    containerStyle.borderRadius ??= 8;
-    containerStyle.borderWidth ??= 0;
-    containerStyle.borderColor ??= 'transparent';
-    containerStyle.borderStyle ??= 'solid';
-    containerStyle.shadowColor ??= 'transparent';
-    containerStyle.shadowOffset ??= { width: 0, height: 0 };
-    containerStyle.shadowOpacity ??= 0;
-    containerStyle.shadowRadius ??= 0;
-    containerStyle.elevation ??= 0;
+    // Get basic styling properties
+    const padding = typeof containerStyle.padding === 'number' ? containerStyle.padding : 12;
+    const borderRadius = typeof containerStyle.borderRadius === 'number' ? containerStyle.borderRadius : 8;
+    const borderWidth = typeof containerStyle.borderWidth === 'number' ? containerStyle.borderWidth : 0;
+    const borderColor = containerStyle.borderColor || 'transparent';
+    const backgroundColor = containerStyle.backgroundColor || 'rgba(0, 0, 0, 0.7)';
     
+    // Check if we have a gradient background
+    const hasBackgroundGradient = containerStyle.backgroundGradient && 
+        Array.isArray(containerStyle.backgroundGradient.colors) && 
+        containerStyle.backgroundGradient.colors.length > 1;
+
     // Create text styles based on the selected style
-    const textStyle = selectedStyle.text;
-    textStyle.color ??= 'white';
-    textStyle.fontSize ??= 18;
-    textStyle.fontWeight ??= 'bold';
-    textStyle.fontStyle ??= 'normal';
-    textStyle.textAlign ??= 'center' as const;
-    textStyle.textShadowColor ??= 'transparent';
-    textStyle.textShadowOffset ??= { width: 0, height: 0 };
-    textStyle.textShadowRadius ??= 0;
+    const textStyle = selectedStyle.text as TextStyle;
+    
+    // Apply default text styles if not provided
+    const textColor = textStyle.color || 'white';
+    const fontSize = textStyle.fontSize || 18;
+    const fontWeight = textStyle.fontWeight || 'bold';
+    const fontStyle = textStyle.fontStyle || 'normal';
+    const textAlign = textStyle.textAlign || 'center';
+    
+    // Shadow properties
+    const textShadowColor = textStyle.textShadowColor || 'transparent';
+    const textShadowOffset = textStyle.textShadowOffset || { width: 0, height: 0 };
+    const textShadowRadius = textStyle.textShadowRadius || 0;
+    
+    // Create view style
+    const viewStyle: ViewStyle = {
+        padding,
+        borderRadius,
+        borderWidth,
+        borderColor,
+        backgroundColor: hasBackgroundGradient ? 'transparent' : backgroundColor,
+        alignItems: 'center',
+        justifyContent: 'center',
+    };
+    
+    // Create text style
+    const formattedTextStyle: TextStyle = {
+        color: textColor,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        textAlign,
+        textShadowColor,
+        textShadowOffset,
+        textShadowRadius,
+        fontFamily: selectedStyle.fontFamily,
+    };
     
     const handleLongPress = useCallback(() => {
         setEditSticker(sticker);
     }, [sticker, setEditSticker]);
 
-    // Determine if we need a gradient text effect
-    const useTextGradient = selectedStyle.useSkia && selectedStyle.skiaConfig && selectedStyle.skiaConfig.type === 'text';
+    // If we have a text gradient specified in skiaConfig, we'll need to handle that differently
+    // For now, we'll just use the first color as we can't easily do text gradients in React Native
+    const skiaConfig = selectedStyle.skiaConfig || {
+        colors: [textColor],
+        type: 'text',
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 0 }
+    };
+
+    // For simple cases, use solid color from first item in gradient colors array
+    if (skiaConfig.colors.length > 1) {
+        formattedTextStyle.color = skiaConfig.colors[0];
+    }
+
+    // Ensure we have at least two colors for LinearGradient
+    const gradientColors = containerStyle.backgroundGradient?.colors || [];
+    // expo-linear-gradient requires at least 2 colors
+    const defaultColors = ['#000000', '#000000'] as const;
     
-    // Determine if we need a gradient background
-    const useGradientBackground = selectedStyle.useSkia && selectedStyle.skiaConfig && selectedStyle.skiaConfig.type === 'background';
-    
-    // Component to render inside the Pressable
-    const renderContent = useCallback(() => {
-        // If we have a gradient background
-        if (useGradientBackground && selectedStyle.skiaConfig) {
-            const { colors, start, end } = selectedStyle.skiaConfig;
-            
-            // Ensure we have at least two colors for the gradient
-            const gradientColors = colors.length >= 2 ? colors : [...colors, colors[0]];
-            
-            return (
-                <LinearGradient
-                    colors={gradientColors as [string, string, ...string[]]}
-                    start={start}
-                    end={end}
-                    style={{
-                        ...containerStyle,
-                        backgroundColor: undefined, // Reset backgroundColor since gradient handles it
-                    }}
-                >
-                    <Text style={textStyle}>{sticker.value}</Text>
-                </LinearGradient>
-            );
-        }
-        
-        // For text gradients, we'll use a simplified approach with regular Text component
-        // This is a fallback since Skia requires more complex setup
-        if (useTextGradient && selectedStyle.skiaConfig) {
-            const { colors } = selectedStyle.skiaConfig;
-            // Set the first color of the gradient as the text color
-            const gradientTextStyle = {
-                ...textStyle,
-                color: colors[0],
-            };
-            
-            return (
-                <View style={containerStyle}>
-                    <Text style={gradientTextStyle}>{sticker.value}</Text>
-                </View>
-            );
-        }
-        
-        // Regular container without gradient
-        return (
-            <View style={containerStyle}>
-                <Text style={textStyle}>{sticker.value}</Text>
-            </View>
-        );
-    }, [sticker, selectedStyle, containerStyle, textStyle, useGradientBackground]);
-    
+    // Create a tuple of at least two colors
+    const safeGradientColors = gradientColors.length >= 2 
+        ? [gradientColors[0], gradientColors[1]] as const
+        : defaultColors;
+
     return (
         <Pressable onLongPress={handleLongPress} delayLongPress={600}>
-            {renderContent()}
+            {hasBackgroundGradient && containerStyle.backgroundGradient ? (
+                <LinearGradient
+                    style={viewStyle}
+                    colors={safeGradientColors}
+                    start={containerStyle.backgroundGradient.start || { x: 0, y: 0 }}
+                    end={containerStyle.backgroundGradient.end || { x: 1, y: 1 }}
+                >
+                    <Text style={formattedTextStyle} ellipsizeMode="tail">
+                        {sticker.value}
+                    </Text>
+                </LinearGradient>
+            ) : (
+                <View style={viewStyle}>
+                    <Text style={formattedTextStyle} ellipsizeMode="tail">
+                        {sticker.value}
+                    </Text>
+                </View>
+            )}
         </Pressable>
     );
 } 
