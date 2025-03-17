@@ -97,9 +97,6 @@ export default function HomeHeader() {
                                 )}
                             </Pressable>
                             <NotificationsButton />
-                            <Pressable onPress={() => router.push('/everything')}>
-                                <Sun size={24} color={colors.foreground} />
-                            </Pressable>
                         </View>
                     </View>
                 </Animated.View>

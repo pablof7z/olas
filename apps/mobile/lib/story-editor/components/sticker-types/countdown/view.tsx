@@ -3,8 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Sticker } from '@/lib/story-editor/store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
-import { getStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
-import countdownStyles from './styles';
+import countdownStyles, { getStyleFromName } from './styles';
 
 interface CountdownStickerViewProps {
     sticker: Sticker;
@@ -14,38 +13,15 @@ export default function CountdownStickerView({ sticker }: CountdownStickerViewPr
     const [timeLeft, setTimeLeft] = useState<string>('');
     
     // Get the selected style or default to the first one if not set
-    const selectedStyle = getStickerStyle(NDKStoryStickerType.Countdown, sticker.style) || countdownStyles[0];
+    const selectedStyle = getStyleFromName(sticker.style);
     
-    // Create container styles based on the selected style
-    const containerStyle = {
-        flexDirection: 'row' as const,
-        alignItems: 'center' as const,
-        padding: 10,
-        backgroundColor: selectedStyle.backgroundColor || 'rgba(0, 0, 0, 0.6)',
-        borderRadius: selectedStyle.borderRadius || 16,
-        borderWidth: selectedStyle.borderWidth,
-        borderColor: selectedStyle.borderColor,
-        borderStyle: selectedStyle.borderStyle as any,
-        shadowColor: selectedStyle.shadowColor,
-        shadowOffset: selectedStyle.shadowOffset,
-        shadowOpacity: selectedStyle.shadowOpacity,
-        shadowRadius: selectedStyle.shadowRadius,
-        elevation: selectedStyle.elevation,
-    };
+    // Extract container and text styles from the selected style
+    const { container, text } = selectedStyle;
     
-    // Create text styles based on the selected style
-    const textStyle = {
-        color: selectedStyle.color || 'white',
-        fontSize: selectedStyle.fontSize || 18,
-        fontWeight: selectedStyle.fontWeight || 'bold',
-        fontStyle: selectedStyle.fontStyle as any,
-        textShadowColor: selectedStyle.textShadowColor,
-        textShadowOffset: selectedStyle.textShadowOffset,
-        textShadowRadius: selectedStyle.textShadowRadius,
-    };
-    
-    // Icon color from the style
-    const iconColor = selectedStyle.iconColor || 'white';
+    // Icon configuration
+    const iconSize = container.iconSize || 18;
+    const showIcon = container.showIcon !== false;
+    const iconColor = text.color || 'white';
     
     useEffect(() => {
         // Get the end time from the sticker metadata
@@ -94,11 +70,20 @@ export default function CountdownStickerView({ sticker }: CountdownStickerViewPr
     }, [sticker.metadata?.endTime]);
     
     return (
-        <View style={containerStyle}>
-            <Ionicons name="time-outline" size={18} color={iconColor} style={{ marginRight: 6 }} />
-            <Text style={textStyle}>
+        <View style={selectedStyle.container}>
+            {showIcon && <Ionicons name="time-outline" size={iconSize} color={iconColor} style={{ marginRight: 6 }} />}
+            <Text style={selectedStyle.text}>
                 {sticker.value || 'Countdown'}: {timeLeft}
             </Text>
         </View>
     );
+}
+
+// Helper function to get the next style in the array
+export function getNextCountdownStyle(currentStyle?: string): string {
+    const index = countdownStyles.findIndex(style => style.name === currentStyle);
+    if (index === -1 || index === countdownStyles.length - 1) {
+        return countdownStyles[0].name;
+    }
+    return countdownStyles[index + 1].name;
 } 

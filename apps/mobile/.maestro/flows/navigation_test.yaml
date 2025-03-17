@@ -15,7 +15,3 @@ appId: com.pablof7z.snapstr
 # Navigate to Notifications
 - tapOn: "Notifications"
 - takeScreenshot: notifications-screen
-
-# Return to Home/Everything
-- tapOn: "Everything"
-- takeScreenshot: home-screen 

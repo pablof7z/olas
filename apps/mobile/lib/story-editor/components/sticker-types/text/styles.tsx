@@ -20,7 +20,7 @@ export interface TextStickerStyle {
 }
 
 // Define styles for text stickers with nested structure
-const textStickerStyles: TextStickerStyle[] = [
+const styles: TextStickerStyle[] = [
     {
         name: 'Default',
         container: {
@@ -270,14 +270,14 @@ const textStickerStyles: TextStickerStyle[] = [
 ];
 
 export function getStyleFromName(name?: string): TextStickerStyle {
-    if (!name) return textStickerStyles[0];
-    return textStickerStyles.find(style => style.name === name) || textStickerStyles[0];
+    if (!name) return styles[0];
+    return styles.find(style => style.name === name) || styles[0];
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
-    if (!currentStyleName) return textStickerStyles[1].name;
-    const index = textStickerStyles.findIndex(style => style.name === currentStyleName);
-    return textStickerStyles[index + 1]?.name || textStickerStyles[0].name;
+    if (!currentStyleName) return styles[1].name;
+    const index = styles.findIndex(style => style.name === currentStyleName);
+    return styles[index + 1]?.name || styles[0].name;
 }
 
-export default textStickerStyles; 
+export default styles; 

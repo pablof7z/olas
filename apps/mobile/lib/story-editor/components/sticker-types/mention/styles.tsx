@@ -9,7 +9,7 @@ export interface MentionStickerStyle {
 }
 
 // Define 10 different styles for mention stickers
-const mentionStickerStyles: MentionStickerStyle[] = [
+const styles: MentionStickerStyle[] = [
     {
         name: 'Default',
         containerStyle: {
@@ -102,20 +102,15 @@ const mentionStickerStyles: MentionStickerStyle[] = [
     },
 ];
 
-export default mentionStickerStyles; 
+export default styles; 
 
-export function getNextStyleName(currentStyle: string | undefined) {
-    if (!currentStyle) return mentionStickerStyles[0].name;
-    
-    const currentIndex = mentionStickerStyles.findIndex(style => style.name === currentStyle);
-    const nextIndex = (currentIndex + 1) % mentionStickerStyles.length;
-    return mentionStickerStyles[nextIndex].name;
+export function getStyleFromName(name?: string): MentionStickerStyle {
+    if (!name) return styles[0];
+    return styles.find(style => style.name === name) || styles[0];
 }
 
-export function getNextStyle(currentStyle: string | undefined) {
-    if (!currentStyle) return mentionStickerStyles[0];
-    
-    const currentIndex = mentionStickerStyles.findIndex(style => style.name === currentStyle);
-    const nextIndex = (currentIndex + 1) % mentionStickerStyles.length;
-    return mentionStickerStyles[nextIndex];
+export function getNextStyleName(currentStyleName?: string): string {
+    if (!currentStyleName) return styles[1].name;
+    const index = styles.findIndex(style => style.name === currentStyleName);
+    return styles[index + 1]?.name || styles[0].name;
 }
