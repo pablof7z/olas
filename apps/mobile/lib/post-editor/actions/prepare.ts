@@ -1,5 +1,6 @@
 import { Blurhash } from 'react-native-blurhash';
-import { Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
+import { Dimensions, Platform } from 'react-native';
+import { getVideoMetaData, Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
 import { getThumbnailAsync } from 'expo-video-thumbnails';
 import * as Exify from '@lodev09/react-native-exify';
 import { Image } from 'expo-image';
@@ -44,10 +45,27 @@ async function compress(media: PostMedia, onProgress?: ProgressCb): Promise<void
             progressDivider: 10,
         });
     } else if (media.mediaType === 'video') {
+        const metadata = await getVideoMetaData(media.uris[0]);
+        console.log('metadata', metadata);
+
+        // Set the duration from metadata if available
+        if (metadata.duration) {
+            media.duration = metadata.duration;
+            console.log('Setting video duration from metadata:', metadata.duration);
+        }
+
+        const screenDimensions = Dimensions.get('screen');
+        const maxWidth = Math.max(screenDimensions.width * 2, metadata.width);
+        const maxHeight = Math.max(screenDimensions.height * 2, metadata.height);
+        const maxSize = Math.max(maxWidth, maxHeight);
+
+        console.log('calculating max size', {maxWidth, maxHeight, maxSize}, JSON.stringify(metadata, null, 2));
+
         uri = await CompressedVideo.compress(
             media.uris[0],
             {
-                compressionMethod: 'auto',
+                compressionMethod: 'manual',
+                maxSize,
                 progressDivider: 10,
             },
             (progress) => {
@@ -120,16 +138,19 @@ async function dimensions(media: PostMedia): Promise<void> {
     }
 
     let file = media.localUri;
+    console.log('running dimensions', file);
 
     if (!media.localUri) throw new Error('Local URI is not set');
 
     if (media.mediaType === 'video') {
         file = media.localThumbnailUri;
     }
-
     if (!file) throw new Error('File is not set');
 
-    const imageData = await Image.loadAsync(media.localUri);
+    console.log('file', file);
+    const normalizedUri = normalizeUri(file);
+    console.log('normalized uri', normalizedUri);
+    const imageData = await Image.loadAsync(normalizedUri);
     media.width = imageData.width;
     media.height = imageData.height;
 }
@@ -218,4 +239,14 @@ async function generateBlurhash(uri: string) {
         console.error('Error generating blurhash', error);
         return null;
     }
+}
+
+function normalizeUri(uri: string) {
+    if (Platform.OS === 'ios' && uri.startsWith('file://') === false) {
+        if (!uri.startsWith('/private')) {
+            uri = uri.replace('/var/', '/private/var/');
+        }
+        return `file://${uri}`;
+    }
+    return uri;
 }

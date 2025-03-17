@@ -6,6 +6,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { UserProfile } from '@/hooks/user-profile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 interface MentionStickerInputProps {
     onStickerAdded: () => void;
@@ -17,6 +18,7 @@ export default function MentionStickerInput({ onStickerAdded }: MentionStickerIn
     const [text, setText] = useState<string>('');
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
     const inputRef = useRef<TextInput>(null);
+    const { ndk } = useNDK();
 
     const handleTextChange = (value: string) => {
         setText(value);
@@ -29,11 +31,14 @@ export default function MentionStickerInput({ onStickerAdded }: MentionStickerIn
             console.log('User pubkey:', pubkey);
             console.log('User profile:', profile);
 
-            if (profile && pubkey) {
+            if (profile && pubkey && ndk) {
+                const user = ndk.getUser({ pubkey });
+                
                 const stickerData = {
                     type: NDKStoryStickerType.Pubkey,
-                    value: pubkey,
-                    metadata: { profile: { ...profile, pubkey } },
+                    value: user,
+                    metadata: { profile },
+                    dimensions: { width: 150, height: 40 }, // Default dimensions for mention sticker
                 };
                 console.log('Creating mention sticker with profile:', profile);
 
@@ -43,13 +48,14 @@ export default function MentionStickerInput({ onStickerAdded }: MentionStickerIn
 
                 onStickerAdded();
             } else {
-                console.error('Cannot create mention sticker: missing profile or pubkey', {
+                console.error('Cannot create mention sticker: missing profile, pubkey, or NDK instance', {
                     hasProfile: !!profile,
                     hasPubkey: !!pubkey,
+                    hasNDK: !!ndk,
                 });
             }
         },
-        [addSticker, onStickerAdded]
+        [addSticker, onStickerAdded, ndk]
     );
 
     return (

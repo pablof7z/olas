@@ -44,10 +44,13 @@ const selectOptimalFormat = (device: CameraDevice) => {
         return aRes - bRes; // Lower resolution first
     });
 
-    // Try to find a format with 720p or lower resolution
-    const optimalFormat = formats.find((f) => f.videoHeight <= 1280 && f.videoWidth <= 720);
+    console.log('formats', JSON.stringify(formats, null, 2));
 
-    return optimalFormat || formats[0];
+    // Find the smallest format that is at least 720p
+    const optimalFormat = null;// formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
+
+    // If no 720p format is found, use the highest resolution format available
+    return optimalFormat || formats[formats.length - 1];
 };
 
 export default function StoryCameraScreen() {
@@ -189,6 +192,7 @@ export default function StoryCameraScreen() {
             } else {
                 await camera.current?.startRecording({
                     onRecordingFinished: (video) => {
+                        console.log('video', video?.width, video?.height);
                         onMediaCaptured(video, 'video');
                     },
                     onRecordingError: (error) => {
@@ -215,26 +219,24 @@ export default function StoryCameraScreen() {
         <>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-                <GestureDetector gesture={pinchGesture}>
+                {/* <GestureDetector gesture={pinchGesture}> */}
                     <View style={{ flex: 1 }}>
                         {device ? (
                             <ReanimatedCamera
                                 ref={camera}
                                 style={cameraStyle}
                                 device={device}
-                                format={format}
-                                fps={30}
                                 isActive={true}
                                 photo={true}
                                 video={true}
                                 audio={true}
-                                enableZoomGesture={false}
+                                enableZoomGesture={true}
                                 onError={handleCameraError}
                                 testID="camera-view"
                             />
                         ) : null}
                     </View>
-                </GestureDetector>
+                {/* </GestureDetector> */}
 
                 <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
                     <TouchableOpacity onPress={() => router.push('/story/selector')} style={styles.selectorButton} testID="selector-button">
@@ -244,6 +246,11 @@ export default function StoryCameraScreen() {
                     <Pressable
                         onPress={onShortPress}
                         onLongPress={onLongPress}
+                        onPressOut={() => {
+                            if (isRecording) {
+                                onLongPress();
+                            }
+                        }}
                         style={[styles.captureButton, isRecording && styles.recording]}
                         testID="capture-button"
                         disabled={isSwitchingCamera}

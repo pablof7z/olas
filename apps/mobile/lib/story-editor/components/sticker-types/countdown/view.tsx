@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Sticker } from '@/lib/story-editor/store';
+import { Sticker } from '@/lib/story-editor/store/index';
 import countdownStyles, { getStyleFromName } from './styles';
 
 interface CountdownStickerViewProps {

@@ -1,9 +1,19 @@
 import { TextStyle, ViewStyle } from 'react-native';
 import { ImageStyle } from 'expo-image';
+
+// Extended ViewStyle with backgroundGradient property
+export interface ExtendedViewStyle extends ViewStyle {
+    backgroundGradient?: {
+        colors: readonly [string, string, ...string[]]; // Typed as required by LinearGradient
+        start?: { x: number; y: number };
+        end?: { x: number; y: number };
+    };
+}
+
 // Define MentionStickerStyle interface
 export interface MentionStickerStyle {
     name: string;
-    containerStyle: ViewStyle;
+    containerStyle: ViewStyle | ExtendedViewStyle;
     avatarStyle: ImageStyle | false;
     nameStyle: TextStyle | false;
 }
@@ -50,7 +60,11 @@ const styles: MentionStickerStyle[] = [
     {
         name: 'Card',
         containerStyle: {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundGradient: {
+                colors: ['#4c669f', '#3b5998', '#192f6a'] as const,
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
             borderRadius: 64,
             borderWidth: 8,
             borderColor: '#ddd',
@@ -65,7 +79,7 @@ const styles: MentionStickerStyle[] = [
             marginBottom: 64,
         },
         nameStyle: {
-            color: '#333',
+            color: '#fff',
             fontSize: 128,
             fontWeight: 'bold',
         },
@@ -87,7 +101,11 @@ const styles: MentionStickerStyle[] = [
     {
         name: 'Ghost',
         containerStyle: {
-            backgroundColor: 'transparent',
+            backgroundGradient: {
+                colors: ['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.4)'] as const,
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
             borderWidth: 8,
             borderColor: 'rgba(255, 255, 255, 0.7)',
             borderRadius: 128,

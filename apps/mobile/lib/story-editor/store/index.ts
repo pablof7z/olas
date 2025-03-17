@@ -11,10 +11,18 @@ import { getNextStyleName as getNextEventStyleName } from '../components/sticker
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export interface Sticker {
+// Type mapping for sticker value types
+type StickerValueType<T extends NDKStoryStickerType> = 
+    T extends NDKStoryStickerType.Pubkey ? NDKUser :
+    T extends NDKStoryStickerType.Text ? string :
+    T extends NDKStoryStickerType.Countdown ? string :
+    T extends NDKStoryStickerType.Event ? NDKEvent :
+    string | NDKUser;
+
+export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
     id: string;
-    type: NDKStoryStickerType;
-    value: string;
+    type: T;
+    value: StickerValueType<T>;
     style?: string;
     transform: {
         translateX: number;
@@ -22,8 +30,12 @@ export interface Sticker {
         scale: number;
         rotate: number;
     };
+    dimensions: {
+        width: number;
+        height: number;
+    };
     metadata?: {
-        profile?: UserProfile;
+        profile?: NDKUserProfile;
         event?: NDKEvent;
         endTime?: Date;
         title?: string;
@@ -35,7 +47,8 @@ interface StickerState {
     addSticker: (sticker: Omit<Sticker, 'id' | 'transform'> & { transform?: Partial<Sticker['transform']> }) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
     updateStickerStyle: (id: string, style: string) => void;
-    updateStickerValue: (id: string, content: string) => void;
+    updateStickerValue: <T extends NDKStoryStickerType>(id: string, value: StickerValueType<T>) => void;
+    updateStickerDimensions: (id: string, dimensions: { width: number; height: number }) => void;
     removeSticker: (id: string) => void;
     getSticker: (id: string) => Sticker | undefined;
     nextStyle: (id: string) => void;
@@ -48,8 +61,8 @@ export const useStickerStore = create<StickerState>((set, get) => ({
         console.log('In useStickerStore.addSticker with data:', stickerData);
         const id = Math.random().toString();
         const defaultTransform = {
-            translateX: SCREEN_WIDTH / 2 - 50,
-            translateY: SCREEN_HEIGHT / 2 - 50,
+            translateX: SCREEN_WIDTH / 4,
+            translateY: SCREEN_HEIGHT / 4,
             scale: 1,
             rotate: 0,
         };
@@ -59,6 +72,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
             type: stickerData.type,
             value: stickerData.value,
             style: stickerData.style,
+            dimensions: stickerData.dimensions,
             transform: {
                 ...defaultTransform,
                 ...stickerData.transform,
@@ -87,9 +101,15 @@ export const useStickerStore = create<StickerState>((set, get) => ({
         }));
     },
 
-    updateStickerValue: (id: string, value: string) => {
+    updateStickerValue: <T extends NDKStoryStickerType>(id: string, value: StickerValueType<T>) => {
         set((state) => ({
             stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, value } : sticker)),
+        }));
+    },
+
+    updateStickerDimensions: (id: string, dimensions: { width: number; height: number }) => {
+        set((state) => ({
+            stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, dimensions } : sticker)),
         }));
     },
 
@@ -104,7 +124,6 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     },
 
     nextStyle: (id: string) => {
-        console.log('nextStyle', id);
         set((state) => {
             const stickers = state.stickers;
             const stickerIndex = stickers.findIndex((sticker) => sticker.id === id);
@@ -112,7 +131,6 @@ export const useStickerStore = create<StickerState>((set, get) => ({
 
             const sticker = stickers[stickerIndex];
             const nextStyle = getNextStyleId(sticker.type, sticker.style);
-            console.log('nextStyle', nextStyle);
             stickers[stickerIndex] = { ...sticker, style: nextStyle };
 
             return { stickers };
@@ -123,7 +141,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
 /**
  * Jotai atom for the sticker being edited
  */
-export const editStickerAtom = atom<Sticker | null>(null);
+export const editStickerAtom = atom<Sticker<NDKStoryStickerType> | null>(null);
 
 function getNextStyleId(type: NDKStoryStickerType, style?: string): string {
     switch (type) {

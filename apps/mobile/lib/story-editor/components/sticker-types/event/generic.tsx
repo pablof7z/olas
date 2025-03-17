@@ -8,6 +8,10 @@ import { EventStickerStyle } from "./styles";
 const width = Dimensions.get('window').width;
 
 export default function EventStickerGeneric({ event, userProfile, styles }: { event: NDKEvent, userProfile?: UserProfile, styles: EventStickerStyle }) {
+    let content = event.content;
+    if (content.trim().length === 0 && event.alt) content = event.alt;
+    if (content.trim().length === 0) content = event.kind.toString();
+    
     return (
         <View style={{width: width}}>
             {styles.author && (
@@ -31,6 +35,7 @@ export default function EventStickerGeneric({ event, userProfile, styles }: { ev
             )}
             <EventContent 
                 event={event}
+                content={content}
                 style={[_styles.text, styles.text]}
             />
         </View>

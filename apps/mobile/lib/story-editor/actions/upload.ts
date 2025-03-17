@@ -1,5 +1,5 @@
 import { Alert } from 'react-native';
-import NDK from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { prepareMediaItem } from '@/lib/post-editor/actions/prepare';
 import { uploadMedia } from '@/lib/post-editor/actions/upload';
 import { PostMedia, PostMediaType } from '@/lib/post-editor/types';
@@ -14,7 +14,7 @@ interface StoryUploadParams {
 
 interface StoryUploadResult {
     success: boolean;
-    mediaUrl?: string;
+    imeta: NDKImetaTag;
     error?: Error;
 }
 
@@ -44,16 +44,30 @@ export async function uploadStory({ path, type, ndk, blossomServer, onProgress }
             throw new Error('Failed to upload media: No URL returned');
         }
 
-        console.log('Successfully uploaded story:', uploadedMedia.uploadedUri);
+        // Generate imeta tag with all required fields
+        const imeta: NDKImetaTag = {
+            url: uploadedMedia.uploadedUri,
+            image: uploadedMedia.uploadedThumbnailUri,
+            x: uploadedMedia.uploadedSha256,
+            dim: uploadedMedia.width && uploadedMedia.height ? `${uploadedMedia.width}x${uploadedMedia.height}` : undefined,
+            m: uploadedMedia.mimeType,
+            size: uploadedMedia.size?.toString(),
+        };
+
+        // Add original hash if different from uploaded hash
+        if (uploadedMedia.uploadedSha256 !== uploadedMedia.localSha256 && uploadedMedia.localSha256) {
+            imeta.ox = uploadedMedia.localSha256;
+        }
 
         return {
             success: true,
-            mediaUrl: uploadedMedia.uploadedUri,
+            imeta,
         };
     } catch (error) {
         console.error('Error uploading story:', error);
         return {
             success: false,
+            imeta: {}, // Empty imeta object to satisfy the type requirement
             error: error instanceof Error ? error : new Error('Unknown error occurred'),
         };
     }

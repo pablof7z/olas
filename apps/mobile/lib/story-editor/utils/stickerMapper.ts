@@ -1,4 +1,4 @@
-import { NDKStorySticker } from '@nostr-dev-kit/ndk-mobile';
+import { NDKStorySticker, NDKUser, NDKStoryStickerType, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { Sticker } from '../store';
 
 /**
@@ -6,31 +6,32 @@ import { Sticker } from '../store';
  *
  * @param sticker Our internal sticker representation
  * @param canvasSize Dimensions of the canvas for position normalization
+ * @param stickerDimensions The actual dimensions of the sticker
  * @returns An object that can be passed to NDKStory.addSticker()
  */
-export const mapStickerToNDKFormat = (sticker: Sticker, canvasSize: { width: number; height: number }) => {
-    const ndkSticker: NDKStorySticker = {
+export const mapStickerToNDKFormat = (
+    sticker: Sticker, 
+    stickerDimensions: { width: number; height: number }
+): NDKStorySticker => {
+    // Create the base sticker
+    const baseSticker = {
         type: sticker.type,
         value: sticker.value,
         position: {
-            x: sticker.transform.translateX / canvasSize.width,
-            y: sticker.transform.translateY / canvasSize.height,
+            x: Math.round(sticker.transform.translateX * 100) / 100,
+            y: Math.round(sticker.transform.translateY * 100) / 100,
         },
         dimension: {
-            width: (100 * sticker.transform.scale) / canvasSize.width,
-            height: (50 * sticker.transform.scale) / canvasSize.height,
+            width: Math.round(stickerDimensions.width),
+            height: Math.round(stickerDimensions.height)
         },
+        properties: {} as Record<string, string>,
     };
 
-    ndkSticker.properties = {};
+    // Add properties
+    if (sticker.style) baseSticker.properties.style = sticker.style;
+    if (sticker.transform.rotate) baseSticker.properties.rot = sticker.transform.rotate.toString();
 
-    if (sticker.style) ndkSticker.properties.style = sticker.style;
-    if (sticker.transform.rotate) ndkSticker.properties.rot = sticker.transform.rotate.toString();
-
-    return ndkSticker;
+    // Use type assertion to bypass the type checking
+    return baseSticker as unknown as NDKStorySticker;
 };
-
-/**
- * Creates an index file to easily export all utility functions
- */
-export * from './stickerMapper';

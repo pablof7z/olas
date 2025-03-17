@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
 import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sticker } from '@/lib/story-editor/store';
+import { Sticker } from '@/lib/story-editor/store/index';
 import { getStyleFromName } from './styles';
 import { useSetAtom } from 'jotai';
 import { editStickerAtom } from '@/lib/story-editor/store';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
 // Extend ViewStyle with backgroundGradient property
 interface ExtendedViewStyle extends ViewStyle {
@@ -16,7 +17,7 @@ interface ExtendedViewStyle extends ViewStyle {
 }
 
 interface TextStickerViewProps {
-    sticker: Sticker;
+    sticker: Sticker<NDKStoryStickerType.Text>;
 }
 
 export default function TextStickerView({ sticker }: TextStickerViewProps) {

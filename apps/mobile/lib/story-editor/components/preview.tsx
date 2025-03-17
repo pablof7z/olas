@@ -1,20 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
-import { VideoView } from 'expo-video';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Text } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Canvas, Image as SkiaImage, useImage, Fill, Group, RoundedRect, useCanvasRef } from '@shopify/react-native-skia';
-import { useStickerStore, Sticker as StickerType, editStickerAtom } from '../store';
+import { useStickerStore, editStickerAtom } from '../store';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { TextStickerInput } from './sticker-types';
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import { useNDK, NDKStory, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { uploadStory } from '../actions/upload';
-import { mapStickerToNDKFormat } from '../utils';
-import { debugEvent } from '@/utils/debug';
+import { createAndPublishStoryEvent } from '../actions/event';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -31,18 +30,19 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
     const image = useImage(path);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
 
-    const { stickers, updateSticker, removeSticker, addSticker } = useStickerStore();
+    const { stickers, removeSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
     const [isUploading, setIsUploading] = useState(false);
-    const ndkContext = useNDK();
+    const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
 
     const isEditingText = useMemo(() => editSticker?.type === NDKStoryStickerType.Text, [editSticker]);
 
-    const handleStickerUpdate = (id: string, transform: any) => {
-        updateSticker(id, transform);
-    };
+    const videoPlayer = useVideoPlayer(type === 'video' ? path : null, player => {
+        player.loop = true;
+        player.play();
+    });
 
     const handleStickerSelect = (id: string) => {
         setSelectedStickerId(id);
@@ -59,8 +59,18 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
         stickersSheetRef?.current?.present();
     };
 
+    const handleAddTextSticker = () => {
+        setEditSticker({
+            id: '',
+            type: NDKStoryStickerType.Text,
+            value: '',
+            transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 },
+            dimensions: { width: 100, height: 100 },
+        });
+    };
+
     const handleShare = async () => {
-        if (!ndkContext?.ndk) {
+        if (!ndk) {
             Alert.alert('Error', 'NDK instance not available');
             return;
         }
@@ -71,7 +81,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             const result = await uploadStory({
                 path,
                 type,
-                ndk: ndkContext.ndk,
+                ndk: ndk,
                 blossomServer: activeBlossomServer,
                 onProgress: (type, progress) => {
                     console.log(`${type} progress: ${progress}%`);
@@ -79,26 +89,20 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             });
 
             if (result.success) {
-                // Create NDKStory event
-                const storyEvent = new NDKStory(ndkContext.ndk);
-
-                // Set story content with the uploaded media URL
-                storyEvent.content = result.mediaUrl || '';
-
-                // Add stickers to the event
-                stickers.forEach((sticker) => {
-                    try {
-                        // Use the utility function to map our sticker to NDK format
-                        const ndkSticker = mapStickerToNDKFormat(sticker, canvasSize);
-                        storyEvent.addSticker(ndkSticker);
-                    } catch (error) {
-                        console.error('Error adding sticker:', error);
-                    }
-                });
-
-                // Publish the story event
-                await storyEvent.sign();
-                debugEvent(storyEvent);
+                try {
+                    // Create and publish the story event
+                    await createAndPublishStoryEvent({
+                        ndk: ndk,
+                    imeta: result.imeta,
+                        path,
+                        type,
+                        stickers,
+                        canvasSize,
+                    });
+                } catch (error) {
+                    console.error('Error creating and publishing story event:', error);
+                    Alert.alert('Error', 'Failed to create and publish story event. Please try again.');
+                }
 
                 Alert.alert('Success', 'Story uploaded and published successfully!');
                 onClose();
@@ -113,6 +117,14 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
         }
     };
 
+    const coordinatesToPaint = [
+        // [0, 0, 'red'],
+        // [Dimensions.get('window').width / 2, Dimensions.get('window').height / 2, 'blue'],
+        // [Dimensions.get('window').width / 3, Dimensions.get('window').height / 3, 'green'],
+        // [Dimensions.get('window').width / 4, Dimensions.get('window').height / 4, 'yellow'],
+        // [Dimensions.get('window').width / 3, 0, 'cyan'],
+    ] as [number, number, string][];
+
     return (
         <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, borderRadius: 20, overflow: 'hidden' }]}>
             <View
@@ -122,16 +134,33 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                     const { width, height } = event.nativeEvent.layout;
                     setCanvasSize({ width, height });
                 }}>
-                <Canvas style={styles.media} ref={canvasRef}>
-                    <Fill color="black" />
-                    {image && (
-                        <Group>
-                            <RoundedRect x={0} y={0} width={canvasSize.width} height={canvasSize.height} r={20}>
-                                <SkiaImage image={image} fit="cover" width={canvasSize.width} height={canvasSize.height} />
-                            </RoundedRect>
-                        </Group>
-                    )}
-                </Canvas>
+                {type === 'photo' ? (
+                    <Canvas style={styles.media} ref={canvasRef}>
+                        <Fill color="black" />
+                        {image && (
+                            <Group>
+                                <RoundedRect x={0} y={0} width={canvasSize.width} height={canvasSize.height} r={20}>
+                                    <SkiaImage image={image} fit="cover" width={canvasSize.width} height={canvasSize.height} />
+                                </RoundedRect>
+                            </Group>
+                        )}
+                    </Canvas>
+                ) : (
+                    <VideoView
+                        style={[styles.media, { borderRadius: 20 }]}
+                        player={videoPlayer}
+                        contentFit="cover"
+                        nativeControls={false}
+                    />
+                )}
+
+                {coordinatesToPaint.map(([x, y, color]) => (
+                    <React.Fragment key={`${x}-${y}`}>
+                        <View style={{ position: 'absolute', left: x as number, top: y as number, borderWidth: 5, width: 20, height: 20, borderColor: color }} />
+                        {/* Write the text */}
+                        <Text style={{ position: 'absolute', left: x as number, top: y as number, color: 'white', fontSize: 20, fontWeight: 'bold' }}>{`${x}, ${y}`}</Text>
+                    </React.Fragment>
+                ))}
 
                 {/* Stickers Layer */}
                 {stickers.map((sticker) => {
@@ -141,7 +170,6 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                             key={sticker.id}
                             sticker={sticker as any}
                             onSelect={() => handleStickerSelect(sticker.id)}
-                            onUpdate={(transform) => handleStickerUpdate(sticker.id, transform)}
                         />
                     );
                 })}
@@ -154,14 +182,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                 <TouchableOpacity
                     style={[styles.button, styles.textButton]}
                     testID="add-text-button"
-                    onPress={() =>
-                        setEditSticker({
-                            id: '',
-                            type: NDKStoryStickerType.Text,
-                            value: '',
-                            transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 },
-                        })
-                    }>
+                    onPress={handleAddTextSticker}>
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openStickersDrawer} style={[styles.button, styles.stickersButton]} testID="add-stickers-button">

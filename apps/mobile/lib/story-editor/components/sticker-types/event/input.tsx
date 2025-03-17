@@ -31,7 +31,11 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
 
         addSticker({
             type: NDKStoryStickerType.Event,
-            value: id,
+            value: event,
+            dimensions: {
+                width: 300,
+                height: 150
+            },
             metadata: { event },
         });
         onStickerAdded();
