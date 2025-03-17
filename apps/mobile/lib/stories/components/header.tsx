@@ -1,18 +1,21 @@
-import { NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKImage } from '@nostr-dev-kit/ndk-mobile';
 import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
 import * as User from '@/components/ui/user';
 import { useUserProfile } from '@/hooks/user-profile';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type StoryHeaderProps = {
-    item: NDKImage;
-    onClose: () => void;
+export type StoryHeaderProps = {
+    item?: NDKEvent | NDKImage;
+    pubkey?: string;
+    onClose?: () => void;
     style?: StyleProp<ViewStyle>;
 };
 
-export function StoryHeader({ item, style, onClose }: StoryHeaderProps) {
-    const { userProfile, flare } = useUserProfile(item.pubkey);
+export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) {
+    // Get pubkey from item or use direct pubkey
+    const userPubkey = item ? item.pubkey : pubkey;
+    const { userProfile, flare } = useUserProfile(userPubkey);
     const insets = useSafeAreaInsets();
 
     return (
@@ -20,18 +23,20 @@ export function StoryHeader({ item, style, onClose }: StoryHeaderProps) {
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 <Pressable
                     style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-                    onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}>
-                    <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={32} flare={flare} />
+                    onPress={() => router.push(`/profile?pubkey=${userPubkey}`)}>
+                    <User.Avatar pubkey={userPubkey} userProfile={userProfile} imageSize={32} flare={flare} />
                     <User.Name
                         userProfile={userProfile}
-                        pubkey={item.pubkey}
+                        pubkey={userPubkey}
                         style={{ color: 'white', marginLeft: 8, fontWeight: '600' }}
                     />
                 </Pressable>
 
-                <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
-                    <Text style={{ color: 'white', fontSize: 24 }}>✕</Text>
-                </TouchableOpacity>
+                {onClose && (
+                    <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
+                        <Text style={{ color: 'white', fontSize: 24 }}>✕</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

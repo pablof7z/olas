@@ -1,6 +1,6 @@
 import { router, Tabs, usePathname } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, Search, UserCircle2, WalletIcon } from 'lucide-react-native';
+import { Home, Search, UserCircle2, WalletIcon, Play } from 'lucide-react-native';
 import { useScrollToTop } from '@react-navigation/native';
 import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
@@ -145,6 +145,21 @@ export default function TabsLayout() {
                 options={{
                     title: 'Publish',
                     tabBarIcon: ({ color, focused }) => <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="story-viewer-demo"
+                options={{
+                    title: 'Story Demo',
+                    headerShown: false,
+                    tabBarIcon: ({ color, focused }) => <Play size={24} color={color} strokeWidth={focused ? 3 : 2} />,
+                }}
+                listeners={{
+                    tabPress: (e) => {
+                        e.preventDefault();
+                        router.push('/story-viewer-demo');
+                    },
                 }}
             />
 

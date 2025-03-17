@@ -4,6 +4,7 @@ import { Sticker } from '../store';
 import { mapStickerToNDKFormat } from '../utils';
 import { debugEvent } from '@/utils/debug';
 import { toast } from '@backpackapp-io/react-native-toast';
+import { Dimensions } from 'react-native';
 
 interface CreateStoryEventParams {
     ndk: NDK;
@@ -33,6 +34,9 @@ export const createAndPublishStoryEvent = async (params: CreateStoryEventParams)
 
     event.imetas = [imeta];
     event.alt = `This is a story event created with Olas`;
+
+    const dimensions = Dimensions.get('window');
+    event.dimensions = dimensions;
 
     // Add stickers to the event
     for (const sticker of stickers) {

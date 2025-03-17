@@ -258,6 +258,8 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         }
     };
 
+    console.log('sticker', sticker, JSON.stringify(animatedStyle, null, 2));
+
     return (
         <GestureDetector gesture={gesture}>
             <Animated.View style={animatedStyle}>

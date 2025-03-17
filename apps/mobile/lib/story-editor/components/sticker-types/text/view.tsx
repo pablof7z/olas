@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sticker } from '@/lib/story-editor/store/index';
 import { getStyleFromName } from './styles';
@@ -18,10 +18,13 @@ interface ExtendedViewStyle extends ViewStyle {
 
 interface TextStickerViewProps {
     sticker: Sticker<NDKStoryStickerType.Text>;
+    fixedDimensions?: boolean;
 }
 
-export default function TextStickerView({ sticker }: TextStickerViewProps) {
+export default function TextStickerView({ sticker, fixedDimensions }: TextStickerViewProps) {
     const setEditSticker = useSetAtom(editStickerAtom);
+    const [containerSize, setContainerSize] = useState(fixedDimensions ? sticker.dimensions : { width: 0, height: 0 });
+    const [adjustedFontSize, setAdjustedFontSize] = useState<number | null>(null);
 
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
@@ -47,7 +50,7 @@ export default function TextStickerView({ sticker }: TextStickerViewProps) {
 
     // Apply default text styles if not provided
     const textColor = textStyle.color || 'white';
-    const fontSize = textStyle.fontSize || 18;
+    const initialFontSize = textStyle.fontSize || 18;
     const fontWeight = textStyle.fontWeight || 'bold';
     const fontStyle = textStyle.fontStyle || 'normal';
     const textAlign = textStyle.textAlign || 'center';
@@ -61,24 +64,69 @@ export default function TextStickerView({ sticker }: TextStickerViewProps) {
     const viewStyle: ViewStyle = {
         padding,
         borderRadius,
-        borderWidth,
-        borderColor,
+        borderWidth: 2,
+        flex: 1,
+        width: containerSize.width,
+        height: containerSize.height,
+        borderColor: 'green',
         backgroundColor: hasBackgroundGradient ? 'transparent' : backgroundColor,
         alignItems: 'center',
         justifyContent: 'center',
     };
 
-    // Create text style
+    // Handle container layout to measure available space
+    const handleLayout = useCallback((event: LayoutChangeEvent) => {
+        if (fixedDimensions) return;
+        const { width, height } = event.nativeEvent.layout;
+        console.log('handleLayout', { width, height });
+        setContainerSize({ width, height });
+    }, [fixedDimensions]);
+
+    // Calculate adjusted font size based on text length and container size
+    useEffect(() => {
+        if (containerSize.width <= 0 || containerSize.height <= 0 || !sticker.value) {
+            return;
+        }
+
+        // Starting with a larger font size based on container dimensions
+        const availableWidth = containerSize.width;
+        const availableHeight = containerSize.height;
+        
+        // Estimate characters per line based on average character width (approximation)
+        const avgCharWidth = initialFontSize * 0.6;
+        const textLength = sticker.value.length;
+        
+        // Calculate a font size that would fit width-wise
+        const maxFontSizeByWidth = availableWidth / (textLength * 0.6) * 1.8;
+        
+        // Ensure the text height also fits within container
+        const estimatedLines = Math.ceil((textLength * avgCharWidth) / availableWidth);
+        const maxFontSizeByHeight = availableHeight / (estimatedLines * 1.3); // 1.3 is line height factor
+        
+        // Use the smaller of the two calculated sizes to ensure fitting in both dimensions
+        const calculatedFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight, initialFontSize * 2);
+        
+        // Set a reasonable floor and ceiling
+        const finalFontSize = Math.max(8, Math.min(calculatedFontSize, 72));
+
+        console.log('calculatedFontSize', { containerSize, finalFontSize, padding: padding / 4, maxFontSizeByWidth, maxFontSizeByHeight, availableWidth, availableHeight, textLength, estimatedLines });
+        
+        setAdjustedFontSize(finalFontSize);
+    }, [containerSize, sticker.value, initialFontSize, padding]);
+
+    // Create text style with adjusted font size if available
     const formattedTextStyle: TextStyle = {
         color: textColor,
-        fontSize,
         fontWeight,
         fontStyle,
         textAlign,
+        fontSize: adjustedFontSize || initialFontSize,
         textShadowColor,
         textShadowOffset,
         textShadowRadius,
         fontFamily: selectedStyle.fontFamily,
+        alignItems: 'center',
+        justifyContent: 'center',
     };
 
     const handleLongPress = useCallback(() => {
@@ -114,14 +162,15 @@ export default function TextStickerView({ sticker }: TextStickerViewProps) {
                     style={viewStyle}
                     colors={safeGradientColors}
                     start={containerStyle.backgroundGradient.start || { x: 0, y: 0 }}
-                    end={containerStyle.backgroundGradient.end || { x: 1, y: 1 }}>
-                    <Text style={formattedTextStyle} ellipsizeMode="tail">
+                    end={containerStyle.backgroundGradient.end || { x: 1, y: 1 }}
+                    onLayout={handleLayout}>
+                    <Text style={formattedTextStyle} adjustsFontSizeToFit numberOfLines={0}>
                         {sticker.value}
                     </Text>
                 </LinearGradient>
             ) : (
-                <View style={viewStyle}>
-                    <Text style={formattedTextStyle} ellipsizeMode="tail">
+                <View style={viewStyle} onLayout={handleLayout}>
+                    <Text style={formattedTextStyle} adjustsFontSizeToFit numberOfLines={0}>
                         {sticker.value}
                     </Text>
                 </View>
