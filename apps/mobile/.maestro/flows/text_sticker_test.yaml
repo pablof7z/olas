@@ -2,62 +2,62 @@ appId: com.pablof7z.snapstr
 ---
 - launchApp
 - waitForAnimationToEnd:
-    timeout: 5000
+      timeout: 5000
 
 # Take a screenshot of the main screen to see what's available
 - takeScreenshot: main-screen
 
 # Navigate to story creation by tapping the + button (usually in the bottom center)
 - tapOn:
-    point: 50%,95%
+      point: 50%,95%
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 
 # Take a photo or select from gallery (tap the camera icon)
 - tapOn:
-    point: 50%,50%
+      point: 50%,50%
 - waitForAnimationToEnd:
-    timeout: 3000
-    
+      timeout: 3000
+
 # Mock selecting an image from gallery
 - tapOn:
-    point: 25%,95%
+      point: 25%,95%
 - waitForAnimationToEnd:
-    timeout: 3000
+      timeout: 3000
 
 # Open sticker menu (usually a button in the toolbar)
 - tapOn:
-    point: 85%,95%
+      point: 85%,95%
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Test adding a text sticker (first option in the sticker menu)
 - tapOn:
-    point: 50%,25%
+      point: 50%,25%
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Edit the text sticker
 - tapOn:
-    point: 50%,50%
-- inputText: "This is a test sticker"
+      point: 50%,50%
+- inputText: 'This is a test sticker'
 - tapOn:
-    point: 90%,10%
+      point: 90%,10%
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Take a screenshot with the sticker
 - takeScreenshot: text-sticker-added
 
 # Submit story with stickers
 - tapOn:
-    point: 90%,95%
+      point: 90%,95%
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 - tapOn:
-    point: 90%,95%
+      point: 90%,95%
 - waitForAnimationToEnd:
-    timeout: 3000
+      timeout: 3000
 
 # Take screenshot of success state
-- takeScreenshot: sticker-test-success 
+- takeScreenshot: sticker-test-success

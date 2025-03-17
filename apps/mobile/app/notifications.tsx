@@ -18,7 +18,7 @@ const replyFilter = (event: NDKEvent) => replyKinds.has(event.kind);
 
 const reactionFilter = (event: NDKEvent) => event.kind === NDKKind.Reaction;
 
-const segmentOptions = ['All', 'Replies', 'Reactions']
+const segmentOptions = ['All', 'Replies', 'Reactions'];
 
 if (WALLET_ENABLED) segmentOptions.push('Zaps');
 
@@ -28,10 +28,14 @@ export default function Notifications() {
     const notifications = useNotifications(false);
     const selectedIndex = useMemo(() => {
         switch (settingsTab) {
-            case 'all': return 0;
-            case 'replies': return 1;
-            case 'reactions': return 2;
-            case 'zaps': return 3;
+            case 'all':
+                return 0;
+            case 'replies':
+                return 1;
+            case 'reactions':
+                return 2;
+            case 'zaps':
+                return 3;
         }
     }, [settingsTab]);
 
@@ -48,18 +52,13 @@ export default function Notifications() {
         }
     }, [settingsTab, currentUser?.pubkey]);
 
-    const sortedEvents = useMemo(
-        () => {
-            // fond index that is null
-            return [...notifications]
-                .filter(notificationsFilter)
-                .sort((a, b) => b.created_at - a.created_at);
-        },
-        [notifications.length, notificationsFilter]
-    );
+    const sortedEvents = useMemo(() => {
+        // fond index that is null
+        return [...notifications].filter(notificationsFilter).sort((a, b) => b.created_at - a.created_at);
+    }, [notifications.length, notificationsFilter]);
 
     // when the user views the notifications screen, we should mark all notifications as read
-    const markNotificationsAsSeen = useAppSettingsStore(s => s.notificationsSeen)
+    const markNotificationsAsSeen = useAppSettingsStore((s) => s.notificationsSeen);
     useEffect(() => {
         markNotificationsAsSeen();
     }, []);
@@ -75,7 +74,7 @@ export default function Notifications() {
 
     return (
         <>
-            <Stack.Screen options={{ headerShown: true, title: 'Notifications'}} />
+            <Stack.Screen options={{ headerShown: true, title: 'Notifications' }} />
             <View style={styles.container} className="bg-card">
                 <NotificationPrompt />
                 <SegmentedControl
@@ -83,13 +82,21 @@ export default function Notifications() {
                     selectedIndex={selectedIndex}
                     onIndexChange={(index) => {
                         switch (index) {
-                            case 0: setSettingsTab('all'); break;
-                            case 1: setSettingsTab('replies'); break;
-                            case 2: setSettingsTab('reactions'); break;
-                            case 3: setSettingsTab('zaps'); break;
+                            case 0:
+                                setSettingsTab('all');
+                                break;
+                            case 1:
+                                setSettingsTab('replies');
+                                break;
+                            case 2:
+                                setSettingsTab('reactions');
+                                break;
+                            case 3:
+                                setSettingsTab('zaps');
+                                break;
                         }
                     }}
-            />
+                />
                 <FlashList
                     data={sortedEvents}
                     renderItem={({ item }) => <NotificationItem event={item} currentUser={currentUser} />}
@@ -114,12 +121,14 @@ function NotificationPrompt() {
         }
     }
 
-    return (<TouchableOpacity className='bg-muted-200 p-4' onPress={enable}>
-        <Text className='text-muted-foreground'>Want to know when people follow you in Olas or comments on your posts?</Text>
-        <View className='flex-col gap-2 items-center'>
-            <Text className="text-primary">Enable</Text>
-        </View>
-    </TouchableOpacity>)
+    return (
+        <TouchableOpacity className="bg-muted-200 p-4" onPress={enable}>
+            <Text className="text-muted-foreground">Want to know when people follow you in Olas or comments on your posts?</Text>
+            <View className="flex-col items-center gap-2">
+                <Text className="text-primary">Enable</Text>
+            </View>
+        </TouchableOpacity>
+    );
 }
 
 const styles = StyleSheet.create({

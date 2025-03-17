@@ -141,7 +141,7 @@ export class BlossomClient {
     static async getUploadAuth(signer: Signer, message = 'Upload Blob', sha256: string, expiration = oneHour()) {
         return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
     }
-    
+
     static async uploadBlob(server: ServerType, file: UploadType, auth?: SignedEvent) {
         const res = await fetch(new URL('/upload', server), {
             method: 'PUT',

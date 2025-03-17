@@ -20,7 +20,7 @@ export default function LoaderScreen({
     wotReady: boolean;
 }) {
     const currentUser = useNDKCurrentUser();
-    const initPaymentStore = usePaymentStore(s => s.init);
+    const initPaymentStore = usePaymentStore((s) => s.init);
     const inset = useSafeAreaInsets();
     const haveInterval = useRef(false);
     const [ignoreWot, setIgnoreWot] = useState(true);
@@ -31,10 +31,10 @@ export default function LoaderScreen({
     const initUserFlareStore = useUserFlareStore((state) => state.init);
     useEffect(() => {
         initPaymentStore(currentUser?.pubkey);
-    }, [currentUser?.pubkey])
+    }, [currentUser?.pubkey]);
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const resetAppSettings = useAppSettingsStore(s => s.reset);
-    
+    const resetAppSettings = useAppSettingsStore((s) => s.reset);
+
     useEffect(() => {
         if (!userProfile?.name || !currentUser?.pubkey) return;
 
@@ -43,17 +43,17 @@ export default function LoaderScreen({
             logout();
             resetAppSettings();
         }
-    }, [currentUser?.pubkey, userProfile?.name])
+    }, [currentUser?.pubkey, userProfile?.name]);
 
     useEffect(() => {
         if (!ndk) return;
 
         initUserProfileStore(ndk, (ndk.cacheAdapter as NDKCacheAdapterSqlite).db);
         initUserFlareStore();
-    }, [!!ndk])
+    }, [!!ndk]);
 
     useEffect(() => {
-        if (appReady && (wotReady)) {
+        if (appReady && wotReady) {
             setTimeout(() => {
                 setRenderApp(true);
             }, 1000);
@@ -71,11 +71,13 @@ export default function LoaderScreen({
 
     const animatedStyles = useAnimatedStyle(() => {
         return {
-            opacity: !renderApp ? withTiming(1, { duration: 300 }) : withTiming(0, { duration: 300 }, (finished) => {
-                if (finished) {
-                    runOnJS(setShouldRender)(false);
-                }
-            })
+            opacity: !renderApp
+                ? withTiming(1, { duration: 300 })
+                : withTiming(0, { duration: 300 }, (finished) => {
+                      if (finished) {
+                          runOnJS(setShouldRender)(false);
+                      }
+                  }),
         };
     }, [renderApp]);
 
@@ -84,7 +86,7 @@ export default function LoaderScreen({
             {shouldRender && (
                 <Animated.View
                     style={[animatedStyles]}
-                    className="h-screen w-screen flex-1 items-center justify-center bg-card absolute top-0 left-0 right-0 bottom-0 z-50">
+                    className="absolute bottom-0 left-0 right-0 top-0 z-50 h-screen w-screen flex-1 items-center justify-center bg-card">
                     <Animated.Image source={logo} entering={ZoomIn} style={[{ width: 300, height: 100, objectFit: 'contain' }]} />
 
                     <Text variant="largeTitle" className="mt-4 text-5xl font-black">
@@ -94,7 +96,9 @@ export default function LoaderScreen({
                         Make waves
                     </Text>
 
-                    <View className="absolute bottom-0 left-0 right-0 flex-col items-center gap-2 p-4" style={{ paddingBottom: inset.bottom }}>
+                    <View
+                        className="absolute bottom-0 left-0 right-0 flex-col items-center gap-2 p-4"
+                        style={{ paddingBottom: inset.bottom }}>
                         <ActivityIndicator size="small" color="#FF7F00" />
 
                         <Text variant="caption1" className="font-light">
@@ -103,7 +107,7 @@ export default function LoaderScreen({
                     </View>
                 </Animated.View>
             )}
-        {appReady && children}
+            {appReady && children}
         </>
     );
 }

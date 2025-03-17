@@ -29,13 +29,6 @@ export default function AlbumsView() {
     );
 }
 
-
-
-
-
-
-
-
 export function AlbumContent() {
     const selectedAlbum = useAtomValue(selectedAlbumAtom);
     const [selectedMedia, setSelectedMedia] = useAtom(selectedMediaAtom);

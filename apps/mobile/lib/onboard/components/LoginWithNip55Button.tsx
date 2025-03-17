@@ -8,11 +8,14 @@ import { Button } from '@/components/nativewindui/Button';
 export function LoginWithNip55Button() {
     const { apps } = useNip55();
     const { login } = useNDK();
-    
-    const loginWith = useCallback(async (packageName: string) => {
-        login('nip55 ' + packageName);
-    }, [login]);
-    
+
+    const loginWith = useCallback(
+        async (packageName: string) => {
+            login('nip55 ' + packageName);
+        },
+        [login]
+    );
+
     if (apps.length === 0) return null;
 
     return (
@@ -34,4 +37,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 20,
     },
-}); 
+});

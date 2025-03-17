@@ -13,7 +13,7 @@ export const migrations = [
                     last_try_at INTEGER
                 );`
             );
-        }
+        },
     },
     {
         version: 1,
@@ -32,7 +32,7 @@ export const migrations = [
                     UNIQUE (wallet_id, proof_c, mint)
                 );`
             );
-        }
+        },
     },
 
     {
@@ -45,7 +45,7 @@ export const migrations = [
                     updated_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
@@ -63,12 +63,15 @@ export const migrations = [
             );
 
             for (const search of predefinedSearches) {
-                db.runSync(
-                    `INSERT INTO saved_searches (title, subtitle, hashtags, created_at, updated_at) VALUES (?, ?, ?, ?, ?);`,
-                    [search.title, search.subTitle, search.hashtags.join(' '), Date.now(), Date.now()]
-                );
+                db.runSync(`INSERT INTO saved_searches (title, subtitle, hashtags, created_at, updated_at) VALUES (?, ?, ?, ?, ?);`, [
+                    search.title,
+                    search.subTitle,
+                    search.hashtags.join(' '),
+                    Date.now(),
+                    Date.now(),
+                ]);
             }
-        }
+        },
     },
 
     {
@@ -80,7 +83,7 @@ export const migrations = [
                     connect BOOLEAN
                 );`
             );
-        }
+        },
     },
 
     {
@@ -88,12 +91,9 @@ export const migrations = [
         up: (db: SQLite.SQLiteDatabase) => {
             const relays = (SecureStore.getItem('relays') || '').split(',');
             for (const relay of relays) {
-                db.runSync(
-                    `INSERT INTO relays (url, connect) VALUES (?, ?);`,
-                    [relay, true]
-                );
+                db.runSync(`INSERT INTO relays (url, connect) VALUES (?, ?);`, [relay, true]);
             }
-        }
+        },
     },
 
     {
@@ -109,7 +109,7 @@ export const migrations = [
                     updated_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
@@ -121,37 +121,37 @@ export const migrations = [
                     created_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
         version: 8,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps RENAME COLUMN preimage TO pr;` );
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN preimage TEXT;` );
-        }
+            db.execSync(`ALTER TABLE nwc_zaps RENAME COLUMN preimage TO pr;`);
+            db.execSync(`ALTER TABLE nwc_zaps ADD COLUMN preimage TEXT;`);
+        },
     },
 
     {
         version: 9,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN amount INTEGER;` );
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN unit TEXT;` );
-        }
+            db.execSync(`ALTER TABLE nwc_zaps ADD COLUMN amount INTEGER;`);
+            db.execSync(`ALTER TABLE nwc_zaps ADD COLUMN unit TEXT;`);
+        },
     },
 
     {
         version: 10,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN pending_payment_id TEXT;` );
-        }
+            db.execSync(`ALTER TABLE nwc_zaps ADD COLUMN pending_payment_id TEXT;`);
+        },
     },
 
     {
         version: 11,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);` );
-        }
+            db.execSync(`CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);`);
+        },
     },
 
     {
@@ -163,7 +163,7 @@ export const migrations = [
                 created_at INTEGER,
                 updated_at INTEGER
             )`);
-        }
+        },
     },
 
     {
@@ -176,7 +176,7 @@ export const migrations = [
                 created_at INTEGER,
                 updated_at INTEGER
             )`);
-        }
+        },
     },
 
     {
@@ -195,13 +195,15 @@ export const migrations = [
                 } else {
                     const payload = JSON.parse(walletConfig);
                     db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_type', '${payload.type}');`);
-                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_payload', '${payload.pairingCode ?? payload.bech32}');`);
+                    db.runSync(
+                        `INSERT INTO app_settings (key, value) VALUES ('wallet_payload', '${payload.pairingCode ?? payload.bech32}');`
+                    );
                 }
             }
 
             SecureStore.deleteItemAsync('wallet');
             SecureStore.deleteItemAsync('wallet_last_updated_at');
-        }
+        },
     },
 
     {
@@ -221,7 +223,7 @@ export const migrations = [
                 updated_at INTEGER,
                 receipt_id TEXT
             )`);
-        }
+        },
     },
 
     {
@@ -232,8 +234,8 @@ export const migrations = [
                 flare_type TEXT,
                 created_at INTEGER
             )`);
-        }
-    }
+        },
+    },
 ];
 
 export const predefinedSearches = [

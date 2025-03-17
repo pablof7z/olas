@@ -1,8 +1,8 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { ZapOption } from "@/app/(home)/(settings)/zaps";
-import { db } from "./db";
-import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from "@nostr-dev-kit/ndk-wallet";
+import { ZapOption } from '@/app/(home)/(settings)/zaps';
+import { db } from './db';
+import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from '@nostr-dev-kit/ndk-wallet';
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
@@ -11,7 +11,7 @@ export type SavedSearch = {
     subtitle: string;
     hashtags: string[];
     lastUsedAt: number;
-}
+};
 
 export type AppSettingsStoreState = {
     removeLocation?: boolean;
@@ -72,7 +72,7 @@ export type AppSettingsStoreActions = {
     setDefaultZap: (zap: ZapOption) => void;
     setYoloZaps: (yoloZaps: boolean) => void;
     setYoloZapsGrowthFactor: (growthFactor: number) => void;
-    
+
     setVideosInFeed: (videosInFeed: VideosInFeed) => void;
 
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
@@ -89,8 +89,8 @@ export type AppSettingsStoreActions = {
 
 const defaultZapSetting = {
     amount: 21,
-    message: '😍😍😍😍'
-}
+    message: '😍😍😍😍',
+};
 
 function getWalletConfig(): {
     walletType?: NDKWalletTypes | 'none';
@@ -100,14 +100,16 @@ function getWalletConfig(): {
     if (!walletType) return { walletType: undefined };
     if (walletType.value === 'none') return { walletType: 'none' };
 
-    const walletPayload = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_payload']) as { value: string | undefined };
+    const walletPayload = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_payload']) as {
+        value: string | undefined;
+    };
 
     const mappedWalletType = walletType.value === 'nip60' ? 'nip-60' : walletType.value;
 
     return {
         walletType: mappedWalletType as NDKWalletTypes,
-        walletPayload: walletPayload?.value
-    }
+        walletPayload: walletPayload?.value,
+    };
 }
 
 export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set, get) => ({
@@ -149,26 +151,39 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
         let defaultZapVal = SecureStore.getItem('defaultZap');
         if (defaultZapVal) {
-            try { state.defaultZap = JSON.parse(defaultZapVal); } catch { }
+            try {
+                state.defaultZap = JSON.parse(defaultZapVal);
+            } catch {}
         }
         state.defaultZap ??= defaultZapSetting;
 
         const videosInFeed = SecureStore.getItem('videosInFeed');
         if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
 
-        const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as { title: string, subtitle: string, hashtags: string, last_used_at: number }[];
-        state.savedSearches = savedSearches.map(search => ({
-            title: search.title,
-            subtitle: search.subtitle,
-            hashtags: search.hashtags.split(' '),
-            lastUsedAt: search.last_used_at
-        })).sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+        const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as {
+            title: string;
+            subtitle: string;
+            hashtags: string;
+            last_used_at: number;
+        }[];
+        state.savedSearches = savedSearches
+            .map((search) => ({
+                title: search.title,
+                subtitle: search.subtitle,
+                hashtags: search.hashtags.split(' '),
+                lastUsedAt: search.last_used_at,
+            }))
+            .sort((a, b) => b.lastUsedAt - a.lastUsedAt);
 
-        const appSettings = db.getAllSync('SELECT * FROM app_settings') as { key: string, value: string }[];
-        appSettings.forEach(setting => {
+        const appSettings = db.getAllSync('SELECT * FROM app_settings') as { key: string; value: string }[];
+        appSettings.forEach((setting) => {
             switch (setting.key) {
-                case 'yoloZaps': state.yoloZaps = setting.value === 'true'; break;
-                case 'yolo_zaps_growth_factor': state.yoloZapsGrowthFactor = parseFloat(setting.value); break;
+                case 'yoloZaps':
+                    state.yoloZaps = setting.value === 'true';
+                    break;
+                case 'yolo_zaps_growth_factor':
+                    state.yoloZapsGrowthFactor = parseFloat(setting.value);
+                    break;
             }
         });
 
@@ -196,11 +211,11 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     },
 
     toggleAdvancedMode: () => {
-        set(state => {
+        set((state) => {
             const value = !state.advancedMode;
             SecureStore.setItemAsync('advancedMode', (!!value).toString());
             return { advancedMode: value };
-        })
+        });
     },
 
     setDefaultZap: (zap: ZapOption) => {
@@ -230,23 +245,33 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     },
 
     addSavedSearch: (search: SavedSearch) => {
-        db.runSync('INSERT INTO saved_searches (title, subtitle, hashtags, last_used_at) VALUES (?, ?, ?, ?);', [search.title, search.subtitle, search.hashtags.join(' '), search.lastUsedAt]);
+        db.runSync('INSERT INTO saved_searches (title, subtitle, hashtags, last_used_at) VALUES (?, ?, ?, ?);', [
+            search.title,
+            search.subtitle,
+            search.hashtags.join(' '),
+            search.lastUsedAt,
+        ]);
         set({ savedSearches: [...get().savedSearches, search] });
     },
 
     removeSavedSearch: (title: string) => {
         db.runSync('DELETE FROM saved_searches WHERE title = ?;', [title]);
-        set({ savedSearches: get().savedSearches.filter(s => s.title !== title) });
+        set({ savedSearches: get().savedSearches.filter((s) => s.title !== title) });
     },
 
     updateSavedSearch: (search: SavedSearch) => {
-        db.runSync('UPDATE saved_searches SET subtitle = ?, hashtags = ?, last_used_at = ? WHERE title = ?;', [search.subtitle, search.hashtags.join(' '), search.lastUsedAt, search.title]);
-        set({ savedSearches: get().savedSearches.map(s => s.title === search.title ? search : s) });
+        db.runSync('UPDATE saved_searches SET subtitle = ?, hashtags = ?, last_used_at = ? WHERE title = ?;', [
+            search.subtitle,
+            search.hashtags.join(' '),
+            search.lastUsedAt,
+            search.title,
+        ]);
+        set({ savedSearches: get().savedSearches.map((s) => (s.title === search.title ? search : s)) });
     },
 
     setWalletConfig: (wallet: NDKWallet) => {
         let payload: string | undefined;
-        
+
         if (wallet instanceof NDKCashuWallet) {
             db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'nip60']);
             db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
@@ -265,7 +290,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         SecureStore.deleteItemAsync('wallet_last_updated_at');
         set({ walletType: 'none' });
     },
-    
+
     reset: () => {
         SecureStore.deleteItemAsync('removeLocation');
         SecureStore.deleteItemAsync('boost');
@@ -283,7 +308,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
             seenNotificationsAt: 0,
             promptedForNotifications: false,
             walletType: undefined,
-            walletPayload: undefined
+            walletPayload: undefined,
         });
-    }
+    },
 }));

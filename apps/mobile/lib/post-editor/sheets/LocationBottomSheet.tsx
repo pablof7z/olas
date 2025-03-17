@@ -21,8 +21,8 @@ export function LocationBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(locationBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const metadata = usePostEditorStore(state => state.metadata);
-    const setMetadata = usePostEditorStore(state => state.setMetadata);
+    const metadata = usePostEditorStore((state) => state.metadata);
+    const setMetadata = usePostEditorStore((state) => state.setMetadata);
     const { colors } = useColorScheme();
     const setAppSettingRemoveLocation = useAppSettingsStore((state) => state.setRemoveLocation);
 
@@ -51,9 +51,13 @@ export function LocationBottomSheet() {
                     Location Sharing
                 </Text>
 
-                <View className="w-full flex-1 flex-col items-stretch gap-4 mt-4">
+                <View className="mt-4 w-full flex-1 flex-col items-stretch gap-4">
                     <View className="w-full flex-1 flex-col items-stretch gap-4 pb-8">
-                        <Button size="huge" variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(false)}>
+                        <Button
+                            size="huge"
+                            variant="secondary"
+                            className="flex-col items-start gap-2 p-4"
+                            onPress={() => changeValue(false)}>
                             <View className="flex-row items-center gap-2">
                                 <MapPin size={48} color={colors.muted} />
                                 <View className="w-full flex-col gap-0">
@@ -65,7 +69,11 @@ export function LocationBottomSheet() {
                             </View>
                         </Button>
 
-                        <Button size="huge" variant="secondary" className="flex-col items-start gap-2 p-4" onPress={() => changeValue(true)}>
+                        <Button
+                            size="huge"
+                            variant="secondary"
+                            className="flex-col items-start gap-2 p-4"
+                            onPress={() => changeValue(true)}>
                             <View className="flex-row items-center gap-2">
                                 <MapPinMinus size={48} color={colors.muted} />
                                 <View className="flex-col gap-0">

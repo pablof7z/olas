@@ -10,15 +10,13 @@ interface PromptStickerViewProps {
 export default function PromptStickerView({ sticker }: PromptStickerViewProps) {
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
-    
+
     // Extract container and text styles from the selected style
     const { container, text } = selectedStyle;
-    
+
     return (
         <View style={container}>
-            <Text style={text}>
-                {sticker.value}
-            </Text>
+            <Text style={text}>{sticker.value}</Text>
         </View>
     );
 }

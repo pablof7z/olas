@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 export default function BlacklistScreen() {
     const [newWord, setNewWord] = useState('');
-    const blacklistedWords = useAppSettingsStore(s => s.blacklistedWords);
+    const blacklistedWords = useAppSettingsStore((s) => s.blacklistedWords);
     const setBlacklistedWords = (words: string[]) => useAppSettingsStore.setState({ blacklistedWords: words });
 
     const addWord = () => {
@@ -20,7 +20,7 @@ export default function BlacklistScreen() {
     };
 
     const removeWord = (word: string) => {
-        setBlacklistedWords(blacklistedWords.filter(w => w !== word));
+        setBlacklistedWords(blacklistedWords.filter((w) => w !== word));
     };
 
     return (

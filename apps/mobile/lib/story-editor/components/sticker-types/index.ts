@@ -14,5 +14,5 @@ export {
     PromptInput as PromptStickerInput,
     PromptStickerView,
     MentionStickerInput,
-    MentionStickerView
-}; 
+    MentionStickerView,
+};

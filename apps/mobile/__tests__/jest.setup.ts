@@ -3,17 +3,17 @@ jest.mock('expo-video', () => {
     const mockPlayer = {
         replace: jest.fn(),
         play: jest.fn(),
-        loop: false
+        loop: false,
     };
-    
+
     return {
         VideoView: 'MockVideoView',
         useVideoPlayer: jest.fn().mockReturnValue(mockPlayer),
         VideoPlayer: {
             prototype: {
-                constructor: jest.fn()
-            }
-        }
+                constructor: jest.fn(),
+            },
+        },
     };
 });
 
@@ -29,18 +29,18 @@ jest.mock('@shopify/react-native-skia', () => {
         Text: 'MockSkiaText',
         Skia: {
             Matrix: jest.fn(),
-            Font: jest.fn().mockImplementation((fontFamily, size) => ({ 
+            Font: jest.fn().mockImplementation((fontFamily, size) => ({
                 getSize: jest.fn().mockReturnValue(size),
-                getTextWidth: jest.fn().mockImplementation((text) => text.length * size * 0.6)
-            }))
+                getTextWidth: jest.fn().mockImplementation((text) => text.length * size * 0.6),
+            })),
         },
         useCanvasRef: jest.fn(() => ({ current: { makeImageSnapshot: jest.fn(() => ({ encodeToBase64: jest.fn() })) } })),
         FontStyle: { Normal: 'normal' },
         FontWeight: { Regular: 'regular' },
         // Add this to fix the JSI bindings error
         __internalInstanceForTesting: {
-            install: jest.fn()
-        }
+            install: jest.fn(),
+        },
     };
 });
 
@@ -66,13 +66,16 @@ const mockReact = jest.requireActual('react');
 const mockReactNative = jest.requireActual('react-native');
 
 // Create the mock before using jest.mock
-const mockIonicons = function(props: { testID?: string; [key: string]: any }) {
+const mockIonicons = function (props: { testID?: string; [key: string]: any }) {
     return mockReact.createElement(mockReactNative.View, { testID: props.testID || 'icon' });
 };
 
 jest.mock('@expo/vector-icons', () => {
     return {
         Ionicons: mockIonicons,
-        createIconSet: () => function() { return null; },
+        createIconSet: () =>
+            function () {
+                return null;
+            },
     };
-}); 
+});

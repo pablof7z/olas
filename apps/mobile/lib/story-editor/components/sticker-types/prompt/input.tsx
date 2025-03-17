@@ -25,7 +25,7 @@ export default function PromptStickerInput({ onStickerAdded }: PromptStickerInpu
         addSticker({
             type: NDKStoryStickerType.Prompt,
             value: promptText,
-            styleId: 'default'
+            styleId: 'default',
         });
         onStickerAdded();
     };
@@ -45,14 +45,10 @@ export default function PromptStickerInput({ onStickerAdded }: PromptStickerInpu
                 numberOfLines={3}
                 textAlignVertical="top"
             />
-            <TouchableOpacity 
-                style={[
-                    styles.addPromptButton,
-                    { opacity: promptText.trim() ? 1 : 0.5 }
-                ]}
+            <TouchableOpacity
+                style={[styles.addPromptButton, { opacity: promptText.trim() ? 1 : 0.5 }]}
                 onPress={handleAddPromptSticker}
-                disabled={!promptText.trim()}
-            >
+                disabled={!promptText.trim()}>
                 <Text style={styles.addPromptButtonText}>Add Prompt</Text>
             </TouchableOpacity>
         </View>
@@ -89,4 +85,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-}); 
+});

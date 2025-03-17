@@ -31,22 +31,26 @@ export default function WalletsScreen() {
     };
 
     const nip60Wallet = useNip60Wallet();
-    
+
     const [primalSupported, setPrimalSupported] = useState(false);
     const [albySupported, setAlbySupported] = useState(false);
 
     useEffect(() => {
-        Linking.canOpenURL('nostrnwc+primal://').then((supported) => {
-            setPrimalSupported(supported);
-        }).catch((e) => {
-            setPrimalSupported(false);
-        });
+        Linking.canOpenURL('nostrnwc+primal://')
+            .then((supported) => {
+                setPrimalSupported(supported);
+            })
+            .catch((e) => {
+                setPrimalSupported(false);
+            });
 
-        Linking.canOpenURL('nostrnwc+alby://').then((supported) => {
-            setAlbySupported(supported);
-        }).catch((e) => {
-            setAlbySupported(false);
-        });
+        Linking.canOpenURL('nostrnwc+alby://')
+            .then((supported) => {
+                setAlbySupported(supported);
+            })
+            .catch((e) => {
+                setAlbySupported(false);
+            });
     }, []);
 
     const data = useMemo(() => {
@@ -58,7 +62,7 @@ export default function WalletsScreen() {
             options.push({
                 id: 'nip60',
                 title: 'Nostr Wallet',
-                leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
+                leftView: <IconView name="lightning-bolt" className="rounded-lg bg-orange-500" />,
                 subTitle: 'Use your nostr native wallet',
                 disabled: true,
                 onPress: () => {
@@ -70,7 +74,7 @@ export default function WalletsScreen() {
             options.push({
                 id: 'nip60',
                 title: 'Nostr-Native Wallet',
-                leftView: <IconView name="lightning-bolt" className="bg-orange-500 rounded-lg" />,
+                leftView: <IconView name="lightning-bolt" className="rounded-lg bg-orange-500" />,
                 subTitle: 'Create a nostr-native NIP-60 wallet',
                 disabled: true,
                 onPress: () => {
@@ -84,7 +88,7 @@ export default function WalletsScreen() {
         options.push({
             id: 'nwc',
             title: 'Connect external wallet (NWC)',
-            leftView: <IconView name="link" className="bg-gray-500 rounded-lg" />,
+            leftView: <IconView name="link" className="rounded-lg bg-gray-500" />,
             subTitle: 'Connect an external wallet',
             onPress: () => {
                 router.push('/(home)/(settings)/nwc');
@@ -92,16 +96,18 @@ export default function WalletsScreen() {
         });
 
         if (primalSupported || albySupported) {
-            options.push('Wallet Apps')
-            
+            options.push('Wallet Apps');
+
             if (primalSupported) {
                 options.push({
                     id: 'primal',
                     title: 'Connect Primal Wallet',
-                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
                     subTitle: `Primal Wallet`,
                     onPress: () => {
-                        Linking.openURL('nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                        Linking.openURL(
+                            'nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc'
+                        );
                     },
                 });
             }
@@ -110,10 +116,12 @@ export default function WalletsScreen() {
                 options.push({
                     id: 'alby',
                     title: 'Connect Alby Wallet',
-                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 w-11 h-11 rounded-lg" />,
+                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
                     subTitle: `Alby Wallet`,
                     onPress: () => {
-                        Linking.openURL('nostrnwc+alby://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc');
+                        Linking.openURL(
+                            'nostrnwc+alby://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc'
+                        );
                     },
                 });
             }
@@ -187,7 +195,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-            titleClassName={cn("text-lg", info.item.titleClassName)}
+            titleClassName={cn('text-lg', info.item.titleClassName)}
             leftView={info.item.leftView}
             rightView={
                 info.item.rightView ?? (

@@ -89,9 +89,7 @@ export function Login() {
 
             <LoginWithNip55Button />
 
-            <Button
-                variant="plain"
-                onPress={switchToSignup}>
+            <Button variant="plain" onPress={switchToSignup}>
                 <Text>New to nostr?</Text>
             </Button>
 
@@ -125,4 +123,4 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 20,
     },
-}); 
+});

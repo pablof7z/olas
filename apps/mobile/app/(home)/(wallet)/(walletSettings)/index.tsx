@@ -1,4 +1,12 @@
-import { NDKCashuMintList, NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKCashuMintList,
+    NDKEvent,
+    NDKKind,
+    useNDK,
+    useNDKCurrentUser,
+    useNDKSessionEventKind,
+    useNDKWallet,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -28,12 +36,12 @@ export default function WalletSettings() {
         setSyncing(true);
         const res = await (activeWallet as NDKCashuWallet).checkProofs();
         setSyncing(false);
-    }
+    };
 
     const copyDebugInfo = useCallback(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
 
-        const dump = activeWallet.state.dump()
+        const dump = activeWallet.state.dump();
         const journal = activeWallet.state.journal;
         const dumpStr = {
             proofs: dump.proofs,
@@ -42,47 +50,50 @@ export default function WalletSettings() {
             tokens: dump.tokens.map((tokenEntry) => ({
                 token: tokenEntry.token?.rawEvent(),
                 state: tokenEntry.state,
-            }))
-        }
+            })),
+        };
 
-        const data = JSON.stringify({...dumpStr, journal}, null, 4);
+        const data = JSON.stringify({ ...dumpStr, journal }, null, 4);
 
         Clipboard.setStringAsync(data);
-        
-        toast.success('Copied')
+
+        toast.success('Copied');
         router.back();
-    }, [activeWallet?.walletId])
+    }, [activeWallet?.walletId]);
 
     const { ndk } = useNDK();
     const disableNutzaps = useCallback(async () => {
         const mintList = new NDKEvent(ndk);
         mintList.kind = NDKKind.CashuMintList;
         mintList.tags = [];
-        await mintList.publishReplaceable()
+        await mintList.publishReplaceable();
         console.log('new mint list', mintList.id.substring(0, 6));
-    }, [activeWallet])
+    }, [activeWallet]);
 
     const { showActionSheetWithOptions } = useActionSheet();
 
     const showDisableNutzapActionSheet = useCallback(() => {
-        showActionSheetWithOptions({
-            title: 'Disable Nutzap',
-            message: 'Are you sure you want to disable receiving nutzaps?',
-            options: ['Disable', 'Cancel'],
-            destructiveButtonIndex: 0,
-            cancelButtonIndex: 1,
-        }, (index) => {
-            if (index === 0) {
-                disableNutzaps();
+        showActionSheetWithOptions(
+            {
+                title: 'Disable Nutzap',
+                message: 'Are you sure you want to disable receiving nutzaps?',
+                options: ['Disable', 'Cancel'],
+                destructiveButtonIndex: 0,
+                cancelButtonIndex: 1,
+            },
+            (index) => {
+                if (index === 0) {
+                    disableNutzaps();
+                }
             }
-        });
-    }, [ showActionSheetWithOptions])
+        );
+    }, [showActionSheetWithOptions]);
 
     const enableNutzaps = useCallback(async () => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
 
         if (!activeWallet.p2pks[0]) {
-            toast('Your NIP-60 wallet did not have a private key; fixing that.')
+            toast('Your NIP-60 wallet did not have a private key; fixing that.');
             await activeWallet.getP2pk();
             await activeWallet.publish();
         }
@@ -93,87 +104,89 @@ export default function WalletSettings() {
         mintList.p2pk = activeWallet.p2pks[0];
         await mintList.publishReplaceable();
         toast.success('Nutzaps enabled');
-    }, [activeWallet, currentUser?.pubkey])
+    }, [activeWallet, currentUser?.pubkey]);
 
     const data = useMemo(() => {
         const opts = [];
-    
-        opts.push(...[
-            {
-                id: '2',
-                title: 'Relays',
-                subTitle: 'Relays where this wallet is stored',
-                leftView: <IconView name="wifi" className="bg-blue-500" />,
-                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/relays')
-            },
-            {
-                id: '3',
-                title: 'Mints',
-                subTitle: "Your wallet's banks",
-                leftView: <IconView name="home-outline" className="bg-green-500" />,
-                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/mints'),
-            },
-            {
-                id: 'tokens',
-                title: 'Coins',
-                subTitle: "Coins in your wallet",
-                leftView: <IconView name="attach-money" className="bg-orange-500" />,
-                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/tokens'),
-            },
 
-            'Tools',
+        opts.push(
+            ...[
+                {
+                    id: '2',
+                    title: 'Relays',
+                    subTitle: 'Relays where this wallet is stored',
+                    leftView: <IconView name="wifi" className="bg-blue-500" />,
+                    onPress: () => router.push('/(home)/(wallet)/(walletSettings)/relays'),
+                },
+                {
+                    id: '3',
+                    title: 'Mints',
+                    subTitle: "Your wallet's banks",
+                    leftView: <IconView name="home-outline" className="bg-green-500" />,
+                    onPress: () => router.push('/(home)/(wallet)/(walletSettings)/mints'),
+                },
+                {
+                    id: 'tokens',
+                    title: 'Coins',
+                    subTitle: 'Coins in your wallet',
+                    leftView: <IconView name="attach-money" className="bg-orange-500" />,
+                    onPress: () => router.push('/(home)/(wallet)/(walletSettings)/tokens'),
+                },
 
-            {
-                id: 'nutzaps',
-                title: 'Nutzaps',
-                subTitle: "See status of your nutzaps",
-                onPress: () => router.push('/(home)/(wallet)/(walletSettings)/nutzaps'),
-            },
+                'Tools',
 
-            {
-                id: '4',
-                title: 'Force-Sync',
-                onPress: forceSync,
-                rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
-            },
-        ]);
+                {
+                    id: 'nutzaps',
+                    title: 'Nutzaps',
+                    subTitle: 'See status of your nutzaps',
+                    onPress: () => router.push('/(home)/(wallet)/(walletSettings)/nutzaps'),
+                },
+
+                {
+                    id: '4',
+                    title: 'Force-Sync',
+                    onPress: forceSync,
+                    rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null,
+                },
+            ]
+        );
 
         if (activeWallet instanceof NDKCashuWallet) {
             opts.push({
                 id: 'copy-debug',
                 title: 'Copy Debug Info',
                 onPress: copyDebugInfo,
-                rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null
+                rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null,
             });
-            
+
             opts.push('  ');
         }
 
-        if (mintList?.hasTag("pubkey")) {
+        if (mintList?.hasTag('pubkey')) {
             opts.push('Incoming zaps');
-            
+
             opts.push({
                 id: 'delete',
                 title: 'Dsiable Nutzaps',
                 titleClassName: 'text-red-500',
-                onPress: () => showDisableNutzapActionSheet()
-            })
-            
+                onPress: () => showDisableNutzapActionSheet(),
+            });
+
             opts.push(`P2PK: ${mintList?.p2pk ? mintList.p2pk : 'Not set'}`);
         } else if (activeWallet instanceof NDKCashuWallet) {
             opts.push('Incoming zaps');
-            
+
             opts.push({
                 id: 'enable',
                 title: 'Enable nutzaps',
                 subTitle: 'You are not setup to receive nutzaps.',
                 titleClassName: 'text-green-500',
-                onPress: enableNutzaps
-            })
+                onPress: enableNutzaps,
+            });
         }
 
         if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {
-            opts.push('Warnings')
+            opts.push('Warnings');
 
             for (const warning of (activeWallet as NDKCashuWallet)?.warnings) {
                 opts.push({
@@ -212,11 +225,9 @@ export default function WalletSettings() {
 
         return (
             <View className="flex-1 p-8">
-                <Text variant="title1">
-                    {nwcWalletInfo?.alias ? nwcWalletInfo.alias : 'NWC Wallet'}
-                </Text>
+                <Text variant="title1">{nwcWalletInfo?.alias ? nwcWalletInfo.alias : 'NWC Wallet'}</Text>
             </View>
-        )
+        );
     }
 
     return (
@@ -241,7 +252,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     return (
         <ListItem
             className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
-            titleClassName={cn("text-lg", info.item.titleClassName)}
+            titleClassName={cn('text-lg', info.item.titleClassName)}
             leftView={info.item.leftView}
             rightView={
                 <View className="flex-1 flex-row items-center justify-center gap-2 px-4">
@@ -271,11 +282,21 @@ function ChevronRight() {
     return <Icon name="chevron-right" size={17} color={colors.grey} />;
 }
 
-export function IconView({ className, name, children, size = 24 }: { className?: string; name?: MaterialIconName; children?: React.ReactNode, size?: number }) {
+export function IconView({
+    className,
+    name,
+    children,
+    size = 24,
+}: {
+    className?: string;
+    name?: MaterialIconName;
+    children?: React.ReactNode;
+    size?: number;
+}) {
     return (
         <View className="px-3">
             <View style={{ width: size, height: size }} className={cn('items-center justify-center rounded-md', className)}>
-                {name ? <Icon name={name} size={size*0.8}  color="white" /> : children}
+                {name ? <Icon name={name} size={size * 0.8} color="white" /> : children}
             </View>
         </View>
     );

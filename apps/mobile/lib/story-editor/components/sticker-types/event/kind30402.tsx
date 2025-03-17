@@ -1,43 +1,50 @@
-import { NDKClassifiedListing } from "@/lib/product-view"
-import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
-import { View, Text, Image, StyleSheet, TextStyle } from "react-native";
-import { UserProfile } from "@/hooks/user-profile";
-import { formatMoney } from "@/utils/bitcoin";
+import { NDKClassifiedListing } from '@/lib/product-view';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { View, Text, Image, StyleSheet, TextStyle } from 'react-native';
+import { UserProfile } from '@/hooks/user-profile';
+import { formatMoney } from '@/utils/bitcoin';
+import { EventStickerStyle } from './styles';
 
-export default function EventStickerKind30402({ event, userProfile, textStyle }: { event: NDKEvent, userProfile: UserProfile, textStyle: TextStyle }) {
+export default function EventStickerKind30402({
+    event,
+    userProfile,
+    styles,
+}: {
+    event: NDKEvent;
+    userProfile?: UserProfile;
+    styles: EventStickerStyle;
+}) {
     const classified = NDKClassifiedListing.from(event);
-    
+
     return (
-        <View style={styles.outerContainer}>
-            <View style={styles.container}>
-                <Text style={[styles.title, textStyle]} numberOfLines={1}>{classified.title}</Text>
-                
+        <View style={[_styles.outerContainer, styles.container]}>
+            <View style={_styles.container}>
+                <Text style={[_styles.title, styles.text]} numberOfLines={1}>
+                    {classified.title}
+                </Text>
+
                 {classified.images?.[0] && (
-                    <View style={styles.imageContainer}>
-                        <Image 
-                            source={{ uri: classified.images[0] }} 
-                            style={styles.image} 
-                            resizeMode="cover" 
-                        />
+                    <View style={_styles.imageContainer}>
+                        <Image source={{ uri: classified.images[0] }} style={_styles.image} resizeMode="cover" />
                     </View>
                 )}
-                
-                <View style={styles.bottomSection}>
+
+                <View style={_styles.bottomSection}>
                     {classified.price && (
-                        <Text style={styles.price}>
+                        <Text style={_styles.price}>
                             {formatMoney({ amount: classified.price.amount, unit: classified.price.currency })}
                         </Text>
                     )}
-                    
+
                     {classified.location && (
-                        <View style={styles.locationContainer}>
-                            <Text style={styles.location}>{classified.location}</Text>
+                        <View style={_styles.locationContainer}>
+                            <Text style={_styles.location}>{classified.location}</Text>
                         </View>
                     )}
                 </View>
-                
+
                 {classified.summary && (
-                    <Text numberOfLines={2} style={styles.description}>
+                    <Text numberOfLines={2} style={_styles.description}>
                         {classified.summary}
                     </Text>
                 )}
@@ -46,9 +53,9 @@ export default function EventStickerKind30402({ event, userProfile, textStyle }:
     );
 }
 
-const styles = StyleSheet.create({
+const _styles = StyleSheet.create({
     outerContainer: {
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,

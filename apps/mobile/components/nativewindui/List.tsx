@@ -271,59 +271,55 @@ function ListItemComponent<T extends ListDataItem>(
     }
     return (
         <>
-            <Animated.View
-                layout={_layout}
-                entering={_entering}
-                exiting={_exiting}
-            >
+            <Animated.View layout={_layout} entering={_entering} exiting={_exiting}>
                 <Button
                     disabled={disabled || !isPressable(props)}
                     variant="plain"
                     size="none"
                     unstable_pressDelay={100}
                     androidRootClassName={androidRootClassName}
-                className={itemVariants({
-                    variant,
-                    sectionHeaderAsGap,
-                    isFirstInSection,
-                    isLastInSection,
-                    disabled,
-                    className,
-                    removeSeparator,
-                })}
-                {...props}
-                ref={ref}>
-                <TextClassContext.Provider value="font-normal leading-5">
-                    {!!leftView && <View>{leftView}</View>}
-                    <View
-                        className={cn(
-                            'h-full flex-1 flex-row',
-                            !item.subTitle ? 'ios:py-3 py-[18px]' : 'ios:py-2 py-2',
-                            !leftView && 'ml-4',
-                            !rightView && 'pr-4',
-                            !removeSeparator && (!isLastInSection || variant === 'full-width') && 'ios:border-b ios:border-border/80',
-                            !removeSeparator && isFirstInSection && variant === 'full-width' && 'ios:border-t ios:border-border/80'
-                        )}>
-                        <View className={cn('flex-1', textContentClassName)}>
-                            {skipTitle !== true && item.title && (
-                                <Text numberOfLines={textNumberOfLines} style={titleStyle} className={titleClassName}>
-                                    {item.title}
-                                </Text>
-                            )}
-                            {!!item.subTitle && (
-                                <Text
-                                    numberOfLines={subTitleNumberOfLines}
-                                    variant="subhead"
-                                    style={subTitleStyle}
-                                    className={cn('text-muted-foreground', subTitleClassName)}>
-                                    {item.subTitle}
-                                </Text>
-                            )}
-                            {children}
+                    className={itemVariants({
+                        variant,
+                        sectionHeaderAsGap,
+                        isFirstInSection,
+                        isLastInSection,
+                        disabled,
+                        className,
+                        removeSeparator,
+                    })}
+                    {...props}
+                    ref={ref}>
+                    <TextClassContext.Provider value="font-normal leading-5">
+                        {!!leftView && <View>{leftView}</View>}
+                        <View
+                            className={cn(
+                                'h-full flex-1 flex-row',
+                                !item.subTitle ? 'ios:py-3 py-[18px]' : 'ios:py-2 py-2',
+                                !leftView && 'ml-4',
+                                !rightView && 'pr-4',
+                                !removeSeparator && (!isLastInSection || variant === 'full-width') && 'ios:border-b ios:border-border/80',
+                                !removeSeparator && isFirstInSection && variant === 'full-width' && 'ios:border-t ios:border-border/80'
+                            )}>
+                            <View className={cn('flex-1', textContentClassName)}>
+                                {skipTitle !== true && item.title && (
+                                    <Text numberOfLines={textNumberOfLines} style={titleStyle} className={titleClassName}>
+                                        {item.title}
+                                    </Text>
+                                )}
+                                {!!item.subTitle && (
+                                    <Text
+                                        numberOfLines={subTitleNumberOfLines}
+                                        variant="subhead"
+                                        style={subTitleStyle}
+                                        className={cn('text-muted-foreground', subTitleClassName)}>
+                                        {item.subTitle}
+                                    </Text>
+                                )}
+                                {children}
+                            </View>
+                            {!!rightView && <View>{rightView}</View>}
                         </View>
-                        {!!rightView && <View>{rightView}</View>}
-                    </View>
-                </TextClassContext.Provider>
+                    </TextClassContext.Provider>
                 </Button>
             </Animated.View>
             {!removeSeparator && Platform.OS !== 'ios' && !isLastInSection && (

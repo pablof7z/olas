@@ -1,36 +1,30 @@
-import { NDKEvent, NDKFilter, NDKImage, NDKImetaTag, NDKKind, NDKSubscriptionCacheUsage, useSubscribe, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { AnimatePresence } from "framer-motion";
-import { Image } from "expo-image";
-import { MotiView } from "moti";
-import * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Dimensions,
-    Modal,
-    Pressable,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-import { AnimatedFlashList, FlashList } from "@shopify/flash-list";
-import { Image as ExpoImage, ImageRef, useImage } from "expo-image";
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    useAnimatedScrollHandler,
-    interpolate,
-    Extrapolation,
-} from "react-native-reanimated";
-import { useStoriesView } from "@/lib/stories/store";
-import StoriesModal from "@/lib/stories/Modal";
-import BackButton from "@/components/buttons/back-button";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+    NDKEvent,
+    NDKFilter,
+    NDKImage,
+    NDKImetaTag,
+    NDKKind,
+    NDKSubscriptionCacheUsage,
+    useSubscribe,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { AnimatePresence } from 'framer-motion';
+import { Image } from 'expo-image';
+import { MotiView } from 'moti';
+import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
+import { Image as ExpoImage, ImageRef, useImage } from 'expo-image';
+import Animated, { useSharedValue, useAnimatedStyle, useAnimatedScrollHandler, interpolate, Extrapolation } from 'react-native-reanimated';
+import { useStoriesView } from '@/lib/stories/store';
+import StoriesModal from '@/lib/stories/Modal';
+import BackButton from '@/components/buttons/back-button';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get("screen");
+const { width, height } = Dimensions.get('screen');
 
 const IMAGE_WIDTH = width * 0.8;
 const IMAGE_HEIGHT = height * 0.75;
@@ -62,29 +56,14 @@ function AnimatedBackground({
 }) {
     const imageAnimatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const opacity = interpolate(
-            animated,
-            [index - 0.8, index, index + 0.8],
-            [0, 0.4, 0],
-            Extrapolation.CLAMP
-        );
+        const opacity = interpolate(animated, [index - 0.8, index, index + 0.8], [0, 0.4, 0], Extrapolation.CLAMP);
         return { opacity };
     });
 
     const textAnimatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const textOpacity = interpolate(
-            animated,
-            [index - 0.8, index, index + 0.8],
-            [0, 1, 0],
-            Extrapolation.CLAMP
-        );
-        const textTranslate = interpolate(
-            animated,
-            [index - 0.8, index, index + 0.8],
-            [200, 0, -200],
-            Extrapolation.CLAMP
-        );
+        const textOpacity = interpolate(animated, [index - 0.8, index, index + 0.8], [0, 1, 0], Extrapolation.CLAMP);
+        const textTranslate = interpolate(animated, [index - 0.8, index, index + 0.8], [200, 0, -200], Extrapolation.CLAMP);
         return {
             opacity: textOpacity,
             transform: [{ translateX: textTranslate }],
@@ -101,27 +80,27 @@ function AnimatedBackground({
             <View
                 style={{
                     flex: 0.25,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     zIndex: cardCount + 1,
                 }}>
-                <Animated.View style={[{ marginBottom: SPACING * 2, alignItems: "center" }, textAnimatedStyle]}>
+                <Animated.View style={[{ marginBottom: SPACING * 2, alignItems: 'center' }, textAnimatedStyle]}>
                     <Text
                         style={{
-                            color: "#fff",
+                            color: '#fff',
                             fontSize: 28,
                             marginBottom: SPACING / 2,
-                            fontWeight: "800",
-                            textTransform: "capitalize",
+                            fontWeight: '800',
+                            textTransform: 'capitalize',
                         }}>
                         Day #{getDayOfYear(item.event.created_at)}
                     </Text>
                     <Text
                         style={{
-                            color: "#ffffffcc",
+                            color: '#ffffffcc',
                             fontSize: 16,
-                            fontWeight: "500",
-                            textAlign: "center",
+                            fontWeight: '500',
+                            textAlign: 'center',
                             marginBottom: SPACING,
                         }}
                         numberOfLines={3}
@@ -130,10 +109,10 @@ function AnimatedBackground({
                     </Text>
                     <Text
                         style={{
-                            color: "#ffffffaa",
+                            color: '#ffffffaa',
                             fontSize: 13,
-                            fontWeight: "500",
-                            textAlign: "center",
+                            fontWeight: '500',
+                            textAlign: 'center',
                         }}>
                         {new Date(item.event.created_at * 1000).toLocaleDateString()}
                     </Text>
@@ -149,7 +128,7 @@ function AnimatedRenderItem({
     item,
     index,
     scrollX,
-    events
+    events,
 }: {
     item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
     index: number;
@@ -158,18 +137,8 @@ function AnimatedRenderItem({
 }) {
     const animatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const translateY = interpolate(
-            animated,
-            [index - 1, index, index + 1],
-            [100, 40, 100],
-            Extrapolation.CLAMP
-        );
-        const scale = interpolate(
-            animated,
-            [index - 1, index, index + 1],
-            [1.5, 1, 1.5],
-            Extrapolation.CLAMP
-        );
+        const translateY = interpolate(animated, [index - 1, index, index + 1], [100, 40, 100], Extrapolation.CLAMP);
+        const scale = interpolate(animated, [index - 1, index, index + 1], [1.5, 1, 1.5], Extrapolation.CLAMP);
         return {
             transform: [{ translateY }, { scale }],
         };
@@ -191,25 +160,29 @@ function AnimatedRenderItem({
                 width: IMAGE_WIDTH,
                 height: IMAGE_HEIGHT,
                 margin: SPACING,
-                overflow: "hidden",
+                overflow: 'hidden',
                 borderRadius: 30,
             }}>
-                <Pressable onPress={handleCardPress}>
-            <AnimatedImage
-                blurhash={item.imeta.blurhash}
-                style={[
-                    {
-                        width: IMAGE_WIDTH,
-                        height: IMAGE_HEIGHT,
-                        resizeMode: "cover",
-                        borderRadius: 20,
-                    },
-                    animatedStyle,
-                ]}
+            <Pressable onPress={handleCardPress}>
+                <AnimatedImage
+                    blurhash={item.imeta.blurhash}
+                    style={[
+                        {
+                            width: IMAGE_WIDTH,
+                            height: IMAGE_HEIGHT,
+                            resizeMode: 'cover',
+                            borderRadius: 20,
+                        },
+                        animatedStyle,
+                    ]}
                     source={{ uri: item.imeta.url }}
                 />
-                </Pressable>
-                {showModal && <Modal transparent={true} animationType="slide"><StoriesModal onClose={() => setShowModal(false)} /></Modal>}
+            </Pressable>
+            {showModal && (
+                <Modal transparent={true} animationType="slide">
+                    <StoriesModal onClose={() => setShowModal(false)} />
+                </Modal>
+            )}
         </Animated.View>
     );
 }
@@ -218,9 +191,9 @@ export default function Wallpapers() {
     const scrollX = useSharedValue(0);
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const { events } = useSubscribe<NDKImage>(
-        [
-            { kinds: [NDKKind.Image], "#t": ["olas365", "#Olas365", "olas365"], authors: [pubkey] },
-        ], { wrap: true }, [pubkey]
+        [{ kinds: [NDKKind.Image], '#t': ['olas365', '#Olas365', 'olas365'], authors: [pubkey] }],
+        { wrap: true },
+        [pubkey]
     );
 
     const imageLoadStartedRef = useRef<Set<string>>(new Set());
@@ -243,7 +216,7 @@ export default function Wallpapers() {
 
             if (!imageLoadStartedRef.current.has(imeta.url)) {
                 imageLoadStartedRef.current.add(imeta.url);
-                ExpoImage.prefetch(imeta.url, 'memory-disk')
+                ExpoImage.prefetch(imeta.url, 'memory-disk');
             }
         }
 
@@ -262,15 +235,15 @@ export default function Wallpapers() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    header: () => <Header />
+                    header: () => <Header />,
                 }}
             />
             <ScrollView>
                 <View
                     style={{
                         flex: 1,
-                        backgroundColor: "#000",
-                        justifyContent: "flex-end",
+                        backgroundColor: '#000',
+                        justifyContent: 'flex-end',
                         height: height,
                     }}>
                     <AnimatePresence>
@@ -281,14 +254,14 @@ export default function Wallpapers() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.1 }}
                                 transition={{
-                                    type: "timing",
+                                    type: 'timing',
                                     duration: 1000,
                                 }}
                                 style={{
                                     flex: 1,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    position: "absolute",
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    position: 'absolute',
                                     width: width,
                                     height: height,
                                 }}>
@@ -308,7 +281,7 @@ export default function Wallpapers() {
                         ))}
                     </View>
                     {/* Wrap FlashList in a container with an explicit height */}
-                    <View style={{ height: IMAGE_HEIGHT + SPACING * 2, flexDirection: 'column',  }}>
+                    <View style={{ height: IMAGE_HEIGHT + SPACING * 2, flexDirection: 'column' }}>
                         <Animated.FlatList
                             data={cardEntries}
                             extraData={cardEntries}
@@ -336,10 +309,12 @@ export default function Wallpapers() {
 
 function Header() {
     const insets = useSafeAreaInsets();
-    
-    return <View style={[headerStyle.container, { paddingTop: insets.top }]}>
-        <BackButton />
-    </View>
+
+    return (
+        <View style={[headerStyle.container, { paddingTop: insets.top }]}>
+            <BackButton />
+        </View>
+    );
 }
 
 const headerStyle = StyleSheet.create({
@@ -348,51 +323,54 @@ const headerStyle = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-    }
-})
+    },
+});
 
 function EmptyDay() {
-    return <View style={{ backgroundColor: "#ddd", flex: 1, width: "100%", height: "100%" }} />;
+    return <View style={{ backgroundColor: '#ddd', flex: 1, width: '100%', height: '100%' }} />;
 }
 
 export function Olas365View({ entries }: { entries: { day: number; event: NDKImage }[] }) {
     const openStory = useStoriesView();
-    const handleCardPress = useCallback((event: NDKImage) => {
-        openStory([event]);
-        router.push('/stories');
-    }, [openStory]);
-
-    const renderItem = useCallback(
-        ({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
-            return (
-                <View style={{ width: Dimensions.get("window").width / 3, height: Dimensions.get("window").width / 3, margin: 0.5, overflow: "hidden" }}>
-                    {event ? (
-                        <TouchableOpacity style={{ flex: 1 }} onPress={() => handleCardPress(event)}>
-                            <AnimatedImage
-                                source={{ uri: event?.imetas?.[0]?.url }}
-                                style={{ flex: 1 }}
-                            />
-                        </TouchableOpacity>
-                    ) : (
-                        <EmptyDay />
-                    )}
-                    <Text
-                        style={{
-                            padding: 4,
-                            fontSize: 12,
-                            color: "gray",
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                        }}>
-                        Day {day}
-                    </Text>
-                </View>
-            );
+    const handleCardPress = useCallback(
+        (event: NDKImage) => {
+            openStory([event]);
+            router.push('/stories');
         },
-        []
+        [openStory]
     );
+
+    const renderItem = useCallback(({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
+        return (
+            <View
+                style={{
+                    width: Dimensions.get('window').width / 3,
+                    height: Dimensions.get('window').width / 3,
+                    margin: 0.5,
+                    overflow: 'hidden',
+                }}>
+                {event ? (
+                    <TouchableOpacity style={{ flex: 1 }} onPress={() => handleCardPress(event)}>
+                        <AnimatedImage source={{ uri: event?.imetas?.[0]?.url }} style={{ flex: 1 }} />
+                    </TouchableOpacity>
+                ) : (
+                    <EmptyDay />
+                )}
+                <Text
+                    style={{
+                        padding: 4,
+                        fontSize: 12,
+                        color: 'gray',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                    }}>
+                    Day {day}
+                </Text>
+            </View>
+        );
+    }, []);
 
     return (
         <FlashList

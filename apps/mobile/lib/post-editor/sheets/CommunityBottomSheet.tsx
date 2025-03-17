@@ -36,9 +36,12 @@ export function CommunityBottomSheet() {
         };
     }, [ref, setBottomSheetRef]);
 
-    const setGroup = useCallback((group: GroupEntry) => {
-        ref.current?.dismiss();
-    }, [ref]);
+    const setGroup = useCallback(
+        (group: GroupEntry) => {
+            ref.current?.dismiss();
+        },
+        [ref]
+    );
 
     return (
         <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
@@ -63,9 +66,7 @@ export function CommunityBottomSheet() {
                             className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                             titleClassName="text-lg"
                             index={index}
-                            target={target}
-                        >
-                        </ListItem>
+                            target={target}></ListItem>
                     )}
                 />
             </BottomSheetView>

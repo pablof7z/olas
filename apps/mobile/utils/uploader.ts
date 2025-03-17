@@ -53,11 +53,7 @@ export class Uploader {
                 throw new Error('No signer found');
             }
             const _sign = signWith(this.signer);
-            const uploadAuth = await BlossomClient.getUploadAuth(
-                _sign as any,
-                'Upload file',
-                this.sha256
-            );
+            const uploadAuth = await BlossomClient.getUploadAuth(_sign as any, 'Upload file', this.sha256);
             const encodedAuthHeader = this.encodeAuthorizationHeader(uploadAuth);
 
             this.xhr.open('PUT', this.url.toString(), true);

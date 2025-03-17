@@ -2,101 +2,101 @@ appId: com.pablof7z.snapstr
 ---
 - launchApp
 - waitForAnimationToEnd:
-    timeout: 5000
+      timeout: 5000
 
 # Navigate to story creation by tapping the + button
 - tapOn:
-    point: 50%,95%
+      point: 50%,95%
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 
 # Take a photo or select from gallery
 - tapOn:
-    point: 50%,50%
+      point: 50%,50%
 - waitForAnimationToEnd:
-    timeout: 3000
-    
+      timeout: 3000
+
 # Mock selecting an image from gallery
 - tapOn:
-    point: 25%,95%
+      point: 25%,95%
 - waitForAnimationToEnd:
-    timeout: 3000
+      timeout: 3000
 
 # Add first mention sticker
 - tapOn:
-    point: 85%,95%  # Add sticker button
+      point: 85%,95% # Add sticker button
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 - tapOn:
-    point: 50%,35%  # Mention sticker option
+      point: 50%,35% # Mention sticker option
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 - takeScreenshot: first-mention-selection
 - tapOn:
-    point: 50%,20%  # Search input
-- inputText: "alice"
+      point: 50%,20% # Search input
+- inputText: 'alice'
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 - tapOn:
-    point: 50%,30%  # First search result
+      point: 50%,30% # First search result
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Position first mention sticker in top-left
 - tapOn:
-    point: 50%,50%  # Select the sticker
+      point: 50%,50% # Select the sticker
 - swipe:
-    direction: LEFT
+      direction: LEFT
 - swipe:
-    direction: UP
+      direction: UP
 - waitForAnimationToEnd:
-    timeout: 500
+      timeout: 500
 
 # Add second mention sticker
 - tapOn:
-    point: 85%,95%  # Add sticker button
+      point: 85%,95% # Add sticker button
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 - tapOn:
-    point: 50%,35%  # Mention sticker option
+      point: 50%,35% # Mention sticker option
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 - takeScreenshot: second-mention-selection
 - tapOn:
-    point: 50%,20%  # Search input
-- inputText: "bob"
+      point: 50%,20% # Search input
+- inputText: 'bob'
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 - tapOn:
-    point: 50%,30%  # First search result
+      point: 50%,30% # First search result
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Position second mention sticker in bottom-right
 - tapOn:
-    point: 50%,50%  # Select the sticker
+      point: 50%,50% # Select the sticker
 - swipe:
-    direction: RIGHT
+      direction: RIGHT
 - swipe:
-    direction: DOWN
+      direction: DOWN
 - waitForAnimationToEnd:
-    timeout: 500
+      timeout: 500
 
 # Verify both mention stickers are visible
 - takeScreenshot: multiple-mention-stickers
 
 # Submit story with mention stickers
 - tapOn:
-    point: 90%,95%  # Preview button
+      point: 90%,95% # Preview button
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 - takeScreenshot: preview-screen
 
 # Continue with submission
 - tapOn:
-    point: 90%,95%  # Submit button
+      point: 90%,95% # Submit button
 - waitForAnimationToEnd:
-    timeout: 3000
+      timeout: 3000
 
 # Take screenshot of success state
-- takeScreenshot: multiple-mention-stickers-success 
+- takeScreenshot: multiple-mention-stickers-success

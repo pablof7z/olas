@@ -1,5 +1,5 @@
-import { getRootTag, NDKEvent, NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { create } from "zustand";
+import { getRootTag, NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { create } from 'zustand';
 
 export type ReactionStats = {
     reactionCount: number;
@@ -11,19 +11,19 @@ export type ReactionStats = {
     repostedByUser: boolean;
     reposts: NDKEvent[];
     bookmarkedByUser: boolean;
-}
+};
 
 type ReactionsStore = {
     seenEventIds: Set<string>;
-    
+
     // Map of event ID to reaction stats
     reactions: Map<string, ReactionStats>;
 
     addEvents: (events: NDKEvent[], currentPubkey?: string | boolean) => void;
-    
+
     // Clear all data
     clear: () => void;
-}
+};
 
 export const DEFAULT_STATS: ReactionStats = {
     reactionCount: 0,
@@ -52,16 +52,10 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
 
                 const targetRootEventId = getTargetRootEventId(event);
                 if (!targetRootEventId) {
-                    console.log(
-                        `[REACTIONS STORE] no target root event id for`,
-                        event.id.substring(0, 8),
-                        event.kind,
-                        event.encode()
-                    );
+                    console.log(`[REACTIONS STORE] no target root event id for`, event.id.substring(0, 8), event.kind, event.encode());
                     continue;
                 }
 
-                
                 const stats = cloneReactionStats(newReactions.get(targetRootEventId) || DEFAULT_STATS);
                 updateStats(stats, event, currentPubkey);
                 newReactions.set(targetRootEventId, stats);
@@ -71,20 +65,15 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
         });
     },
 
-    clear: () => set({ reactions: new Map() })
+    clear: () => set({ reactions: new Map() }),
 }));
-
 
 function getTargetRootEventId(event: NDKEvent): string | undefined {
     const rootTag = getRootTag(event);
     return rootTag?.[1];
 }
 
-function updateStats(
-    stats: ReactionStats,
-    event: NDKEvent,
-    currentPubkey?: string | boolean
-): void {
+function updateStats(stats: ReactionStats, event: NDKEvent, currentPubkey?: string | boolean): void {
     switch (event.kind) {
         case NDKKind.Reaction:
             if (event.pubkey === currentPubkey || currentPubkey === true) {
@@ -124,14 +113,14 @@ function updateStats(
 
 function cloneReactionStats(stats: ReactionStats): ReactionStats {
     return {
-      reactionCount: stats.reactionCount,
-      reactedByUser: stats.reactedByUser ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser) : null,
-      commentCount: stats.commentCount,
-      commentedByUser: stats.commentedByUser,
-      comments: [...stats.comments],
-      repostedBy: new Set(stats.repostedBy),
-      repostedByUser: stats.repostedByUser,
-      reposts: [...stats.reposts],
-      bookmarkedByUser: stats.bookmarkedByUser,
+        reactionCount: stats.reactionCount,
+        reactedByUser: stats.reactedByUser ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser) : null,
+        commentCount: stats.commentCount,
+        commentedByUser: stats.commentedByUser,
+        comments: [...stats.comments],
+        repostedBy: new Set(stats.repostedBy),
+        repostedByUser: stats.repostedByUser,
+        reposts: [...stats.reposts],
+        bookmarkedByUser: stats.bookmarkedByUser,
     };
 }

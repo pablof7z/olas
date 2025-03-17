@@ -8,11 +8,7 @@ import { Toasts } from '@backpackapp-io/react-native-toast';
 import { StyleSheet } from 'react-native';
 import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import {
-    NDKEventWithFrom,
-    useNDKCurrentUser, useNDKInit,
-    NDKUser
-} from '@nostr-dev-kit/ndk-mobile';
+import { NDKEventWithFrom, useNDKCurrentUser, useNDKInit, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -62,9 +58,7 @@ const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platfor
     const headerShown = Platform.OS !== 'ios';
 
     return { presentation, headerShown, ...opts };
-}
-
-
+};
 
 export default function RootLayout() {
     const [appReady, setAppReady] = useState(!!currentUserInSettings);
@@ -104,7 +98,7 @@ export default function RootLayout() {
                     feedType = { kind: 'discover', value: storedFeed };
                 }
 
-                if (feedType.kind as string === 'hashtag' && feedType.value) {
+                if ((feedType.kind as string) === 'hashtag' && feedType.value) {
                     feedType.hashtags = [feedType.value.slice(1, 999)];
                 }
             }
@@ -115,7 +109,7 @@ export default function RootLayout() {
         setFeedType(feedType);
     }, []);
 
-    useAppSub(currentUser?.pubkey, [(!ndk || !currentUser?.pubkey || !appReady), currentUser?.pubkey]);
+    useAppSub(currentUser?.pubkey, [!ndk || !currentUser?.pubkey || !appReady, currentUser?.pubkey]);
 
     useEffect(() => {
         if (!currentUser?.pubkey) return;
@@ -131,10 +125,7 @@ export default function RootLayout() {
                 kinds: sessionKinds,
                 filters: (user: NDKUser) => [
                     {
-                        kinds: [
-                            NDKKind.CashuMintList,
-                            NDKKind.CashuWallet,
-                        ],
+                        kinds: [NDKKind.CashuMintList, NDKKind.CashuWallet],
                         authors: [user.pubkey],
                     },
                 ],
@@ -237,8 +228,7 @@ export default function RootLayout() {
                                         <Stack.Screen name="eula" options={modalPresentation()} />
 
                                         <Stack.Screen name="story" options={{ headerShown: false }} />
-                                        <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }}
-                                        />
+                                        <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }} />
 
                                         <Stack.Screen
                                             name="receive"
@@ -246,22 +236,22 @@ export default function RootLayout() {
                                         />
                                         <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
                                     </Stack>
-                                    
-                                <PostOptionsMenu />
-                                <LocationBottomSheet />
-                                {COMMUNITIES_ENABLED && <CommunityBottomSheet />}
-                                {/* <AlbumsBottomSheet /> */}
-                                {/* <PostTypeSelectorBottomSheet /> */}
-                                <FeedTypeBottomSheet />
-                                {/* <HandleNotificationPrompt /> */}
-                                <TagSelectorBottomSheet />
-                                <FeedEditorBottomSheet />
-                                <UserBottomSheet />
-                                <ReactionPickerBottomSheet />
-                                <CommentsBottomSheet />
-                                <ZapperBottomSheet />
-                                <ProductViewBottomSheet />
-                            </NavThemeProvider>
+
+                                    <PostOptionsMenu />
+                                    <LocationBottomSheet />
+                                    {COMMUNITIES_ENABLED && <CommunityBottomSheet />}
+                                    {/* <AlbumsBottomSheet /> */}
+                                    {/* <PostTypeSelectorBottomSheet /> */}
+                                    <FeedTypeBottomSheet />
+                                    {/* <HandleNotificationPrompt /> */}
+                                    <TagSelectorBottomSheet />
+                                    <FeedEditorBottomSheet />
+                                    <UserBottomSheet />
+                                    <ReactionPickerBottomSheet />
+                                    <CommentsBottomSheet />
+                                    <ZapperBottomSheet />
+                                    <ProductViewBottomSheet />
+                                </NavThemeProvider>
                             </ActionSheetProvider>
                             <Toasts />
                             <DevelopmentStatus />

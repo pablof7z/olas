@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { useObserver } from "./observer";
-import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo } from "@nostr-dev-kit/ndk-mobile";
+import { useEffect, useRef, useState } from 'react';
+import { useObserver } from './observer';
+import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 
 type StoryEntry = {
-    events: NDKEvent[],
-    live: boolean,
-}
+    events: NDKEvent[];
+    live: boolean;
+};
 
 export function useStories() {
     // useSubscribe([
@@ -16,14 +16,14 @@ export function useStories() {
         [{ kinds: [20, NDKKind.ShortVideo], since: twentyFourHoursAgo }],
         // [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
         { wrap: true, cacheUnconstrainFilter: [] }
-    )
+    );
 
     const [stories, setStories] = useState<Map<Hexpubkey, StoryEntry>>(new Map());
     const knownIds = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         let changed = false;
-        const map = new Map < Hexpubkey, StoryEntry>();
+        const map = new Map<Hexpubkey, StoryEntry>();
 
         for (const event of events) {
             if (knownIds.current.has(event.id)) continue;

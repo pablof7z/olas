@@ -18,19 +18,11 @@ export default function MentionButton({ onSelectUser }: MentionButtonProps) {
 
     return (
         <>
-            <TouchableOpacity
-                style={[styles.button, { backgroundColor: colors.grey5 }]}
-                onPress={handlePress}
-            >
-                <Text style={[styles.buttonText, { color: colors.foreground }]}>
-                    @Mention
-                </Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: colors.grey5 }]} onPress={handlePress}>
+                <Text style={[styles.buttonText, { color: colors.foreground }]}>@Mention</Text>
             </TouchableOpacity>
-            
-            <MentionBottomSheet
-                ref={bottomSheetRef}
-                onSelectUser={onSelectUser}
-            />
+
+            <MentionBottomSheet ref={bottomSheetRef} onSelectUser={onSelectUser} />
         </>
     );
 }
@@ -41,10 +33,10 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 8,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
     buttonText: {
         fontSize: 14,
-        fontWeight: '500'
-    }
-}); 
+        fontWeight: '500',
+    },
+});

@@ -20,26 +20,26 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
     const onDateChange = (event: any, selectedDate?: Date) => {
         const currentDate = selectedDate || countdownDate;
         setShowDatePicker(false);
-        
+
         // Preserve the time from the current countdownDate
         const newDate = new Date(currentDate);
         newDate.setHours(countdownDate.getHours());
         newDate.setMinutes(countdownDate.getMinutes());
-        
+
         setCountdownDate(newDate);
     };
-    
+
     const onTimeChange = (event: any, selectedTime?: Date) => {
         const currentTime = selectedTime || countdownDate;
         setShowTimePicker(false);
-        
+
         // Preserve the date from the current countdownDate
         const newDate = new Date(countdownDate);
         if (selectedTime) {
             newDate.setHours(currentTime.getHours());
             newDate.setMinutes(currentTime.getMinutes());
         }
-        
+
         setCountdownDate(newDate);
     };
 
@@ -48,7 +48,7 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
             addSticker({
                 type: NDKStoryStickerType.Countdown,
                 value: (countdownDate.getTime() / 1000).toString(),
-                metadata: { title: countdownName, endTime: countdownDate }
+                metadata: { title: countdownName, endTime: countdownDate },
             });
             onStickerAdded();
         }
@@ -65,57 +65,31 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
                 onChangeText={setCountdownName}
                 autoFocus
             />
-            
+
             <Text style={[styles.countdownLabel, { marginTop: 16 }]}>Select date & time:</Text>
-            
+
             <View style={styles.datePickerRow}>
-                <TouchableOpacity 
-                    style={styles.datePickerButton}
-                    onPress={() => setShowDatePicker(true)}
-                >
+                <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowDatePicker(true)}>
                     <Ionicons name="calendar-outline" size={20} color="white" style={styles.datePickerIcon} />
-                    <Text style={styles.datePickerText}>
-                        {countdownDate.toLocaleDateString()}
-                    </Text>
+                    <Text style={styles.datePickerText}>{countdownDate.toLocaleDateString()}</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
-                    style={styles.timePickerButton}
-                    onPress={() => setShowTimePicker(true)}
-                >
+
+                <TouchableOpacity style={styles.timePickerButton} onPress={() => setShowTimePicker(true)}>
                     <Ionicons name="time-outline" size={20} color="white" style={styles.datePickerIcon} />
                     <Text style={styles.datePickerText}>
                         {countdownDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>
                 </TouchableOpacity>
             </View>
-            
-            {showDatePicker && (
-                <DateTimePicker
-                    value={countdownDate}
-                    mode="date"
-                    display="default"
-                    onChange={onDateChange}
-                />
-            )}
-            
-            {showTimePicker && (
-                <DateTimePicker
-                    value={countdownDate}
-                    mode="time"
-                    display="default"
-                    onChange={onTimeChange}
-                />
-            )}
-            
-            <TouchableOpacity 
-                style={[
-                    styles.addEventButton,
-                    { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 }
-                ]}
+
+            {showDatePicker && <DateTimePicker value={countdownDate} mode="date" display="default" onChange={onDateChange} />}
+
+            {showTimePicker && <DateTimePicker value={countdownDate} mode="time" display="default" onChange={onTimeChange} />}
+
+            <TouchableOpacity
+                style={[styles.addEventButton, { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 }]}
                 onPress={handleAddCountdownSticker}
-                disabled={!countdownName.trim()}
-            >
+                disabled={!countdownName.trim()}>
                 <Text style={styles.addEventButtonText}>Add Countdown</Text>
             </TouchableOpacity>
         </View>
@@ -180,4 +154,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-}); 
+});

@@ -23,7 +23,7 @@ export default function WalletRelayScreen() {
 
     useEffect(() => {
         if (!mintList) return;
-        setRelays([...mintList.relays])
+        setRelays([...mintList.relays]);
     }, [mintList?.relays?.length]);
 
     const addFn = () => {
@@ -41,9 +41,12 @@ export default function WalletRelayScreen() {
         }
     };
 
-    const removeRelay = useCallback((url: string) => {
-        setRelays(relays.filter((r) => r !== url));
-    }, [relays]);
+    const removeRelay = useCallback(
+        (url: string) => {
+            setRelays(relays.filter((r) => r !== url));
+        },
+        [relays]
+    );
 
     const data = useMemo(() => {
         let r: string[] = relays;
@@ -72,14 +75,17 @@ export default function WalletRelayScreen() {
         setIsSaving(true);
         mintList.relays = relays;
         await activeWallet.getP2pk();
-        activeWallet.publish().then(() => {
-            router.back()
-            mintList.mints ??= activeWallet.mints;
-            mintList.p2pk = activeWallet.p2pk;
-            mintList.publishReplaceable();
-        }).finally(() => {
-            setIsSaving(false);
-        });
+        activeWallet
+            .publish()
+            .then(() => {
+                router.back();
+                mintList.mints ??= activeWallet.mints;
+                mintList.p2pk = activeWallet.p2pk;
+                mintList.publishReplaceable();
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
     }, [relays, activeWallet]);
 
     return (
@@ -90,7 +96,7 @@ export default function WalletRelayScreen() {
                     iosHideWhenScrolling: true,
                     onChangeText: setSearchText,
                 }}
-                rightView={() => (
+                rightView={() =>
                     !isSaving ? (
                         <TouchableOpacity onPress={save}>
                             <Text className="text-primary">Save</Text>
@@ -98,7 +104,7 @@ export default function WalletRelayScreen() {
                     ) : (
                         <ActivityIndicator />
                     )
-                )}
+                }
             />
             <List
                 contentContainerClassName="pt-4"

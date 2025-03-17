@@ -15,12 +15,12 @@ interface EventStickerViewProps {
 
 export default function EventStickerView({ sticker }: EventStickerViewProps) {
     const eventId = sticker.value;
-    
+
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
-    
+
     const { ndk } = useNDK();
-    const [ event, setEvent ] = useState<NDKEvent | null>(sticker.metadata?.event || null);
+    const [event, setEvent] = useState<NDKEvent | null>(sticker.metadata?.event || null);
     const { userProfile } = useUserProfile(event?.pubkey);
     const { colors } = useColorScheme();
 
@@ -33,27 +33,20 @@ export default function EventStickerView({ sticker }: EventStickerViewProps) {
         fetchEvent();
     }, [ndk, eventId, sticker.metadata?.event]);
 
-    const content = (<>
-        {!event ? (
-            <ActivityIndicator size="small" color={colors.foreground} />
-        ) : (
-            <RenderEvent event={event} styles={selectedStyle} />
-        )}
-    </>)
-
-    return (
-        <View style={selectedStyle.container as ViewStyle}>
-            {content}
-        </View>
+    const content = (
+        <>{!event ? <ActivityIndicator size="small" color={colors.foreground} /> : <RenderEvent event={event} styles={selectedStyle} />}</>
     );
+
+    return <View style={selectedStyle.container as ViewStyle}>{content}</View>;
 }
 
-
-function RenderEvent({ event, styles }: { event: NDKEvent, styles: EventStickerStyle }) {
+function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerStyle }) {
     const { userProfile } = useUserProfile(event?.pubkey);
-    
+
     switch (event.kind) {
-        case NDKKind.Classified: return <Kind30402 event={event} userProfile={userProfile} styles={styles} />;
-        default: return <Generic event={event} userProfile={userProfile} styles={styles} />
+        case NDKKind.Classified:
+            return <Kind30402 event={event} userProfile={userProfile} styles={styles} />;
+        default:
+            return <Generic event={event} userProfile={userProfile} styles={styles} />;
     }
 }

@@ -74,7 +74,7 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
     const user = event?.author;
 
-    const advancedMode = useAppSettingsStore(s => s.advancedMode);
+    const advancedMode = useAppSettingsStore((s) => s.advancedMode);
 
     return (
         <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom + 20, flexDirection: 'column', gap: 20 }}>
@@ -101,21 +101,21 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
                     <View className="flex-col items-start justify-start gap-2">
                         {advancedMode && (
-                            <Button
-                                size="lg"
-                                variant="secondary"
-                                className="w-full flex-row gap-2 py-4"
-                                onPress={() => close(copyRaw)}>
+                            <Button size="lg" variant="secondary" className="w-full flex-row gap-2 py-4" onPress={() => close(copyRaw)}>
                                 <Code size={24} color={colors.muted} />
                                 <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
                             </Button>
                         )}
-                
+
                         <DeletePostButton event={event} currentUser={currentUser} closeFn={close} />
                         <View className="flex-row gap-2">
                             <MuteButton user={user} currentUser={currentUser} closeFn={close} />
 
-                            <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 py-4" onPress={() => setShowReport(true)}>
+                            <Button
+                                size="lg"
+                                variant="secondary"
+                                className="flex-1 flex-row gap-2 py-4"
+                                onPress={() => setShowReport(true)}>
                                 <UserX size={24} color="red" />
                                 <Text className="flex-1 text-red-500">Report</Text>
                             </Button>
@@ -132,28 +132,31 @@ function ReportBody({ event }: { event: NDKEvent }) {
     const [sent, setSent] = useState(false);
     const { mute } = useMuteList();
     const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
-    
-    const report = useCallback(async (reason: string) => {
-        const report = new NDKEvent(ndk, {
-            kind: NDKKind.Report,
-        } as NostrEvent);
-        report.tag(event, reason);
-        for (const xTag of event.getMatchingTags('x')) {
-            report.tags.push(['x', xTag[1]]);
-        }
-        await report.sign();
-        report.publish();
-        mute(event.pubkey, 'pubkey');
-        setSent(true);
-        optionsSheetRef.current?.dismiss();
-    }, [event?.id, optionsSheetRef]);
-    
+
+    const report = useCallback(
+        async (reason: string) => {
+            const report = new NDKEvent(ndk, {
+                kind: NDKKind.Report,
+            } as NostrEvent);
+            report.tag(event, reason);
+            for (const xTag of event.getMatchingTags('x')) {
+                report.tags.push(['x', xTag[1]]);
+            }
+            await report.sign();
+            report.publish();
+            mute(event.pubkey, 'pubkey');
+            setSent(true);
+            optionsSheetRef.current?.dismiss();
+        },
+        [event?.id, optionsSheetRef]
+    );
+
     return (
         <View>
             <Text variant="title1">Report</Text>
             <Text variant="body">Please describe the reason for reporting this post.</Text>
 
-            <View className="flex-col gap-2 my-4">
+            <View className="my-4 flex-col gap-2">
                 <View className="flex-row gap-2">
                     <Button variant="secondary" className="flex-1" onPress={() => report('nudity')}>
                         <Text>Nudity</Text>
@@ -168,7 +171,7 @@ function ReportBody({ event }: { event: NDKEvent }) {
                     <Button variant="secondary" className="flex-1" onPress={() => report('illegal')}>
                         <Text>Illegal</Text>
                     </Button>
-                    
+
                     <Button variant="secondary" className="flex-1" onPress={() => report('other')}>
                         <Text>Other</Text>
                     </Button>
@@ -178,19 +181,27 @@ function ReportBody({ event }: { event: NDKEvent }) {
                     <Button variant="secondary" className="flex-1" onPress={() => report('impersonation')}>
                         <Text>Impersonation</Text>
                     </Button>
-                    
+
                     <Button variant="secondary" className="flex-1" onPress={() => report('other')}>
                         <Text>Other</Text>
                     </Button>
                 </View>
             </View>
         </View>
-    )
+    );
 }
 
-function DeletePostButton({ event, currentUser, closeFn }: { event: NDKEvent, currentUser: NDKUser, closeFn: (cb: (event?: NDKEvent) => void) => void }) {
+function DeletePostButton({
+    event,
+    currentUser,
+    closeFn,
+}: {
+    event: NDKEvent;
+    currentUser: NDKUser;
+    closeFn: (cb: (event?: NDKEvent) => void) => void;
+}) {
     if (currentUser?.pubkey !== event.pubkey) return null;
-    
+
     return (
         <Button
             size="lg"
@@ -206,7 +217,15 @@ function DeletePostButton({ event, currentUser, closeFn }: { event: NDKEvent, cu
     );
 }
 
-function MuteButton({ user, currentUser, closeFn }: { user: NDKUser, currentUser: NDKUser, closeFn: (cb: (event?: NDKEvent) => void) => void }) {
+function MuteButton({
+    user,
+    currentUser,
+    closeFn,
+}: {
+    user: NDKUser;
+    currentUser: NDKUser;
+    closeFn: (cb: (event?: NDKEvent) => void) => void;
+}) {
     const { mute } = useMuteList();
     const followType = useFollowType(user?.pubkey);
 
@@ -214,16 +233,28 @@ function MuteButton({ user, currentUser, closeFn }: { user: NDKUser, currentUser
     if (!!followType) return null;
 
     return (
-        <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 bg-red-900/10 py-4" onPress={() => {
-            closeFn(() => mute(user.pubkey, 'pubkey'));
-        }}>
+        <Button
+            size="lg"
+            variant="secondary"
+            className="flex-1 flex-row gap-2 bg-red-900/10 py-4"
+            onPress={() => {
+                closeFn(() => mute(user.pubkey, 'pubkey'));
+            }}>
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Mute</Text>
         </Button>
-    )
+    );
 }
 
-function ReportUserButton({ event, currentUser, closeFn }: { event: NDKEvent, currentUser: NDKUser, closeFn: (cb: (event?: NDKEvent) => void) => void }) {
+function ReportUserButton({
+    event,
+    currentUser,
+    closeFn,
+}: {
+    event: NDKEvent;
+    currentUser: NDKUser;
+    closeFn: (cb: (event?: NDKEvent) => void) => void;
+}) {
     const { mute } = useMuteList();
     const followType = useFollowType(event?.pubkey);
     const user = event?.author;
@@ -239,7 +270,7 @@ function ReportUserButton({ event, currentUser, closeFn }: { event: NDKEvent, cu
             tags: [['p', event.pubkey]],
         } as NostrEvent);
         r.publish();
-    }, [ event?.pubkey ]);
+    }, [event?.pubkey]);
 
     const handleBlock = useCallback(() => {
         mute(user.pubkey, 'pubkey');
@@ -251,8 +282,7 @@ function ReportUserButton({ event, currentUser, closeFn }: { event: NDKEvent, cu
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Report</Text>
         </Button>
-    )
-    
+    );
 }
 
 export default function PostOptionsMenu() {

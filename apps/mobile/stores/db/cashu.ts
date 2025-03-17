@@ -1,5 +1,5 @@
-import { MintKeys, GetInfoResponse } from "@cashu/cashu-ts";
-import { db } from ".";
+import { MintKeys, GetInfoResponse } from '@cashu/cashu-ts';
+import { db } from '.';
 
 export function dbGetMintInfo(url: string) {
     const res = db.getFirstSync<{ payload: string }>(`SELECT payload FROM mint_info WHERE url = ?`, [url]);
@@ -8,16 +8,13 @@ export function dbGetMintInfo(url: string) {
 }
 
 export function dbSetMintInfo(url: string, payload: GetInfoResponse) {
-    console.log('dbSetMintInfo', {url, payload});
-    db.runSync(
-        `INSERT OR REPLACE INTO mint_info (url, payload) VALUES (?, ?)`, 
-        [url, JSON.stringify(payload)]
-    );
+    console.log('dbSetMintInfo', { url, payload });
+    db.runSync(`INSERT OR REPLACE INTO mint_info (url, payload) VALUES (?, ?)`, [url, JSON.stringify(payload)]);
 }
 
 export function dbGetMintKeys(url: string) {
     const res = db.getAllSync<{ payload: string }>(`SELECT payload FROM mint_keys WHERE url = ?`, [url]);
-    const keys = res.map(r => JSON.parse(r.payload));
+    const keys = res.map((r) => JSON.parse(r.payload));
     return keys as MintKeys[];
 }
 

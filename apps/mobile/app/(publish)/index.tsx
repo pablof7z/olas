@@ -14,10 +14,10 @@ import { useEffect, useMemo } from 'react';
 export default function NewPostScreen() {
     const { colors } = useColorScheme();
 
-    const addMoreMedia = usePostEditorStore(s => s.newMediaFromSelector);
-    const isEditing = usePostEditorStore(s => s.editingIndex !== null);
-    const hasEditUri = useEditImageStore(s => s.imageUri !== null);
-    const reset = usePostEditorStore(s => s.reset);
+    const addMoreMedia = usePostEditorStore((s) => s.newMediaFromSelector);
+    const isEditing = usePostEditorStore((s) => s.editingIndex !== null);
+    const hasEditUri = useEditImageStore((s) => s.imageUri !== null);
+    const reset = usePostEditorStore((s) => s.reset);
 
     const insets = useSafeAreaInsets();
     function abort() {
@@ -25,9 +25,9 @@ export default function NewPostScreen() {
         reset();
     }
 
-    const media = usePostEditorStore(s => s.media);
-    const editingIndex = usePostEditorStore(s => s.editingIndex);
-    const setImageUri = useEditImageStore(s => s.setImageUri);
+    const media = usePostEditorStore((s) => s.media);
+    const editingIndex = usePostEditorStore((s) => s.editingIndex);
+    const setImageUri = useEditImageStore((s) => s.setImageUri);
 
     useEffect(() => {
         if (!media || editingIndex === null) return;
@@ -35,13 +35,13 @@ export default function NewPostScreen() {
         if (mediaItem?.mediaType === 'image') {
             setImageUri(mediaItem.uris[0]);
         }
-    }, [media, editingIndex])
+    }, [media, editingIndex]);
 
     const showEdit = useMemo(() => isEditing && hasEditUri, [isEditing, hasEditUri]);
 
     return (
         <>
-            <StatusBar hidden={showEdit}/>
+            <StatusBar hidden={showEdit} />
             <Stack.Screen
                 options={{
                     headerTransparent: false,

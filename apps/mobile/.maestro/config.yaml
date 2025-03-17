@@ -6,8 +6,8 @@ appId:
     ios: com.pablof7z.snapstr
 
 config:
-    screenshotsPath: "./.maestro/screenshots"
-    reportPath: "./.maestro/report"
+    screenshotsPath: './.maestro/screenshots'
+    reportPath: './.maestro/report'
     deviceCapabilities:
-        - "SCREENSHOTS"
-        - "VIDEO" 
+        - 'SCREENSHOTS'
+        - 'VIDEO'

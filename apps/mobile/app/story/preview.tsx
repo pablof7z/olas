@@ -6,8 +6,8 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function StoryPreviewScreen() {
     const router = useRouter();
-    const { path, type } = useLocalSearchParams<{ 
-        path: string; 
+    const { path, type } = useLocalSearchParams<{
+        path: string;
         type: 'photo' | 'video';
     }>();
 
@@ -16,18 +16,14 @@ export default function StoryPreviewScreen() {
     };
 
     const insets = useSafeAreaInsets();
-    
+
     if (!path || !type) {
         return <View style={styles.container} />;
     }
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StoryPreview 
-                path={path} 
-                type={type as 'photo' | 'video'} 
-                onClose={handleClose} 
-            />
+            <StoryPreview path={path} type={type as 'photo' | 'video'} onClose={handleClose} />
         </View>
     );
 }

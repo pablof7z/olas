@@ -15,9 +15,7 @@ import { usePostEditorStore } from '@/lib/post-editor/store';
 import { Hash } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 
-export const mountTagSelectorAtom = atom<boolean, [boolean], null>(false, (get, set, value) =>
-    set(mountTagSelectorAtom, value)
-);
+export const mountTagSelectorAtom = atom<boolean, [boolean], null>(false, (get, set, value) => set(mountTagSelectorAtom, value));
 
 type TagEntry = {
     // This is the tag as we match for internally
@@ -28,26 +26,28 @@ type TagEntry = {
 
     // This is the count of how many times this tag has been used
     count: number;
-}
+};
 
 export type TagSelectorSheetRefAtomType = RefObject<BottomSheetModal> | null;
 
-export const tagSelectorBottomSheetRefAtom = atom<TagSelectorSheetRefAtomType, [TagSelectorSheetRefAtomType], null>(null, (get, set, value) =>
-    set(tagSelectorBottomSheetRefAtom, value)
+export const tagSelectorBottomSheetRefAtom = atom<TagSelectorSheetRefAtomType, [TagSelectorSheetRefAtomType], null>(
+    null,
+    (get, set, value) => set(tagSelectorBottomSheetRefAtom, value)
 );
 
 export type TagSelectorBottomSheetCbType = (tags: string[]) => void;
 
-export const tagSelectorBottomSheetCbAtom = atom<TagSelectorBottomSheetCbType, [TagSelectorBottomSheetCbType], null>(null, (get, set, value) =>
-    set(tagSelectorBottomSheetCbAtom, value)
+export const tagSelectorBottomSheetCbAtom = atom<TagSelectorBottomSheetCbType, [TagSelectorBottomSheetCbType], null>(
+    null,
+    (get, set, value) => set(tagSelectorBottomSheetCbAtom, value)
 );
 
 export function TagSelectorBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+    const metadata = usePostEditorStore((s) => s.metadata);
+    const setMetadata = usePostEditorStore((s) => s.setMetadata);
     const selectedTags = useRef<Set<string>>(new Set());
     const [selectedCount, setSelectedCount] = useState(0);
     const tagSelectorCb = useAtomValue<TagSelectorBottomSheetCbType>(tagSelectorBottomSheetCbAtom);
@@ -58,18 +58,18 @@ export function TagSelectorBottomSheet() {
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length])
+    }, [metadata?.tags?.length]);
 
     useEffect(() => {
         setBottomSheetRef(ref);
     }, [ref, setBottomSheetRef]);
 
     const updateCaption = useCallback(() => {
-        const currentCaptionTags = generateHashtags(metadata?.caption ?? "");
+        const currentCaptionTags = generateHashtags(metadata?.caption ?? '');
 
-        // see if the caption has tags we don't have, if it does, let's remove them 
+        // see if the caption has tags we don't have, if it does, let's remove them
         const tagsToRemove = currentCaptionTags.filter((tag) => !selectedTags.current.has(tag));
-        const newCaption = (metadata?.caption ?? "")
+        const newCaption = (metadata?.caption ?? '')
             .replace(/#(\w+)/g, (match, tag) => {
                 if (tagsToRemove.includes(tag)) return '';
                 return match;
@@ -80,17 +80,20 @@ export function TagSelectorBottomSheet() {
 
     return (
         <Sheet ref={ref}>
-            <BottomSheetView style={{ flexDirection: 'column', paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
-                <View className="px-4 py-2 flex-col gap-2 w-full">
-                    <View className="flex-row items-center justify-between w-full">
-                        <Text variant="title1" className="text-foreground">Tag your post</Text>
+            <BottomSheetView
+                style={{ flexDirection: 'column', paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
+                <View className="w-full flex-col gap-2 px-4 py-2">
+                    <View className="w-full flex-row items-center justify-between">
+                        <Text variant="title1" className="text-foreground">
+                            Tag your post
+                        </Text>
                         <Button size="sm" variant="primary" onPress={() => tagSelectorCb?.(Array.from(selectedTags.current))}>
                             <Text>Done</Text>
                         </Button>
                     </View>
                     <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
                 </View>
-                
+
                 <TagSelector />
             </BottomSheetView>
         </Sheet>
@@ -98,8 +101,8 @@ export function TagSelectorBottomSheet() {
 }
 
 export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void }) {
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+    const metadata = usePostEditorStore((s) => s.metadata);
+    const setMetadata = usePostEditorStore((s) => s.setMetadata);
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
@@ -115,7 +118,7 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length])
+    }, [metadata?.tags?.length]);
 
     const tagsToShow = useMemo(() => {
         if (!ndk || !currentUser || !mountTagSelector) return [];
@@ -126,12 +129,13 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
 
         // if we have a search, let's sort by the fact that the tag actually matches, if it doesn't match, it should be lower
         if (alphanumSearch) {
-            result.sort((a, b) => {
-                const aMatches = a.tag.toLowerCase().includes(alphanumSearch);
-                const bMatches = b.tag.toLowerCase().includes(alphanumSearch);
-                return aMatches ? -1 : bMatches ? 1 : 0;
-            })
-            .filter((tag) => tag.tag.toLowerCase().includes(alphanumSearch));
+            result
+                .sort((a, b) => {
+                    const aMatches = a.tag.toLowerCase().includes(alphanumSearch);
+                    const bMatches = b.tag.toLowerCase().includes(alphanumSearch);
+                    return aMatches ? -1 : bMatches ? 1 : 0;
+                })
+                .filter((tag) => tag.tag.toLowerCase().includes(alphanumSearch));
         }
 
         // if we have selected tags that are not in the result and we don't have a search active, let's add them to the top
@@ -143,9 +147,12 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         return result;
     }, [ndk, currentUser?.pubkey, follows?.length, search, selectedTags.current, mountTagSelector]);
 
-    const setTagsInMetadata = useCallback((tags: string[]) => {
-        setMetadata({ ...metadata, tags });
-    }, [metadata, setMetadata]);
+    const setTagsInMetadata = useCallback(
+        (tags: string[]) => {
+            setMetadata({ ...metadata, tags });
+        },
+        [metadata, setMetadata]
+    );
 
     const addTagManually = useCallback(() => {
         if (!search) return;
@@ -161,55 +168,55 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         setSearch('');
     }, [search, setSearch, setTagsInMetadata, onSelected]);
 
-    const onItemPress = useCallback((tag: string) => {
-        if (onSelected) {
-            onSelected(tag);
-            setSearch('');
-            return;
-        }
-        
-        if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
-        else selectedTags.current.add(tag);
-        setTagsInMetadata(Array.from(selectedTags.current));
-        setSelectedCount(selectedTags.current.size);
-        setSearch('');
-    }, [setTagsInMetadata, setSelectedCount, setSearch, onSelected]);
+    const onItemPress = useCallback(
+        (tag: string) => {
+            if (onSelected) {
+                onSelected(tag);
+                setSearch('');
+                return;
+            }
 
-    const {colors} = useColorScheme();
-    
+            if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
+            else selectedTags.current.add(tag);
+            setTagsInMetadata(Array.from(selectedTags.current));
+            setSelectedCount(selectedTags.current.size);
+            setSearch('');
+        },
+        [setTagsInMetadata, setSelectedCount, setSearch, onSelected]
+    );
+
+    const { colors } = useColorScheme();
+
     const keyExtractor = (item: TagEntry) => item.tag;
-    const renderItem = useCallback(({ item, index }: { item: TagEntry, index: number, target }) => {
-        const isSelected = selectedTags.current.has(item.tag);
-        return (
-            <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                )}
-                titleClassName={cn(
-                    isSelected && '!text-primary !font-bold',
-                )}
-                leftView={
-                    <Hash size={24} color={isSelected ? colors.primary : colors.muted } style={{ marginHorizontal: 10 }} />
-                }
-                item={{
-                    title: item.tag,
-                }}
-                index={index}
-                onPress={() => onItemPress(item.tag)}
-            />
-        );
-    }, [selectedCount, onItemPress]);
+    const renderItem = useCallback(
+        ({ item, index }: { item: TagEntry; index: number; target }) => {
+            const isSelected = selectedTags.current.has(item.tag);
+            return (
+                <ListItem
+                    className={cn('ios:pl-0 pl-2')}
+                    titleClassName={cn(isSelected && '!text-primary !font-bold')}
+                    leftView={<Hash size={24} color={isSelected ? colors.primary : colors.muted} style={{ marginHorizontal: 10 }} />}
+                    item={{
+                        title: item.tag,
+                    }}
+                    index={index}
+                    onPress={() => onItemPress(item.tag)}
+                />
+            );
+        },
+        [selectedCount, onItemPress]
+    );
 
     const data = useMemo(() => {
         return tagsToShow;
     }, [tagsToShow, selectedCount, renderItem, onItemPress]);
 
     return (
-        <View className="px-4 flex-col gap-2">
-            <View className="flex-row items-center bg-card border border-border/25 dark:border-border/80 rounded-md px-4 py-3">
+        <View className="flex-col gap-2 px-4">
+            <View className="border-border/25 dark:border-border/80 flex-row items-center rounded-md border bg-card px-4 py-3">
                 <Text className="text-foreground">#</Text>
                 <TextInput
-                    className="text-foreground flex-1 px-1"
+                    className="flex-1 px-1 text-foreground"
                     value={search}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -220,24 +227,17 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
 
                 <Button
                     size="sm"
-                    variant={tagsToShow.length === 0 ? 'primary' : 'secondary' }
+                    variant={tagsToShow.length === 0 ? 'primary' : 'secondary'}
                     disabled={search.length === 0}
-                    onPress={addTagManually}
-                >
+                    onPress={addTagManually}>
                     <Text>Add</Text>
                 </Button>
             </View>
 
-            <FlatList
-                data={data}
-                variant="insets"
-                keyExtractor={keyExtractor}
-                renderItem={renderItem}
-            />
+            <FlatList data={data} variant="insets" keyExtractor={keyExtractor} renderItem={renderItem} />
         </View>
     );
 }
-
 
 /**
  * This function gets the tags that should be shown to the user;
@@ -264,7 +264,7 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
     });
 
     return tagsToReturn;
-    
+
     // return tagsFromUser;
 }
 
@@ -273,11 +273,11 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
  * to do that it looks at what tags the user has used, what tags
  * the user has interacted with, and what tags are popular in their
  * network.
- * 
- * @param ndk 
- * @param pubkeys 
+ *
+ * @param ndk
+ * @param pubkeys
  * @param top The number of most popular tags to return
- * @returns 
+ * @returns
  */
 function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: string): Array<TagEntry> {
     let postsByUser = getPostsByUser(ndk, pubkeys);
@@ -285,7 +285,7 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
     if (search) {
         const lowerCaseSearch = search.toLowerCase();
         console.log('search', postsByUser.length, search, lowerCaseSearch);
-        postsByUser = postsByUser.filter((post) => post.getMatchingTags("t").some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch)));
+        postsByUser = postsByUser.filter((post) => post.getMatchingTags('t').some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch)));
         console.log('postsByUser', postsByUser.length);
     }
 
@@ -296,7 +296,7 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
 
     // This counts how many tags a tag is tagged in total, regardless of the variation
     const tagCount = new Map<string, number>();
-    
+
     postsByUser.forEach((post) => {
         post.getMatchingTags('t').forEach((tag) => {
             const tagName = tag[1] as string;
@@ -316,7 +316,7 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
         .sort((a, b) => b[1] - a[1])
         .slice(0, top)
         .map(([tag, count]) => ({ id: tag.toLowerCase(), tag, count }));
-    
+
     // get the most common tag variation of each top tag and add it to the topTags array
     topTags.forEach((tag) => {
         const variations = tagVariations.get(tag.id);

@@ -23,56 +23,55 @@ export default function MutedScreen() {
         setHashtags(Array.from(mutedHashtags));
         setPubkeys(Array.from(mutedPubkeys));
     }, [mutedHashtags, mutedPubkeys]);
-    
+
     const data = useMemo(() => {
         const v = [];
 
         v.push({ id: 'hashtags', type: 'header', value: 'Hashtags' });
-        v.push(...hashtags.map(h => ({ id: `hashtag-${h}`, type: 'hashtag', value: h })));
+        v.push(...hashtags.map((h) => ({ id: `hashtag-${h}`, type: 'hashtag', value: h })));
         v.push({ id: 'hashtag-add', type: 'hashtag-add' });
 
         if (pubkeys.length > 0) {
-            v.push  ({ id: 'users', type: 'header', value: 'Users' });
-            v.push(...pubkeys.map(p => ({ id: `user-${p}`, type: 'user', value: p })));
+            v.push({ id: 'users', type: 'header', value: 'Users' });
+            v.push(...pubkeys.map((p) => ({ id: `user-${p}`, type: 'user', value: p })));
         }
 
         return v;
     }, [hashtags.length, pubkeys.length]);
 
-    console.log('rendering data', {hashtagCount: hashtags.length, pubkeyCount: pubkeys.length});
+    console.log('rendering data', { hashtagCount: hashtags.length, pubkeyCount: pubkeys.length });
 
     const { ndk } = useNDK();
 
     const save = useCallback(async () => {
         const event = new NDKList(ndk);
         event.kind = 10000;
-        event.tags = [
-            ...hashtags.map(h => ['t', h]),
-            ...pubkeys.map(p => ['p', p]),
-        ]
+        event.tags = [...hashtags.map((h) => ['t', h]), ...pubkeys.map((p) => ['p', p])];
         await event.sign();
         console.log('event', JSON.stringify(event.rawEvent(), null, 2));
         await event.publishReplaceable();
         router.back();
     }, [hashtags, pubkeys]);
-    
+
     return (
         <>
-            <Stack.Screen options={{
-                headerTitle: 'Muted Content',
-                headerRight: () => (
-                    <Button variant="plain" onPress={save}>
-                        <Text className="text-primary">Save</Text>
-                    </Button>
-                )
-            }} />
-        <List
-            data={data}
-            variant="insets"
-            estimatedItemSize={50}
-            keyExtractor={item => item.id}
-            getItemType={item => item.type}
-            renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} />}
+            <Stack.Screen
+                options={{
+                    headerTitle: 'Muted Content',
+                    headerRight: () => (
+                        <Button variant="plain" onPress={save}>
+                            <Text className="text-primary">Save</Text>
+                        </Button>
+                    ),
+                }}
+            />
+            <List
+                data={data}
+                variant="insets"
+                estimatedItemSize={50}
+                keyExtractor={(item) => item.id}
+                getItemType={(item) => item.type}
+                renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} />}
             />
         </>
     );
@@ -88,24 +87,26 @@ function HashtagAddItem({ item, index, target }: { item: any; index: number; tar
         getFocus.current = true;
         setHashtag('');
     }, [hashtag, setHashtags]);
-    
-    return <View className="flex-row items-center justify-between gap-2 bg-card">
-        <TextInput
-            value={hashtag}
-            onChangeText={setHashtag}
-            placeholder="Add hashtag"
-            onSubmitEditing={add}
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="flex-1 p-4"
-            autoFocus={getFocus.current}
-        />
-        {hashtag.length > 0 && (
-            <Button onPress={add} variant="plain">
-                <Text>Add</Text>
-            </Button>
-        )}
-    </View>
+
+    return (
+        <View className="flex-row items-center justify-between gap-2 bg-card">
+            <TextInput
+                value={hashtag}
+                onChangeText={setHashtag}
+                placeholder="Add hashtag"
+                onSubmitEditing={add}
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="flex-1 p-4"
+                autoFocus={getFocus.current}
+            />
+            {hashtag.length > 0 && (
+                <Button onPress={add} variant="plain">
+                    <Text>Add</Text>
+                </Button>
+            )}
+        </View>
+    );
 }
 
 function Item({ item, index, target }: { item: any; index: number; target: RenderTarget }) {
@@ -125,15 +126,10 @@ function Item({ item, index, target }: { item: any; index: number; target: Rende
 function HashtagItem({ hashtag, index, target }: { hashtag: string; index: number; target: RenderTarget }) {
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const remove = useCallback(() => {
-        setHashtags(hashtags.filter(h => h !== hashtag));
+        setHashtags(hashtags.filter((h) => h !== hashtag));
     }, [hashtag, setHashtags, hashtags]);
-    
-    return <ListItem
-        item={{ title: hashtag }}
-        index={index}
-        target={target}
-        rightView={<RemoveButton onPress={remove} />}
-    />;
+
+    return <ListItem item={{ title: hashtag }} index={index} target={target} rightView={<RemoveButton onPress={remove} />} />;
 }
 
 function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: RenderTarget; index: number }) {
@@ -141,9 +137,9 @@ function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: 
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {
-        setPubkeys(pubkeys.filter(p => p !== pubkey));
+        setPubkeys(pubkeys.filter((p) => p !== pubkey));
     }, [pubkey, pubkeys, setPubkeys]);
-    
+
     return (
         <ListItem
             index={index}
@@ -159,7 +155,9 @@ function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: 
 }
 
 function RemoveButton({ onPress }: { onPress: () => void }) {
-    return <Button variant="plain" onPress={onPress}>
-        <Delete size={16} />
-    </Button>;
+    return (
+        <Button variant="plain" onPress={onPress}>
+            <Delete size={16} />
+        </Button>
+    );
 }

@@ -24,55 +24,39 @@ export function Reactions({
     reactions?: ReactionStats;
 }) {
     const { colors } = useColorScheme();
-    const {
-        reactionCount,
-        reactedByUser,
-        commentCount,
-        commentedByUser,
-        repostedBy,
-        repostedByUser,
-    } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions, event.id]);
+    const { reactionCount, reactedByUser, commentCount, commentedByUser, repostedBy, repostedByUser } = useMemo(
+        () => reactions ?? DEFAULT_STATS,
+        [reactions, event.id]
+    );
 
     inactiveColor ??= colors.foreground;
     foregroundColor ??= colors.foreground;
 
     return (
         // <View style={styles.container}>
-            <View style={styles.group}>
-                <React
-                    event={event}
-                    inactiveColor={inactiveColor}
-                    reactedByUser={reactedByUser}
-                    reactionCount={reactionCount}
-                    iconSize={28}
-                />
+        <View style={styles.group}>
+            <React event={event} inactiveColor={inactiveColor} reactedByUser={reactedByUser} reactionCount={reactionCount} iconSize={28} />
 
-                <Comment
-                    event={event}
-                    inactiveColor={inactiveColor}
-                    foregroundColor={foregroundColor}
-                    commentedByUser={commentedByUser}
-                    commentCount={commentCount}
-                    iconSize={28}
-                />
-            
-                <Repost
-                    event={event}
-                    inactiveColor={inactiveColor}
-                    activeColor={foregroundColor}
-                    repostedBy={repostedBy}
-                    repostedByUser={repostedByUser}
-                    iconSize={28}
-                />
+            <Comment
+                event={event}
+                inactiveColor={inactiveColor}
+                foregroundColor={foregroundColor}
+                commentedByUser={commentedByUser}
+                commentCount={commentCount}
+                iconSize={28}
+            />
 
-                {WALLET_ENABLED && (
-                    <Zaps
-                        event={event}
-                        inactiveColor={inactiveColor}
-                        iconSize={28}
-                    />
-                )}
-            </View>
+            <Repost
+                event={event}
+                inactiveColor={inactiveColor}
+                activeColor={foregroundColor}
+                repostedBy={repostedBy}
+                repostedByUser={repostedByUser}
+                iconSize={28}
+            />
+
+            {WALLET_ENABLED && <Zaps event={event} inactiveColor={inactiveColor} iconSize={28} />}
+        </View>
 
         //     <Bookmark
         //         event={event}
@@ -83,9 +67,9 @@ export function Reactions({
     );
 }
 
-export function InlinedComments({ event, reactions }: { event: NDKEvent, reactions?: ReactionStats }) {
+export function InlinedComments({ event, reactions }: { event: NDKEvent; reactions?: ReactionStats }) {
     const comments = reactions?.comments ?? [];
-    
+
     if (comments.length === 0) {
         return null;
     }
@@ -113,7 +97,7 @@ export function InlineComment({ comment }: { comment: NDKEvent }) {
 }
 
 const styles = StyleSheet.create({
-    container: {    
+    container: {
         flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -123,5 +107,5 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         gap: 10,
-    }
+    },
 });

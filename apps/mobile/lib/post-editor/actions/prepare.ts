@@ -18,7 +18,10 @@ export async function prepareMedia(media: PostMedia[], onProgress?: ProgressCb):
         res.push(output);
     }
 
-    console.log('prepared all media', res.map(m => m.localUri));
+    console.log(
+        'prepared all media',
+        res.map((m) => m.localUri)
+    );
 
     return res;
 }
@@ -26,12 +29,12 @@ export async function prepareMedia(media: PostMedia[], onProgress?: ProgressCb):
 const MAX_WIDTH = 2048;
 const MAX_HEIGHT = 1024;
 
-/** 
+/**
  * Compresses images and videos
  */
 async function compress(media: PostMedia, onProgress?: ProgressCb): Promise<void> {
     let uri: string;
-    
+
     if (media.mediaType === 'image') {
         uri = await CompressedImage.compress(media.uris[0], {
             compressionMethod: 'auto',
@@ -41,12 +44,16 @@ async function compress(media: PostMedia, onProgress?: ProgressCb): Promise<void
             progressDivider: 10,
         });
     } else if (media.mediaType === 'video') {
-        uri = await CompressedVideo.compress(media.uris[0], {
-            compressionMethod: 'auto',
-            progressDivider: 10,
-        }, (progress) => {
-            onProgress?.('Compressing', progress);
-        });
+        uri = await CompressedVideo.compress(
+            media.uris[0],
+            {
+                compressionMethod: 'auto',
+                progressDivider: 10,
+            },
+            (progress) => {
+                onProgress?.('Compressing', progress);
+            }
+        );
     } else {
         throw new Error('Invalid media type: ' + media.mediaType);
     }
@@ -79,7 +86,7 @@ async function removeExif(media: PostMedia): Promise<void> {
 
 async function thumbnail(media: PostMedia): Promise<void> {
     if (!media.localUri) throw new Error('Local URI is not set');
-    
+
     if (media.mediaType === 'video') {
         const thumbnail = await getThumbnailAsync(media.localUri);
         media.localThumbnailUri = thumbnail.uri;
@@ -90,9 +97,9 @@ async function thumbnail(media: PostMedia): Promise<void> {
 
 async function blurhash(media: PostMedia): Promise<void> {
     if (media.blurhash) return;
-    
+
     let blurhash: string | null;
-    
+
     if (!media.localUri) throw new Error('Local URI is not set');
 
     if (media.mediaType === 'image') {
@@ -113,7 +120,7 @@ async function dimensions(media: PostMedia): Promise<void> {
     }
 
     let file = media.localUri;
-    
+
     if (!media.localUri) throw new Error('Local URI is not set');
 
     if (media.mediaType === 'video') {
@@ -124,12 +131,12 @@ async function dimensions(media: PostMedia): Promise<void> {
 
     const imageData = await Image.loadAsync(media.localUri);
     media.width = imageData.width;
-    media.height = imageData.height;    
+    media.height = imageData.height;
 }
 
 async function sha256(media: PostMedia): Promise<void> {
     media.localSha256 ??= await RNFS.hash(media.localUri!, 'sha256');
-    
+
     if (media.localThumbnailUri) {
         media.localThumbnailSha256 ??= await RNFS.hash(media.localThumbnailUri!, 'sha256');
     }
@@ -204,7 +211,7 @@ async function generateBlurhash(uri: string) {
         maxHeight: 300,
         quality: 0.5,
     });
-    
+
     try {
         return await Blurhash.encode(compressedUri, 7, 5);
     } catch (error) {

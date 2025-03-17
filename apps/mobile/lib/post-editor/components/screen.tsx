@@ -13,18 +13,21 @@ import { useGroup } from '@/lib/groups/store';
 import { communityBottomSheetRefAtom, locationBottomSheetRefAtom, usePostEditorStore } from '../store';
 import { GroupEntry } from '@/lib/groups/types';
 import { COMMUNITIES_ENABLED, PUBLISH_ENABLED } from '@/utils/const';
-import { mountTagSelectorAtom, tagSelectorBottomSheetCbAtom, tagSelectorBottomSheetRefAtom, TagSelectorSheetRefAtomType } from '@/components/TagSelectorBottomSheet';
+import {
+    mountTagSelectorAtom,
+    tagSelectorBottomSheetCbAtom,
+    tagSelectorBottomSheetRefAtom,
+    TagSelectorSheetRefAtomType,
+} from '@/components/TagSelectorBottomSheet';
 
 export default function MainScreen() {
-    const isSelecting = usePostEditorStore(s => s.selecting);
-    const height = Dimensions.get('screen').height * 0.5
+    const isSelecting = usePostEditorStore((s) => s.selecting);
+    const height = Dimensions.get('screen').height * 0.5;
 
     return (
         <View className="flex-1 flex-col justify-between">
-            <View style={{ flex: 1,position: 'relative' }}>
-                <MediaPreview>
-                    {isSelecting && <ActivityIndicator />}
-                </MediaPreview>
+            <View style={{ flex: 1, position: 'relative' }}>
+                <MediaPreview>{isSelecting && <ActivityIndicator />}</MediaPreview>
             </View>
 
             <PostOptions />
@@ -36,38 +39,41 @@ export default function MainScreen() {
 
 function Actions() {
     const { ndk } = useNDK();
-    const readyToPublish = usePostEditorStore(s => s.readyToPublish);
-    const uploading = usePostEditorStore(s => s.state === 'uploading');
-    const busy = useMemo(() => (uploading) && readyToPublish, [uploading, readyToPublish]);
-    const publish = usePostEditorStore(s => s.publish);
+    const readyToPublish = usePostEditorStore((s) => s.readyToPublish);
+    const uploading = usePostEditorStore((s) => s.state === 'uploading');
+    const busy = useMemo(() => uploading && readyToPublish, [uploading, readyToPublish]);
+    const publish = usePostEditorStore((s) => s.publish);
     const activeBlossomServer = useActiveBlossomServer();
-    const setReadyToPublish = usePostEditorStore(s => s.setReadyToPublish);
+    const setReadyToPublish = usePostEditorStore((s) => s.setReadyToPublish);
     const tagSelectorBottomSheetRef = useAtomValue<TagSelectorSheetRefAtomType>(tagSelectorBottomSheetRefAtom);
     const [mountTagSelector, setMountTagSelector] = useAtom(mountTagSelectorAtom);
     const setTagSelectorCb = useSetAtom(tagSelectorBottomSheetCbAtom);
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+    const metadata = usePostEditorStore((s) => s.metadata);
+    const setMetadata = usePostEditorStore((s) => s.setMetadata);
 
     const publishCb = useCallback(() => {
         setReadyToPublish(true);
         publish(ndk, activeBlossomServer);
         if (router.canGoBack()) router.back();
-        else router.replace("/(home)");
+        else router.replace('/(home)');
     }, [publish, ndk, activeBlossomServer]);
 
     const shownTagSelector = useRef(false);
 
-    const tagSelectorCb = useCallback((tags: string[]) => {
-        if (tags.length) {
-            let caption = metadata.caption.trim();
-            if (caption.length > 0) caption += '\n\n';
-            caption += tags.map(tag => `#${tag}`).join(' ');
-            setMetadata({ ...metadata, caption });
-        }
-        tagSelectorBottomSheetRef?.current?.dismiss();
-        publishCb();
-    }, [metadata, setMetadata, tagSelectorBottomSheetRef?.current]);
-    
+    const tagSelectorCb = useCallback(
+        (tags: string[]) => {
+            if (tags.length) {
+                let caption = metadata.caption.trim();
+                if (caption.length > 0) caption += '\n\n';
+                caption += tags.map((tag) => `#${tag}`).join(' ');
+                setMetadata({ ...metadata, caption });
+            }
+            tagSelectorBottomSheetRef?.current?.dismiss();
+            publishCb();
+        },
+        [metadata, setMetadata, tagSelectorBottomSheetRef?.current]
+    );
+
     const handlePublish = useCallback(() => {
         if (!mountTagSelector) setMountTagSelector(true);
         if (!shownTagSelector.current) {
@@ -84,23 +90,25 @@ function Actions() {
         shownTagSelector.current = false;
 
         publishCb();
-    }, [publish, ndk, activeBlossomServer, tagSelectorCb])
-    
-    return (<View className="flex-col justify-between px-4">
-        <Button variant="accent" onPress={handlePublish} disabled={busy}>
-            {busy && <ActivityIndicator />}
-            <Text className="py-2 text-lg font-bold text-white">Publish</Text>
-        </Button>
-    </View>);
+    }, [publish, ndk, activeBlossomServer, tagSelectorCb]);
+
+    return (
+        <View className="flex-col justify-between px-4">
+            <Button variant="accent" onPress={handlePublish} disabled={busy}>
+                {busy && <ActivityIndicator />}
+                <Text className="py-2 text-lg font-bold text-white">Publish</Text>
+            </Button>
+        </View>
+    );
 }
 
 function PostOptions() {
-    const metadata = usePostEditorStore(s => s.metadata);   
+    const metadata = usePostEditorStore((s) => s.metadata);
     const locationBottomSheetRef = useAtomValue(locationBottomSheetRefAtom);
     const communityBottomSheetRef = useAtomValue(communityBottomSheetRefAtom);
     const { colors } = useColorScheme();
-    const selectedMedia = usePostEditorStore(s => s.media);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+    const selectedMedia = usePostEditorStore((s) => s.media);
+    const setMetadata = usePostEditorStore((s) => s.setMetadata);
 
     const openCaption = () => router.push('/(publish)/caption');
     const openExpiration = () => router.push('/(publish)/expiration');
@@ -140,8 +148,11 @@ function PostOptions() {
     }
 
     return (
-        <View className="bg-card p-4 flex-col gap-2 flex-1">
-            <TouchableOpacity onPress={openCaption} className="dark:border-border/80 rounded-lg border border-border p-2 mb-2" style={{ maxHeight: 200, minHeight: 80 }}>
+        <View className="flex-1 flex-col gap-2 bg-card p-4">
+            <TouchableOpacity
+                onPress={openCaption}
+                className="dark:border-border/80 mb-2 rounded-lg border border-border p-2"
+                style={{ maxHeight: 200, minHeight: 80 }}>
                 <Text className="text-sm text-foreground">{metadata.caption.trim().length > 0 ? metadata.caption : 'Add a caption'}</Text>
             </TouchableOpacity>
 
@@ -153,7 +164,11 @@ function PostOptions() {
                         <Text className="text-base font-semibold text-foreground">Expiration</Text>
                         <Text className="text-sm text-muted-foreground">Delete post after some time</Text>
                     </View>
-                    {metadata.expiration && <Text className="text-sm text-muted-foreground">In {calculateRelativeExpirationTimeInDaysOrHours(metadata.expiration)}</Text>}
+                    {metadata.expiration && (
+                        <Text className="text-sm text-muted-foreground">
+                            In {calculateRelativeExpirationTimeInDaysOrHours(metadata.expiration)}
+                        </Text>
+                    )}
                 </TouchableOpacity>
             </View>
 

@@ -16,14 +16,14 @@
 //         this._packageName = packageName;
 //         console.log('NIP-55 SIGNER STARTING', packageName)
 //     }
-    
+
 //     /**
 //      * Blocks until the signer is ready and returns the associated NDKUser.
 //      * @returns A promise that resolves to the NDKUser instance.
 //      */
 //     async blockUntilReady(): Promise<NDKUser> {
 //         if (this._user) return this._user;
-        
+
 //         const data = await Nip55.getPublicKey();
 //         if (!data) throw new Error('No signer available found');
 
@@ -56,7 +56,7 @@
 //         console.log('NIP-55 SIGNER SIGNED', result)
 //         return result.signature;
 //     }
-    
+
 //     /**
 //      * Determine the types of encryption (by nip) that this signer can perform.
 //      * Implementing classes SHOULD return a value even for legacy (only nip04) third party signers.
@@ -92,7 +92,7 @@
 // export default function LoginWithNip55Button() {
 //     const [signerApps, setSignerApps] = useState<SignerAppInfo[]>([]);
 //     const { ndk, login } = useNDK();
-    
+
 //     useEffect(() => {
 //         getInstalledSignerApps().then(setSignerApps);
 //     }, [])
@@ -107,7 +107,7 @@
 //             login(signer)
 //         }
 //     }, [])
-    
+
 //     if (signerApps.length === 0) return null;
 
 //     return <View style={styles.container}>

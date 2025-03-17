@@ -271,13 +271,13 @@ const styles: TextStickerStyle[] = [
 
 export function getStyleFromName(name?: string): TextStickerStyle {
     if (!name) return styles[0];
-    return styles.find(style => style.name === name) || styles[0];
+    return styles.find((style) => style.name === name) || styles[0];
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
     if (!currentStyleName) return styles[1].name;
-    const index = styles.findIndex(style => style.name === currentStyleName);
+    const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
 }
 
-export default styles; 
+export default styles;

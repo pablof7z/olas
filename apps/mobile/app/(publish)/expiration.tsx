@@ -8,8 +8,8 @@ import { useAtom } from 'jotai';
 import { usePostEditorStore } from '@/lib/post-editor/store';
 
 export default function ExpirationScreen() {
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+    const metadata = usePostEditorStore((s) => s.metadata);
+    const setMetadata = usePostEditorStore((s) => s.setMetadata);
     const [date, setDate] = useState(new Date(metadata?.expiration ?? new Date().getTime() + 1000 * 60 * 60 * 24));
 
     const setExpiration = (expiration?: number) => {

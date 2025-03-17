@@ -81,14 +81,22 @@ export default function RelaysScreen() {
         }
         console.log('map', map);
         setRelaySetting(map);
-    }, [ pathname === '/(home)/(settings)/relays' ]);
-    
+    }, [pathname === '/(home)/(settings)/relays']);
+
     const autoConnectRelays = useMemo(() => {
-        return new Set(Array.from(relaySetting.entries()).filter(([_, connect]) => connect).map(([url]) => url));
+        return new Set(
+            Array.from(relaySetting.entries())
+                .filter(([_, connect]) => connect)
+                .map(([url]) => url)
+        );
     }, [relaySetting]);
 
     const blacklistedRelays = useMemo(() => {
-        return new Set(Array.from(relaySetting.entries()).filter(([_, connect]) => !connect).map(([url]) => url));
+        return new Set(
+            Array.from(relaySetting.entries())
+                .filter(([_, connect]) => !connect)
+                .map(([url]) => url)
+        );
     }, [relaySetting]);
 
     const pools = ndk.pools;
@@ -96,7 +104,7 @@ export default function RelaysScreen() {
     const relays = useMemo(() => {
         const pool = pools[selectedPoolIndex];
         return Array.from(pool.relays.values());
-    }, [selectedPoolIndex, lastActionAt])
+    }, [selectedPoolIndex, lastActionAt]);
 
     useEffect(() => {
         ndk.pool.on('relay:connect', () => setLastActionAt(Date.now()));
@@ -136,31 +144,29 @@ export default function RelaysScreen() {
     const data = useMemo(() => {
         if (!ndk) return [];
         const ret = [];
-        
-        ret.push(...Array.from(relays.values())
-            .map((relay: NDKRelay) => ({
-                id: relay.url,
-                title: relay.url,
-                isAutoConnect: relaySetting.get(relay.url) === true,
-                isBlacklisted: relaySetting.get(relay.url) === false,
-                rightView: (
-                    <RightView relay={relay} relayUrl={relay.url} />
-                ),
-                onPress: () => {
-                    router.push(`/(home)/(settings)/relay?relayUrl=${relay.url}`);
-                },
-            }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!)));
-        
+
+        ret.push(
+            ...Array.from(relays.values())
+                .map((relay: NDKRelay) => ({
+                    id: relay.url,
+                    title: relay.url,
+                    isAutoConnect: relaySetting.get(relay.url) === true,
+                    isBlacklisted: relaySetting.get(relay.url) === false,
+                    rightView: <RightView relay={relay} relayUrl={relay.url} />,
+                    onPress: () => {
+                        router.push(`/(home)/(settings)/relay?relayUrl=${relay.url}`);
+                    },
+                }))
+                .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!))
+        );
+
         for (const url of blacklistedRelays) {
             if (!relays.find((r) => r.url === url)) {
                 ret.push({
                     id: url,
                     title: url,
                     isBlacklisted: true,
-                    rightView: (
-                        <RightView relayUrl={url} />
-                    ),
+                    rightView: <RightView relayUrl={url} />,
                 });
             }
         }
@@ -194,32 +200,29 @@ export default function RelaysScreen() {
                 )}
             />
 
-<View className="flex-1 flex-col">
-            <List
-                contentContainerClassName="pt-4"
-                contentInsetAdjustmentBehavior="automatic"
-                variant="insets"
-                data={[...data, { id: 'add', fn: addFn, set: setUrl }]}
-                estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
-                renderItem={renderItem}
+            <View className="flex-1 flex-col">
+                <List
+                    contentContainerClassName="pt-4"
+                    contentInsetAdjustmentBehavior="automatic"
+                    variant="insets"
+                    data={[...data, { id: 'add', fn: addFn, set: setUrl }]}
+                    estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
+                    renderItem={renderItem}
                     keyExtractor={keyExtractor}
                 />
                 <SegmentedControl
-                values={pools.map((p) => p.name)}
-                selectedIndex={selectedPoolIndex}
-                onIndexChange={(index) => {
-                    setSelectedPoolIndex(index);
-                }}
-            />
+                    values={pools.map((p) => p.name)}
+                    selectedIndex={selectedPoolIndex}
+                    onIndexChange={(index) => {
+                        setSelectedPoolIndex(index);
+                    }}
+                />
             </View>
         </View>
     );
 }
 
-function RightView({
-    relay,
-    relayUrl,
-}: { relay?: NDKRelay, relayUrl: string }) {
+function RightView({ relay, relayUrl }: { relay?: NDKRelay; relayUrl: string }) {
     const { colors } = useColorScheme();
     const { showActionSheetWithOptions } = useActionSheet();
     const [relaySetting, setRelaySetting] = useAtom(relaySettingAtom);
@@ -233,29 +236,32 @@ function RightView({
         if (relaySetting.get(relayUrl) === true) {
             options.push(["Don't auto-connect", null]);
         } else if (relaySetting.get(relayUrl) === false) {
-            options.push(["Unblock", null]);
+            options.push(['Unblock', null]);
         } else {
-            options.push(["Auto-connect", true]);
-            options.push(["Block", false]);
+            options.push(['Auto-connect', true]);
+            options.push(['Block', false]);
             destructiveButtonIndex = 1;
         }
 
-        options.push(["Cancel", undefined]);
-        
-        showActionSheetWithOptions({
-            title: relayUrl,
-            options: options.map((o) => o[0]),
-            cancelButtonIndex: options.length-1,
-            destructiveButtonIndex,
-        }, (buttonIndex) => {
-            const state = new Map(relaySetting);
-            const val = options[buttonIndex][1];
-            if (val === undefined) return;
-            if (val === null) state.delete(relayUrl);
-            else state.set(relayUrl, val);
-            setRelaySetting(state);
-        })
-    }, [showActionSheetWithOptions, relayUrl, relaySetting])
+        options.push(['Cancel', undefined]);
+
+        showActionSheetWithOptions(
+            {
+                title: relayUrl,
+                options: options.map((o) => o[0]),
+                cancelButtonIndex: options.length - 1,
+                destructiveButtonIndex,
+            },
+            (buttonIndex) => {
+                const state = new Map(relaySetting);
+                const val = options[buttonIndex][1];
+                if (val === undefined) return;
+                if (val === null) state.delete(relayUrl);
+                else state.set(relayUrl, val);
+                setRelaySetting(state);
+            }
+        );
+    }, [showActionSheetWithOptions, relayUrl, relaySetting]);
 
     return (
         <View className="flex-1 flex-row items-center gap-4 px-4 py-2">
@@ -318,13 +324,12 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={info.item.onPress}
-        >
-            {info.item.isAutoConnect && <Text className="text-muted-foreground text-xs">Auto-connect</Text>}
-            {info.item.isBlacklisted && <Text className="text-muted-foreground text-xs">Won't connect</Text>}
-            {!info.item.isBlacklisted && !info.item.isAutoConnect && <Text className="text-muted-foreground text-xs">
-                Used when needed
-            </Text>}
+            onPress={info.item.onPress}>
+            {info.item.isAutoConnect && <Text className="text-xs text-muted-foreground">Auto-connect</Text>}
+            {info.item.isBlacklisted && <Text className="text-xs text-muted-foreground">Won't connect</Text>}
+            {!info.item.isBlacklisted && !info.item.isAutoConnect && (
+                <Text className="text-xs text-muted-foreground">Used when needed</Text>
+            )}
         </ListItem>
     );
 }

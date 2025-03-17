@@ -1,22 +1,16 @@
-import { showStoriesModalAtom, storiesAtom } from "@/lib/stories/store";
-import { NDKImage, NDKImetaTag, NDKVideo } from "@nostr-dev-kit/ndk-mobile";
-import { useVideoPlayer, VideoView } from "expo-video";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { atom } from "jotai";
-import * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-    Dimensions,
-    FlatList,
-    FlatListProps, StyleSheet,
-    TouchableWithoutFeedback,
-    View
-} from "react-native";
-import { Image, ImageStyle, useImage } from "expo-image";
-import { StoryHeader } from "./components/header";
+import { showStoriesModalAtom, storiesAtom } from '@/lib/stories/store';
+import { NDKImage, NDKImetaTag, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom } from 'jotai';
+import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, FlatList, FlatListProps, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, ImageStyle, useImage } from 'expo-image';
+import { StoryHeader } from './components/header';
 import StoryText from './components/StoryText';
-import { urlIsVideo } from "@/utils/media";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { urlIsVideo } from '@/utils/media';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -26,11 +20,11 @@ import Animated, {
     interpolate,
     Extrapolation,
     runOnJS,
-    SharedValue
-} from "react-native-reanimated";
-import { router } from "expo-router";
+    SharedValue,
+} from 'react-native-reanimated';
+import { router } from 'expo-router';
 
-const { width, height } = Dimensions.get("screen");
+const { width, height } = Dimensions.get('screen');
 
 const isLoadingAtom = atom(false);
 const durationAtom = atom(-1);
@@ -39,7 +33,7 @@ const screenWidth = Dimensions.get('screen').width;
 const screenHeight = Dimensions.get('screen').height;
 
 const isOverLandscapeThreshold = (width: number, height: number) => {
-    return (width / height) > 1.1;
+    return width / height > 1.1;
 };
 
 interface StoryProgressProps {
@@ -52,15 +46,7 @@ interface StoryProgressProps {
     duration?: number;
 }
 
-const StoryProgress = ({
-    isLongPressed,
-    done,
-    activeIndex,
-    index,
-    onEnd,
-    active,
-    duration = 8000,
-}: StoryProgressProps) => {
+const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, active, duration = 8000 }: StoryProgressProps) => {
     const progress = useSharedValue(-width / 3);
     const [progressWidth, setProgressWidth] = useState<number | null>(null);
     const longPressElapsedDuration = useRef(0);
@@ -71,36 +57,41 @@ const StoryProgress = ({
 
     const animatedStyle = useAnimatedStyle(() => ({
         height: 4,
-        backgroundColor: "white",
+        backgroundColor: 'white',
         transform: [{ translateX: progress.value }],
     }));
 
-    const startAnimation = useCallback((dur: number) => {
-        console.log('starting animation', dur);
-        if (currentAnimation.current) {
-            progress.value = progress.value;
-            currentAnimation.current = null;
-        }
-        
-        progress.value = withTiming(0, {
-            duration: dur,
-            easing: Easing.linear,
-        }, (finished) => {
-            currentAnimation.current = null;
-            if (finished && active) {
-                runOnJS(onEnd)(index + 1);
+    const startAnimation = useCallback(
+        (dur: number) => {
+            console.log('starting animation', dur);
+            if (currentAnimation.current) {
+                progress.value = progress.value;
+                currentAnimation.current = null;
             }
-        });
-    }, [active, index, onEnd]);
+
+            progress.value = withTiming(
+                0,
+                {
+                    duration: dur,
+                    easing: Easing.linear,
+                },
+                (finished) => {
+                    currentAnimation.current = null;
+                    if (finished && active) {
+                        runOnJS(onEnd)(index + 1);
+                    }
+                }
+            );
+        },
+        [active, index, onEnd]
+    );
 
     // Update elapsed time during long press
     useEffect(() => {
         if (!progressWidth || !active) return;
-        
+
         const updateElapsed = () => {
-            longPressElapsedDuration.current = Math.abs(
-                (progress.value * duration) / progressWidth
-            );
+            longPressElapsedDuration.current = Math.abs((progress.value * duration) / progressWidth);
         };
         updateElapsed();
     }, [progress.value, progressWidth, active, duration]);
@@ -108,7 +99,7 @@ const StoryProgress = ({
     // Main animation effect
     useEffect(() => {
         if (!progressWidth || duration <= 0) return;
-        
+
         // Reset on inactive
         if (!active) {
             progress.value = -progressWidth;
@@ -142,15 +133,11 @@ const StoryProgress = ({
             style={{
                 height: 4,
                 flex: 1,
-                overflow: "hidden",
+                overflow: 'hidden',
                 marginRight: 8,
-                backgroundColor: "rgba(255,255,255,0.4)",
-            }}
-        >
-            <Animated.View
-                onLayout={(e) => setProgressWidth(e.nativeEvent.layout.width)}
-                style={animatedStyle}
-            />
+                backgroundColor: 'rgba(255,255,255,0.4)',
+            }}>
+            <Animated.View onLayout={(e) => setProgressWidth(e.nativeEvent.layout.width)} style={animatedStyle} />
         </View>
     );
 };
@@ -160,18 +147,21 @@ function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
     const setDuration = useSetAtom(durationAtom);
     const [isLandscape, setIsLandscape] = useState(false);
 
-    const imageSource = useImage({
-        uri: imeta.url,
-        blurhash: imeta.blurhash,
-    }, {
-        onError: (error) => {
-            console.log('error', error);
+    const imageSource = useImage(
+        {
+            uri: imeta.url,
+            blurhash: imeta.blurhash,
+        },
+        {
+            onError: (error) => {
+                console.log('error', error);
+            },
         }
-    });
+    );
 
     useEffect(() => {
         if (!imageSource?.width || !imageSource?.height) return;
-        
+
         if (!isLandscape && isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
             setIsLandscape(true);
         } else if (isLandscape && !isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
@@ -217,33 +207,30 @@ function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
         console.log('slide video setting loading', imeta.url);
         setLoading(true);
     }, [imeta.url]);
-    
-    const player = useVideoPlayer({
-        uri: imeta.url,
-    }, (player) => {
-        player.muted = false;
-        player.loop = false;
-        player.addListener('statusChange', () => {
-            if (player.status === 'readyToPlay') {
-                console.log('slide video setting loading false', imeta.url, { duration: player.duration });
-                player.play();
-                setLoading(false);
-            }
-        });
-        player.addListener('playingChange', (playing) => {
-            if (playing) {
-                setDuration(player.duration * 1000);
-            }
-        });
-    });
-    
-    return (
-        <VideoView
-            player={player}
-            contentFit="cover"
-            style={{ flex: 1 }}
-        />
+
+    const player = useVideoPlayer(
+        {
+            uri: imeta.url,
+        },
+        (player) => {
+            player.muted = false;
+            player.loop = false;
+            player.addListener('statusChange', () => {
+                if (player.status === 'readyToPlay') {
+                    console.log('slide video setting loading false', imeta.url, { duration: player.duration });
+                    player.play();
+                    setLoading(false);
+                }
+            });
+            player.addListener('playingChange', (playing) => {
+                if (playing) {
+                    setDuration(player.duration * 1000);
+                }
+            });
+        }
     );
+
+    return <VideoView player={player} contentFit="cover" style={{ flex: 1 }} />;
 }
 
 const Slide = ({
@@ -300,7 +287,7 @@ const Slide = ({
     const url = item.imetas[activeSlide].url;
 
     const insets = useSafeAreaInsets();
-    
+
     if (!url) return null;
 
     const type = urlIsVideo(url) ? 'video' : 'image';
@@ -308,13 +295,9 @@ const Slide = ({
     return (
         <View style={{ width, height }}>
             <View style={[StyleSheet.absoluteFillObject]}>
-                {type === 'image' ? (
-                    <SlideImage imeta={item.imetas[activeSlide]} />
-                ) : (
-                    <SlideVideo imeta={item.imetas[activeSlide]} />
-                )}
+                {type === 'image' ? <SlideImage imeta={item.imetas[activeSlide]} /> : <SlideVideo imeta={item.imetas[activeSlide]} />}
             </View>
-            <View style={[StyleSheet.absoluteFillObject, { flexDirection: "row" }]}>
+            <View style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}>
                 <TouchableWithoutFeedback
                     delayLongPress={200}
                     onPressOut={() => {
@@ -323,8 +306,7 @@ const Slide = ({
                     onLongPress={() => {
                         setIsLongPressed(true);
                     }}
-                    onPress={() => goPrev(activeSlide - 1)}
-                >
+                    onPress={() => goPrev(activeSlide - 1)}>
                     <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
                 <TouchableWithoutFeedback
@@ -335,22 +317,20 @@ const Slide = ({
                     onLongPress={() => {
                         setIsLongPressed(true);
                     }}
-                    onPress={() => goNext(activeSlide + 1)}
-                >
-                    <View style={{ backgroundColor: "transparent", flex: 1 }} />
+                    onPress={() => goNext(activeSlide + 1)}>
+                    <View style={{ backgroundColor: 'transparent', flex: 1 }} />
                 </TouchableWithoutFeedback>
             </View>
             <View
                 key={`story-progress-${index}`}
                 style={{
                     paddingHorizontal: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-evenly",
-                    position: "absolute",
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-evenly',
+                    position: 'absolute',
                     top: insets.top,
-                }}
-            >
+                }}>
                 {item.imetas.map((_, i) => {
                     return (
                         <StoryProgress
@@ -390,54 +370,21 @@ interface StoryItemProps {
     flatListRef: React.RefObject<FlatList<NDKImage | NDKVideo>>;
 }
 
-const StoryItem = ({
-    item,
-    index,
-    scrollX,
-    activeIndex,
-    storiesLength,
-    onClose,
-    isScrolling,
-    flatListRef,
-}: StoryItemProps) => {
-    const inputRange = [
-        (index - 0.5) * width,
-        index * width,
-        (index + 0.5) * width,
-    ];
+const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, isScrolling, flatListRef }: StoryItemProps) => {
+    const inputRange = [(index - 0.5) * width, index * width, (index + 0.5) * width];
 
     const animatedStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            scrollX.value,
-            inputRange,
-            [0.5, 1, 0.5],
-            Extrapolation.CLAMP
-        ),
+        opacity: interpolate(scrollX.value, inputRange, [0.5, 1, 0.5], Extrapolation.CLAMP),
         transform: [
             { perspective: width * 4 },
             {
-                translateX: interpolate(
-                    scrollX.value,
-                    inputRange,
-                    [-width / 2, 0, width / 2],
-                    Extrapolation.CLAMP
-                ),
+                translateX: interpolate(scrollX.value, inputRange, [-width / 2, 0, width / 2], Extrapolation.CLAMP),
             },
             {
-                rotateY: `${interpolate(
-                    scrollX.value,
-                    inputRange,
-                    [angle / 2, 0, -angle / 2],
-                    Extrapolation.CLAMP
-                )}rad`,
+                rotateY: `${interpolate(scrollX.value, inputRange, [angle / 2, 0, -angle / 2], Extrapolation.CLAMP)}rad`,
             },
             {
-                translateX: interpolate(
-                    scrollX.value,
-                    inputRange,
-                    [width / 2, 0, -width / 2],
-                    Extrapolation.CLAMP
-                ),
+                translateX: interpolate(scrollX.value, inputRange, [width / 2, 0, -width / 2], Extrapolation.CLAMP),
             },
         ],
     }));
@@ -539,13 +486,13 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        backgroundColor: "#000",
+        justifyContent: 'center',
+        backgroundColor: '#000',
     },
     paragraph: {
         margin: 24,
         fontSize: 18,
-        fontWeight: "bold",
-        textAlign: "center",
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });

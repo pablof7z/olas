@@ -14,32 +14,21 @@ export default function Confirm() {
     const close = useCallback(() => {
         feedRef?.current?.dismiss();
     }, [feedRef]);
-    
+
     return (
         <View style={styles.container}>
             <View style={styles.innerContainer}>
-                <Text variant="title1">
-                    Private feed saved
-                </Text>
-                <Text variant="body">
-                    {title} is now accessible from your list of private feeds.
-                </Text>
+                <Text variant="title1">Private feed saved</Text>
+                <Text variant="body">{title} is now accessible from your list of private feeds.</Text>
             </View>
             <View style={styles.buttonContainer}>
-                <Button
-                    variant="primary"
-                    onPress={() => setMode('edit')}
-                    size="lg"
-                >
+                <Button variant="primary" onPress={() => setMode('edit')} size="lg">
                     <List size={24} color="white" />
                     <Text>Edit feed settings</Text>
                 </Button>
 
                 {/* close button */}
-                <Button
-                    variant="plain"
-                    onPress={close}
-                >
+                <Button variant="plain" onPress={close}>
                     <Text>Close</Text>
                 </Button>
             </View>

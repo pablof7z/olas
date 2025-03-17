@@ -1,14 +1,14 @@
-import { View, StyleSheet, TextInput } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import { useCallback, useState } from "react";
-import { NDKEvent, NDKUser, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { atom, useAtomValue } from "jotai";
-import { Button } from "@/components/nativewindui/Button";
-import { formatMoney } from "@/utils/bitcoin";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { useColorScheme } from "../useColorScheme";
-import { useZap } from "@/hooks/zap";
-import * as User from "@/components/ui/user";
+import { View, StyleSheet, TextInput } from 'react-native';
+import { Text } from '@/components/nativewindui/Text';
+import { useCallback, useState } from 'react';
+import { NDKEvent, NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { atom, useAtomValue } from 'jotai';
+import { Button } from '@/components/nativewindui/Button';
+import { formatMoney } from '@/utils/bitcoin';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { useColorScheme } from '../useColorScheme';
+import { useZap } from '@/hooks/zap';
+import * as User from '@/components/ui/user';
 
 type ZapperModalTarget = NDKEvent | NDKUser;
 export const zapperModalTargetAtom = atom<ZapperModalTarget | null, [ZapperModalTarget | null], void>(null, (get, set, value) => {
@@ -39,14 +39,17 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
             <View style={styles.titleContainer}>
                 <User.Avatar userProfile={userProfile} pubkey={target.pubkey} imageSize={64} />
                 <User.Name userProfile={userProfile} pubkey={target.pubkey} className="font-bold text-foreground" />
-                <View style={{flex: 1}} />
+                <View style={{ flex: 1 }} />
             </View>
-            
+
             <BottomSheetTextInput
                 value={comment}
                 onChangeText={setComment}
                 placeholder="Comment"
-                style={[styles.commentInput, { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 }]}
+                style={[
+                    styles.commentInput,
+                    { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 },
+                ]}
             />
 
             <BottomSheetTextInput
@@ -54,13 +57,15 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
                 onChangeText={(v) => setAmount(Number(v))}
                 placeholder="Amount"
                 keyboardType="numeric"
-                style={[styles.commentInput, { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 }]}
+                style={[
+                    styles.commentInput,
+                    { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 },
+                ]}
             />
 
             <Button variant="primary" onPress={handlePress} style={{ width: '100%' }}>
                 <Text>
-                    Zap{' '}
-                    <Text className="font-black">{formatMoney({ amount, unit: 'sats' })}</Text>
+                    Zap <Text className="font-black">{formatMoney({ amount, unit: 'sats' })}</Text>
                 </Text>
             </Button>
         </View>
@@ -78,15 +83,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    
+
     rulerContainer: {
-      flex: 1,
-      justifyContent: "center",
-      gap: 24,
+        flex: 1,
+        justifyContent: 'center',
+        gap: 24,
     },
     commentInput: {
         borderWidth: 1,
         borderRadius: 5,
         padding: 10,
-    }
-  });
+    },
+});

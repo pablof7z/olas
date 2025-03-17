@@ -1,5 +1,5 @@
-import NDK, { NDKCashuMintList } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
+import NDK, { NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export function humanWalletType(type: string) {
     if (type === 'nip-60') return 'Nostr-Native Wallet';
@@ -19,6 +19,6 @@ export async function createNip60Wallet(ndk: NDK) {
     mintList.publishReplaceable();
 
     wallet.start({ subId: 'wallet', skipVerification: true });
-    
+
     return wallet;
 }

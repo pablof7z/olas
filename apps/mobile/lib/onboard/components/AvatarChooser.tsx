@@ -9,7 +9,7 @@ import { avatarAtom, usernameAtom } from '../store';
 export function AvatarChooser() {
     const username = useAtomValue(usernameAtom);
     const [avatar, setAvatar] = useAtom(avatarAtom);
-    
+
     const chooseImage = useCallback(() => {
         ImageCropPicker.openPicker({
             width: 400,
@@ -37,16 +37,11 @@ export function AvatarChooser() {
     }, []);
 
     return (
-        <View className="h-24 w-28 flex-row gap-4 items-center justify-center">
-            <Button
-                size="icon"
-                variant="accent"
-                className="!rounded-full" 
-                onPress={openCamera}
-            >
+        <View className="h-24 w-28 flex-row items-center justify-center gap-4">
+            <Button size="icon" variant="accent" className="!rounded-full" onPress={openCamera}>
                 <Camera size={24} color="white" />
             </Button>
-            
+
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
                     source={{ uri: avatar || 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username }}
@@ -54,14 +49,9 @@ export function AvatarChooser() {
                 />
             </View>
 
-            <Button
-                size="icon"
-                variant="accent"
-                className="!rounded-full" 
-                onPress={chooseImage}
-            >
+            <Button size="icon" variant="accent" className="!rounded-full" onPress={chooseImage}>
                 <Plus size={24} color="white" />
             </Button>
         </View>
     );
-} 
+}

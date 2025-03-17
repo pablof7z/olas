@@ -21,7 +21,7 @@ export function isPortrait(width: number, height: number) {
 export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<PostMedia> {
     let mediaType: PostMediaType = 'image';
     if (asset.mediaType === 'video') mediaType = 'video';
-    
+
     console.log('asset', asset.mediaType, asset);
 
     if (!mediaType) {
@@ -29,7 +29,7 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
     }
 
     // get the size of the file
-    const file = (await FileSystem.getInfoAsync(asset.uri));
+    const file = await FileSystem.getInfoAsync(asset.uri);
     let size: number | undefined;
 
     if (file.exists) size = file.size;
@@ -48,7 +48,7 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
 
 export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): Promise<PostMedia> {
     // get the size of the file
-    const file = (await FileSystem.getInfoAsync(asset.uri));
+    const file = await FileSystem.getInfoAsync(asset.uri);
     let size: number | undefined;
 
     if (file.exists) size = file.size;
@@ -73,16 +73,16 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
 
 export function imagePickerAssetTypeToPostType(type: ImagePickerAsset['type']) {
     if (type === 'image') {
-        return 'image'
+        return 'image';
     } else if (type === 'video') {
-        return 'video'
-    } else return 'image'
+        return 'video';
+    } else return 'image';
 }
 
 export function postTypeToImagePickerType(type: PostMediaType) {
     if (type === 'image') {
-        return 'images'
+        return 'images';
     } else if (type === 'video') {
-        return 'videos'
+        return 'videos';
     }
 }

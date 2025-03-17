@@ -13,44 +13,49 @@ import { BottomSheetFlashList, BottomSheetView } from '@gorhom/bottom-sheet';
 export default function Comments() {
     const rootEvent = useAtomValue(rootEventAtom);
 
-    const { events } = useSubscribe( rootEvent ? [
-        { kinds: [NDKKind.Text, NDKKind.GenericReply], ...rootEvent.filter() },
-        { kinds: [NDKKind.GenericReply], ...rootEvent.nip22Filter() },
-    ] : false, { groupable: false, closeOnEose: false, subId: 'comments' }, [ rootEvent?.id ]);
+    const { events } = useSubscribe(
+        rootEvent
+            ? [
+                  { kinds: [NDKKind.Text, NDKKind.GenericReply], ...rootEvent.filter() },
+                  { kinds: [NDKKind.GenericReply], ...rootEvent.nip22Filter() },
+              ]
+            : false,
+        { groupable: false, closeOnEose: false, subId: 'comments' },
+        [rootEvent?.id]
+    );
 
     const filteredComments = useMemo(() => {
         if (!rootEvent) return [];
         const [tagKey, tagValue] = rootEvent.tagReference();
-        return [
-            rootEvent,
-            ...events.filter(e => e.tagValue(tagKey) === tagValue)
-        ]
+        return [rootEvent, ...events.filter((e) => e.tagValue(tagKey) === tagValue)];
     }, [events]);
 
     const currentUser = useNDKCurrentUser();
-    
+
     // clean up reply event when the screen is unmounted
     const setReplyEvent = useSetAtom(replyEventAtom);
     useEffect(() => {
-        return () => { setReplyEvent(null); }
+        return () => {
+            setReplyEvent(null);
+        };
     }, [setReplyEvent]);
 
     return (
-        <View
-            style={styles.container}
-        >
-                <BottomSheetView className="w-full flex-1" style={styles.innerContainer}>
+        <View style={styles.container}>
+            <BottomSheetView className="w-full flex-1" style={styles.innerContainer}>
                 <BottomSheetFlashList
                     data={filteredComments}
                     renderItem={({ item }) => {
-                        if (item.id === rootEvent?.id) return <Comment item={item} />
-                        return <Thread event={item} indentLevel={0} isRoot={true} />
+                        if (item.id === rootEvent?.id) return <Comment item={item} />;
+                        return <Thread event={item} indentLevel={0} isRoot={true} />;
                     }}
                     estimatedItemSize={50}
                     keyExtractor={(item) => item.id}
                 />
-                    {currentUser && rootEvent && <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />}
-                </BottomSheetView>
+                {currentUser && rootEvent && (
+                    <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />
+                )}
+            </BottomSheetView>
         </View>
     );
 }
@@ -66,6 +71,5 @@ const styles = StyleSheet.create({
         padding: 10,
         borderBottomWidth: 1,
         borderColor: '#ccc',
-    }
+    },
 });
-  

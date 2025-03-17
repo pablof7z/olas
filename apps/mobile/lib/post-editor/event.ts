@@ -1,9 +1,19 @@
-import NDK, { imetaTagToTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKRelaySet, NDKTag, NDKVideo, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import NDK, {
+    imetaTagToTag,
+    NDKEvent,
+    NDKImage,
+    NDKImetaTag,
+    NDKKind,
+    NDKRelaySet,
+    NDKTag,
+    NDKVideo,
+    NostrEvent,
+} from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 import { PostMedia, PostMetadata } from './types';
 
 function generateImageEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKImage {
-    const event = new NDKImage(ndk)
+    const event = new NDKImage(ndk);
     const imetas: NDKImetaTag[] = [];
 
     for (const m of media) {
@@ -33,7 +43,7 @@ function mediaToImeta(media: PostMedia): NDKImetaTag {
 }
 
 function generateVideoEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKVideo {
-    const event = new NDKVideo(ndk)
+    const event = new NDKVideo(ndk);
     const imetas: NDKImetaTag[] = [];
 
     for (const m of media) {
@@ -76,9 +86,9 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
     // }
 
     let relaySet: NDKRelaySet | undefined;
-    
+
     if (metadata.groups?.[0]?.relayUrls) {
-        event.tags.push(['h', metadata.groups[0].groupId, ...metadata.groups[0].relayUrls])
+        event.tags.push(['h', metadata.groups[0].groupId, ...metadata.groups[0].relayUrls]);
         relaySet = NDKRelaySet.fromRelayUrls(metadata.groups[0].relayUrls, ndk);
     }
 
@@ -105,7 +115,7 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
 
     return {
         event,
-        relaySet
+        relaySet,
     };
 }
 

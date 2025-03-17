@@ -14,7 +14,7 @@ export type EventMediaProps = {
     forceProxy?: boolean;
     contentFit?: 'contain' | 'cover';
     style?: StyleProp<ViewStyle>;
-    priority?: 'low' | 'normal' | 'high',
+    priority?: 'low' | 'normal' | 'high';
     maxWidth?: number;
     maxHeight?: number;
     onPress?: () => void;
@@ -47,24 +47,26 @@ export function EventMediaGridContainer({
     size ??= Dimensions.get('window').width / numColumns;
 
     if (event.kind === 30402) {
-        return <ProductGridContainer event={event}>
-            <EventMediaContainer
-                event={event}
-                onPress={onPress}
-                forceProxy={forceProxy}
-                onLongPress={onLongPress}
-                style={[styles.mediaGridContainer]}
-                singleMode
-                width={size}
-                height={size}
-                style={style}
-                {...props}
-            />
-        </ProductGridContainer>
+        return (
+            <ProductGridContainer event={event}>
+                <EventMediaContainer
+                    event={event}
+                    onPress={onPress}
+                    forceProxy={forceProxy}
+                    onLongPress={onLongPress}
+                    style={[styles.mediaGridContainer]}
+                    singleMode
+                    width={size}
+                    height={size}
+                    style={style}
+                    {...props}
+                />
+            </ProductGridContainer>
+        );
     }
 
     return (
-        <View style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}] }>
+        <View style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}]}>
             <EventMediaContainer
                 event={event}
                 onPress={onPress}
@@ -88,7 +90,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
         marginBottom: 0.5,
-    }
+    },
 });
 
 export default function EventMediaContainer({
@@ -200,21 +202,22 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
             const parsed = JSON.parse(event.content);
             const imetas = parsed.images.map((image: string) => ({ url: image }));
             return imetas;
-        } catch { return []; }
+        } catch {
+            return [];
+        }
         // const imetas = event.getMatchingTags("images")
     } else if (event.kind === 30402) {
-        const imaages = event.getMatchingTags("image").map((t) => ({ url: t[1] }));
+        const imaages = event.getMatchingTags('image').map((t) => ({ url: t[1] }));
         return imaages;
     }
-    
+
     if (event instanceof NDKImage || event instanceof NDKVideo) {
         return event.imetas;
     }
 
-    const imetas = event.getMatchingTags("imeta")
-        .map(mapImetaTag)
+    const imetas = event.getMatchingTags('imeta').map(mapImetaTag);
     if (imetas.length > 0) return imetas;
-    
+
     try {
         if (event.kind === NDKKind.Text) {
             const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi);

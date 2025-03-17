@@ -1,8 +1,4 @@
-import {
-    Hexpubkey,
-    NDKEventId,
-    NDKSubscription
-} from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKEventId, NDKSubscription } from '@nostr-dev-kit/ndk-mobile';
 import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 import React, { useMemo, useRef, useState, useEffect } from 'react';
@@ -30,7 +26,7 @@ import UploadIndicator from '@/components/UploadIndicator';
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
-    
+
     return (
         <>
             <Stack.Screen
@@ -49,7 +45,7 @@ export default function HomeScreen() {
     );
 }
 
-const bookmarksFilters = [{ kinds: [3006], "#k": ["20"] }];
+const bookmarksFilters = [{ kinds: [3006], '#k': ['20'] }];
 const bookmarksOpts = { skipVerification: true, groupable: false, wrap: true };
 
 function useBookmarkIds() {
@@ -70,12 +66,12 @@ function useBookmarkIds() {
         }
 
         if (sub.current) return;
-        
+
         sub.current = ndk.subscribe(bookmarksFilters, bookmarksOpts, undefined, false);
-        
-        sub.current.on("event", (event) => {
+
+        sub.current.on('event', (event) => {
             if (event.kind !== 3006) return;
-            for (const tag of event.getMatchingTags("e")) {
+            for (const tag of event.getMatchingTags('e')) {
                 ids.add(tag[1]);
             }
 
@@ -83,8 +79,8 @@ function useBookmarkIds() {
                 setRet(Array.from(ids));
             }
         });
-    
-        sub.current.on("eose", () => {
+
+        sub.current.on('eose', () => {
             eosed.current = true;
             setRet(Array.from(ids));
         });
@@ -95,7 +91,7 @@ function useBookmarkIds() {
             sub.current?.stop();
             sub.current = null;
             eosed.current = false;
-        }
+        };
     }, [ndk, feedType]);
 
     return ret;
@@ -110,7 +106,7 @@ const FOR_YOU_UNFOLLOWED_POST_THRESHOLD = 2;
 function forYouFilter(followSet: Set<string>) {
     let run = 0;
     let unfollowedPubkeysRecentlyShown: Hexpubkey[] = [];
-    
+
     return (feedEntry: FeedEntry, index: number) => {
         if (index === 0) {
             unfollowedPubkeysRecentlyShown = [];
@@ -123,12 +119,12 @@ function forYouFilter(followSet: Set<string>) {
         const isFollowed = followSet.has(feedEntry.event?.pubkey);
         if (!isFollowed) {
             // this is an unfollowed pubkey, check if they were recently shown
-            const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter(p => p === feedEntry.event?.pubkey).length;
-            
+            const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter((p) => p === feedEntry.event?.pubkey).length;
+
             if (recentTimesThisPubkeyWasShown >= FOR_YOU_UNFOLLOWED_POST_THRESHOLD) {
                 return false;
             }
-            
+
             unfollowedPubkeysRecentlyShown.push(feedEntry.event?.pubkey);
 
             // trim the time
@@ -136,33 +132,33 @@ function forYouFilter(followSet: Set<string>) {
                 unfollowedPubkeysRecentlyShown.shift();
             }
         }
-        
+
         return true;
-    }
+    };
 }
 
 const nip50Relays = ['wss://relay.nostr.band'];
 
 function hashtagSearch(hashtag: string) {
     const hashtagWithoutHash = hashtag.replace(/^#/, '');
-    
+
     return {
-        filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], "#t": [hashtagWithoutHash] }],
+        filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [hashtagWithoutHash] }],
         key: 'hashtag-' + hashtag,
         filterFn: null,
         relayUrls: undefined,
         numColumns: 3,
-    }
+    };
 }
 
 function textSearch(text: string) {
     return {
-        filters: [{ kinds: [NDKKind.Image], "search": text }],
+        filters: [{ kinds: [NDKKind.Image], search: text }],
         key: 'search-' + text,
         filterFn: null,
         relayUrls: nip50Relays,
         numColumns: 3,
-    }
+    };
 }
 
 function DataList() {
@@ -172,20 +168,18 @@ function DataList() {
     const bookmarkIds = useBookmarkIds();
 
     const isSavedSearch = useIsSavedSearch();
-    const withTweets = useMemo(() => (
-        feedType.kind === 'search' && !isSavedSearch
-    ), [feedType.kind, isSavedSearch])
+    const withTweets = useMemo(() => feedType.kind === 'search' && !isSavedSearch, [feedType.kind, isSavedSearch]);
 
     const bookmarkIdsForFilter = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
         return [];
-    }, [bookmarkIds.length, feedType])
+    }, [bookmarkIds.length, feedType]);
 
     const followSet = useMemo(() => {
         const set = new Set(follows);
-        if (currentUser) set.add(currentUser.pubkey)
+        if (currentUser) set.add(currentUser.pubkey);
         return set;
-    }, [currentUser?.pubkey, follows.size])
+    }, [currentUser?.pubkey, follows.size]);
 
     const searchQuery = useAtomValue(searchQueryAtom);
 
@@ -195,35 +189,35 @@ function DataList() {
             // is a single word?
             if (!searchQuery.includes(' ')) return hashtagSearch(searchQuery);
             else return textSearch(searchQuery);
-        }  else if (feedType.kind === 'group') {
+        } else if (feedType.kind === 'group') {
             return {
-                filters: [
-                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], "#h": [feedType.value] },
-                ],
+                filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': [feedType.value] }],
                 key: 'groups-' + feedType.value,
                 filterFn: null,
-                relayUrls: feedType.relayUrls
-            }
+                relayUrls: feedType.relayUrls,
+            };
         } else if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') {
             if (bookmarkIdsForFilter.length === 0) return { filters: undefined, key: 'empty' };
             return {
-                filters: [ { ids: bookmarkIdsForFilter } ], key: 'bookmark-feed'+bookmarkIdsForFilter.length, numColumns: 1
+                filters: [{ ids: bookmarkIdsForFilter }],
+                key: 'bookmark-feed' + bookmarkIdsForFilter.length,
+                numColumns: 1,
             };
         }
-        
-        const keyParts = [currentUser?.pubkey ?? ""];
+
+        const keyParts = [currentUser?.pubkey ?? ''];
         if (feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
         else keyParts.push(feedType.value);
 
         let hashtagFilter: NDKFilter = {};
-        
+
         if (feedType.kind === 'search') {
-            hashtagFilter = { "#t": feedType.hashtags };
+            hashtagFilter = { '#t': feedType.hashtags };
             if (!isSavedSearch) numColumns = 3;
         }
 
         const filters: NDKFilter[] = [];
-    
+
         // filters.push({ kinds: [1] });
         filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21, 22], ...hashtagFilter, limit: 500 });
         filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter, limit: 50 });
@@ -237,7 +231,7 @@ function DataList() {
         if (feedType.kind === 'discover' && feedType.value === 'follows') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
                 if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
-                return followSet.has(feedEntry.event?.pubkey)
+                return followSet.has(feedEntry.event?.pubkey);
             };
         } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
             filterFn = forYouFilter(followSet);
@@ -245,18 +239,18 @@ function DataList() {
             filterFn = (feedEntry: FeedEntry, index: number) => {
                 if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
                 if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
-                
-                const isFollowed = followSet.has(feedEntry.event?.pubkey)
+
+                const isFollowed = followSet.has(feedEntry.event?.pubkey);
                 if (isFollowed) return true;
                 if (feedType.kind === 'discover' && feedType.value === 'follows') return false;
 
-                const isVideo = videoKinds.has(feedEntry.event?.kind)
+                const isVideo = videoKinds.has(feedEntry.event?.kind);
 
                 return !isVideo || isFollowed;
             };
         }
 
-        return {filters, key: keyParts.join(), filterFn, numColumns};
+        return { filters, key: keyParts.join(), filterFn, numColumns };
     }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
 
     const insets = useSafeAreaInsets();
@@ -280,24 +274,23 @@ function DataList() {
 const kind1MustHaveMedia = (feedEntry: FeedEntry) => {
     // if it's a kind 1, make sure we have a URL of an image or video
     if (feedEntry.event?.kind === 1) {
-        const imeta = feedEntry.event?.tagValue("imeta");
+        const imeta = feedEntry.event?.tagValue('imeta');
         if (imeta) return true;
         const matches = feedEntry.event?.content.match(imageOrVideoUrlRegexp);
         return matches !== null;
-    } 
-}
+    }
+};
 
 const videosMustBeFromFollows = (feedEntry: FeedEntry, index: number, followSet: Set<string>) => {
     if (videoKinds.has(feedEntry.event?.kind)) {
         return followSet.has(feedEntry.event?.pubkey);
     }
     return true;
-}
+};
 
 type FeedFilterFn = (feedEntry: FeedEntry, index: number, followSet: Set<string>) => boolean;
 
 const feedFilters: Record<string, FeedFilterFn> = {
     kind1MustHaveMedia,
     videosMustBeFromFollows,
-}
-
+};

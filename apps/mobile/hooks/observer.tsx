@@ -1,12 +1,5 @@
-import {
-    NDKEvent,
-    NDKFilter,
-    NDKSubscription,
-    NDKSubscriptionCacheUsage,
-    NDKSubscriptionOptions,
-    useNDK,
-} from "@nostr-dev-kit/ndk-mobile";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { NDKEvent, NDKFilter, NDKSubscription, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useObserver<T extends NDKEvent>(
     filters: NDKFilter[] | false,
@@ -65,7 +58,7 @@ export function useObserver<T extends NDKEvent>(
                 closeOnEose: true,
                 cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
                 groupable: false,
-                subId: "observer",
+                subId: 'observer',
                 wrap: true,
                 ...opts,
             },
@@ -74,7 +67,7 @@ export function useObserver<T extends NDKEvent>(
         );
 
         // Process asynchronous events.
-        sub.current.on("event", (event) => {
+        sub.current.on('event', (event) => {
             if (!isValid) return;
             processEvent(event);
         });

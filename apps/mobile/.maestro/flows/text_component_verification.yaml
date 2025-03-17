@@ -16,13 +16,13 @@ tags:
 
 # Success message
 - evalScript: |
-    console.log("TextInputModal component exists in the codebase at components/story/TextInput.tsx");
-    console.log("It provides text overlay functionality for stories with the following features:");
-    console.log("- Text input with customizable font size");
-    console.log("- Color selection for text");
-    console.log("- Checkmark button to confirm text entry");
-    console.log("- Close button to cancel text entry");
-    console.log("- Support for editing existing text stickers");
-    console.log("");
-    console.log("The component is used in the story preview screen to add text overlays to images");
-    console.log("Test completed successfully"); 
+      console.log("TextInputModal component exists in the codebase at components/story/TextInput.tsx");
+      console.log("It provides text overlay functionality for stories with the following features:");
+      console.log("- Text input with customizable font size");
+      console.log("- Color selection for text");
+      console.log("- Checkmark button to confirm text entry");
+      console.log("- Close button to cancel text entry");
+      console.log("- Support for editing existing text stickers");
+      console.log("");
+      console.log("The component is used in the story preview screen to add text overlays to images");
+      console.log("Test completed successfully");

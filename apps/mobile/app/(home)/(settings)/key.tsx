@@ -24,7 +24,7 @@ export default function SettingsIosStyleScreen() {
     const copyNsec = useCallback(() => {
         // const key = SecureStore.getItem('currentUser', { requireAuthentication: true, keychainService: 'olas' });
         // if (!key) return;
-        
+
         Clipboard.setStringAsync(nsec);
 
         if (nsec) {

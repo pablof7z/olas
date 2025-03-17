@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 
 export default function PublishLayout() {
     return (
@@ -7,5 +7,5 @@ export default function PublishLayout() {
             <Stack.Screen name="caption" options={{ headerShown: true, presentation: 'modal' }} />
             <Stack.Screen name="expiration" options={{ headerShown: true, presentation: 'modal' }} />
         </Stack>
-    )
+    );
 }

@@ -17,7 +17,7 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
     const handleEventIdChange = (text: string) => {
         setEventIdInput(text);
     };
-    
+
     const handleAddEventSticker = useCallback(async () => {
         if (!ndk) return;
         const id = eventIdInput.trim();
@@ -32,7 +32,7 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
         addSticker({
             type: NDKStoryStickerType.Event,
             value: id,
-            metadata: { event }
+            metadata: { event },
         });
         onStickerAdded();
     }, [ndk, eventIdInput, addSticker, onStickerAdded]);
@@ -50,14 +50,10 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
                 autoCapitalize="none"
                 autoCorrect={false}
             />
-            <TouchableOpacity 
-                style={[
-                    styles.addEventButton,
-                    { opacity: eventIdInput.trim() ? 1 : 0.5 }
-                ]}
+            <TouchableOpacity
+                style={[styles.addEventButton, { opacity: eventIdInput.trim() ? 1 : 0.5 }]}
                 onPress={handleAddEventSticker}
-                disabled={!eventIdInput.trim()}
-            >
+                disabled={!eventIdInput.trim()}>
                 <Text style={styles.addEventButtonText}>Done</Text>
             </TouchableOpacity>
         </View>
@@ -93,4 +89,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-}); 
+});

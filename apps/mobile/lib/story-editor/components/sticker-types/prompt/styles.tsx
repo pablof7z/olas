@@ -217,12 +217,12 @@ export default styles;
 // Helper function to get style by name
 export function getStyleFromName(name?: string): PromptStickerStyle {
     if (!name) return styles[0];
-    return styles.find(style => style.name === name) || styles[0];
+    return styles.find((style) => style.name === name) || styles[0];
 }
 
 // Helper function to get the next style name
 export function getNextStyleName(currentStyleName?: string): string {
     if (!currentStyleName) return styles[1].name;
-    const index = styles.findIndex(style => style.name === currentStyleName);
+    const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
-} 
+}

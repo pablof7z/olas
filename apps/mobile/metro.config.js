@@ -1,9 +1,7 @@
 // Learn more https://docs.expo.dev/guides/monorepos
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
-const {
-  wrapWithReanimatedMetroConfig,
-} = require('react-native-reanimated/metro-config');
+const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
 const { FileStore } = require('metro-cache');
 const path = require('path');
 
@@ -16,14 +14,9 @@ const config = getDefaultConfig(projectRoot);
 // #1 - Watch all files in the monorepo
 config.watchFolders = [workspaceRoot];
 // #2 - Try resolving with project modules first, then workspace modules
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules'), path.resolve(workspaceRoot, 'node_modules')];
 
 // Use turborepo to restore the cache when possible
-config.cacheStores = [
-  new FileStore({ root: path.join(projectRoot, 'node_modules', '.cache', 'metro') }),
-];
+config.cacheStores = [new FileStore({ root: path.join(projectRoot, 'node_modules', '.cache', 'metro') })];
 
 module.exports = wrapWithReanimatedMetroConfig(withNativeWind(config, { input: './global.css', inlineRem: 16 }));

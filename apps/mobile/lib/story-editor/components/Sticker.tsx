@@ -1,19 +1,9 @@
 import React, { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    runOnJS,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
 import type { Sticker as StickerType } from '../store';
-import { 
-    EventStickerView, 
-    TextStickerView, 
-    CountdownStickerView, 
-    MentionStickerView,
-    PromptStickerView
-} from './sticker-types';
+import { EventStickerView, TextStickerView, CountdownStickerView, MentionStickerView, PromptStickerView } from './sticker-types';
 import { useStickerStore } from '../store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
@@ -27,17 +17,13 @@ interface StickerProps {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-    }
+    },
 });
 
-export default function Sticker({ 
-    sticker, 
-    onUpdate, 
-    onSelect, 
-}: StickerProps) {
+export default function Sticker({ sticker, onUpdate, onSelect }: StickerProps) {
     // Get the nextStyle function from the store
-    const nextStyle = useStickerStore(state => state.nextStyle);
-    
+    const nextStyle = useStickerStore((state) => state.nextStyle);
+
     // Shared values for transformations
     const translateX = useSharedValue(sticker.transform.translateX);
     const translateY = useSharedValue(sticker.transform.translateY);
@@ -132,13 +118,7 @@ export default function Sticker({
     // Compose gestures
     const gesture = Gesture.Exclusive(
         doubleTapGesture,
-        Gesture.Simultaneous(
-            tapGesture,
-            Gesture.Simultaneous(
-                panGesture,
-                Gesture.Simultaneous(pinchGesture, rotationGesture)
-            )
-        )
+        Gesture.Simultaneous(tapGesture, Gesture.Simultaneous(panGesture, Gesture.Simultaneous(pinchGesture, rotationGesture)))
     );
 
     // Animated style for transformations
@@ -146,11 +126,21 @@ export default function Sticker({
         let scaleFactor = scale.value;
         if (sticker.type === NDKStoryStickerType.Text) scaleFactor = scale.value * 0.4;
         if (sticker.type === NDKStoryStickerType.Pubkey) scaleFactor = scale.value * 0.4;
+        if (sticker.type === NDKStoryStickerType.Countdown) scaleFactor = scale.value * 0.4;
+        if (sticker.type === NDKStoryStickerType.Event) scaleFactor = scale.value;
+
+        console.log('animatedStyle', {
+            translateX: translateX.value * (1-scaleFactor),
+            translateY: translateY.value * (1-scaleFactor),
+            scale: scaleFactor,
+            rotate: rotate.value,
+        });
+
         return {
             position: 'absolute',
             transform: [
-                { translateX: translateX.value },
-                { translateY: translateY.value },
+                { translateX: translateX.value * scaleFactor },
+                { translateY: translateY.value * scaleFactor },
                 { scale: scaleFactor },
                 { rotate: `${rotate.value}rad` },
             ],
@@ -160,7 +150,7 @@ export default function Sticker({
     // Get the content component based on sticker type
     const renderContent = () => {
         console.log('Rendering sticker content:', sticker);
-        
+
         switch (sticker.type) {
             case NDKStoryStickerType.Text:
                 console.log('Rendering text sticker');
@@ -186,9 +176,7 @@ export default function Sticker({
     return (
         <GestureDetector gesture={gesture}>
             <View style={styles.container}>
-                <Animated.View style={animatedStyle}>
-                    {renderContent()}
-                </Animated.View>
+                <Animated.View style={animatedStyle}>{renderContent()}</Animated.View>
             </View>
         </GestureDetector>
     );

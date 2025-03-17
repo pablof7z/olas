@@ -14,12 +14,12 @@ import { PUBLISH_ENABLED } from '@/utils/const';
 interface PostEditorStoreState {
     // internal random id
     id: string;
-    
+
     state: PostState;
     media: PostMedia[];
     metadata: PostMetadata;
 
-    readyToPublish: boolean;    
+    readyToPublish: boolean;
 
     error: string | null;
 
@@ -51,7 +51,7 @@ export type PostEditorStore = PostEditorStoreState & PostEditorStoreActions;
 
 export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
     id: getRandomId(),
-    state: "editing",
+    state: 'editing',
     media: [],
     metadata: { caption: '' },
     readyToPublish: false,
@@ -70,23 +70,24 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
             mediaTypes: types.map(postTypeToImagePickerType),
             allowsMultipleSelection: false,
             exif: true,
-        }).then((result) => {
-            const selectedAsset = result.assets?.[0];
-            
-            if (selectedAsset?.type === 'video') {
-                mapImagePickerAssetToPostMedia(selectedAsset).then((item) => {
-                    set({ media: [...get().media, item] });
-                });
-            } else if (selectedAsset?.type === 'image') {
-                mapImagePickerAssetToPostMedia(selectedAsset).then((item) => {
-                    const currentMedia = get().media;
-                    set({ media: [...currentMedia, item], editingIndex: currentMedia.length });
-                });
-            }
         })
-        .finally(() => {
-            set({ selecting: false });
-        });
+            .then((result) => {
+                const selectedAsset = result.assets?.[0];
+
+                if (selectedAsset?.type === 'video') {
+                    mapImagePickerAssetToPostMedia(selectedAsset).then((item) => {
+                        set({ media: [...get().media, item] });
+                    });
+                } else if (selectedAsset?.type === 'image') {
+                    mapImagePickerAssetToPostMedia(selectedAsset).then((item) => {
+                        const currentMedia = get().media;
+                        set({ media: [...currentMedia, item], editingIndex: currentMedia.length });
+                    });
+                }
+            })
+            .finally(() => {
+                set({ selecting: false });
+            });
     },
 
     openPickerIfEmpty: () => {
@@ -97,7 +98,7 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
     },
 
     setEditingIndex: (index) => {
-        set({ editingIndex: index })
+        set({ editingIndex: index });
     },
 
     publish: async (ndk: NDK, blossomServer: string) => {
@@ -109,14 +110,14 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
         set({ state: 'uploading' });
         let uploadedMedia: PostMedia[] = [];
         try {
-            uploadedMedia = await uploadMedia(media, ndk, blossomServer );
+            uploadedMedia = await uploadMedia(media, ndk, blossomServer);
         } catch (error) {
             set({ state: 'error', error: error.message });
             return;
         }
 
         set({ state: 'uploaded' });
-        
+
         // setSelectedMedia(uploadedMedia);
         const { metadata } = get();
 
@@ -125,53 +126,57 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
         set({ state: 'publishing' });
 
         if (!PUBLISH_ENABLED) {
-            alert("Publish disabled in dev mode");
+            alert('Publish disabled in dev mode');
             set({ readyToPublish: false, media: [], state: 'editing', metadata: { caption: '' } });
             return;
         }
 
-        event.publish(relaySet).then(async () => {
-            if (metadata.boost) {
-                const boost = new NDKEvent(ndk);
-                boost.kind = NDKKind.Text;
-                boost.content = "nostr:" + event.encode();
-                boost.tag(event, "mention", false, "q");
-                await boost.publish();
-            }
+        event
+            .publish(relaySet)
+            .then(async () => {
+                if (metadata.boost) {
+                    const boost = new NDKEvent(ndk);
+                    boost.kind = NDKKind.Text;
+                    boost.content = 'nostr:' + event.encode();
+                    boost.tag(event, 'mention', false, 'q');
+                    await boost.publish();
+                }
 
-            set({ readyToPublish: false, media: [], state: 'editing', metadata: { caption: '' } });
-        }).catch((error) => {
-            set({ error: error.message });
-        });
+                set({ readyToPublish: false, media: [], state: 'editing', metadata: { caption: '' } });
+            })
+            .catch((error) => {
+                set({ error: error.message });
+            });
     },
 
-    reset: () => set({
-        state: "editing",
-        media: [],
-        metadata: { caption: '' },
-        readyToPublish: false,
-        error: null,
-    })
-}))
-
-
+    reset: () =>
+        set({
+            state: 'editing',
+            media: [],
+            metadata: { caption: '' },
+            readyToPublish: false,
+            error: null,
+        }),
+}));
 
 /**
  * Bottom sheet refs
  */
-export const postTypeSelectorSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(null, (get, set, value) =>
-    set(postTypeSelectorSheetRefAtom, value)
+export const postTypeSelectorSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(
+    null,
+    (get, set, value) => set(postTypeSelectorSheetRefAtom, value)
 );
 
-export const locationBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(null, (get, set, value) =>
-    set(locationBottomSheetRefAtom, value)
+export const locationBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(
+    null,
+    (get, set, value) => set(locationBottomSheetRefAtom, value)
 );
 
-export const communityBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(null, (get, set, value) =>
-    set(communityBottomSheetRefAtom, value)
+export const communityBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], null>(
+    null,
+    (get, set, value) => set(communityBottomSheetRefAtom, value)
 );
 
 function getRandomId() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
-

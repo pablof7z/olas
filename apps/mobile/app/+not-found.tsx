@@ -5,7 +5,7 @@ import { Text } from '~/components/nativewindui/Text';
 
 export default function NotFoundScreen() {
     const screenName = usePathname();
-    
+
     return (
         <>
             <Stack.Screen options={{ title: 'Oops!' }} />

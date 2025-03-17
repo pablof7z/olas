@@ -1,11 +1,11 @@
 import * as MediaLibrary from 'expo-media-library';
-import { atom, useAtom, useSetAtom } from "jotai";
+import { atom, useAtom, useSetAtom } from 'jotai';
 import { albumPermission, albumsAtom } from './store';
 
 export function useAlbums() {
     const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
     const setAlbumPermission = useSetAtom(albumPermission);
-    const [ albums, setAlbums ] = useAtom(albumsAtom);
+    const [albums, setAlbums] = useAtom(albumsAtom);
 
     async function getAlbums() {
         if (permissionResponse?.status !== 'granted') {
@@ -19,5 +19,5 @@ export function useAlbums() {
         setAlbums(fetchedAlbums);
     }
 
-    return { getAlbums, albums }
+    return { getAlbums, albums };
 }

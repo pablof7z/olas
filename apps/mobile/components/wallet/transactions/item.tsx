@@ -1,21 +1,21 @@
-import { cn } from "@/lib/cn";
-import { Button } from "@/components/nativewindui/Button";
-import { NDKEvent, useNDK, NDKNutzap, useUserProfile, NDKZapSplit, NDKPaymentConfirmation, NDKKind } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuDeposit, NDKWallet } from "@nostr-dev-kit/ndk-wallet";
-import { NDKCashuWalletTx } from "@nostr-dev-kit/ndk-mobile";
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { View } from "react-native";
-import { ListItem } from "@/components/nativewindui/List";
-import { Text } from "@/components/nativewindui/Text";
-import { ArrowUp, ArrowDown, Timer } from "lucide-react-native";
-import { useColorScheme } from "@/lib/useColorScheme";
-import * as User from "@/components/ui/user";
-import { PendingZap } from "@/stores/payments";
-import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
-import { ItemRightColumn } from "./item-right-column";
-import { Counterparty } from "./counterparty";
+import { cn } from '@/lib/cn';
+import { Button } from '@/components/nativewindui/Button';
+import { NDKEvent, useNDK, NDKNutzap, useUserProfile, NDKZapSplit, NDKPaymentConfirmation, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuDeposit, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWalletTx } from '@nostr-dev-kit/ndk-mobile';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { View } from 'react-native';
+import { ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import { ArrowUp, ArrowDown, Timer } from 'lucide-react-native';
+import { useColorScheme } from '@/lib/useColorScheme';
+import * as User from '@/components/ui/user';
+import { PendingZap } from '@/stores/payments';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import { ItemRightColumn } from './item-right-column';
+import { Counterparty } from './counterparty';
 
-const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: string }) => {
+const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out'; pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
     const { colors } = useColorScheme();
 
@@ -23,7 +23,7 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: str
 
     if (pubkey && userProfile) {
         return (
-            <View className="flex-row items-center gap-2 relative" style={{ marginRight: 10}}>
+            <View className="relative flex-row items-center gap-2" style={{ marginRight: 10 }}>
                 {userProfile && <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={48} />}
                 {direction === 'out' && (
                     <View className="absolute -right-2 -top-2 rotate-45">
@@ -31,45 +31,49 @@ const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out', pubkey?: str
                     </View>
                 )}
                 {direction === 'in' && (
-                    <View className="absolute -right-2 -bottom-2 -rotate-45">
+                    <View className="absolute -bottom-2 -right-2 -rotate-45">
                         <ArrowDown size={18} color={color} />
                     </View>
                 )}
             </View>
-        )
+        );
     }
-    
+
     return (
-        <View className="flex-row items-center gap-2 mr-2">
+        <View className="mr-2 flex-row items-center gap-2">
             {direction === 'out' ? <ArrowUp size={24} color={color} /> : <ArrowDown size={24} color={color} />}
         </View>
-    )
-}
+    );
+};
 
-
-
-export default function HistoryItem({ wallet, item, index, target, onPress }: {
-    wallet: NDKWallet, item: NDKEvent | NDKCashuDeposit | PendingZap
-    index: number,
-    target: any,
-    onPress: () => void
+export default function HistoryItem({
+    wallet,
+    item,
+    index,
+    target,
+    onPress,
+}: {
+    wallet: NDKWallet;
+    item: NDKEvent | NDKCashuDeposit | PendingZap;
+    index: number;
+    target: any;
+    onPress: () => void;
 }) {
     if (item instanceof NDKCashuDeposit) {
-        return <HistoryItemCashuQuote item={item} index={index} target={target} onPress={onPress} />
+        return <HistoryItemCashuQuote item={item} index={index} target={target} onPress={onPress} />;
     } else if (item instanceof NDKEvent) {
-        return <HistoryItemEvent wallet={wallet} item={item} index={index} target={target} onPress={onPress} />
+        return <HistoryItemEvent wallet={wallet} item={item} index={index} target={target} onPress={onPress} />;
     } else {
-        return <HistoryItemPendingZap item={item} index={index} target={target} />
+        return <HistoryItemPendingZap item={item} index={index} target={target} />;
     }
 }
 
-
-function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, index: number, target: any }) {
+function HistoryItemPendingZap({ item, index, target }: { item: PendingZap; index: number; target: any }) {
     console.log('pending', item.internalId);
-    
-    const [ state, setState ] = useState<'pending' | 'sending' | 'complete' | 'failed'>('sending');
+
+    const [state, setState] = useState<'pending' | 'sending' | 'complete' | 'failed'>('sending');
     const timer = useRef<NodeJS.Timeout | null>(null);
-    const [ error, setError ] = useState<Error | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     const { amount } = item.zapper;
 
@@ -77,7 +81,7 @@ function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, inde
         if (state === 'failed') {
             // remove it from the store
         }
-    }
+    };
 
     if (!timer.current) {
         timer.current = setTimeout(() => {
@@ -95,7 +99,7 @@ function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, inde
 
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn('ios:pl-0 !bg-transparent pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
             item={{
                 id: item.internalId,
@@ -103,63 +107,86 @@ function HistoryItemPendingZap({ item, index, target }: { item: PendingZap, inde
             leftView={<LeftView direction="out" pubkey={targetPubkey} />}
             rightView={<ItemRightColumn isPending={true} amount={amount} unit={item.zapper.unit} />}
             index={index}
-            onPress={onPress}
-        >
+            onPress={onPress}>
             <Counterparty pubkey={item.zapper.target?.pubkey} />
             {/* <Text className="text-xs text-muted-foreground">{item.id}</Text> */}
             {error && <Text className="text-xs text-red-500">{error.message}</Text>}
-        </ListItem>  
-    )
+        </ListItem>
+    );
 }
 
-function HistoryItemCashuQuote({ item, index, target, onPress }: { item: NDKCashuDeposit, index: number, target: any, onPress: () => void }) {
+function HistoryItemCashuQuote({
+    item,
+    index,
+    target,
+    onPress,
+}: {
+    item: NDKCashuDeposit;
+    index: number;
+    target: any;
+    onPress: () => void;
+}) {
     const { colors } = useColorScheme();
 
     const check = async () => {
-        const res =await item.check();
+        const res = await item.check();
         console.log('check', res);
-    }
+    };
 
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn('ios:pl-0 !bg-transparent pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
             leftView={<Timer size={24} color={colors.foreground} />}
-            rightView={<Button variant="plain" size="sm" onPress={check}>
-                <Text>Check</Text>
-            </Button>}
+            rightView={
+                <Button variant="plain" size="sm" onPress={check}>
+                    <Text>Check</Text>
+                </Button>
+            }
             item={{
                 id: item.quoteId,
                 title: 'Cashu Deposit',
-                subTitle: 'Waiting for confirmation'
+                subTitle: 'Waiting for confirmation',
             }}
             index={index}
-            onPress={onPress}
-        >
-        </ListItem>  
-    )
+            onPress={onPress}></ListItem>
+    );
 }
 
 const historyItemCache = new Map<string, NDKCashuWalletTx>();
 const nutzapItemCache = new Map<string, NDKNutzap>();
 
-function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: NDKWallet, item: NDKEvent, index: number, target: any, onPress: () => void }) {
+function HistoryItemEvent({
+    wallet,
+    item,
+    index,
+    target,
+    onPress,
+}: {
+    wallet: NDKWallet;
+    item: NDKEvent;
+    index: number;
+    target: any;
+    onPress: () => void;
+}) {
     const { ndk } = useNDK();
-    const [ nutzap, setNutzap ] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id));
+    const [nutzap, setNutzap] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id));
     const id = item.tagId();
-    const [ walletChange, setWalletChange ] = useState<NDKCashuWalletTx | null>(historyItemCache.get(id));
+    const [walletChange, setWalletChange] = useState<NDKCashuWalletTx | null>(historyItemCache.get(id));
 
     useEffect(() => {
         if (!walletChange && item.content.length > 0) {
-            NDKCashuWalletTx.from(item).then((walletChange) => {
-                if (item.id === walletChange.id) {
-                    setWalletChange(walletChange);
-                }
-                historyItemCache.set(walletChange.tagId(), walletChange);
-            }).catch((e) => {
-                console.error('error converting item id', item.id, 'to walletChange id', e);
-                console.log(item.rawEvent());
-            });
+            NDKCashuWalletTx.from(item)
+                .then((walletChange) => {
+                    if (item.id === walletChange.id) {
+                        setWalletChange(walletChange);
+                    }
+                    historyItemCache.set(walletChange.tagId(), walletChange);
+                })
+                .catch((e) => {
+                    console.error('error converting item id', item.id, 'to walletChange id', e);
+                    console.log(item.rawEvent());
+                });
         }
     }, [item.id, setWalletChange]);
 
@@ -194,32 +221,33 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
         return () => {
             isValid = false;
             nutzapFetched = false;
-        }
+        };
     }, [eTag, ndk]);
 
     const handleLongPress = () => {
         console.log('long press', JSON.stringify(walletChange?.rawEvent(), null, 4));
-    }
+    };
 
-    if (!walletChange) return <></>
+    if (!walletChange) return <></>;
     if (walletChange.amount < 0) return <Text>invalid item {item.id}</Text>;
 
     return (
         <Animated.View entering={SlideInDown}>
             <ListItem
-                className={cn('px-2 !bg-transparent', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn('!bg-transparent px-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                 target={target}
                 leftView={<LeftView direction={walletChange.direction} pubkey={nutzapCounterparts?.[0]} />}
                 item={{
                     id: item.id,
-                    title: nutzapCounterparts && nutzapCounterparts.length > 1 ? `${nutzapCounterparts.length} zappers` : undefined
+                    title: nutzapCounterparts && nutzapCounterparts.length > 1 ? `${nutzapCounterparts.length} zappers` : undefined,
                 }}
                 titleClassName="font-bold"
-                rightView={<ItemRightColumn mint={walletChange.mint} amount={walletChange.amount} unit={walletChange.unit} isPending={false} />}
+                rightView={
+                    <ItemRightColumn mint={walletChange.mint} amount={walletChange.amount} unit={walletChange.unit} isPending={false} />
+                }
                 index={index}
                 onPress={onPress}
-                onLongPress={handleLongPress}
-            >
+                onLongPress={handleLongPress}>
                 {nutzapCounterparts && nutzapCounterparts.length === 1 && (
                     <Counterparty pubkey={nutzapCounterparts[0]} timestamp={item.created_at}>
                         <Text className="text-sm text-muted-foreground">{walletChange.description}</Text>
@@ -228,7 +256,7 @@ function HistoryItemEvent({ wallet, item, index, target, onPress }: { wallet: ND
                 {nutzapCounterparts && nutzapCounterparts.length > 1 && (
                     <Text className="text-sm text-muted-foreground">{walletChange.description}</Text>
                 )}
-            </ListItem>  
+            </ListItem>
         </Animated.View>
-    )
+    );
 }

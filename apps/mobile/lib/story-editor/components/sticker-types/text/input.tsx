@@ -11,35 +11,32 @@ export default function TextStickerInput() {
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
     const [text, setText] = useState(editSticker?.value || '');
     const insets = useSafeAreaInsets();
-    
+
     const handleDone = () => {
         if (editSticker?.id) {
             // Update existing sticker
             const updatedSticker = {
                 ...editSticker,
-                value: text.trim() || 'Tap to edit'
+                value: text.trim() || 'Tap to edit',
             };
-            
+
             // Use updateStickerContent from the store to update just the content
-            updateStickerValue(
-                editSticker.id,
-                text.trim() || 'Tap to edit'
-            );
+            updateStickerValue(editSticker.id, text.trim() || 'Tap to edit');
         } else {
             // Create new sticker
             addSticker({
                 type: NDKStoryStickerType.Text,
                 value: text.trim() || 'Tap to edit',
-                style: 'default'
+                style: 'default',
             });
         }
         setEditSticker(null);
     };
-    
+
     const handleCancel = () => {
         setEditSticker(null);
     };
-    
+
     return (
         <View style={styles.container}>
             <View style={styles.overlay}>
@@ -51,7 +48,7 @@ export default function TextStickerInput() {
                         <Text style={styles.buttonText}>Done</Text>
                     </TouchableOpacity>
                 </View>
-                
+
                 <KeyboardAvoidingView style={styles.inputContainer}>
                     <TextInput
                         style={styles.textInput}
@@ -114,4 +111,4 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 8,
     },
-}); 
+});

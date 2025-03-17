@@ -21,7 +21,7 @@ export function SignUp() {
     const { setActiveWallet } = useNDKWallet();
     const avatar = useAtomValue(avatarAtom);
     const [isNsec, setIsNsec] = useState(false);
-    
+
     // Check if username starts with nsec1
     useEffect(() => {
         if (username && username.trim().replace(/^@/, '').toLowerCase().startsWith('nsec1')) {
@@ -36,7 +36,7 @@ export function SignUp() {
             Alert.alert('Error', 'Please enter a username');
             return;
         }
-        
+
         const signer = NDKPrivateKeySigner.generate();
         const nsec = nip19.nsecEncode(signer._privateKey!);
         await login(nsec);
@@ -64,7 +64,7 @@ export function SignUp() {
                 }),
                 tags: [],
                 created_at: Math.floor(Date.now() / 1000),
-                pubkey: ''  // This will be set by NDK
+                pubkey: '', // This will be set by NDK
             } as unknown as NostrEvent);
             await event.publish();
 
@@ -111,24 +111,16 @@ export function SignUp() {
                 )}
             </View>
 
-            <Button 
-                variant="accent" 
-                size="lg" 
-                className="w-full" 
-                onPress={createAccount}
-                disabled={isNsec}
-            >
+            <Button variant="accent" size="lg" className="w-full" onPress={createAccount} disabled={isNsec}>
                 <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
                     <Text className="py-2 text-lg font-bold text-white">Sign Up</Text>
                     <ArrowRight size={24} color="white" />
                 </View>
             </Button>
 
-            <Button
-                variant="plain"
-                onPress={switchToLogin}>
+            <Button variant="plain" onPress={switchToLogin}>
                 <Text>Already on Nostr?</Text>
             </Button>
         </View>
     );
-} 
+}

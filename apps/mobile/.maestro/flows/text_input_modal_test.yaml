@@ -17,34 +17,34 @@ env:
 # Create a mock text input scenario
 # This is a simplified test that just verifies the text input functionality
 - evalScript: |
-    // Simulate the TextInputModal being visible
-    // This is a mock test that doesn't require navigating to the actual preview screen
-    const textInput = document.createElement('input');
-    textInput.placeholder = 'Enter text here...';
-    textInput.id = 'text-input';
-    document.body.appendChild(textInput);
-    
-    // Create a checkmark button
-    const checkmarkButton = document.createElement('button');
-    checkmarkButton.textContent = 'checkmark';
-    checkmarkButton.id = 'checkmark-button';
-    document.body.appendChild(checkmarkButton);
-    
-    // Create a result element to show the entered text
-    const resultElement = document.createElement('div');
-    resultElement.id = 'result';
-    document.body.appendChild(resultElement);
-    
-    // Add event listener to the checkmark button
-    checkmarkButton.addEventListener('click', () => {
-      resultElement.textContent = textInput.value;
-    });
+      // Simulate the TextInputModal being visible
+      // This is a mock test that doesn't require navigating to the actual preview screen
+      const textInput = document.createElement('input');
+      textInput.placeholder = 'Enter text here...';
+      textInput.id = 'text-input';
+      document.body.appendChild(textInput);
+
+      // Create a checkmark button
+      const checkmarkButton = document.createElement('button');
+      checkmarkButton.textContent = 'checkmark';
+      checkmarkButton.id = 'checkmark-button';
+      document.body.appendChild(checkmarkButton);
+
+      // Create a result element to show the entered text
+      const resultElement = document.createElement('div');
+      resultElement.id = 'result';
+      document.body.appendChild(resultElement);
+
+      // Add event listener to the checkmark button
+      checkmarkButton.addEventListener('click', () => {
+        resultElement.textContent = textInput.value;
+      });
 
 # Test the text input functionality
-- assertVisible: "Enter text here..."
-- inputText: "Hello Nostr"
+- assertVisible: 'Enter text here...'
+- inputText: 'Hello Nostr'
 - tapOn:
-    id: "checkmark-button"
+      id: 'checkmark-button'
 
 # Verify the result
-- assertVisible: "Hello Nostr" 
+- assertVisible: 'Hello Nostr'

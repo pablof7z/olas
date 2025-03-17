@@ -41,7 +41,7 @@ export type PostType = {
 //     }
 
 //     return <Camera
-        
+
 //         device={devices[0]}
 //         isActive={true}
 //     />
@@ -72,7 +72,7 @@ export type PostType = {
 //         <Sheet ref={ref}>
 //             <BottomSheetView style={{ flexDirection: 'column', width: '100%', alignContent: 'stretch', paddingBottom: insets.bottom }}>
 //                 {/* <InlineCamera /> */}
-                
+
 //                 {/* <View className="flex-row mb-4" style={{ height: 140}}>
 //                     <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
 //                         <Button style={{ height: 140}} size="none" variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => imagePicker({ types: ['images'] }))}>
@@ -90,8 +90,7 @@ export type PostType = {
 //                 </View> */}
 
 //                 {/* <View className="flex-row" style={{ height: 140}}>
-                    
-                    
+
 //                     <View className="w-1/2 p-2 flex-col" style={{ height: 140}}>
 //                         <Button size="none" style={{ height: 140}} variant="secondary" className="flex-col items-center gap-2" onPress={() => close(() => camera({ types: ['videos'] }))}>
 //                             <ShortVideo color={colors.foreground} size={48} />
@@ -107,11 +106,11 @@ export type PostType = {
 const styles = StyleSheet.create({
     container: {
         margin: 10,
-        gap: 10
+        gap: 10,
     },
     row: {
         height: 120,
         flexDirection: 'row',
-        gap: 10
-    }
-})
+        gap: 10,
+    },
+});

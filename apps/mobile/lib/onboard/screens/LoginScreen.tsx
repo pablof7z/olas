@@ -21,33 +21,29 @@ export default function LoginScreen() {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerTransparent: true,
-                title: ""
-            }} />
-            <View 
-                className="w-full flex-1 items-center justify-center bg-card px-8 py-4" 
-                style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}
-            >
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-                    style={styles.container}
-                >
+            <Stack.Screen
+                options={{
+                    headerTransparent: true,
+                    title: '',
+                }}
+            />
+            <View
+                className="w-full flex-1 items-center justify-center bg-card px-8 py-4"
+                style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                     {mode === 'login' ? <Login /> : <SignUp />}
                 </KeyboardAvoidingView>
 
-                <TouchableOpacity 
-                    onPress={handleTermsOfService} 
-                    style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        paddingBottom: 20 
-                    }}
-                >
+                <TouchableOpacity
+                    onPress={handleTermsOfService}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingBottom: 20,
+                    }}>
                     <Text className="text-sm text-muted-foreground">
-                        By continuing you agree to our{' '}
-                        <Text className="text-sm text-primary">Terms of Service</Text>
+                        By continuing you agree to our <Text className="text-sm text-primary">Terms of Service</Text>
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -64,4 +60,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 20,
     },
-}); 
+});

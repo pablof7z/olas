@@ -1,1 +1,1 @@
-export * from './stickerMapper'; 
+export * from './stickerMapper';

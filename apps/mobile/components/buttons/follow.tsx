@@ -50,7 +50,7 @@ export default function FollowButton({
     const setUserBottomSheet = useSetAtom(userBottomSheetAtom);
 
     const handleOpenUserBottomSheet = useCallback(() => {
-        setUserBottomSheet(ndk?.getUser({pubkey}));
+        setUserBottomSheet(ndk?.getUser({ pubkey }));
     }, [ndk, pubkey, setUserBottomSheet]);
 
     const followStatus = useFollowType(pubkey);
@@ -59,13 +59,14 @@ export default function FollowButton({
 
     if (!enabling && followStatus === 'public') return null;
 
-    if (!enabling && followStatus === 'private') return (
-        <View style={styles.container}>
-            <Button variant="plain" size="sm" className="rounded-sm" onPress={handleOpenUserBottomSheet}>
-                <Lock size={16} color={colors.muted} />
-            </Button>
-        </View>
-    );
+    if (!enabling && followStatus === 'private')
+        return (
+            <View style={styles.container}>
+                <Button variant="plain" size="sm" className="rounded-sm" onPress={handleOpenUserBottomSheet}>
+                    <Lock size={16} color={colors.muted} />
+                </Button>
+            </View>
+        );
 
     return (
         <View style={styles.container}>
@@ -76,16 +77,9 @@ export default function FollowButton({
                 onLongPress={() => {
                     console.log('long press');
                 }}
-                className="rounded-sm"
-            >
+                className="rounded-sm">
                 {followStatus === 'private' && <Lock size={16} color={colors.muted} />}
-                <Text className="text-sm pr-2">
-                    {followStatus ? (
-                        "Following"
-                    ) : (
-                        "Follow"
-                    )}
-                </Text>
+                <Text className="pr-2 text-sm">{followStatus ? 'Following' : 'Follow'}</Text>
             </Button>
             <Button variant="secondary" size="sm" className="rounded-sm" onPress={handleOpenUserBottomSheet}>
                 <ChevronDown size={16} color={colors.muted} />
@@ -94,12 +88,11 @@ export default function FollowButton({
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'stretch',
         justifyContent: 'center',
-        gap: 1
+        gap: 1,
     },
 });

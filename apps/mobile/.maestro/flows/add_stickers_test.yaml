@@ -2,88 +2,88 @@ appId: com.pablof7z.snapstr
 ---
 - launchApp
 - waitForAnimationToEnd:
-    timeout: 5000
+      timeout: 5000
 
 # Navigate to story creation (using a visible text button instead of ID)
-- tapOn: "Create"
+- tapOn: 'Create'
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Take a photo or select from gallery
-- tapOn: "Photo"
+- tapOn: 'Photo'
 - waitForAnimationToEnd:
-    timeout: 3000
-    
+      timeout: 3000
+
 # Mock selecting an image
-- tapOn: "Library"
+- tapOn: 'Library'
 - waitForAnimationToEnd:
-    timeout: 3000
+      timeout: 3000
 
 # Open sticker menu
-- tapOn: "Add Sticker"
+- tapOn: 'Add Sticker'
 - waitForAnimationToEnd:
-    timeout: 1000
-- assertVisible: "Add Sticker"
+      timeout: 1000
+- assertVisible: 'Add Sticker'
 
 # Test adding a text sticker
-- tapOn: "Text"
+- tapOn: 'Text'
 - waitForAnimationToEnd:
-    timeout: 1000
-- assertVisible: "Tap to edit"
+      timeout: 1000
+- assertVisible: 'Tap to edit'
 
 # Test sticker editing
 - tapOn:
-    text: "Tap to edit" 
-- inputText: "This is a test sticker"
+      text: 'Tap to edit'
+- inputText: 'This is a test sticker'
 - tapOn:
-    text: "OK"
+      text: 'OK'
 - waitForAnimationToEnd:
-    timeout: 1000
-- assertVisible: "This is a test sticker"
+      timeout: 1000
+- assertVisible: 'This is a test sticker'
 
 # Test adding a mention sticker
-- tapOn: "Add Sticker"
+- tapOn: 'Add Sticker'
 - waitForAnimationToEnd:
-    timeout: 1000
-- tapOn: "Mention"
-- assertVisible: "Select User"
-- inputText: "test"
+      timeout: 1000
+- tapOn: 'Mention'
+- assertVisible: 'Select User'
+- inputText: 'test'
 - waitForAnimationToEnd:
-    timeout: 2000
+      timeout: 2000
 - tapOn:
-    point: 50%,30%
+      point: 50%,30%
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Test adding a countdown sticker
-- tapOn: "Add Sticker"
+- tapOn: 'Add Sticker'
 - waitForAnimationToEnd:
-    timeout: 1000
-- tapOn: "Countdown"
-- assertVisible: "Create Countdown"
-- inputText: "Test Event"
-- tapOn: "Select Date"
+      timeout: 1000
+- tapOn: 'Countdown'
+- assertVisible: 'Create Countdown'
+- inputText: 'Test Event'
+- tapOn: 'Select Date'
 - tapOn:
-    text: "OK"
-- tapOn: "Add"
+      text: 'OK'
+- tapOn: 'Add'
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Manipulate stickers (move, resize)
-- tapOn: "This is a test sticker"
+- tapOn: 'This is a test sticker'
 - swipe:
-    direction: RIGHT
+      direction: RIGHT
 - waitForAnimationToEnd:
-    timeout: 1000
+      timeout: 1000
 
 # Submit story with stickers
-- tapOn: "Preview"
+- tapOn: 'Preview'
 - waitForAnimationToEnd:
-    timeout: 2000
-- tapOn: "Post"
+      timeout: 2000
+- tapOn: 'Post'
 - waitForAnimationToEnd:
-    timeout: 3000
-- assertVisible: "Story posted successfully"
+      timeout: 3000
+- assertVisible: 'Story posted successfully'
 
 # Take screenshot of success state
-- takeScreenshot: add-stickers-success 
+- takeScreenshot: add-stickers-success

@@ -30,9 +30,7 @@ export default function SearchScreen() {
     }, [hashtagFromQuery, setInput]);
 
     const filters = useMemo(() => {
-        return [
-            { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [input.trim().replace('#', '')] },
-        ]
+        return [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [input.trim().replace('#', '')] }];
     }, [input]);
 
     const insets = useSafeAreaInsets();
@@ -40,8 +38,8 @@ export default function SearchScreen() {
         return {
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
-        }
-    }, [insets])
+        };
+    }, [insets]);
     const { colors } = useColorScheme();
 
     return (
@@ -57,20 +55,16 @@ export default function SearchScreen() {
                     <Pressable onPress={() => router.replace('/(home)')}>
                         <ArrowLeft size={24} color={colors.foreground} />
                     </Pressable>
-                    <View className="border-b border-border flex-1">
+                    <View className="flex-1 border-b border-border">
                         <Input onSearch={onSearch} />
                     </View>
                 </View>
 
-            <View style={{ flex: 1 }}>
-                <Feed
-                    filters={filters}
-                    filterKey={input}
-                    numColumns={3}
-                />
-            </View>
+                <View style={{ flex: 1 }}>
+                    <Feed filters={filters} filterKey={input} numColumns={3} />
+                </View>
             </KeyboardAvoidingView>
-            </>
+        </>
     );
 }
 
@@ -102,8 +96,8 @@ function Input({ onSearch }: { onSearch: (input: string) => void }) {
                 autoComplete="off"
                 autoCorrect={false}
                 style={{
-                  flex: 1,
-                  color: colors.foreground,
+                    flex: 1,
+                    color: colors.foreground,
                 }}
                 className="text-xl font-bold"
             />
@@ -122,5 +116,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
-    }
-})
+    },
+});

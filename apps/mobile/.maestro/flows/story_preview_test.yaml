@@ -14,51 +14,50 @@ appId: com.pablof7z.snapstr
 
 - launchApp
 - waitForAnimationToEnd:
-    timeout: 5000
+      timeout: 5000
 
 # Assuming we've reached the preview screen
 # Test 2: Verify preview screen elements
 - assertVisible:
-    id: "preview-container"
+      id: 'preview-container'
 - assertVisible:
-    id: "close-button" 
+      id: 'close-button'
 - assertVisible:
-    id: "add-text-button"
+      id: 'add-text-button'
 - assertVisible:
-    id: "share-button"
+      id: 'share-button'
 - takeScreenshot: preview-screen-initial
 
 # Test 3: Test adding text overlay functionality
 - tapOn:
-    id: "add-text-button"
-- assertVisible: "Enter your text..."
-- inputText: "Sample Story Text"
+      id: 'add-text-button'
+- assertVisible: 'Enter your text...'
+- inputText: 'Sample Story Text'
 - takeScreenshot: text-input-modal
 
 # Confirm adding text
 - tapOn:
-    id: "done-text-button"
-- assertNotVisible: "Enter your text..."
+      id: 'done-text-button'
+- assertNotVisible: 'Enter your text...'
 - takeScreenshot: text-overlay-added
 
 # Test 4: Test text cancellation
 - tapOn:
-    id: "add-text-button"
-- assertVisible: "Enter your text..."
-- inputText: "Text that will be cancelled"
+      id: 'add-text-button'
+- assertVisible: 'Enter your text...'
+- inputText: 'Text that will be cancelled'
 - tapOn:
-    id: "cancel-text-button"
-- assertNotVisible: "Enter your text..."
+      id: 'cancel-text-button'
+- assertNotVisible: 'Enter your text...'
 - takeScreenshot: after-text-cancelled
 
 # Test 5: Test closing the preview
 - tapOn:
-    id: "close-button"
+      id: 'close-button'
 # Assuming this takes us back to previous screen
 - assertNotVisible:
-    id: "preview-container"
-    timeout: 3000
-
+      id: 'preview-container'
+      timeout: 3000
 # Note: For a complete test suite, you would also want to test:
 # 1. Video preview functionality
 # 2. Panning/zooming interactions
@@ -66,4 +65,4 @@ appId: com.pablof7z.snapstr
 # 4. Sharing functionality
 
 # These interactions might require more complex gestures and
-# could be implemented in separate test flows if needed 
+# could be implemented in separate test flows if needed

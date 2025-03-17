@@ -41,19 +41,27 @@ function Header({ event }: { event: NDKEvent }) {
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${event.pubkey}`);
-    }, [event.pubkey])
-    
+    }, [event.pubkey]);
+
     return (
         <View style={[headerStyles.container, { paddingTop: insets.top }]}>
             <BackButton />
 
-            <AvatarAndName pubkey={event.pubkey} userProfile={userProfile} onPress={viewProfile} imageSize={24} borderColor='black' canSkipBorder={true} pressableStyle={{ padding: 16 }} />
+            <AvatarAndName
+                pubkey={event.pubkey}
+                userProfile={userProfile}
+                onPress={viewProfile}
+                imageSize={24}
+                borderColor="black"
+                canSkipBorder={true}
+                pressableStyle={{ padding: 16 }}
+            />
 
             <Text style={headerStyles.timestamp}>
                 <RelativeTime timestamp={event.created_at!} />
             </Text>
         </View>
-    )
+    );
 }
 
 const headerStyles = StyleSheet.create({
@@ -66,20 +74,21 @@ const headerStyles = StyleSheet.create({
         fontSize: 12,
         color: '#9CA3AF', // Tailwind 'text-gray-400'
     },
-})
+});
 
 export default function ViewScreen() {
     const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
-    const reactions = useReactionsStore(state => state.reactions.get(activeEvent?.tagId() ?? ''));
-    const {events} = useSubscribe( activeEvent ? [
-        activeEvent.filter(),
-    ] : false, { groupable: false }, [activeEvent?.id]);
+    const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
+    const { events } = useSubscribe(activeEvent ? [activeEvent.filter()] : false, { groupable: false }, [activeEvent?.id]);
 
-    const height = useHeaderHeight(); 
+    const height = useHeaderHeight();
     const insets = useSafeAreaInsets();
-    const style = useMemo(() => ({
+    const style = useMemo(
+        () => ({
             paddingTop: height,
-    }), [height]);
+        }),
+        [height]
+    );
 
     if (!activeEvent) {
         return <Text style={styles.noActiveEvent}>No active event</Text>;
@@ -110,13 +119,12 @@ export default function ViewScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    headerTintColor: "white",
-                    header: () => <Header event={activeEvent} />
+                    headerTintColor: 'white',
+                    header: () => <Header event={activeEvent} />,
                 }}
             />
             <View style={[styles.scrollView, style]}>
-                <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }}
-                contentContainerStyle={{ flex: 1 }}>
+                <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
                     <EventMediaContainer
                         event={activeEvent}
                         contentFit="contain"
@@ -129,10 +137,18 @@ export default function ViewScreen() {
 
                 {/* Content */}
                 <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 2 }]}>
-                    {price && <Text numberOfLines={1} variant="title1" className="text-white">{nicelyFormattedSatNumber(price)} {currency.toLowerCase()}</Text>}
-                    {title && <Text numberOfLines={1} variant="title1" className="text-white">{title}</Text>}
+                    {price && (
+                        <Text numberOfLines={1} variant="title1" className="text-white">
+                            {nicelyFormattedSatNumber(price)} {currency.toLowerCase()}
+                        </Text>
+                    )}
+                    {title && (
+                        <Text numberOfLines={1} variant="title1" className="text-white">
+                            {title}
+                        </Text>
+                    )}
                     <EventContent event={activeEvent} content={content} style={styles.eventContent} />
-                    <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' reactions={reactions} />
+                    <Reactions event={activeEvent} foregroundColor="white" inactiveColor="white" reactions={reactions} />
                 </View>
             </View>
         </>

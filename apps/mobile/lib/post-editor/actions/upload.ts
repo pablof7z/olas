@@ -5,11 +5,7 @@ import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
 import { BlobDescriptor } from '@/utils';
 import { determineMimeType } from '@/utils/url';
 
-export async function uploadMedia(
-    media: PostMedia[],
-    ndk: NDK,
-    blossomServer: string = DEFAULT_BLOSSOM_SERVER
-): Promise<PostMedia[]> {
+export async function uploadMedia(media: PostMedia[], ndk: NDK, blossomServer: string = DEFAULT_BLOSSOM_SERVER): Promise<PostMedia[]> {
     const mediaItems = [...media];
 
     for (const m of mediaItems) {
@@ -36,7 +32,13 @@ export async function uploadMedia(
     return mediaItems;
 }
 
-async function upload(localUri: string, ndk: NDK, blossomServer: string, mimeType: string, sha256: string): Promise<{url: string, sha256: string}> {
+async function upload(
+    localUri: string,
+    ndk: NDK,
+    blossomServer: string,
+    mimeType: string,
+    sha256: string
+): Promise<{ url: string; sha256: string }> {
     return new Promise((resolve, reject) => {
         const uploader = new Uploader(ndk, localUri, mimeType, blossomServer, sha256);
         uploader.onUploaded = (data: BlobDescriptor) => {

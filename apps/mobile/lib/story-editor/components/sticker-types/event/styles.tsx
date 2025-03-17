@@ -8,12 +8,14 @@ export interface EventStickerStyle {
         color: string;
     };
     // author style, if false we don't show the author
-    author: false | {
-        // avatar style, if false we don't show the avatar
-        avatarStyle: ImageStyle | false;
-        // name style, if false we don't show the name
-        nameStyle: TextStyle | false;
-    }
+    author:
+        | false
+        | {
+              // avatar style, if false we don't show the avatar
+              avatarStyle: ImageStyle | false;
+              // name style, if false we don't show the name
+              nameStyle: TextStyle | false;
+          };
 }
 
 // Define 10 different styles for event stickers
@@ -22,11 +24,12 @@ const styles: EventStickerStyle[] = [
         name: 'Default',
         container: {
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            borderRadius: 16,
+            borderRadius: 32,
+            padding: 10,
         },
         text: {
             color: 'white',
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: 'bold',
         },
         icon: {
@@ -34,32 +37,33 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                marginRight: 8,
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                marginRight: 32,
             },
             nameStyle: {
                 color: 'white',
-                fontSize: 14,
-            }
-        }
+                fontSize: 18,
+            },
+        },
     },
     {
         name: 'Card',
         container: {
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: 8,
-            borderWidth: 1,
+            borderRadius: 16,
+            borderWidth: 2,
             borderColor: '#ddd',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
+            shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1,
-            shadowRadius: 4,
+            shadowRadius: 8,
+            padding: 10,
         },
         text: {
             color: '#333',
-            fontSize: 16,
+            fontSize: 32,
             fontWeight: 'bold',
         },
         icon: {
@@ -67,32 +71,33 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                marginRight: 8,
+                width: 48,
+                height: 48,
+                borderRadius: 18,
+                marginRight: 16,
             },
             nameStyle: {
                 color: '#555',
-                fontSize: 14,
-            }
-        }
+                fontSize: 28,
+            },
+        },
     },
     {
         name: 'Pill',
         container: {
             backgroundColor: 'rgba(33, 150, 243, 0.8)',
-            borderRadius: 30,
+            borderRadius: 60,
+            padding: 16,
         },
         text: {
             color: 'white',
-            fontSize: 14,
+            fontSize: 28,
             fontWeight: 'bold',
         },
         icon: {
             color: 'white',
         },
-        author: false
+        author: false,
     },
     {
         name: 'Ghost',
@@ -101,6 +106,7 @@ const styles: EventStickerStyle[] = [
             borderWidth: 1,
             borderColor: 'rgba(255, 255, 255, 0.7)',
             borderRadius: 16,
+            padding: 10,
         },
         text: {
             color: 'white',
@@ -112,8 +118,8 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: 12,
                 marginRight: 8,
                 borderWidth: 1,
@@ -123,14 +129,15 @@ const styles: EventStickerStyle[] = [
                 color: 'white',
                 fontSize: 14,
                 opacity: 0.9,
-            }
-        }
+            },
+        },
     },
     {
         name: 'Highlight',
         container: {
             backgroundColor: 'rgba(255, 235, 59, 0.9)',
             borderRadius: 4,
+            padding: 8,
         },
         text: {
             color: '#333',
@@ -142,8 +149,8 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: 12,
                 marginRight: 8,
             },
@@ -151,14 +158,15 @@ const styles: EventStickerStyle[] = [
                 color: '#555',
                 fontSize: 14,
                 fontWeight: 'bold',
-            }
-        }
+            },
+        },
     },
     {
         name: 'Dark',
         container: {
             backgroundColor: 'rgba(33, 33, 33, 0.9)',
             borderRadius: 8,
+            padding: 12,
         },
         text: {
             color: '#fff',
@@ -170,22 +178,23 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: 12,
                 marginRight: 8,
             },
             nameStyle: {
                 color: '#64b5f6',
                 fontSize: 14,
-            }
-        }
+            },
+        },
     },
     {
         name: 'Nostr',
         container: {
             backgroundColor: 'rgba(128, 0, 128, 0.7)',
             borderRadius: 12,
+            padding: 12,
         },
         text: {
             color: '#fff',
@@ -197,8 +206,8 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: 12,
                 marginRight: 8,
                 borderWidth: 1,
@@ -207,14 +216,15 @@ const styles: EventStickerStyle[] = [
             nameStyle: {
                 color: '#ffd700',
                 fontSize: 14,
-            }
-        }
+            },
+        },
     },
     {
         name: 'Minimal',
         container: {
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
             borderRadius: 4,
+            padding: 6,
         },
         text: {
             color: 'white',
@@ -224,7 +234,7 @@ const styles: EventStickerStyle[] = [
         icon: {
             color: 'white',
         },
-        author: false
+        author: false,
     },
     {
         name: 'Rounded',
@@ -235,6 +245,7 @@ const styles: EventStickerStyle[] = [
             shadowOffset: { width: 0, height: 3 },
             shadowOpacity: 0.2,
             shadowRadius: 5,
+            padding: 12,
         },
         text: {
             color: 'white',
@@ -246,16 +257,16 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 24,
-                height: 24,
+                width: 18,
+                height: 18,
                 borderRadius: 12,
                 marginRight: 8,
             },
             nameStyle: {
                 color: 'white',
                 fontSize: 14,
-            }
-        }
+            },
+        },
     },
     {
         name: 'Outlined',
@@ -264,6 +275,7 @@ const styles: EventStickerStyle[] = [
             borderWidth: 2,
             borderColor: '#3f51b5',
             borderRadius: 8,
+            padding: 10,
         },
         text: {
             color: '#3f51b5',
@@ -278,18 +290,18 @@ const styles: EventStickerStyle[] = [
             nameStyle: {
                 color: '#3f51b5',
                 fontWeight: 'bold',
-            }
-        }
+            },
+        },
     },
 ];
 
 export function getStyleFromName(name?: string): EventStickerStyle {
     if (!name) return styles[0];
-    return styles.find(style => style.name === name) || styles[0];
+    return styles.find((style) => style.name === name) || styles[0];
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
     if (!currentStyleName) return styles[1].name;
-    const index = styles.findIndex(style => style.name === currentStyleName);
+    const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
 }

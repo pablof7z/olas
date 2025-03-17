@@ -1,20 +1,30 @@
-import FollowButton from "@/components/buttons/follow";
-import RelativeTime from "@/components/relative-time";
-import AvatarGroup from "@/components/ui/user/AvatarGroup";
-import { useUserFlare } from "@/hooks/user-flare";
-import { getClientName } from "@/utils/event";
-import { NDKEvent, NDKUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { router } from "expo-router";
-import { useSetAtom, useAtomValue } from "jotai";
-import { Repeat, MoreHorizontal } from "lucide-react-native";
-import { useCallback } from "react";
-import { View, TouchableOpacity, Pressable, StyleSheet } from "react-native";
-import { optionsMenuEventAtom, optionsSheetRefAtom } from "./store";
-import * as User from "@/components/ui/user";
-import { Text } from "@/components/nativewindui/Text";
-import { useColorScheme } from "@/lib/useColorScheme";
+import FollowButton from '@/components/buttons/follow';
+import RelativeTime from '@/components/relative-time';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { useUserFlare } from '@/hooks/user-flare';
+import { getClientName } from '@/utils/event';
+import { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { useSetAtom, useAtomValue } from 'jotai';
+import { Repeat, MoreHorizontal } from 'lucide-react-native';
+import { useCallback } from 'react';
+import { View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
+import * as User from '@/components/ui/user';
+import { Text } from '@/components/nativewindui/Text';
+import { useColorScheme } from '@/lib/useColorScheme';
 
-export function PostHeader({ event, reposts, timestamp, userProfile }: { event: NDKEvent; reposts: NDKEvent[]; timestamp: number; userProfile: NDKUserProfile | undefined }) {
+export function PostHeader({
+    event,
+    reposts,
+    timestamp,
+    userProfile,
+}: {
+    event: NDKEvent;
+    reposts: NDKEvent[];
+    timestamp: number;
+    userProfile: NDKUserProfile | undefined;
+}) {
     const flare = useUserFlare(event.pubkey);
     const { colors } = useColorScheme();
     const clientName = getClientName(event);
@@ -98,5 +108,5 @@ const style = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         padding: 2,
-    }
-})
+    },
+});

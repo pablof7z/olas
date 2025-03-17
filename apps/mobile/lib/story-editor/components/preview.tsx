@@ -3,15 +3,7 @@ import { View, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-nat
 import { VideoView } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import {
-    Canvas,
-    Image as SkiaImage,
-    useImage,
-    Fill,
-    Group,
-    RoundedRect,
-    useCanvasRef,
-} from '@shopify/react-native-skia';
+import { Canvas, Image as SkiaImage, useImage, Fill, Group, RoundedRect, useCanvasRef } from '@shopify/react-native-skia';
 import { useStickerStore, Sticker as StickerType, editStickerAtom } from '../store';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
@@ -38,7 +30,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
     const [canvasSize, setCanvasSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     const image = useImage(path);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-    
+
     const { stickers, updateSticker, removeSticker, addSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
@@ -62,7 +54,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             setSelectedStickerId(null);
         }
     };
-    
+
     const openStickersDrawer = () => {
         stickersSheetRef?.current?.present();
     };
@@ -75,7 +67,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
 
         try {
             setIsUploading(true);
-            
+
             const result = await uploadStory({
                 path,
                 type,
@@ -83,18 +75,18 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                 blossomServer: activeBlossomServer,
                 onProgress: (type, progress) => {
                     console.log(`${type} progress: ${progress}%`);
-                }
+                },
             });
-            
+
             if (result.success) {
                 // Create NDKStory event
                 const storyEvent = new NDKStory(ndkContext.ndk);
-                
+
                 // Set story content with the uploaded media URL
                 storyEvent.content = result.mediaUrl || '';
-                
+
                 // Add stickers to the event
-                stickers.forEach(sticker => {
+                stickers.forEach((sticker) => {
                     try {
                         // Use the utility function to map our sticker to NDK format
                         const ndkSticker = mapStickerToNDKFormat(sticker, canvasSize);
@@ -103,11 +95,11 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                         console.error('Error adding sticker:', error);
                     }
                 });
-                
+
                 // Publish the story event
                 await storyEvent.sign();
                 debugEvent(storyEvent);
-                
+
                 Alert.alert('Success', 'Story uploaded and published successfully!');
                 onClose();
             } else {
@@ -123,31 +115,19 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
 
     return (
         <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, borderRadius: 20, overflow: 'hidden' }]}>
-            <View 
-                style={[styles.previewContainer, { borderRadius: 20, overflow: 'hidden' }]} 
+            <View
+                style={[styles.previewContainer, { borderRadius: 20, overflow: 'hidden' }]}
                 testID="preview-container"
                 onLayout={(event) => {
                     const { width, height } = event.nativeEvent.layout;
                     setCanvasSize({ width, height });
-                }}
-            >
+                }}>
                 <Canvas style={styles.media} ref={canvasRef}>
                     <Fill color="black" />
                     {image && (
                         <Group>
-                            <RoundedRect
-                                x={0}
-                                y={0}
-                                width={canvasSize.width}
-                                height={canvasSize.height}
-                                r={20}
-                            >
-                                <SkiaImage
-                                    image={image}
-                                    fit="cover"
-                                    width={canvasSize.width}
-                                    height={canvasSize.height}
-                                />
+                            <RoundedRect x={0} y={0} width={canvasSize.width} height={canvasSize.height} r={20}>
+                                <SkiaImage image={image} fit="cover" width={canvasSize.width} height={canvasSize.height} />
                             </RoundedRect>
                         </Group>
                     )}
@@ -168,60 +148,40 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             </View>
 
             <View style={[styles.header]}>
-                <TouchableOpacity 
-                    onPress={onClose} 
-                    style={[styles.button, styles.closeButton]}
-                    testID="close-button"
-                >
+                <TouchableOpacity onPress={onClose} style={[styles.button, styles.closeButton]} testID="close-button">
                     <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.button, styles.textButton]}
                     testID="add-text-button"
-                    onPress={() => setEditSticker({ 
-                        id: '', 
-                        type: NDKStoryStickerType.Text, 
-                        value: '', 
-                        transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 } 
-                    })}
-                >
+                    onPress={() =>
+                        setEditSticker({
+                            id: '',
+                            type: NDKStoryStickerType.Text,
+                            value: '',
+                            transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 },
+                        })
+                    }>
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={openStickersDrawer}
-                    style={[styles.button, styles.stickersButton]}
-                    testID="add-stickers-button"
-                >
+                <TouchableOpacity onPress={openStickersDrawer} style={[styles.button, styles.stickersButton]} testID="add-stickers-button">
                     <Ionicons name="pricetag" size={20} color="white" />
                 </TouchableOpacity>
                 {selectedStickerId && (
-                    <TouchableOpacity 
-                        onPress={handleDeleteSelected}
-                        style={[styles.button, styles.deleteButton]}
-                        testID="delete-button"
-                    >
+                    <TouchableOpacity onPress={handleDeleteSelected} style={[styles.button, styles.deleteButton]} testID="delete-button">
                         <Ionicons name="trash" size={20} color="white" />
                     </TouchableOpacity>
                 )}
             </View>
 
             <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
-                <TouchableOpacity 
-                    style={styles.shareButton}
-                    testID="share-button"
-                    onPress={handleShare}
-                    disabled={isUploading}
-                >
-                    <Ionicons 
-                        name={isUploading ? "hourglass" : "arrow-forward-circle"} 
-                        size={60} 
-                        color="white" 
-                    />
+                <TouchableOpacity style={styles.shareButton} testID="share-button" onPress={handleShare} disabled={isUploading}>
+                    <Ionicons name={isUploading ? 'hourglass' : 'arrow-forward-circle'} size={60} color="white" />
                 </TouchableOpacity>
             </View>
-            
+
             <StickersBottomSheet />
-            
+
             {isEditingText && (
                 <View style={styles.textInputOverlay}>
                     <TextStickerInput />
@@ -316,4 +276,4 @@ const styles = StyleSheet.create({
         bottom: 0,
         zIndex: 10,
     },
-}); 
+});

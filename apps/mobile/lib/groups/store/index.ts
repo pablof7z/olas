@@ -1,10 +1,8 @@
-import NDK, { Hexpubkey, NDKUser, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
-import { create } from "zustand";
-import { loadGroups, loadMyGroups } from "./load";
-import { useEffect } from "react";
-import { GroupEntry } from "../types";
-
-
+import NDK, { Hexpubkey, NDKUser, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { create } from 'zustand';
+import { loadGroups, loadMyGroups } from './load';
+import { useEffect } from 'react';
+import { GroupEntry } from '../types';
 
 export type GroupStoreState = {
     groups: Map<string, GroupEntry>;
@@ -12,14 +10,14 @@ export type GroupStoreState = {
 
     myGroupsLoaded: boolean;
     groupsLoaded: Set<string>;
-}
+};
 
 type GroupStoreActions = {
     addGroup: (group: GroupEntry) => void;
     loadGroups: (ndk: NDK, currentUser: NDKUser, relay: string, groupIds?: string[]) => void;
 
     loadMyGroups: (ndk: NDK, currentUser: NDKUser) => void;
-}
+};
 
 export type GroupStore = GroupStoreState & GroupStoreActions;
 
@@ -33,7 +31,7 @@ export const useGroups = create<GroupStore>()((set) => ({
     loadGroups: (ndk, currentUser, relay, groupIds) => loadGroups(ndk, currentUser, relay, groupIds, set),
 
     loadMyGroups: (ndk, currentUser) => loadMyGroups(ndk, currentUser, set),
-}))
+}));
 
 export function useAllGroups(relayUrls: string[]) {
     const groups = useGroups((state) => state.groups);
@@ -52,7 +50,7 @@ export function useAllGroups(relayUrls: string[]) {
             loadGroups(ndk, currentUser, relayUrl);
         }
     }, [ndk, currentUser, relayUrls]);
-    
+
     return Array.from(groups.values());
 }
 
@@ -85,6 +83,6 @@ export function useGroup(groupId?: string, relayUrl?: string) {
     if (!group) {
         loadGroups(ndk, currentUser, relayUrl, [groupId]);
     }
-    
+
     return group;
 }

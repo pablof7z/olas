@@ -150,9 +150,11 @@ type AndroidOnlyButtonProps = {
     androidRootClassName?: string;
 };
 
-type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps & {
-    state?: ButtonState;
-};
+type ButtonProps = PressableProps &
+    ButtonVariantProps &
+    AndroidOnlyButtonProps & {
+        state?: ButtonState;
+    };
 
 export type ButtonState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -190,8 +192,7 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
                         ref={ref}
                         style={style}
                         android_ripple={ANDROID_RIPPLE[colorScheme][variant]}
-                        {...props}
-                    >
+                        {...props}>
                         {renderContent()}
                     </Pressable>
                 </Root>

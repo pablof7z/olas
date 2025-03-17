@@ -34,7 +34,7 @@ export default function VideoComponent({
     if (dimensions && !renderDimensions) {
         renderDimensions = calcDimensions(dimensions, maxDimensions);
     }
-    
+
     loop ??= true;
     muted ??= true;
     const player = useVideoPlayer(url, (player) => {
@@ -50,8 +50,7 @@ export default function VideoComponent({
         let width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
         let height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
         return { width, height };
-    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
-    
+    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url]);
 
     return (
         <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
@@ -67,11 +66,10 @@ export default function VideoComponent({
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-    }
+    },
 });

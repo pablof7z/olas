@@ -1,5 +1,5 @@
 import * as MediaLibrary from 'expo-media-library';
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
 /**
  * Album permission

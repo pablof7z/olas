@@ -19,13 +19,13 @@ const styles = StyleSheet.create({
         zIndex: 1000,
         paddingBottom: 10,
         borderTopWidth: 1,
-    }
+    },
 });
 
 export default function UploadingIndicator() {
     const bottomHeight = useBottomTabBarHeight();
-    const readyToPublish = usePostEditorStore(s => s.readyToPublish);
-    const resetPostEditor = usePostEditorStore(s => s.reset);
+    const readyToPublish = usePostEditorStore((s) => s.readyToPublish);
+    const resetPostEditor = usePostEditorStore((s) => s.reset);
     const { colors } = useColorScheme();
     const scrollDir = useAtomValue(scrollDirAtom);
 
@@ -33,53 +33,49 @@ export default function UploadingIndicator() {
         if (scrollDir === 'up') {
             return {
                 transform: [{ translateY: withTiming(-bottomHeight, { duration: 200 }) }],
-            }
+            };
         }
 
         return {
             transform: [{ translateY: withTiming(0, { duration: 200 }) }],
-        }
+        };
     }, [bottomHeight, scrollDir]);
 
     if (!readyToPublish) return null;
 
     return (
-        <Animated.View
-            style={[ styles.container, { borderTopColor: colors.grey3, backgroundColor: colors.card }, animStyle]}
-        >
+        <Animated.View style={[styles.container, { borderTopColor: colors.grey3, backgroundColor: colors.card }, animStyle]}>
             <Pressable
-            style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, flexDirection: 'row', gap: 10, alignItems: 'center' }}
-        >
-            <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden'}}>
-                <PostEditorMediaPreview limit={1} withEdit={false} maxWidth={60} maxHeight={60} forceImage={true} />
-            </View>
+                style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden' }}>
+                    <PostEditorMediaPreview limit={1} withEdit={false} maxWidth={60} maxHeight={60} forceImage={true} />
+                </View>
 
-            <Status />
+                <Status />
 
-
-            <Button variant="plain" onPress={resetPostEditor}>
+                <Button variant="plain" onPress={resetPostEditor}>
                     <X size={24} color={colors.foreground} />
                 </Button>
             </Pressable>
         </Animated.View>
-    )
+    );
 }
 
 function Status() {
-    const state = usePostEditorStore(s => s.state);
-    const metadata = usePostEditorStore(s => s.metadata);
-    const uploadError = usePostEditorStore(s => s.error);
+    const state = usePostEditorStore((s) => s.state);
+    const metadata = usePostEditorStore((s) => s.metadata);
+    const uploadError = usePostEditorStore((s) => s.error);
 
     return (
-        <View className="flex-col items-start flex-1">
+        <View className="flex-1 flex-col items-start">
             {uploadError ? (
-                <Text className="text-red-500 text-sm">{uploadError}</Text>
+                <Text className="text-sm text-red-500">{uploadError}</Text>
             ) : (
-                <Text className="text-lg font-medium">
-                    {stateLabel(state)}
-                </Text>
+                <Text className="text-lg font-medium">{stateLabel(state)}</Text>
             )}
-            <Text variant="caption1" numberOfLines={1} className="text-muted-foreground">{metadata.caption}</Text>
+            <Text variant="caption1" numberOfLines={1} className="text-muted-foreground">
+                {metadata.caption}
+            </Text>
         </View>
     );
 }

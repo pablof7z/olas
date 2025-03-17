@@ -35,11 +35,13 @@ function getProfileCount(db: SQLiteDatabase): Row[] {
 
 function getUnpublishedEvents(db: SQLiteDatabase): Row[] {
     const data = db.getAllSync('SELECT * FROM unpublished_events') as { id: string; kind: number; content: string }[];
-    return [{
-        id: 'unpublished-events',
-        title: 'Unpublished events',
-        value: data.length.toString()
-    }]
+    return [
+        {
+            id: 'unpublished-events',
+            title: 'Unpublished events',
+            value: data.length.toString(),
+        },
+    ];
 }
 
 function getEventCount(db: SQLiteDatabase): Row[] {

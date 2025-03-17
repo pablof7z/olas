@@ -11,9 +11,7 @@ interface MentionStickerInputProps {
     onStickerAdded: () => void;
 }
 
-export default function MentionStickerInput({ 
-    onStickerAdded
-}: MentionStickerInputProps) {
+export default function MentionStickerInput({ onStickerAdded }: MentionStickerInputProps) {
     const { colors } = useColorScheme();
     const { addSticker } = useStickerStore();
     const [text, setText] = useState<string>('');
@@ -25,46 +23,47 @@ export default function MentionStickerInput({
         setShowSuggestions(true);
     };
 
-    const handleProfileSelect = useCallback((pubkey: Hexpubkey, profile: NDKUserProfile) => {
-        console.log('Profile selected:', profile);
-        console.log('User pubkey:', pubkey);
-        console.log('User profile:', profile);
-        
-        if (profile && pubkey) {
-            const stickerData = {
-                type: NDKStoryStickerType.Pubkey,
-                value: pubkey,
-                metadata: { profile: {...profile, pubkey} }
-            };
-            console.log('Creating mention sticker with profile:', profile);
-            
-            console.log('Adding sticker with data:', stickerData);
-            const stickerId = addSticker(stickerData);
-            console.log('Sticker added with ID:', stickerId);
-            
-            onStickerAdded();
-        } else {
-            console.error('Cannot create mention sticker: missing profile or pubkey', {
-                hasProfile: !!profile,
-                hasPubkey: !!pubkey
-            });
-        }
-    }, [addSticker, onStickerAdded]);
+    const handleProfileSelect = useCallback(
+        (pubkey: Hexpubkey, profile: NDKUserProfile) => {
+            console.log('Profile selected:', profile);
+            console.log('User pubkey:', pubkey);
+            console.log('User profile:', profile);
+
+            if (profile && pubkey) {
+                const stickerData = {
+                    type: NDKStoryStickerType.Pubkey,
+                    value: pubkey,
+                    metadata: { profile: { ...profile, pubkey } },
+                };
+                console.log('Creating mention sticker with profile:', profile);
+
+                console.log('Adding sticker with data:', stickerData);
+                const stickerId = addSticker(stickerData);
+                console.log('Sticker added with ID:', stickerId);
+
+                onStickerAdded();
+            } else {
+                console.error('Cannot create mention sticker: missing profile or pubkey', {
+                    hasProfile: !!profile,
+                    hasPubkey: !!pubkey,
+                });
+            }
+        },
+        [addSticker, onStickerAdded]
+    );
 
     return (
         <View style={styles.container}>
-            <Text style={[styles.label, { color: colors.foreground }]}>
-                Enter @ to mention someone
-            </Text>
+            <Text style={[styles.label, { color: colors.foreground }]}>Enter @ to mention someone</Text>
             <TextInput
                 ref={inputRef}
                 style={[
                     styles.input,
-                    { 
+                    {
                         backgroundColor: colors.card,
                         color: colors.foreground,
-                        borderColor: colors.grey3
-                    }
+                        borderColor: colors.grey3,
+                    },
                 ]}
                 value={text}
                 onChangeText={handleTextChange}
@@ -74,19 +73,17 @@ export default function MentionStickerInput({
                 autoCapitalize="none"
                 autoCorrect={false}
             />
-            
+
             {showSuggestions && (
-                <View style={[
-                    styles.suggestionsContainer,
-                    { 
-                        backgroundColor: colors.card,
-                        borderColor: colors.grey3
-                    }
-                ]}>
-                    <MentionSuggestions 
-                        query={text}
-                        onPress={handleProfileSelect}
-                    />
+                <View
+                    style={[
+                        styles.suggestionsContainer,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: colors.grey3,
+                        },
+                    ]}>
+                    <MentionSuggestions query={text} onPress={handleProfileSelect} />
                 </View>
             )}
         </View>
@@ -123,5 +120,5 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
-    }
-}); 
+    },
+});

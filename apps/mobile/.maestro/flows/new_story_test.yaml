@@ -2,34 +2,34 @@ appId: com.pablof7z.snapstr
 ---
 - launchApp
 - waitForAnimationToEnd:
-    timeout: 5000
+      timeout: 5000
 
 # Navigate to new story creation
 - tapOn:
-    id: "new-story-button"
-- assertVisible: "New Story"
+      id: 'new-story-button'
+- assertVisible: 'New Story'
 
 # Enter story text
 - tapOn:
-    id: "story-text-input"
-- inputText: "This is a test story created by Maestro"
+      id: 'story-text-input'
+- inputText: 'This is a test story created by Maestro'
 
 # Verify text was entered correctly
-- assertVisible: "This is a test story created by Maestro"
+- assertVisible: 'This is a test story created by Maestro'
 
 # Submit the story
 - tapOn:
-    id: "submit-story-button"
+      id: 'submit-story-button'
 
 # Verify success
 - waitForAnimationToEnd:
-    timeout: 3000
-- assertVisible: "Story posted successfully"
+      timeout: 3000
+- assertVisible: 'Story posted successfully'
 
 # Take screenshot of success state
 - takeScreenshot: new-story-success
 
 # Optional: Verify story appears in feed
 - tapOn:
-    id: "feed-tab"
-- assertVisible: "This is a test story created by Maestro" 
+      id: 'feed-tab'
+- assertVisible: 'This is a test story created by Maestro'

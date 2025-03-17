@@ -1,10 +1,21 @@
-import NDK, { NDKEvent, NDKFilter, NDKKind, NDKList, NDKRelay, NDKRelaySet, NDKSimpleGroupMemberList, NDKSimpleGroupMetadata, NDKSubscriptionCacheUsage, NDKUser, useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
-import { GroupStore } from ".";
+import NDK, {
+    NDKEvent,
+    NDKFilter,
+    NDKKind,
+    NDKList,
+    NDKRelay,
+    NDKRelaySet,
+    NDKSimpleGroupMemberList,
+    NDKSimpleGroupMetadata,
+    NDKSubscriptionCacheUsage,
+    NDKUser,
+    useNDK,
+    useNDKCurrentUser,
+} from '@nostr-dev-kit/ndk-mobile';
+import { GroupStore } from '.';
 
 export function loadMyGroups(ndk: NDK, currentUser: NDKUser, set: (state: GroupStore) => void) {
-    ndk.subscribe([
-        { kinds: [NDKKind.SimpleGroupList], authors: [currentUser.pubkey] }
-    ], undefined, undefined, {
+    ndk.subscribe([{ kinds: [NDKKind.SimpleGroupList], authors: [currentUser.pubkey] }], undefined, undefined, {
         onEvent: (event) => {
             const list = NDKList.from(event);
             const relays = new Map<string, string[]>();
@@ -18,11 +29,17 @@ export function loadMyGroups(ndk: NDK, currentUser: NDKUser, set: (state: GroupS
             relays.forEach((hTags, relay) => {
                 loadGroups(ndk, currentUser, relay, hTags, set);
             });
-        }
-    })
+        },
+    });
 }
 
-export function loadGroups(ndk: NDK, currentUser: NDKUser, relay: string, groupIds: string[] | undefined, set: (state: GroupStore) => void) {
+export function loadGroups(
+    ndk: NDK,
+    currentUser: NDKUser,
+    relay: string,
+    groupIds: string[] | undefined,
+    set: (state: GroupStore) => void
+) {
     const handleEvent = (event: NDKEvent, relay?: NDKRelay) => {
         const groupId = event.dTag;
         set((state: GroupStore) => {
@@ -55,14 +72,19 @@ export function loadGroups(ndk: NDK, currentUser: NDKUser, relay: string, groupI
     const relaySet = NDKRelaySet.fromRelayUrls([relay], ndk);
 
     const filters: NDKFilter[] = [{ kinds: [39000, 39002] }];
-    if (groupIds) filters[0]["#d"] = groupIds;
+    if (groupIds) filters[0]['#d'] = groupIds;
 
-    ndk.subscribe(filters, {
-        subId: 'groups-load',
-        groupable: false,
-        closeOnEose: true,
-        cacheUsage: NDKSubscriptionCacheUsage.PARALLEL
-    }, relaySet, {
-        onEvent: handleEvent
-    });
+    ndk.subscribe(
+        filters,
+        {
+            subId: 'groups-load',
+            groupable: false,
+            closeOnEose: true,
+            cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+        },
+        relaySet,
+        {
+            onEvent: handleEvent,
+        }
+    );
 }

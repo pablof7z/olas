@@ -9,10 +9,22 @@ export const skiaMatrixToRN = (m: SkMatrix): number[] => {
     // Use type assertion to access the matrix values
     const matrixArray = m as unknown as number[];
     return [
-        matrixArray[0], matrixArray[1], 0, matrixArray[2],
-        matrixArray[3], matrixArray[4], 0, matrixArray[5],
-        0, 0, 1, 0,
-        matrixArray[6], matrixArray[7], 0, matrixArray[8]
+        matrixArray[0],
+        matrixArray[1],
+        0,
+        matrixArray[2],
+        matrixArray[3],
+        matrixArray[4],
+        0,
+        matrixArray[5],
+        0,
+        0,
+        1,
+        0,
+        matrixArray[6],
+        matrixArray[7],
+        0,
+        matrixArray[8],
     ];
 };
 
@@ -36,7 +48,7 @@ export const scale = (matrix: SkMatrix, factor: number, pivotX: number, pivotY: 
     m.translate(pivotX, pivotY);
     m.scale(factor, factor);
     m.translate(-pivotX, -pivotY);
-    
+
     const result = Skia.Matrix();
     result.concat(matrix);
     result.concat(m);
@@ -51,7 +63,7 @@ export const rotate = (matrix: SkMatrix, angle: number, pivotX: number, pivotY: 
     m.translate(pivotX, pivotY);
     m.rotate(angle);
     m.translate(-pivotX, -pivotY);
-    
+
     const result = Skia.Matrix();
     result.concat(matrix);
     result.concat(m);
@@ -61,15 +73,15 @@ export const rotate = (matrix: SkMatrix, angle: number, pivotX: number, pivotY: 
 /**
  * Creates a matrix buffer for efficient animations without creating new objects
  */
-export const createMatrixBuffer = (): { 
-    current: SkMatrix; 
-    buffer: SkMatrix; 
+export const createMatrixBuffer = (): {
+    current: SkMatrix;
+    buffer: SkMatrix;
     swap: () => void;
 } => {
     const a = Skia.Matrix();
     const b = Skia.Matrix();
     let useCurrent = true;
-    
+
     return {
         get current() {
             return useCurrent ? a : b;
@@ -79,7 +91,7 @@ export const createMatrixBuffer = (): {
         },
         swap: () => {
             useCurrent = !useCurrent;
-        }
+        },
     };
 };
 
@@ -87,18 +99,18 @@ export const createMatrixBuffer = (): {
  * Fits an element with specified dimensions into a destination rect
  */
 export const fitBox = (
-    srcWidth: number, 
-    srcHeight: number, 
-    dstWidth: number, 
+    srcWidth: number,
+    srcHeight: number,
+    dstWidth: number,
     dstHeight: number
 ): { scale: number; x: number; y: number } => {
     const aspectRatio = srcWidth / srcHeight;
     const containerRatio = dstWidth / dstHeight;
-    
+
     let scale: number;
     let x: number;
     let y: number;
-    
+
     if (aspectRatio > containerRatio) {
         // Source is wider than container
         scale = dstWidth / srcWidth;
@@ -110,6 +122,6 @@ export const fitBox = (
         x = (dstWidth - srcWidth * scale) / 2;
         y = 0;
     }
-    
+
     return { scale, x, y };
-}; 
+};

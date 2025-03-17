@@ -16,4 +16,4 @@ export const activeEventStore = create<ActiveEventStoreState>((set) => ({
 
 export const useActiveEventStore = () => {
     return useStore(activeEventStore);
-}
+};

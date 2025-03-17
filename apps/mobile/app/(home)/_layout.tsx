@@ -17,13 +17,7 @@ import { Button } from '@/components/nativewindui/Button';
 import { scrollDirAtom } from '@/components/Feed/store';
 import { Animated, Platform, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Reanimated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withSpring,
-    interpolate,
-    runOnJS,
-} from 'react-native-reanimated';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, interpolate, runOnJS } from 'react-native-reanimated';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -31,7 +25,7 @@ export default function TabsLayout() {
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const tabBarAnim = useSharedValue(0);
 
-    const openPickerIfEmpty = usePostEditorStore(s => s.openPickerIfEmpty);
+    const openPickerIfEmpty = usePostEditorStore((s) => s.openPickerIfEmpty);
 
     // Create a ref that we can safely pass to useScrollToTop
     const safeScrollRef = useMemo(() => {
@@ -56,17 +50,15 @@ export default function TabsLayout() {
     }, [scrollDir]);
 
     const isReels = usePathname() === '/reels';
-    
+
     // Create animated style using Reanimated
     const animatedTabBarStyle = useAnimatedStyle(() => {
         return {
-            transform: [{
-                translateY: interpolate(
-                    tabBarAnim.value,
-                    [0, 1],
-                    [0, 100]
-                )
-            }],
+            transform: [
+                {
+                    translateY: interpolate(tabBarAnim.value, [0, 1], [0, 100]),
+                },
+            ],
         };
     });
 
@@ -82,22 +74,14 @@ export default function TabsLayout() {
             return {
                 tabBarActiveTintColor: 'white',
                 tabBarInactiveTintColor: 'white',
-                tabBarStyle: [
-                    baseStyle,
-                    { backgroundColor: 'black' },
-                    animatedTabBarStyle
-                ]
-            }
+                tabBarStyle: [baseStyle, { backgroundColor: 'black' }, animatedTabBarStyle],
+            };
         } else {
             return {
                 tabBarActiveTintColor: colors.foreground,
                 tabBarInactiveTintColor: colors.foreground,
-                tabBarStyle: [
-                    baseStyle,
-                    { backgroundColor: colors.card },
-                    animatedTabBarStyle
-                ]
-            }
+                tabBarStyle: [baseStyle, { backgroundColor: colors.card }, animatedTabBarStyle],
+            };
         }
     }, [isReels, colors, animatedTabBarStyle]);
 
@@ -106,7 +90,7 @@ export default function TabsLayout() {
             screenOptions={{
                 headerShown: true,
                 tabBarShowLabel: false,
-                ...screenOptions
+                ...screenOptions,
             }}>
             <Tabs.Screen
                 name="index"
@@ -117,13 +101,15 @@ export default function TabsLayout() {
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />,
                 }}
-                listeners={{
-                    // tabPress: (e) => {
-                    //     if (scrollRef.current) {
-                    //         scrollRef.current.scrollToOffset({ offset: 0, animated: true });
-                    //     }
-                    // },
-                }}
+                listeners={
+                    {
+                        // tabPress: (e) => {
+                        //     if (scrollRef.current) {
+                        //         scrollRef.current.scrollToOffset({ offset: 0, animated: true });
+                        //     }
+                        // },
+                    }
+                }
             />
 
             <Tabs.Screen
@@ -131,9 +117,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Reels',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} color={color} />
-                    ),
+                    tabBarIcon: ({ color, focused }) => <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} color={color} />,
                 }}
             />
 
@@ -160,9 +144,7 @@ export default function TabsLayout() {
                 }}
                 options={{
                     title: 'Publish',
-                    tabBarIcon: ({ color, focused }) => (
-                        <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />
-                    ),
+                    tabBarIcon: ({ color, focused }) => <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />,
                 }}
             />
 
@@ -172,9 +154,7 @@ export default function TabsLayout() {
                     options={{
                         title: 'Wallets',
                         headerShown: false,
-                        tabBarIcon: ({ color, focused }) => (
-                            <WalletButton size={24} focused={focused} color={color} />
-                        ),
+                        tabBarIcon: ({ color, focused }) => <WalletButton size={24} focused={focused} color={color} />,
                     }}
                 />
             ) : null}
@@ -184,9 +164,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Settings',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        <UserButton size={24} />
-                    )
+                    tabBarIcon: ({ color, focused }) => <UserButton size={24} />,
                 }}
                 listeners={{
                     tabPress: (e) => {
@@ -196,13 +174,12 @@ export default function TabsLayout() {
                         } else {
                             router.push('/(home)/(settings)');
                         }
-                    }
+                    },
                 }}
             />
         </Tabs>
     );
 }
-
 
 function UserButton({ size = 32 }: { size?: number }) {
     const currentUser = useNDKCurrentUser();
@@ -211,10 +188,17 @@ function UserButton({ size = 32 }: { size?: number }) {
     const userFlare = useUserFlare(currentUser?.pubkey);
 
     if (currentUser) {
-        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={size} flare={userFlare} canSkipBorder={true} borderWidth={1} />
+        return (
+            <UserAvatar
+                pubkey={currentUser.pubkey}
+                userProfile={userProfile}
+                imageSize={size}
+                flare={userFlare}
+                canSkipBorder={true}
+                borderWidth={1}
+            />
+        );
     }
-    
-    return (
-        <UserCircle2 size={size} color={colors.foreground} strokeWidth={2} />
-    )
+
+    return <UserCircle2 size={size} color={colors.foreground} strokeWidth={2} />;
 }

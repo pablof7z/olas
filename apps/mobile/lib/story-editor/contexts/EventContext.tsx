@@ -35,13 +35,14 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     }, [eventStartTime]);
 
     return (
-        <EventContext.Provider value={{
-            eventStartTime,
-            setEventStartTime,
-            displayOption,
-            setDisplayOption,
-            dateString
-        }}>
+        <EventContext.Provider
+            value={{
+                eventStartTime,
+                setEventStartTime,
+                displayOption,
+                setDisplayOption,
+                dateString,
+            }}>
             {children}
         </EventContext.Provider>
     );
@@ -54,7 +55,7 @@ export const useEventStartTime = () => {
         setEventStartTime: context.setEventStartTime,
         displayOption: context.displayOption,
         setDisplayOption: context.setDisplayOption,
-        dateString: context.dateString
+        dateString: context.dateString,
     };
 };
 
@@ -101,4 +102,4 @@ export const useEventCountdown = (targetDate: Date | null): string => {
     }, [targetDate]);
 
     return countdown;
-}; 
+};

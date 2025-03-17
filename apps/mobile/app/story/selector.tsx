@@ -35,16 +35,16 @@ export default function MediaSelector() {
     const handleSelect = async (asset: MediaLibrary.Asset) => {
         // For iOS photo assets, we need to ensure the ID is properly formatted
         // The asset uri from MediaLibrary is already in correct format for display
-        
+
         // Get the full asset info to make sure we have all the data we need
         const assetInfo = await MediaLibrary.getAssetInfoAsync(asset.id);
-        
+
         router.push({
-            pathname: "/story/preview" as const,
-            params: { 
-                path: assetInfo.localUri, 
+            pathname: '/story/preview' as const,
+            params: {
+                path: assetInfo.localUri,
                 type: 'photo',
-            }
+            },
         });
     };
 
@@ -78,15 +78,8 @@ export default function MediaSelector() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() => handleSelect(item)}
-                        style={[
-                            styles.imageContainer,
-                            { width: itemSize, height: itemSize / aspectRatio }
-                        ]}
-                    >
-                        <Image
-                            source={{ uri: item.uri }}
-                            style={styles.image}
-                        />
+                        style={[styles.imageContainer, { width: itemSize, height: itemSize / aspectRatio }]}>
+                        <Image source={{ uri: item.uri }} style={styles.image} />
                     </TouchableOpacity>
                 )}
             />
@@ -124,4 +117,3 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
-

@@ -7,7 +7,21 @@ import { router } from 'expo-router';
 import { Text } from '@/components/nativewindui/Text';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 
-export default function Comment({ event, inactiveColor, foregroundColor, iconSize = 18, commentedByUser, commentCount }: { event: NDKEvent, inactiveColor: string, foregroundColor?: string, iconSize?: number, commentedByUser?: boolean, commentCount?: number }) {
+export default function Comment({
+    event,
+    inactiveColor,
+    foregroundColor,
+    iconSize = 18,
+    commentedByUser,
+    commentCount,
+}: {
+    event: NDKEvent;
+    inactiveColor: string;
+    foregroundColor?: string;
+    iconSize?: number;
+    commentedByUser?: boolean;
+    commentCount?: number;
+}) {
     const openComment = useCommentBottomSheet();
 
     const comment = () => {
@@ -19,13 +33,9 @@ export default function Comment({ event, inactiveColor, foregroundColor, iconSiz
             <TouchableOpacity onPress={comment}>
                 <MessageCircle size={iconSize} color={commentedByUser ? foregroundColor : inactiveColor} />
             </TouchableOpacity>
-            {commentCount > 0 && (
-                <Text style={[styles.text, { color: inactiveColor }]}>
-                    {commentCount}
-                </Text>
-            )}
+            {commentCount > 0 && <Text style={[styles.text, { color: inactiveColor }]}>{commentCount}</Text>}
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -38,5 +48,5 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 14,
         fontWeight: 'semibold',
-    }
+    },
 });

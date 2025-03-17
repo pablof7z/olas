@@ -33,7 +33,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
 
         // hide keyboard
         Keyboard.dismiss();
-        
+
         if (activeWallet instanceof NDKCashuWallet) {
             const deposit = (activeWallet as NDKCashuWallet).deposit(amount, selectedMint);
 
@@ -51,7 +51,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
             }
         } else if (activeWallet instanceof NDKNWCWallet) {
             console.log('activeWallet', activeWallet);
-            const res = await activeWallet.makeInvoice(amount * 1000, "deposit");
+            const res = await activeWallet.makeInvoice(amount * 1000, 'deposit');
             console.log('res', res);
             setBolt11(res.invoice);
         } else {
@@ -63,11 +63,13 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
     const copyToClipboard = useCallback(async () => {
         await Clipboard.setStringAsync(bolt11);
         setCopied(true);
-        setTimeout(() => { setCopied(false); }, 2000);
+        setTimeout(() => {
+            setCopied(false);
+        }, 2000);
     }, [bolt11]);
 
     let unit = activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
-    
+
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
             <TextInput
@@ -80,7 +82,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
             />
 
             {bolt11 ? ( // Conditionally render QR code
-                <View className="px-4 flex-col gap-4 w-full items-stretch justify-center">
+                <View className="w-full flex-col items-stretch justify-center gap-4 px-4">
                     <View style={styles.qrCodeContainer}>
                         <QRCode value={bolt11} size={350} />
                     </View>
@@ -94,8 +96,8 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                     <WalletBalance amount={amount} unit={unit} onPress={() => inputRef.current?.focus()} />
                     <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                         <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                        
+                    </TouchableOpacity>
+
                     {activeWallet instanceof NDKCashuWallet && <MintSelector wallet={activeWallet as NDKCashuWallet} />}
                 </>
             )}
@@ -112,14 +114,13 @@ function MintSelector({ wallet }: { wallet: NDKCashuWallet }) {
         }
     }, [wallet?.walletId]);
 
-    
     return (
         <Picker selectedValue={selectedMint} onValueChange={(itemValue) => setSelectedMint(itemValue)} style={styles.picker}>
             {wallet.mints.map((mint, index) => (
                 <Picker.Item key={index} label={mint} value={mint} />
             ))}
         </Picker>
-    )
+    );
 }
 
 const styles = StyleSheet.create({

@@ -85,7 +85,7 @@ const styles: MentionStickerStyle[] = [
         },
     },
     {
-        name: 'Ghost',  
+        name: 'Ghost',
         containerStyle: {
             backgroundColor: 'transparent',
             borderWidth: 8,
@@ -102,15 +102,15 @@ const styles: MentionStickerStyle[] = [
     },
 ];
 
-export default styles; 
+export default styles;
 
 export function getStyleFromName(name?: string): MentionStickerStyle {
     if (!name) return styles[0];
-    return styles.find(style => style.name === name) || styles[0];
+    return styles.find((style) => style.name === name) || styles[0];
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
     if (!currentStyleName) return styles[1].name;
-    const index = styles.findIndex(style => style.name === currentStyleName);
+    const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
 }

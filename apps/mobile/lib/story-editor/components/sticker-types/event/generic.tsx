@@ -1,34 +1,43 @@
 import { NDKEvent, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
 import * as User from '@/components/ui/user';
-import { View, StyleSheet, TextStyle } from 'react-native';
+import { View, StyleSheet, TextStyle, Dimensions } from 'react-native';
 import EventContent from '@/components/ui/event/content';
 import { UserProfile } from "@/hooks/user-profile";
+import { EventStickerStyle } from "./styles";
 
-export default function EventStickerGeneric({ event, userProfile, textStyle }: { event: NDKEvent, userProfile: UserProfile, textStyle: TextStyle }) {
+const width = Dimensions.get('window').width;
+
+export default function EventStickerGeneric({ event, userProfile, styles }: { event: NDKEvent, userProfile?: UserProfile, styles: EventStickerStyle }) {
     return (
-        <View>
-            <View style={styles.userContainer}>
-                <User.Avatar 
-                    pubkey={event.pubkey}
-                    userProfile={userProfile}
-                    imageSize={32}
-                    style={styles.icon}
-                />
-                <User.Name 
-                    userProfile={userProfile} 
-                    pubkey={event.pubkey} 
-                    style={textStyle}
-                />
-            </View>
+        <View style={{width: width}}>
+            {styles.author && (
+                <View style={_styles.userContainer}>
+                    {styles.author.avatarStyle && (
+                        <User.Avatar
+                            pubkey={event.pubkey}
+                            userProfile={userProfile}
+                            imageSize={styles.author.avatarStyle.width as number}
+                            style={[_styles.icon, styles.author.avatarStyle]}
+                        />
+                    )}
+                    {styles.author.nameStyle && (
+                        <User.Name
+                            userProfile={userProfile}
+                            pubkey={event.pubkey}
+                            style={styles.author.nameStyle}
+                        />
+                    )}
+                </View>
+            )}
             <EventContent 
                 event={event}
-                style={textStyle}
+                style={[_styles.text, styles.text]}
             />
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const _styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',

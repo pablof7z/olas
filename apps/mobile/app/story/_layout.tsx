@@ -8,8 +8,7 @@ export default function StoryLayout() {
                 headerShown: false,
                 contentStyle: { backgroundColor: 'black' },
                 animation: 'fade',
-            }}
-        >
+            }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="selector" />
             <Stack.Screen name="preview" />

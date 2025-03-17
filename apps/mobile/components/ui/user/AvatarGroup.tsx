@@ -18,18 +18,10 @@ const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: 
             height: avatarSize,
             width: avatarSize,
             marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
-        }
+        };
     }, [avatarSize, index]);
 
-    return (
-        <User.Avatar
-            pubkey={pubkey}
-            userProfile={userProfile}
-            alt={pubkey}
-            style={style}
-            imageSize={avatarSize}
-        />
-    );
+    return <User.Avatar pubkey={pubkey} userProfile={userProfile} alt={pubkey} style={style} imageSize={avatarSize} />;
 };
 
 /**

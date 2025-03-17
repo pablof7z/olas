@@ -1,9 +1,9 @@
-import { db } from ".";
+import { db } from '.';
 
 export type RelayEntry = {
     url: string;
     connect: boolean;
-}
+};
 
 export function getRelays(): RelayEntry[] {
     const relays = db.getAllSync('SELECT * FROM relays') as RelayEntry[];

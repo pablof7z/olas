@@ -25,7 +25,7 @@ export default function MediaComponent({
     imeta: NDKImetaTag;
     maxWidth?: number;
     maxHeight?: number;
-    priority?: 'low' | 'normal' | 'high',
+    priority?: 'low' | 'normal' | 'high';
     onPress?: () => void;
     forceProxy?: boolean;
     onLongPress?: () => void;
@@ -37,13 +37,8 @@ export default function MediaComponent({
     style?: StyleProp<ViewStyle>;
     autoplay?: boolean;
 }) {
-    const forceDimensions= width && height ? { width, height } : undefined;
-    const {
-        url,
-        blurhash,
-        dim,
-        dimensions,
-    } = useMemo(() => {
+    const forceDimensions = width && height ? { width, height } : undefined;
+    const { url, blurhash, dim, dimensions } = useMemo(() => {
         const { url, blurhash, dim } = imeta;
         const dimensions = dim?.split('x').map(Number) ?? undefined;
         const validDimensions = dimensions && dimensions[0] && dimensions[1] ? { width: dimensions[0], height: dimensions[1] } : undefined;
@@ -53,7 +48,7 @@ export default function MediaComponent({
             blurhash,
             dim,
             dimensions: validDimensions,
-        }
+        };
     }, [imeta]);
 
     if (urlIsVideo(url)) {

@@ -13,7 +13,7 @@ export default function SettingsLayout() {
                 headerShown: true,
                 headerTintColor: Platform.OS === 'ios' ? undefined : colors.foreground,
                 contentStyle: {
-                    paddingBottom: bottomHeight
+                    paddingBottom: bottomHeight,
                 },
             }}>
             <Stack.Screen name="index" />

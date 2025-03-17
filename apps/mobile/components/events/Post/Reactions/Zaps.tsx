@@ -1,19 +1,29 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, StyleSheet, Pressable, Dimensions } from "react-native";
-import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useAppSettingsStore } from "@/stores/app";
-import Lightning from "@/components/icons/lightning";
-import { useZapperModal } from "@/lib/zapper/hook";
-import { useZap } from "@/hooks/zap";
-import { usePaymentStore } from "@/stores/payments";
-import { ZapModal } from "@/components/ZapModal";
-import { X } from "lucide-react-native";
-import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useAppSettingsStore } from '@/stores/app';
+import Lightning from '@/components/icons/lightning';
+import { useZapperModal } from '@/lib/zapper/hook';
+import { useZap } from '@/hooks/zap';
+import { usePaymentStore } from '@/stores/payments';
+import { ZapModal } from '@/components/ZapModal';
+import { X } from 'lucide-react-native';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
-export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor }: { event?: NDKEvent, inactiveColor: string, iconSize?: number, growthFactor?: number }) {
+export default function Zaps({
+    event,
+    inactiveColor,
+    iconSize = 18,
+    growthFactor,
+}: {
+    event?: NDKEvent;
+    inactiveColor: string;
+    iconSize?: number;
+    growthFactor?: number;
+}) {
     const cancelZapRef = useRef<() => void | null>(null);
-    const paymentEntry = usePaymentStore((s) => s.entries.get(event?.tagId() ?? ""));
+    const paymentEntry = usePaymentStore((s) => s.entries.get(event?.tagId() ?? ''));
     const defaultZap = useAppSettingsStore((s) => s.defaultZap);
     const sendZap = useZap();
     const openZapperModal = useZapperModal();
@@ -27,7 +37,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
 
     const yoloZaps = useAppSettingsStore((s) => s.yoloZaps);
     const yoloZapsGrowthFactor = useAppSettingsStore((s) => s.yoloZapsGrowthFactor);
-    
+
     growthFactor ??= yoloZapsGrowthFactor;
 
     useEffect(() => {
@@ -46,7 +56,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
                     setTimeout(() => setShowCancel(false), 2500);
                 }
             } catch (error) {
-                console.error("Error in sendZapWithAmount:", error);
+                console.error('Error in sendZapWithAmount:', error);
             }
         },
         [event?.id, sendZap]
@@ -72,7 +82,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
         openZapperModal(event);
     }, [event?.id]);
 
-    const color = (paymentEntry && paymentEntry.zapCountByCurrentUser > 0) ? "orange" : inactiveColor;
+    const color = paymentEntry && paymentEntry.zapCountByCurrentUser > 0 ? 'orange' : inactiveColor;
     const [modalVisible, setModalVisible] = useState(false);
     const [explode, setExplosion] = useState(false);
 
@@ -81,7 +91,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
         transform: [{ scale: buttonIconAnim.value }],
     }));
 
-    const cancelPoint = useMemo(() => Dimensions.get("window").height * 0.9, []);
+    const cancelPoint = useMemo(() => Dimensions.get('window').height * 0.9, []);
 
     const panGesture = Gesture.Pan()
         .onStart(() => {
@@ -105,7 +115,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
                 const absX = Math.abs(evt.changeX);
                 const absY = Math.abs(evt.changeY);
 
-                const isHorizontal = absX > (absY / 2);
+                const isHorizontal = absX > absY / 2;
 
                 if (isHorizontal) {
                     newVal -= Math.pow(absX, growthFactor);
@@ -174,7 +184,7 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
                             size={iconSize}
                             stroke={color}
                             strokeWidth={2}
-                            fill={paymentEntry?.zapCountByCurrentUser > 0 ? color : "none"}
+                            fill={paymentEntry?.zapCountByCurrentUser > 0 ? color : 'none'}
                         />
                     </View>
                 </GestureDetector>
@@ -194,8 +204,8 @@ export default function Zaps({ event, inactiveColor, iconSize = 18, growthFactor
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 6,
     },
 });
