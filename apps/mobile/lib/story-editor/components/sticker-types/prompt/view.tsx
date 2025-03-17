@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Sticker } from '@/lib/story-editor/store';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { getStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import promptStyles from './styles';
 

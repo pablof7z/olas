@@ -12,45 +12,32 @@ import {
     TextStickerView, 
     CountdownStickerView, 
     MentionStickerView,
-    NostrFilterStickerView,
     PromptStickerView
 } from './sticker-types';
-import { NDKStoryStickerType } from '../types';
-import { getNextStyleId } from '../styles/stickerStyles';
+import { useStickerStore } from '../store';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
 interface StickerProps {
     sticker: StickerType;
     onUpdate: (transform: StickerType['transform']) => void;
     onSelect: () => void;
-    onStyleChange: (styleId: string) => void;
-    isSelected: boolean;
 }
 
 // Define styles using StyleSheet.create
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-    },
-    selectionIndicator: {
-        position: 'absolute',
-        top: -4,
-        left: -4,
-        right: -4,
-        bottom: -4,
-        borderWidth: 2,
-        borderColor: '#4a8cff',
-        borderRadius: 20,
-        borderStyle: 'dashed',
-    },
+    }
 });
 
 export default function Sticker({ 
     sticker, 
     onUpdate, 
     onSelect, 
-    onStyleChange,
-    isSelected 
 }: StickerProps) {
+    // Get the nextStyle function from the store
+    const nextStyle = useStickerStore(state => state.nextStyle);
+    
     // Shared values for transformations
     const translateX = useSharedValue(sticker.transform.translateX);
     const translateY = useSharedValue(sticker.transform.translateY);
@@ -61,14 +48,12 @@ export default function Sticker({
     const savedScale = useSharedValue(sticker.transform.scale);
     const savedRotate = useSharedValue(sticker.transform.rotate);
 
-    // Handle style change outside of the gesture handler
-    const handleDoubleDoubleTap = useCallback(() => {
-        // Get the next style ID for this sticker type
-        const nextStyleId = getNextStyleId(sticker.type, sticker.styleId);
-        if (nextStyleId) {
-            onStyleChange(nextStyleId);
-        }
-    }, [sticker.type, sticker.styleId, onStyleChange]);
+    // Handle style change using the store's nextStyle function
+    const handleDoubleDoubleTap = () => {
+        console.log('handleDoubleDoubleTap', sticker.id);
+        // Use the store's nextStyle function to update the style
+        nextStyle(sticker.id);
+    };
 
     // Pan gesture for translation
     const panGesture = Gesture.Pan()
@@ -180,10 +165,6 @@ export default function Sticker({
                 return <EventStickerView sticker={sticker} />;
             case NDKStoryStickerType.Countdown:
                 return <CountdownStickerView sticker={sticker} />;
-            case NDKStoryStickerType.Mention:
-                return <MentionStickerView sticker={sticker} />;
-            case NDKStoryStickerType.NostrFilter:
-                return <NostrFilterStickerView sticker={sticker} />;
             case NDKStoryStickerType.Prompt:
                 return <PromptStickerView sticker={sticker} />;
             default:
@@ -194,7 +175,6 @@ export default function Sticker({
     return (
         <GestureDetector gesture={gesture}>
             <View style={styles.container}>
-                {isSelected && <View style={styles.selectionIndicator} />}
                 <Animated.View style={animatedStyle}>
                     {renderContent()}
                 </Animated.View>

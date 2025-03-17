@@ -1,9 +1,47 @@
-import { StickerStyle } from '@/lib/story-editor/types';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { BaseStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import { registerStickerStyles } from '@/lib/story-editor/styles/stickerStyles';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+// Define PromptStickerStyle interface
+export interface PromptStickerStyle extends BaseStickerStyle {
+    // Flat properties for backward compatibility
+    backgroundColor?: string;
+    backgroundOpacity?: number;
+    borderWidth?: number;
+    borderColor?: string;
+    borderRadius?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted';
+    color?: string;
+    fontSize?: number;
+    fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+    fontStyle?: 'normal' | 'italic';
+    textShadowColor?: string;
+    textShadowOffset?: { width: number; height: number };
+    textShadowRadius?: number;
+    elevation?: number;
+    shadowColor?: string;
+    shadowOffset?: { width: number; height: number };
+    shadowOpacity?: number;
+    shadowRadius?: number;
+    iconColor?: string;
+    
+    // Nested structure
+    style?: {
+        text: any;
+        container: any;
+        input: any;
+        button: any;
+        gradient?: {
+            colors: [string, string] | [string, string, string];
+            start?: { x: number; y: number };
+            end?: { x: number; y: number };
+        };
+    };
+    fontFamily?: string;
+}
 
 // Define 10 different styles for prompt stickers
-const promptStickerStyles: StickerStyle[] = [
+const promptStickerStyles: PromptStickerStyle[] = [
     {
         id: 'default',
         name: 'Default',

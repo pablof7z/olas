@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Sticker } from '@/lib/story-editor/store';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { NDKKind, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { getStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import eventStyles from './styles';
-import EventContent from '@/components/ui/event/content';
 import { NDKEvent, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
+import { useColorScheme } from '@/lib/useColorScheme';
+import Generic from './generic';
+import Kind30402 from './kind30402';
 
 interface EventStickerViewProps {
     sticker: Sticker;
 }
 
 export default function EventStickerView({ sticker }: EventStickerViewProps) {
-    const eventId = sticker.metadata?.eventId || '';
-    const shortEventId = eventId.substring(0, 8) + '...';
+    const eventId = sticker.value;
     
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStickerStyle(NDKStoryStickerType.Event, sticker.styleId) || eventStyles[0];
@@ -47,74 +47,42 @@ export default function EventStickerView({ sticker }: EventStickerViewProps) {
         textShadowOffset: selectedStyle.textShadowOffset,
         textShadowRadius: selectedStyle.textShadowRadius,
     };
-    
-    // Icon color from the style
-    const iconColor = selectedStyle.iconColor || 'white';
 
     const { ndk } = useNDK();
 
-    const [ event, setEvent ] = useState<NDKEvent | null>(null);
+    const [ event, setEvent ] = useState<NDKEvent | null>(sticker.metadata?.event || null);
     const { userProfile } = useUserProfile(event?.pubkey);
 
+    const { colors } = useColorScheme();
+
     useEffect(() => {
-        if (!ndk || !eventId) return;
+        if (!ndk || sticker?.metadata?.event || !eventId) return;
         const fetchEvent = async () => {
             const event = await ndk.fetchEvent(eventId);
             setEvent(event);
         };
         fetchEvent();
-    }, [ndk, eventId]);
+    }, [ndk, eventId, sticker.metadata?.event]);
+
+    const renderEventContent = useCallback(() => {
+        if (!event) return null;
+        console.log(event.kind);
+        switch (event.kind) {
+            case NDKKind.Classified: return <Kind30402 event={event} userProfile={userProfile} textStyle={textStyle} />;
+            default: return <Generic event={event} userProfile={userProfile} textStyle={textStyle} />
+        }
+    }, [event, textStyle]);
     
     return (
         <View style={containerStyle}>
             {event ? (
                 <>
-                        <View style={styles.userContainer}>
-                            <User.Avatar 
-                                pubkey={event.pubkey}
-                                userProfile={userProfile}
-                                imageSize={32}
-                                style={styles.icon}
-                            />
-                            <User.Name 
-                                userProfile={userProfile} 
-                                pubkey={event.pubkey} 
-                                style={textStyle}
-                            />
-                        </View>
-                    <EventContent 
-                        event={event}
-                        style={textStyle}
-                    />
+                    {renderEventContent()}
                 </>
             ) : (
-                <Text style={textStyle}>
-                    {sticker.content || `Event2: ${shortEventId}`}
-                </Text>
+                <ActivityIndicator size="small" color={colors.foreground} />
             )}
         </View>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 16,
-    },
-    userContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    icon: {
-        marginRight: 6,
-    },
-    text: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-}); 

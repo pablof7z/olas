@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '../../../types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
 interface PromptStickerInputProps {
     onStickerAdded: () => void;
@@ -24,7 +24,7 @@ export default function PromptStickerInput({ onStickerAdded }: PromptStickerInpu
 
         addSticker({
             type: NDKStoryStickerType.Prompt,
-            content: promptText,
+            value: promptText,
             styleId: 'default'
         });
         onStickerAdded();

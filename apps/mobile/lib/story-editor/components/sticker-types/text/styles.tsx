@@ -1,123 +1,283 @@
-import { StickerStyle } from '@/lib/story-editor/types';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
-import { registerStickerStyles } from '@/lib/story-editor/styles/stickerStyles';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { TextStyle, View, ViewStyle } from 'react-native';
 
-// Define 10 different styles for text stickers
-const textStickerStyles: StickerStyle[] = [
+interface SkiaConfig {
+    colors: string[];
+    type: 'text' | 'background';
+    start: { x: number; y: number };
+    end: { x: number; y: number };
+    blur?: number;
+}
+
+// Define the TextStickerStyle interface
+export interface TextStickerStyle {
+    name: string;
+    container: ViewStyle;
+    text: TextStyle;
+    useSkia?: boolean;
+    skiaConfig?: SkiaConfig;
+    fontFamily?: string;
+}
+
+// Define styles for text stickers with nested structure
+const textStickerStyles: TextStickerStyle[] = [
     {
-        id: 'default',
         name: 'Default',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: 16,
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: 16,
+            padding: 12,
+        },
+        text: {
+            color: 'white',
+            fontSize: 16,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'neon',
         name: 'Neon',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        borderRadius: 16,
-        color: '#0ff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        textShadowColor: '#0ff',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 10,
+        container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderRadius: 16,
+            padding: 12,
+        },
+        text: {
+            color: '#0ff',
+            fontSize: 18,
+            fontWeight: 'bold',
+            textShadowColor: '#0ff',
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 10,
+            textAlign: 'center',
+        },
     },
     {
-        id: 'minimal',
         name: 'Minimal',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 8,
-        color: '#000',
-        fontSize: 16,
-        fontWeight: 'normal',
+        container: {
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: 8,
+            padding: 12,
+        },
+        text: {
+            color: '#000',
+            fontSize: 16,
+            fontWeight: 'normal',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'retro',
         name: 'Retro',
-        backgroundColor: 'rgba(255, 220, 0, 0.8)',
-        borderRadius: 0,
-        borderWidth: 2,
-        borderColor: '#000',
-        color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
-        fontStyle: 'italic',
+        container: {
+            backgroundColor: 'rgba(255, 220, 0, 0.8)',
+            borderRadius: 8,
+            borderWidth: 2,
+            borderColor: '#000',
+            padding: 12,
+        },
+        text: {
+            color: '#000',
+            fontSize: 16,
+            fontWeight: 'bold',
+            fontStyle: 'italic',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'glitch',
         name: 'Glitch',
-        backgroundColor: 'rgba(255, 0, 128, 0.7)',
-        borderRadius: 4,
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        textShadowColor: '#0ff',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 0,
+        container: {
+            backgroundColor: 'rgba(255, 0, 128, 0.7)',
+            borderRadius: 8,
+            padding: 12,
+        },
+        text: {
+            color: '#fff',
+            fontSize: 18,
+            fontWeight: 'bold',
+            textShadowColor: '#0ff',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 0,
+            textAlign: 'center',
+        },
     },
     {
-        id: 'bubble',
         name: 'Bubble',
-        backgroundColor: 'rgba(100, 200, 255, 0.8)',
-        borderRadius: 24,
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
+        container: {
+            backgroundColor: 'rgba(100, 200, 255, 0.8)',
+            borderRadius: 24,
+            padding: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+        },
+        text: {
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'outline',
         name: 'Outline',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: '#fff',
-        borderRadius: 16,
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'normal',
+        container: {
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderColor: '#fff',
+            borderRadius: 16,
+            padding: 12,
+        },
+        text: {
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 'normal',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'paper',
         name: 'Paper',
-        backgroundColor: 'rgba(255, 252, 235, 0.9)',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#d0c8b0',
-        color: '#6d4c41',
-        fontSize: 16,
-        fontWeight: 'normal',
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        container: {
+            backgroundColor: 'rgba(255, 252, 235, 0.9)',
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: '#d0c8b0',
+            padding: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 2, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+        },
+        text: {
+            color: '#6d4c41',
+            fontSize: 16,
+            fontWeight: 'normal',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'gradient',
-        name: 'Gradient',
-        backgroundColor: 'rgba(120, 0, 255, 0.7)',
-        borderRadius: 16,
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+        name: 'Gradient BG',
+        container: {
+            backgroundGradient: {
+                colors: ['rgba(120, 0, 255, 0.7)', 'rgba(60, 0, 128, 0.7)'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
+            borderRadius: 12,
+            padding: 12,
+        },
+        text: {
+            color: '#fff',
+            fontSize: 18,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
     },
     {
-        id: 'typed',
         name: 'Typewriter',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        borderRadius: 4,
-        color: '#7FFF00',
-        fontSize: 14,
-        fontWeight: '400',
+        container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderRadius: 8,
+            padding: 12,
+        },
+        text: {
+            color: '#7FFF00',
+            fontSize: 14,
+            fontWeight: '400',
+            textAlign: 'center',
+        },
+    },
+    {
+        name: 'Rainbow',
+        container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: 12,
+            padding: 12,
+        },
+        text: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
+        useSkia: true,
+        skiaConfig: {
+            colors: ['#FF0000', '#FFA500', '#FFFF00', '#008000', '#0000FF', '#4B0082', '#EE82EE'],
+            type: 'text',
+            start: { x: 0, y: 0 },
+            end: { x: 1, y: 0 },
+        },
+    },
+    {
+        name: 'Neon Glow',
+        container: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderRadius: 12,
+            padding: 12,
+        },
+        text: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
+        useSkia: true,
+        skiaConfig: {
+            colors: ['#00FFFF', '#FF00FF'],
+            type: 'text',
+            start: { x: 0, y: 0 },
+            end: { x: 1, y: 1 },
+            blur: 4,
+        },
+    },
+    {
+        name: 'Subtle BG',
+        container: {
+            backgroundGradient: {
+                colors: ['rgba(240, 240, 240, 0.9)', 'rgba(220, 220, 220, 0.9)'],
+                start: { x: 0, y: 0 },
+                end: { x: 0, y: 1 },
+            },
+            borderRadius: 10,
+            padding: 12,
+            borderWidth: 1,
+            borderColor: 'rgba(200, 200, 200, 0.5)',
+        },
+        text: {
+            color: '#333',
+            fontSize: 16,
+            fontWeight: '500',
+            textAlign: 'center',
+        },
+    },
+    {
+        name: 'Metallic',
+        container: {
+            backgroundColor: 'rgba(40, 40, 40, 0.85)',
+            borderRadius: 12,
+            padding: 12,
+        },
+        text: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            textAlign: 'center',
+        },
+        useSkia: true,
+        skiaConfig: {
+            colors: ['#C0C0C0', '#FFFFFF', '#A8A8A8', '#EFEFEF', '#8E8E8E'],
+            type: 'text',
+            start: { x: 0, y: 0 },
+            end: { x: 0, y: 1 },
+        },
     },
 ];
 
-// Register the styles
-registerStickerStyles(NDKStoryStickerType.Text, textStickerStyles);
+export function getStyleFromName(name?: string): TextStickerStyle {
+    if (!name) return textStickerStyles[0];
+    return textStickerStyles.find(style => style.name === name) || textStickerStyles[0];
+}
+
+export function getNextStyleName(currentStyleName?: string): string {
+    if (!currentStyleName) return textStickerStyles[1].name;
+    const index = textStickerStyles.findIndex(style => style.name === currentStyleName);
+    return textStickerStyles[index + 1]?.name || textStickerStyles[0].name;
+}
 
 export default textStickerStyles; 

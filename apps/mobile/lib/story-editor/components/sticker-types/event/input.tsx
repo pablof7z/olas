@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '../../../types';
-
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 interface EventStickerInputProps {
     onStickerAdded: () => void;
 }
@@ -12,24 +12,30 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
     const [eventIdInput, setEventIdInput] = useState('');
     const { colors } = useColorScheme();
     const { addSticker } = useStickerStore();
+    const { ndk } = useNDK();
 
     const handleEventIdChange = (text: string) => {
         setEventIdInput(text);
     };
     
-    const handleAddEventSticker = () => {
-        if (eventIdInput.trim()) {
-            const id = eventIdInput.trim();
-            const title = `Event: ${id.substring(0, 8)}...`;
-            addSticker({
-                type: NDKStoryStickerType.Event,
-                content: title,
-                styleId: 'default',
-                metadata: { eventId: id }
-            });
-            onStickerAdded();
+    const handleAddEventSticker = useCallback(async () => {
+        if (!ndk) return;
+        const id = eventIdInput.trim();
+        if (!id) return;
+
+        const event = await ndk.fetchEvent(id);
+        if (!event) {
+            alert('Event not found');
+            return;
         }
-    };
+
+        addSticker({
+            type: NDKStoryStickerType.Event,
+            value: id,
+            metadata: { event }
+        });
+        onStickerAdded();
+    }, [ndk, eventIdInput, addSticker, onStickerAdded]);
 
     return (
         <View style={styles.eventInputContainer}>

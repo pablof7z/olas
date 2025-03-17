@@ -1,17 +1,18 @@
 import { create } from 'zustand';
 import { Dimensions } from 'react-native';
-import { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { NDKStoryStickerType } from '../types';
+import { NDKUser, NDKUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { UserProfile } from '@/hooks/user-profile';
 import { atom } from 'jotai';
+import { getNextStyleName as getNextTextStyleName } from '../components/sticker-types/text/styles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface Sticker {
     id: string;
     type: NDKStoryStickerType;
-    content: string;
-    styleId?: string;
+    value: string;
+    style?: string;
     transform: {
         translateX: number;
         translateY: number;
@@ -20,8 +21,9 @@ export interface Sticker {
     };
     metadata?: {
         profile?: UserProfile;
-        eventId?: string;
+        event?: NDKEvent;
         endTime?: Date;
+        title?: string;
     };
 }
 
@@ -29,10 +31,11 @@ interface StickerState {
     stickers: Sticker[];
     addSticker: (sticker: Omit<Sticker, 'id' | 'transform'> & { transform?: Partial<Sticker['transform']> }) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
-    updateStickerStyle: (id: string, styleId: string) => void;
-    updateStickerContent: (id: string, content: string) => void;
+    updateStickerStyle: (id: string, style: string) => void;
+    updateStickerValue: (id: string, content: string) => void;
     removeSticker: (id: string) => void;
     getSticker: (id: string) => Sticker | undefined;
+    nextStyle: (id: string) => void;
 }
 
 export const useStickerStore = create<StickerState>((set, get) => ({
@@ -50,8 +53,8 @@ export const useStickerStore = create<StickerState>((set, get) => ({
         const newSticker: Sticker = {
             id,
             type: stickerData.type,
-            content: stickerData.content,
-            styleId: stickerData.styleId,
+            value: stickerData.value,
+            style: stickerData.style,
             transform: {
                 ...defaultTransform,
                 ...stickerData.transform
@@ -71,18 +74,18 @@ export const useStickerStore = create<StickerState>((set, get) => ({
         }));
     },
 
-    updateStickerStyle: (id: string, styleId: string) => {
+    updateStickerStyle: (id: string, style: string) => {
         set((state) => ({
             stickers: state.stickers.map(sticker =>
-                sticker.id === id ? { ...sticker, styleId } : sticker
+                sticker.id === id ? { ...sticker, style } : sticker
             )
         }));
     },
 
-    updateStickerContent: (id: string, content: string) => {
+    updateStickerValue: (id: string, value: string) => {
         set((state) => ({
             stickers: state.stickers.map(sticker =>
-                sticker.id === id ? { ...sticker, content } : sticker
+                sticker.id === id ? { ...sticker, value } : sticker
             )
         }));
     },
@@ -96,6 +99,30 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     getSticker: (id: string) => {
         return get().stickers.find(sticker => sticker.id === id);
     },
+    
+    nextStyle: (id: string) => {
+        set((state) => {
+            const stickers = state.stickers;
+            const stickerIndex = stickers.findIndex(sticker => sticker.id === id);
+            if (stickerIndex === -1) return { stickers };
+
+            const sticker = stickers[stickerIndex];
+            const nextStyle = getNextStyleId(sticker.type, sticker.style);
+            stickers[stickerIndex] = { ...sticker, style: nextStyle };
+            
+            return { stickers };
+        });
+    },
 })); 
 
+/**
+ * Jotai atom for the sticker being edited
+ */
 export const editStickerAtom = atom<Sticker | null>(null);
+
+function getNextStyleId(type: NDKStoryStickerType, style?: string): string {
+    switch (type) {
+        case NDKStoryStickerType.Text: return getNextTextStyleName(style)
+        default: return '';
+    }
+}

@@ -1,14 +1,18 @@
-import { StickerStyle } from '../types';
+// Define a basic style interface with just the essential fields
+export interface BaseStickerStyle {
+    id: string;
+    name: string;
+}
 
 // Map of sticker type to its available styles
-const stickerStylesMap: Record<string, Record<string, StickerStyle>> = {};
+const stickerStylesMap: Record<string, Record<string, BaseStickerStyle>> = {};
 
 /**
  * Get all styles for a specific sticker type
  * @param stickerType The type of sticker
  * @returns Array of styles for the sticker type
  */
-export const getStickerStyles = (stickerType: string): StickerStyle[] => {
+export const getStickerStyles = (stickerType: string): BaseStickerStyle[] => {
     // If styles exist for this sticker type, return them
     if (stickerStylesMap[stickerType]) {
         return Object.values(stickerStylesMap[stickerType]);
@@ -23,9 +27,9 @@ export const getStickerStyles = (stickerType: string): StickerStyle[] => {
  * @param stickerType The type of sticker
  * @param styles The styles to register
  */
-export const registerStickerStyles = (stickerType: string, styles: StickerStyle[]): void => {
+export const registerStickerStyles = (stickerType: string, styles: BaseStickerStyle[]): void => {
     // Create an object map for faster lookups
-    const stylesMap: Record<string, StickerStyle> = {};
+    const stylesMap: Record<string, BaseStickerStyle> = {};
     styles.forEach(style => {
         stylesMap[style.id] = style;
     });
@@ -70,7 +74,7 @@ export const getNextStyleId = (stickerType: string, currentStyleId?: string): st
  * @param styleId The style id
  * @returns The style object or undefined if not found
  */
-export const getStickerStyle = (stickerType: string, styleId?: string): StickerStyle | undefined => {
+export const getStickerStyle = (stickerType: string, styleId?: string): BaseStickerStyle | undefined => {
     if (!styleId || !stickerStylesMap[stickerType]) {
         return undefined;
     }

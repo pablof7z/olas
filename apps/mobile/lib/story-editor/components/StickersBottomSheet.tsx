@@ -6,12 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Ionicons } from '@expo/vector-icons';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
-import { NDKStoryStickerType } from '../types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
 import {
     TextStickerInput,
     EventStickerInput,
     CountdownStickerInput,
-    NostrFilterStickerInput,
     PromptStickerInput,
     MentionStickerInput
 } from './sticker-types';
@@ -38,7 +38,7 @@ const STICKER_OPTIONS = [
     {
         name: "Mention",
         icon: "person",
-        type: NDKStoryStickerType.Mention,
+        type: NDKStoryStickerType.Pubkey,
         description: "Tag another user",
         gradientColors: ['#7F7FD5', '#91EAE4'] as [string, string]
     },
@@ -55,20 +55,6 @@ const STICKER_OPTIONS = [
         type: NDKStoryStickerType.Countdown,
         description: "Add a countdown timer",
         gradientColors: ['#FFB88C', '#DE6262'] as [string, string]
-    },
-    {
-        name: "Nostr Filter",
-        icon: "filter",
-        type: NDKStoryStickerType.NostrFilter,
-        description: "Add a Nostr filter",
-        gradientColors: ['#8E2DE2', '#4A00E0'] as [string, string]
-    },
-    {
-        name: "Prompt",
-        icon: "chatbubble-outline",
-        type: NDKStoryStickerType.Prompt,
-        description: "Add an interactive question or prompt",
-        gradientColors: ['#5433FF', '#20BDFF'] as [string, string]
     }
 ];
 
@@ -81,7 +67,7 @@ function StickerOption({ name, icon, type, description, gradientColors }: Sticke
         setEditSticker({
             id: '',
             type,
-            content: '',
+            value: '',
             transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 }
         });
     }, [setEditSticker, type]);
@@ -168,7 +154,7 @@ export default function StickersBottomSheet() {
                 <Text>{editStickerType?.toString()}</Text>
                 {!editStickerType && <StickerList />}
 
-                {editStickerType === NDKStoryStickerType.Mention && (
+                {editStickerType === NDKStoryStickerType.Pubkey && (
                     <>
                         {renderSearchHeader('Mention Someone')}
                         <MentionStickerInput 
@@ -190,15 +176,6 @@ export default function StickersBottomSheet() {
                     <>
                         {renderSearchHeader('Create Countdown')}
                         <CountdownStickerInput 
-                            onStickerAdded={handleStickerAdded}
-                        />
-                    </>
-                )}
-                
-                {editStickerType === NDKStoryStickerType.NostrFilter && (
-                    <>
-                        {renderSearchHeader('Create Nostr Filter')}
-                        <NostrFilterStickerInput 
                             onStickerAdded={handleStickerAdded}
                         />
                     </>

@@ -1,9 +1,73 @@
-import { StickerStyle } from '@/lib/story-editor/types';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { BaseStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import { registerStickerStyles } from '@/lib/story-editor/styles/stickerStyles';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+// Define CountdownStickerStyle interface
+export interface CountdownStickerStyle extends BaseStickerStyle {
+    // Flat properties for backward compatibility
+    backgroundColor?: string;
+    backgroundOpacity?: number;
+    borderWidth?: number;
+    borderColor?: string;
+    borderRadius?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted';
+    color?: string;
+    fontSize?: number;
+    fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+    fontStyle?: 'normal' | 'italic';
+    textShadowColor?: string;
+    textShadowOffset?: { width: number; height: number };
+    textShadowRadius?: number;
+    elevation?: number;
+    shadowColor?: string;
+    shadowOffset?: { width: number; height: number };
+    shadowOpacity?: number;
+    shadowRadius?: number;
+    iconColor?: string;
+    
+    // Nested structure
+    container?: {
+        backgroundColor?: string;
+        backgroundOpacity?: number;
+        borderWidth?: number;
+        borderColor?: string;
+        borderRadius?: number;
+        borderStyle?: 'solid' | 'dashed' | 'dotted';
+        padding?: number;
+        elevation?: number;
+        shadowColor?: string;
+        shadowOffset?: { width: number; height: number };
+        shadowOpacity?: number;
+        shadowRadius?: number;
+    };
+    text?: {
+        color?: string;
+        fontSize?: number;
+        fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+        fontStyle?: 'normal' | 'italic';
+        textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
+        textShadowColor?: string;
+        textShadowOffset?: { width: number; height: number };
+        textShadowRadius?: number;
+    };
+    countdown?: {
+        color?: string;
+        fontSize?: number;
+        fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+    };
+    layout?: {
+        direction: 'row' | 'column';
+        iconSize?: number;
+        showIcon?: boolean;
+        alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+        justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+        gap?: number;
+    };
+    fontFamily?: string;
+}
 
 // Define 10 different styles for countdown stickers
-const countdownStickerStyles: StickerStyle[] = [
+const countdownStickerStyles: CountdownStickerStyle[] = [
     {
         id: 'default',
         name: 'Default',

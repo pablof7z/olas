@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { VideoView } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,12 +13,16 @@ import {
     useCanvasRef,
 } from '@shopify/react-native-skia';
 import { useStickerStore, Sticker as StickerType, editStickerAtom } from '../store';
-import { NDKStoryStickerType } from '../types';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { TextStickerInput } from './sticker-types';
+import { useActiveBlossomServer } from '@/hooks/blossom';
+import { useNDK, NDKStory, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { uploadStory } from '../actions/upload';
+import { mapStickerToNDKFormat } from '../utils';
+import { debugEvent } from '@/utils/debug';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,6 +42,9 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
     const { stickers, updateSticker, updateStickerStyle, removeSticker, addSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
+    const [isUploading, setIsUploading] = useState(false);
+    const ndkContext = useNDK();
+    const activeBlossomServer = useActiveBlossomServer();
 
     const isEditingText = useMemo(() => editSticker?.type === NDKStoryStickerType.Text, [editSticker]);
 
@@ -58,6 +65,60 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
     
     const openStickersDrawer = () => {
         stickersSheetRef?.current?.present();
+    };
+
+    const handleShare = async () => {
+        if (!ndkContext?.ndk) {
+            Alert.alert('Error', 'NDK instance not available');
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            
+            const result = await uploadStory({
+                path,
+                type,
+                ndk: ndkContext.ndk,
+                blossomServer: activeBlossomServer,
+                onProgress: (type, progress) => {
+                    console.log(`${type} progress: ${progress}%`);
+                }
+            });
+            
+            if (result.success) {
+                // Create NDKStory event
+                const storyEvent = new NDKStory(ndkContext.ndk);
+                
+                // Set story content with the uploaded media URL
+                storyEvent.content = result.mediaUrl || '';
+                
+                // Add stickers to the event
+                stickers.forEach(sticker => {
+                    try {
+                        // Use the utility function to map our sticker to NDK format
+                        const ndkSticker = mapStickerToNDKFormat(sticker, canvasSize);
+                        storyEvent.addSticker(ndkSticker);
+                    } catch (error) {
+                        console.error('Error adding sticker:', error);
+                    }
+                });
+                
+                // Publish the story event
+                await storyEvent.sign();
+                debugEvent(storyEvent);
+                
+                Alert.alert('Success', 'Story uploaded and published successfully!');
+                onClose();
+            } else {
+                Alert.alert('Upload Failed', result.error?.message || 'Failed to upload story. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error handling story upload:', error);
+            Alert.alert('Upload Failed', 'An unexpected error occurred. Please try again.');
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
@@ -147,8 +208,14 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                 <TouchableOpacity 
                     style={styles.shareButton}
                     testID="share-button"
+                    onPress={handleShare}
+                    disabled={isUploading}
                 >
-                    <Ionicons name="arrow-forward-circle" size={60} color="white" />
+                    <Ionicons 
+                        name={isUploading ? "hourglass" : "arrow-forward-circle"} 
+                        size={60} 
+                        color="white" 
+                    />
                 </TouchableOpacity>
             </View>
             

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as User from '@/components/ui/user';
 import { Sticker } from '@/lib/story-editor/store';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { getStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import mentionStyles from './styles';
 
@@ -17,7 +17,7 @@ export default function MentionStickerView({ sticker }: MentionStickerViewProps)
     
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStickerStyle(
-        sticker.type === NDKStoryStickerType.Pubkey ? NDKStoryStickerType.Pubkey : NDKStoryStickerType.Mention, 
+        sticker.type === NDKStoryStickerType.Pubkey ? NDKStoryStickerType.Pubkey : NDKStoryStickerType.Pubkey, 
         sticker.styleId
     ) || mentionStyles[0];
     

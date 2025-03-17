@@ -1,9 +1,32 @@
-import { StickerStyle } from '@/lib/story-editor/types';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { BaseStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { registerStickerStyles } from '@/lib/story-editor/styles/stickerStyles';
 
+// Define MentionStickerStyle interface
+export interface MentionStickerStyle extends BaseStickerStyle {
+    backgroundColor?: string;
+    backgroundOpacity?: number;
+    borderWidth?: number;
+    borderColor?: string;
+    borderRadius?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted';
+    color?: string;
+    fontSize?: number;
+    fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+    fontStyle?: 'normal' | 'italic';
+    textShadowColor?: string;
+    textShadowOffset?: { width: number; height: number };
+    textShadowRadius?: number;
+    elevation?: number;
+    shadowColor?: string;
+    shadowOffset?: { width: number; height: number };
+    shadowOpacity?: number;
+    shadowRadius?: number;
+    iconColor?: string;
+}
+
 // Define 10 different styles for mention stickers
-const mentionStickerStyles: StickerStyle[] = [
+const mentionStickerStyles: MentionStickerStyle[] = [
     {
         id: 'default',
         name: 'Default',
@@ -123,7 +146,6 @@ const mentionStickerStyles: StickerStyle[] = [
 ];
 
 // Register the styles
-registerStickerStyles(NDKStoryStickerType.Mention, mentionStickerStyles);
 registerStickerStyles(NDKStoryStickerType.Pubkey, mentionStickerStyles);
 
 export default mentionStickerStyles; 

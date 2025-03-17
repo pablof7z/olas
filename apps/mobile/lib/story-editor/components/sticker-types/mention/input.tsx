@@ -4,7 +4,7 @@ import { NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '../../../types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { UserProfile } from '@/hooks/user-profile';
 
 interface MentionStickerInputProps {
@@ -33,8 +33,8 @@ export default function MentionStickerInput({
             };
             
             addSticker({
-                type: NDKStoryStickerType.Mention,
-                content: profile.name || profile.displayName || 'User',
+                type: NDKStoryStickerType.Pubkey,
+                value: user.pubkey,
                 styleId: 'default',
                 metadata: { profile }
             });

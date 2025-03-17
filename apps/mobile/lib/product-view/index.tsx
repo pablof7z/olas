@@ -157,7 +157,7 @@ function SizeSelector({ sizes }: { sizes: string[] | undefined }) {
     )
 }
 
-class NDKClassifiedListing extends NDKEvent {
+export class NDKClassifiedListing extends NDKEvent {
     static kind = 30402;
     static kinds = [30402, 30403];
 

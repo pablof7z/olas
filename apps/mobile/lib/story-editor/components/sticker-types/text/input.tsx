@@ -1,34 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { editStickerAtom, useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '../../../types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom } from 'jotai';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function TextStickerInput() {
-    const { addSticker } = useStickerStore();
-    const [text, setText] = useState('');
-    const insets = useSafeAreaInsets();
+    const { addSticker, updateStickerValue } = useStickerStore();
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
-    
-    // Initialize text field with sticker content when editing existing sticker
-    useEffect(() => {
-        if (editSticker && editSticker.type === NDKStoryStickerType.Text) {
-            setText(editSticker.content);
-        }
-    }, [editSticker]);
+    const [text, setText] = useState(editSticker?.value || '');
+    const insets = useSafeAreaInsets();
     
     const handleDone = () => {
         if (editSticker?.id) {
             // Update existing sticker
             const updatedSticker = {
                 ...editSticker,
-                content: text.trim() || 'Tap to edit'
+                value: text.trim() || 'Tap to edit'
             };
             
             // Use updateStickerContent from the store to update just the content
-            useStickerStore.getState().updateStickerContent(
+            updateStickerValue(
                 editSticker.id,
                 text.trim() || 'Tap to edit'
             );
@@ -36,7 +29,7 @@ export default function TextStickerInput() {
             // Create new sticker
             addSticker({
                 type: NDKStoryStickerType.Text,
-                content: text.trim() || 'Tap to edit',
+                value: text.trim() || 'Tap to edit',
                 styleId: 'default'
             });
         }

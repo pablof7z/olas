@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Sticker } from '@/lib/story-editor/store';
-import { NDKStoryStickerType } from '@/lib/story-editor/types';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { getStickerStyle } from '@/lib/story-editor/styles/stickerStyles';
 import countdownStyles from './styles';
 
@@ -14,7 +14,7 @@ export default function CountdownStickerView({ sticker }: CountdownStickerViewPr
     const [timeLeft, setTimeLeft] = useState<string>('');
     
     // Get the selected style or default to the first one if not set
-    const selectedStyle = getStickerStyle(NDKStoryStickerType.Countdown, sticker.styleId) || countdownStyles[0];
+    const selectedStyle = getStickerStyle(NDKStoryStickerType.Countdown, sticker.style) || countdownStyles[0];
     
     // Create container styles based on the selected style
     const containerStyle = {
@@ -97,7 +97,7 @@ export default function CountdownStickerView({ sticker }: CountdownStickerViewPr
         <View style={containerStyle}>
             <Ionicons name="time-outline" size={18} color={iconColor} style={{ marginRight: 6 }} />
             <Text style={textStyle}>
-                {sticker.content || 'Countdown'}: {timeLeft}
+                {sticker.value || 'Countdown'}: {timeLeft}
             </Text>
         </View>
     );

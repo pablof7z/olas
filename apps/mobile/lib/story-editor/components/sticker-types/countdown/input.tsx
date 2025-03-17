@@ -4,8 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/lib/useColorScheme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '../../../types';
-
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 interface CountdownStickerInputProps {
     onStickerAdded: () => void;
 }
@@ -48,9 +47,8 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
         if (countdownName.trim()) {
             addSticker({
                 type: NDKStoryStickerType.Countdown,
-                content: countdownName || 'Countdown',
-                styleId: 'default',
-                metadata: { endTime: countdownDate }
+                value: (countdownDate.getTime() / 1000).toString(),
+                metadata: { title: countdownName, endTime: countdownDate }
             });
             onStickerAdded();
         }
