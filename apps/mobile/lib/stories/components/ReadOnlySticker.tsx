@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Dimensions, LayoutChangeEvent } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, Dimensions, LayoutChangeEvent, Button } from 'react-native';
 import { Sticker } from '../utils';
 import { NDKStoryStickerType, useNDK, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import {
@@ -14,6 +14,8 @@ interface ReadOnlyStickerProps {
     containerDimensions: { width: number; height: number };
     originalDimensions: { width: number; height: number };
 }
+
+const maxWidth = Dimensions.get('window').width * 0.9;
 
 /**
  * A read-only component to render stickers in story view mode
@@ -40,12 +42,11 @@ export default function ReadOnlySticker({
     const isCountdownSticker = sticker.type === NDKStoryStickerType.Countdown;
     const isEventSticker = sticker.type === NDKStoryStickerType.Event;
 
+    const pendingScale = useRef(1);
+
     const handleLayout = (event: LayoutChangeEvent) => {
         const { width: renderedWidth, height: renderedHeight } = event.nativeEvent.layout;
-        const aspectRatio = renderedWidth / renderedHeight;
-        const orig = originalDimensions.width / originalDimensions.height;
-        const cont = containerDimensions.width / containerDimensions.height;
-        console.log('👋 handleLayout', JSON.stringify({ initialRender: { renderedWidth, renderedHeight, aspectRatio }, originalDimensions: {...originalDimensions, aspectRatio: orig}, containerDimensions: {...containerDimensions, aspectRatio: cont} }, null, 4));
+        console.log('👋 parent handleLayout');
         
         if (renderedWidth === 0 || renderedHeight === 0) {
             console.warn('Layout dimensions are 0, skipping');
@@ -62,11 +63,18 @@ export default function ReadOnlySticker({
         if (originalAspectRatio > renderedAspectRatio) {
             // Width is the limiting factor
             newScale = width / renderedWidth;
+            console.log('👋 parent handleLayout will change scale by using width', { newScale, width, renderedWidth });
         } else {
             // Height is the limiting factor
             newScale = height / renderedHeight;
+            console.log('👋 parent handleLayout will change scale by using heighto', { newScale, height, renderedHeight });
         }
-        setScale(newScale);
+
+        pendingScale.current = newScale;
+
+        console.log('👋 parent handleLayout will change scale to', { newScale });
+        
+        // setScale(newScale);
     };
 
     return (
@@ -78,28 +86,32 @@ export default function ReadOnlySticker({
                     left,
                     top,
                     width,
+                    maxWidth,
                     height,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justifyContent: 'center', borderWidth: 1, borderColor: 'blue',
                     transform: [
                         { rotate: `${sticker.transform.rotate}deg` }
                     ]
                 }
             ]}
         >
-            <View style={{ transform: [{ scale }] }}>
-                {isTextSticker && <TextSticker sticker={sticker as Sticker<NDKStoryStickerType.Text>} onLayout={handleLayout} />}
-                {isMentionSticker && <MentionSticker sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>} onLayout={handleLayout} />}
-                {isCountdownSticker && <CountdownSticker sticker={sticker as Sticker<NDKStoryStickerType.Countdown>} onLayout={handleLayout} />}
-                {isEventSticker && <EventSticker sticker={sticker as Sticker<NDKStoryStickerType.Event>} onLayout={handleLayout} />}
+            <View style={{ transform: [{ scale }], borderWidth: 1, borderColor: 'cyan' }}>
+                <View style={{ borderWidth: 1, borderColor: 'cyan' }}>
+                    {isTextSticker && <TextSticker sticker={sticker as Sticker<NDKStoryStickerType.Text>} onLayout={handleLayout} />}
+                    {isMentionSticker && <MentionSticker sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>} onLayout={handleLayout} />}
+                    {isCountdownSticker && <CountdownSticker sticker={sticker as Sticker<NDKStoryStickerType.Countdown>} onLayout={handleLayout} />}
+                    {isEventSticker && <EventSticker sticker={sticker as Sticker<NDKStoryStickerType.Event>} onLayout={handleLayout} />}
+                </View>
             </View>
         </View>
     );
 }
 
 function TextSticker({ sticker, onLayout }: { sticker: Sticker<NDKStoryStickerType.Text>; onLayout?: (event: LayoutChangeEvent) => void }) {
-    return <TextStickerView sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions={true} onLayout={onLayout} />;
+    return <TextStickerView
+        sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions={true} onLayout={onLayout} />;
 }
 
 function MentionSticker({ sticker, onLayout }: { sticker: Sticker; onLayout?: (event: LayoutChangeEvent) => void }) {

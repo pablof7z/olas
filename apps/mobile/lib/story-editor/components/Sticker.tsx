@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { StyleSheet, View, Text, LayoutChangeEvent, Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
@@ -34,6 +34,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
+        borderWidth: 1,
+        borderColor: 'cyan',
     }
 });
 
@@ -79,7 +81,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
             const newHeight = baseDimensions.current.height * scale.value * scaleFactor;
             setStickerDimensions({ width: newWidth, height: newHeight });
         }
-    }, [scale.value, scaleFactor]);
+    }, [scale, scaleFactor]);
 
     // Update store with new transform values
     const updateStickerTransform = useCallback(() => {
@@ -178,14 +180,17 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     // Handle layout changes to get dimensions
     const handleLayout = useCallback((event: LayoutChangeEvent) => {
+        'worklet';
         const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
         console.log('Layout dimensions:', newWidth, newHeight);
         if (newWidth > 0 && newHeight > 0) {
             // Store the base dimensions (without scaling)
             baseDimensions.current = { width: newWidth, height: newHeight };
             
-            const scaledWidth = newWidth * scale.value * scaleFactor;
-            const scaledHeight = newHeight * scale.value * scaleFactor;
+            // Use a worklet to access shared values
+            const currentScale = scale.value;
+            const scaledWidth = newWidth * currentScale * scaleFactor;
+            const scaledHeight = newHeight * currentScale * scaleFactor;
             
             setStickerDimensions({ width: scaledWidth, height: scaledHeight });
             width.value = scaledWidth;
@@ -197,17 +202,20 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 height: scaledHeight
             });
         }
-    }, [sticker.id, scale.value, scaleFactor, updateStickerDimensions, width, height]);
+    }, [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]);
 
     // Handle content layout specifically
     const handleContentLayout = useCallback((event: LayoutChangeEvent) => {
+        'worklet';
         const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
         
         // Store the base dimensions (without scaling)
         baseDimensions.current = { width: newWidth, height: newHeight };
         
-        const scaledWidth = newWidth * scale.value * scaleFactor;
-        const scaledHeight = newHeight * scale.value * scaleFactor;
+        // Use a worklet to access shared values
+        const currentScale = scale.value;
+        const scaledWidth = newWidth * currentScale * scaleFactor;
+        const scaledHeight = newHeight * currentScale * scaleFactor;
 
         console.log('Content dimensions:', { raw: { width: newWidth, height: newHeight }, scaled: { width: scaledWidth, height: scaledHeight } });
 
@@ -222,15 +230,16 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 height: scaledHeight
             });
         }
-    }, [sticker.id, scale.value, scaleFactor, updateStickerDimensions, width, height]);
+    }, [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]);
 
     const scaleStyle = useAnimatedStyle(() => {
         return {
+            borderWidth: 1, borderColor: 'blue',
             transform: [ { scale: scale.value * scaleFactor } ],
         };
     });
 
-    const animatedStyle = useAnimatedStyle(() => {
+    const rotationStyle = useAnimatedStyle(() => {
         return {
             position: 'absolute',
             maxWidth,
@@ -242,17 +251,25 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         };
     });
 
-    const scaledMaxWidth = maxWidth / scale.value * scaleFactor;
+    // Create a derived state for scaledMaxWidth to avoid direct .value access in render
+    const [derivedScaledMaxWidth, setDerivedScaledMaxWidth] = useState(maxWidth);
+    
+    // Update derivedScaledMaxWidth when scale changes using a layout effect
+    useLayoutEffect(() => {
+        setDerivedScaledMaxWidth(maxWidth / scale.value * scaleFactor);
+    }, [scale, scaleFactor]);
+
+    console.log('rendering sticker', JSON.stringify(sticker));
 
     // Get the content component based on sticker type
     const renderContent = () => {
         switch (sticker.type) {
             case NDKStoryStickerType.Text: 
-                return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} maxWidth={scaledMaxWidth} />;
+                return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} maxWidth={derivedScaledMaxWidth} />;
             case NDKStoryStickerType.Pubkey: 
                 return <MentionStickerView sticker={sticker as StickerType<NDKStoryStickerType.Pubkey>} />;
             case NDKStoryStickerType.Event: 
-                return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} maxWidth={scaledMaxWidth} />;
+                return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} maxWidth={derivedScaledMaxWidth} />;
             case NDKStoryStickerType.Countdown: 
                 return <CountdownStickerView sticker={sticker} />;
             case NDKStoryStickerType.Prompt: 
@@ -264,7 +281,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     return (
         <GestureDetector gesture={gesture}>
-            <Animated.View style={animatedStyle}>
+            <Animated.View style={rotationStyle}>
                 <Animated.View style={scaleStyle} onLayout={handleLayout}>
                     <View style={styles.contentContainer} onLayout={handleContentLayout}>
                         {renderContent()}

@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { Dimensions } from 'react-native';
 import { NDKUser, NDKUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
-import { UserProfile } from '@/hooks/user-profile';
 import { atom } from 'jotai';
 import { getNextStyleName as getNextTextStyleName } from '../components/sticker-types/text/styles';
 import { getNextStyleName as getNextMentionStyleName } from '../components/sticker-types/mention/styles';
@@ -112,6 +111,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     },
 
     updateStickerDimensions: (id: string, dimensions: { width: number; height: number }) => {
+        console.log('In useStickerStore.updateStickerDimensions with id:', id, 'and dimensions:', dimensions);
         set((state) => ({
             stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, dimensions } : sticker)),
         }));

@@ -70,11 +70,6 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
         stickersSheetRef?.current?.present();
     };
 
-    const openSettingsDrawer = () => {
-        console.log('Opening settings drawer', settingsSheetRef?.current);
-        settingsSheetRef?.current?.present();
-    };
-
     const handleAddTextSticker = () => {
         setEditSticker({
             id: '',
@@ -234,7 +229,6 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
 
                 {/* Stickers Layer */}
                 {stickers.map((sticker) => {
-                    console.log('Mapping sticker in preview:', sticker);
                     return (
                         <Sticker
                             key={sticker.id}

@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent } from 'react-native';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
+import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent, Button } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sticker } from '@/lib/story-editor/store/index';
 import { getStyleFromName } from './styles';
@@ -24,177 +24,124 @@ interface TextStickerViewProps {
 }
 
 export default function TextStickerView({ sticker, fixedDimensions, maxWidth, onLayout }: TextStickerViewProps) {
-    const setEditSticker = useSetAtom(editStickerAtom);
-    const [containerSize, setContainerSize] = useState(fixedDimensions ? sticker.dimensions : { width: 0, height: 0 });
-    const [adjustedFontSize, setAdjustedFontSize] = useState<number | null>(null);
+    const selectedStyle = useMemo(() => getStyleFromName(sticker.style), [sticker.style]);
+    const [needsAspectRatio, setNeedsAspectRatio] = useState(false);
+    const [hasAdjustedLayout, setHasAdjustedLayout] = useState(false);
+    const [fontSize, setFontSize] = useState<number | undefined>(selectedStyle.text.fontSize ?? 12);
 
-    // Get the selected style or default to the first one if not set
-    const selectedStyle = getStyleFromName(sticker.style);
+    const containerStyle = useMemo(() => {
+        const _style: ViewStyle = {
+            borderWidth: 1, borderColor: 'orange',
+            maxWidth,
+            width: sticker.dimensions?.width,
+        };
 
-    // Create container styles based on the selected style
-    const containerStyle = selectedStyle.container as ExtendedViewStyle;
+        return _style;
+    }, [])
 
-    // Get basic styling properties
-    const padding = typeof containerStyle.padding === 'number' ? containerStyle.padding : 12;
-    const borderRadius = typeof containerStyle.borderRadius === 'number' ? containerStyle.borderRadius : 8;
-    const borderWidth = typeof containerStyle.borderWidth === 'number' ? containerStyle.borderWidth : 0;
-    const borderColor = containerStyle.borderColor || 'transparent';
-    const backgroundColor = containerStyle.backgroundColor || 'rgba(0, 0, 0, 0.7)';
-
-    // Check if we have a gradient background
-    const hasBackgroundGradient =
-        containerStyle.backgroundGradient &&
-        Array.isArray(containerStyle.backgroundGradient.colors) &&
-        containerStyle.backgroundGradient.colors.length > 1;
-
-    // Create text styles based on the selected style
-    const textStyle = selectedStyle.text as TextStyle;
-
-    // Apply default text styles if not provided
-    const textColor = textStyle.color || 'white';
-    const initialFontSize = textStyle.fontSize || 18;
-    const fontWeight = textStyle.fontWeight || 'bold';
-    const fontStyle = textStyle.fontStyle || 'normal';
-    const textAlign = textStyle.textAlign || 'center';
-
-    // Shadow properties
-    const textShadowColor = textStyle.textShadowColor || 'transparent';
-    const textShadowOffset = textStyle.textShadowOffset || { width: 0, height: 0 };
-    const textShadowRadius = textStyle.textShadowRadius || 0;
-
-    // Create view style
-    const viewStyle: ViewStyle = {
-        borderRadius,
-        borderWidth,
-        borderColor,
-        padding,
-        width: '100%',
-        height: '100%',
-        maxWidth,
-        backgroundColor: hasBackgroundGradient ? 'transparent' : backgroundColor,
-        alignItems: 'center',
-        justifyContent: 'center',
-    };
-
-    // Handle container layout to measure available space
-    const handleLayout = useCallback((event: LayoutChangeEvent) => {
-        onLayout?.(event);
+    const textStyle = useMemo(() => {
+        const padding = Number(selectedStyle?.container?.padding || 0);
+        let width = undefined;
         
-        if (fixedDimensions) return;
-        const { width, height } = event.nativeEvent.layout;
-        setContainerSize({ width, height });
-    }, [fixedDimensions, onLayout]);
-
-    // Initialize container size for fixed dimensions
-    useEffect(() => {
-        if (fixedDimensions && sticker.dimensions) {
-            setContainerSize(sticker.dimensions);
+        if (sticker.dimensions && typeof sticker.dimensions.width === 'number') {
+            width = sticker.dimensions.width - padding * 2;
         }
-    }, [fixedDimensions, sticker.dimensions]);
+        
+        const _style: TextStyle = {
+            ...selectedStyle.text,
+            borderWidth: 1,
+            borderColor: 'yellow',
+            fontSize: fontSize,
+        }
 
-    // Calculate adjusted font size based on text length and container size
-    useEffect(() => {
+        return _style;
+    }, [selectedStyle.text, fontSize])
 
-        if (containerSize.width <= 0 || containerSize.height <= 0 || !sticker.value) {
+    const handleTextLayout = useCallback((event: LayoutChangeEvent) => {
+        if (!fixedDimensions || !sticker.dimensions) return;
+        
+        const { height, width } = event.nativeEvent.layout;
+        const desiredHeight = sticker.dimensions.height;
+        const desiredWidth = sticker.dimensions.width;
+        
+        // Calculate current and desired aspect ratios
+        const currentAspectRatio = width / height;
+        const desiredAspectRatio = desiredWidth / desiredHeight;
+        const aspectRatioDifference = Math.abs(currentAspectRatio - desiredAspectRatio) / desiredAspectRatio;
+        
+        // Check if we're within 5% of the desired aspect ratio
+        if (aspectRatioDifference <= 0.05) {
+            onLayout?.(event);
             return;
         }
-
-        // Starting with a larger font size based on container dimensions
-        const availableWidth = containerSize.width - (padding * 1.5);
-        const availableHeight = containerSize.height - (padding * 1.5);
         
-        // Estimate characters per line based on average character width (approximation)
-        const avgCharWidth = initialFontSize * 0.5;
-        const textLength = sticker.value.length;
-        
-        // Calculate a font size that would fit width-wise
-        const maxFontSizeByWidth = availableWidth / (textLength * 0.5) * 2.2;
-        
-        // Ensure the text height also fits within container
-        const estimatedLines = Math.ceil((textLength * avgCharWidth) / availableWidth);
-        const maxFontSizeByHeight = availableHeight / (estimatedLines * 1.2);
-        
-        // Use the smaller of the two calculated sizes to ensure fitting in both dimensions
-        const calculatedFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight, initialFontSize * 3);
-        
-        // Set a reasonable floor and ceiling
-        const finalFontSize = Math.max(14, Math.min(calculatedFontSize, 90));
-
-        console.log('calculatedFontSize', { containerSize, finalFontSize, padding, maxFontSizeByWidth, maxFontSizeByHeight, availableWidth, availableHeight, textLength, estimatedLines });
-        
-        setAdjustedFontSize(finalFontSize);
-        console.log("👉 SETTING ADJUSTED FONT SIZE", finalFontSize);
-    }, [containerSize, sticker.value, initialFontSize, padding]);
-
-    // Create text style with adjusted font size if available
-    const formattedTextStyle: TextStyle = {
-        color: textColor,
-        fontWeight,
-        fontStyle,
-        textAlign,
-        fontSize: (textStyle.fontSize || 128),
-        textShadowColor,
-        textShadowOffset,
-        textShadowRadius,
-        fontFamily: selectedStyle.fontFamily,
-        alignItems: 'center',
-        justifyContent: 'center',
-    };
-
-    if (fixedDimensions && containerSize) {
-        formattedTextStyle.width = containerSize.width;
-        formattedTextStyle.height = containerSize.height;
-    }
-
-    const handleLongPress = useCallback(() => {
-        setEditSticker(sticker);
-    }, [sticker, setEditSticker]);
-
-    // If we have a text gradient specified in skiaConfig, we'll need to handle that differently
-    // For now, we'll just use the first color as we can't easily do text gradients in React Native
-    const skiaConfig = selectedStyle.skiaConfig || {
-        colors: [textColor],
-        type: 'text',
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
-    };
-
-    // For simple cases, use solid color from first item in gradient colors array
-    if (skiaConfig.colors.length > 1) {
-        formattedTextStyle.color = skiaConfig.colors[0];
-    }
-
-    // Ensure we have at least two colors for LinearGradient
-    const gradientColors = containerStyle.backgroundGradient?.colors || [];
-    // expo-linear-gradient requires at least 2 colors
-    const defaultColors = ['#000000', '#000000'] as const;
-
-    // Create a tuple of at least two colors
-    const safeGradientColors = gradientColors.length >= 2 ? ([gradientColors[0], gradientColors[1]] as const) : defaultColors;
-
-    console.log('view style', JSON.stringify(viewStyle));
-    console.log('text style', JSON.stringify(formattedTextStyle));
-
+        // Check if we need to adjust the height
+        if (height < desiredHeight * 0.98) {  // Allow for 2% tolerance under desired height
+            console.log('👀 current height is less than desired:', { 
+                current: height, 
+                desired: desiredHeight,
+                currentFontSize: fontSize
+            });
+            
+            // Gradually increase font size to approach the desired height
+            // Use a smaller increment for finer control
+            const newFontSize = (fontSize || 12) * 1.05;  // 5% increment
+            
+            console.log('👀 increasing font size:', { 
+                from: fontSize, 
+                to: newFontSize, 
+                currentHeight: height,
+                desiredHeight: desiredHeight,
+                currentWidth: width,
+                desiredWidth: desiredWidth
+            });
+            
+            // Update font size state
+            setFontSize(newFontSize);
+            setNeedsAspectRatio(true);
+            
+            // Prevent too many adjustments
+            if (hasAdjustedLayout && height >= desiredHeight * 0.95) {
+                console.log('👀 close enough to desired height, stopping adjustments');
+                onLayout?.(event);
+                return;
+            }
+            
+            setHasAdjustedLayout(true);
+        } else if (height > desiredHeight * 1.02) {  // More than 2% over desired height
+            console.log('👀 current height exceeds desired height:', {
+                current: height,
+                desired: desiredHeight,
+                currentFontSize: fontSize
+            });
+            
+            // If we've overshot, reduce font size slightly
+            if (fontSize && fontSize > 8) {  // Don't go below minimum readable size
+                const newFontSize = fontSize * 0.98;  // Small reduction
+                console.log('👀 reducing font size:', {
+                    from: fontSize,
+                    to: newFontSize
+                });
+                setFontSize(newFontSize);
+                setNeedsAspectRatio(true);
+                setHasAdjustedLayout(true);
+            } else {
+                // Font size reached minimum, consider adjustments complete
+                console.log('👀 reached minimum font size, stopping adjustments');
+                onLayout?.(event);
+            }
+        } else {
+            // Height is within tolerance, no adjustment needed
+            console.log('👀 height is within tolerance, adjustments complete');
+            onLayout?.(event);
+        }
+    }, [fixedDimensions, fontSize, hasAdjustedLayout, onLayout]);
+    
     return (
-        <Pressable onLongPress={handleLongPress} delayLongPress={600}>
-            {hasBackgroundGradient && containerStyle.backgroundGradient ? (
-                <LinearGradient
-                    style={[viewStyle, selectedStyle.container]}
-                    colors={safeGradientColors}
-                    start={containerStyle.backgroundGradient.start || { x: 0, y: 0 }}
-                    end={containerStyle.backgroundGradient.end || { x: 1, y: 1 }}
-                    onLayout={handleLayout}>
-                    <Text style={formattedTextStyle} adjustsFontSizeToFit>
-                        {sticker.value}
-                    </Text>
-                </LinearGradient>
-            ) : (
-                <View style={[viewStyle, selectedStyle.container]} onLayout={handleLayout}>
-                    <Text style={[formattedTextStyle]} numberOfLines={0}>
-                        {sticker.value}
-                    </Text>
-                </View>
-            )}
-        </Pressable>
+        <View onLayout={handleTextLayout} style={[selectedStyle.container, containerStyle]}>
+            <Text style={[textStyle]} adjustsFontSizeToFit>
+                {sticker.value}
+            </Text>
+        </View>
     );
 }
