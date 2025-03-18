@@ -125,7 +125,6 @@ export default function StickersBottomSheet() {
             handleIndicatorStyle={styles.handleIndicator}
             style={styles.sheet}>
             <BottomSheetView style={[styles.container, { paddingBottom: insets.bottom }]}>
-                <Text>{editStickerType?.toString()}</Text>
                 {!editStickerType && <StickerList />}
 
                 {editStickerType === NDKStoryStickerType.Pubkey && (

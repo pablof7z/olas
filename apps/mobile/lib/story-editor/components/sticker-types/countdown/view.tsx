@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Sticker } from '@/lib/story-editor/store/index';
 import countdownStyles, { getStyleFromName } from './styles';
 
 interface CountdownStickerViewProps {
     sticker: Sticker;
+    onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function CountdownStickerView({ sticker }: CountdownStickerViewProps) {
+export default function CountdownStickerView({ sticker, onLayout }: CountdownStickerViewProps) {
     const [timeLeft, setTimeLeft] = useState<string>('');
 
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
-
-    // Extract styles from the selected style
-    const { container, text, titleText, countdownText } = selectedStyle;
-
-    // Icon configuration
-    const iconSize = container.iconSize || 18;
-    const showIcon = container.showIcon !== false;
-    const iconColor = text.color || 'white';
 
     useEffect(() => {
         // Get the end time from the sticker metadata
@@ -74,7 +67,7 @@ export default function CountdownStickerView({ sticker }: CountdownStickerViewPr
     }, [sticker.metadata?.endTime]);
 
     return (
-        <View style={selectedStyle.container}>
+        <View style={selectedStyle.container} onLayout={onLayout}>
             {/* {showIcon && <Ionicons name="time-outline" size={iconSize} color={iconColor} style={{ marginRight: 6 }} />} */}
             <Text style={selectedStyle.titleText}>
                 {sticker.style}

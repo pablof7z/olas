@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Dimensions, ActivityIndicator, Text } from 'react-native';
 import { Image, ImageStyle, useImage } from 'expo-image';
 import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
-import StoryStickersContainer from './StoryStickersContainer';
-import { StoryHeader } from './header';
-import StoryText from './StoryText';
+import StoryStickersContainer from '../StoryStickersContainer';
+import { StoryHeader } from '../header';
+import StoryText from '../StoryText';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { urlIsVideo } from '@/utils/media';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -51,11 +51,15 @@ const VideoContent = ({ url }: { url: string }) => {
 };
 
 const ImageContent = ({ url }: { url: string }) => {
+    // Handle both remote and local file URIs
+    // Local URIs will be in the format "file:///path/to/file"
     const imageSource = useImage({ uri: url });
 
     return <Image
         style={styles.media}
         source={imageSource}
+        // Add contentFit to ensure it displays properly
+        contentFit="cover"
     />;
 };
 const styles = StyleSheet.create({

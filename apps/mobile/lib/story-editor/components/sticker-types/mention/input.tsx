@@ -1,11 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { View, TextInput, StyleSheet, Text } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import { Hexpubkey, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import MentionSuggestions from '@/lib/comments/components/mention-suggestions';
+import Mention from '@/lib/mentions/search';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useStickerStore } from '../../../store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
-import { UserProfile } from '@/hooks/user-profile';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 interface MentionStickerInputProps {
@@ -15,15 +14,7 @@ interface MentionStickerInputProps {
 export default function MentionStickerInput({ onStickerAdded }: MentionStickerInputProps) {
     const { colors } = useColorScheme();
     const { addSticker } = useStickerStore();
-    const [text, setText] = useState<string>('');
-    const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-    const inputRef = useRef<TextInput>(null);
     const { ndk } = useNDK();
-
-    const handleTextChange = (value: string) => {
-        setText(value);
-        setShowSuggestions(true);
-    };
 
     const handleProfileSelect = useCallback(
         (pubkey: Hexpubkey, profile: NDKUserProfile) => {
@@ -61,37 +52,23 @@ export default function MentionStickerInput({ onStickerAdded }: MentionStickerIn
     return (
         <View style={styles.container}>
             <Text style={[styles.label, { color: colors.foreground }]}>Enter @ to mention someone</Text>
-            <TextInput
-                ref={inputRef}
-                style={[
-                    styles.input,
-                    {
-                        backgroundColor: colors.card,
-                        color: colors.foreground,
-                        borderColor: colors.grey3,
-                    },
-                ]}
-                value={text}
-                onChangeText={handleTextChange}
+            <Mention
                 placeholder="Type @ to mention someone..."
                 placeholderTextColor={colors.grey2}
                 autoFocus
-                autoCapitalize="none"
-                autoCorrect={false}
+                onMentionSelect={handleProfileSelect}
+                style={{
+                    ...styles.input,
+                    backgroundColor: colors.card,
+                    color: colors.foreground,
+                    borderColor: colors.grey3,
+                }}
+                suggestionsContainerStyle={{
+                    ...styles.suggestionsContainer,
+                    backgroundColor: colors.card,
+                    borderColor: colors.grey3,
+                }}
             />
-
-            {showSuggestions && (
-                <View
-                    style={[
-                        styles.suggestionsContainer,
-                        {
-                            backgroundColor: colors.card,
-                            borderColor: colors.grey3,
-                        },
-                    ]}>
-                    <MentionSuggestions query={text} onPress={handleProfileSelect} />
-                </View>
-            )}
         </View>
     );
 }

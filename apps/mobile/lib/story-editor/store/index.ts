@@ -30,7 +30,7 @@ export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
         scale: number;
         rotate: number;
     };
-    dimensions: {
+    dimensions?: {
         width: number;
         height: number;
     };

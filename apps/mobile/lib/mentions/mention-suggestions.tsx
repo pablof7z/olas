@@ -1,4 +1,4 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
     NDKCacheAdapterSqlite,
@@ -18,9 +18,10 @@ interface MentionSuggestionsProps {
     query: string;
     onPress: (pubkey: Hexpubkey, userProfile: NDKUserProfile) => void;
     FlashListComponent?: typeof FlashList;
+    style?: ViewStyle;
 }
 
-export default function MentionSuggestions({ query, onPress, FlashListComponent = FlashList }: MentionSuggestionsProps) {
+export default function MentionSuggestions({ query, onPress, FlashListComponent = FlashList, style }: MentionSuggestionsProps) {
     const { ndk } = useNDK();
     const { colors } = useColorScheme();
     const [profiles, setProfiles] = useState<[Hexpubkey, NDKUserProfile][]>([]);
@@ -40,7 +41,7 @@ export default function MentionSuggestions({ query, onPress, FlashListComponent 
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, style]}>
             <FlashListComponent
                 data={profiles}
                 estimatedItemSize={50}
@@ -106,4 +107,4 @@ const styles = StyleSheet.create({
         width: '94%',
         alignSelf: 'center',
     },
-});
+}); 

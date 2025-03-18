@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState, useRef } from 'react';
-import { StyleSheet, View, Text, LayoutChangeEvent } from 'react-native';
+import { StyleSheet, View, Text, LayoutChangeEvent, Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
 import { Sticker as StickerType } from '@/lib/story-editor/store/index';
@@ -16,8 +16,6 @@ interface StickerProps {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        borderWidth: 10,
-        borderColor: 'yellow',
     },
     debugCoordinates: {
         position: 'absolute',
@@ -38,6 +36,8 @@ const styles = StyleSheet.create({
         left: 0,
     }
 });
+
+const maxWidth = Dimensions.get('window').width * 0.9;
 
 export default function Sticker({ sticker, onSelect }: StickerProps) {
     // Get the store functions directly
@@ -60,6 +60,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const savedScale = useSharedValue(sticker.transform.scale);
     const savedRotate = useSharedValue(sticker.transform.rotate);
     const scaleFactor = useMemo(() => {
+        return 1;
         if (sticker.type === NDKStoryStickerType.Text) return 0.4;
         if (sticker.type === NDKStoryStickerType.Pubkey) return 0.4;
         if (sticker.type === NDKStoryStickerType.Countdown) return 0.4;
@@ -148,7 +149,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
             runOnJS(onSelect)();
         })
         .onChange((event) => {
-            rotate.value = savedRotate.value + event.rotation;
+            rotate.value = savedRotate.value + event.rotation * (180 / Math.PI);
         })
         .onEnd(() => {
             savedRotate.value = rotate.value;
@@ -232,23 +233,26 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const animatedStyle = useAnimatedStyle(() => {
         return {
             position: 'absolute',
+            maxWidth,
             transform: [
                 { translateX: translateX.value },
                 { translateY: translateY.value },
-                { rotate: `${rotate.value}rad` },
+                { rotate: `${rotate.value}deg` },
             ],
         };
     });
+
+    const scaledMaxWidth = maxWidth / scale.value * scaleFactor;
 
     // Get the content component based on sticker type
     const renderContent = () => {
         switch (sticker.type) {
             case NDKStoryStickerType.Text: 
-                return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} />;
+                return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} maxWidth={scaledMaxWidth} />;
             case NDKStoryStickerType.Pubkey: 
                 return <MentionStickerView sticker={sticker as StickerType<NDKStoryStickerType.Pubkey>} />;
             case NDKStoryStickerType.Event: 
-                return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} />;
+                return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} maxWidth={scaledMaxWidth} />;
             case NDKStoryStickerType.Countdown: 
                 return <CountdownStickerView sticker={sticker} />;
             case NDKStoryStickerType.Prompt: 
@@ -257,8 +261,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 return null;
         }
     };
-
-    console.log('sticker', sticker, JSON.stringify(animatedStyle, null, 2));
 
     return (
         <GestureDetector gesture={gesture}>

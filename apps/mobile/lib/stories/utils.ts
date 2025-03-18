@@ -58,8 +58,6 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
         width = ndkSticker.dimension.width || 100;
         height = ndkSticker.dimension.height || 100;
 
-        console.log('ndkSticker', ndkSticker.dimension);
-        
         // Basic sticker structure
         const sticker: Sticker = {
             id: uuidv4(),

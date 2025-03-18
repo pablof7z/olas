@@ -30,7 +30,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: 'white',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },
@@ -44,7 +44,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#0ff',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textShadowColor: '#0ff',
             textShadowOffset: { width: 0, height: 0 },
@@ -61,7 +61,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#000',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'normal',
             textAlign: 'center',
         },
@@ -77,7 +77,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#000',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             fontStyle: 'italic',
             textAlign: 'center',
@@ -92,7 +92,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#fff',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textShadowColor: '#0ff',
             textShadowOffset: { width: 2, height: 2 },
@@ -113,7 +113,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#fff',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },
@@ -129,7 +129,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#fff',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'normal',
             textAlign: 'center',
         },
@@ -149,7 +149,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#6d4c41',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'normal',
             textAlign: 'center',
         },
@@ -167,7 +167,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#fff',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },
@@ -181,7 +181,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#7FFF00',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: '400',
             textAlign: 'center',
         },
@@ -194,7 +194,7 @@ const styles: TextStickerStyle[] = [
             padding: 12,
         },
         text: {
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },
@@ -214,7 +214,7 @@ const styles: TextStickerStyle[] = [
             padding: 12,
         },
         text: {
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },
@@ -242,7 +242,7 @@ const styles: TextStickerStyle[] = [
         },
         text: {
             color: '#333',
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: '500',
             textAlign: 'center',
         },
@@ -255,7 +255,7 @@ const styles: TextStickerStyle[] = [
             padding: 12,
         },
         text: {
-            fontSize: 128,
+            fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
         },

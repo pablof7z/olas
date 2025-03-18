@@ -20,7 +20,7 @@ import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
 import { Image as ExpoImage, ImageRef, useImage } from 'expo-image';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedScrollHandler, interpolate, Extrapolation } from 'react-native-reanimated';
 import { useStoriesView } from '@/lib/stories/store';
-import StoriesModal from '@/lib/stories/Modal';
+import StoriesModal from '@/lib/stories/SlidesModal';
 import BackButton from '@/components/buttons/back-button';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

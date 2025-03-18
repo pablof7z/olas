@@ -23,28 +23,29 @@ const styles: EventStickerStyle[] = [
     {
         name: 'Default',
         container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            borderRadius: 32,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderRadius: 8,
             padding: 10,
         },
         text: {
             color: 'white',
             fontSize: 18,
-            fontWeight: 'bold',
+            fontWeight: 'normal',
         },
         icon: {
             color: 'white',
         },
         author: {
             avatarStyle: {
-                width: 96,
-                height: 96,
+                width: 48,
+                height: 48,
                 borderRadius: 48,
-                marginRight: 32,
+                marginRight: 8,
             },
             nameStyle: {
                 color: 'white',
                 fontSize: 18,
+                fontWeight: 'bold',
             },
         },
     },
@@ -63,7 +64,7 @@ const styles: EventStickerStyle[] = [
         },
         text: {
             color: '#333',
-            fontSize: 32,
+            fontSize: 24,
             fontWeight: 'bold',
         },
         icon: {
@@ -118,9 +119,9 @@ const styles: EventStickerStyle[] = [
         },
         author: {
             avatarStyle: {
-                width: 18,
-                height: 18,
-                borderRadius: 12,
+                width: 48,
+                height: 48,
+                borderRadius: 24,
                 marginRight: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(255, 255, 255, 0.7)',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
-import MentionSuggestions from './mention-suggestions';
+import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 

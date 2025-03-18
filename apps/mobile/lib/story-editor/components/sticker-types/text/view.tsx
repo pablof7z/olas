@@ -19,9 +19,11 @@ interface ExtendedViewStyle extends ViewStyle {
 interface TextStickerViewProps {
     sticker: Sticker<NDKStoryStickerType.Text>;
     fixedDimensions?: boolean;
+    maxWidth?: number;
+    onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function TextStickerView({ sticker, fixedDimensions }: TextStickerViewProps) {
+export default function TextStickerView({ sticker, fixedDimensions, maxWidth, onLayout }: TextStickerViewProps) {
     const setEditSticker = useSetAtom(editStickerAtom);
     const [containerSize, setContainerSize] = useState(fixedDimensions ? sticker.dimensions : { width: 0, height: 0 });
     const [adjustedFontSize, setAdjustedFontSize] = useState<number | null>(null);
@@ -62,12 +64,13 @@ export default function TextStickerView({ sticker, fixedDimensions }: TextSticke
 
     // Create view style
     const viewStyle: ViewStyle = {
-        padding,
         borderRadius,
         borderWidth,
         borderColor,
-        width: fixedDimensions ? containerSize.width : '100%',
-        height: fixedDimensions ? containerSize.height : '100%',
+        padding,
+        width: '100%',
+        height: '100%',
+        maxWidth,
         backgroundColor: hasBackgroundGradient ? 'transparent' : backgroundColor,
         alignItems: 'center',
         justifyContent: 'center',
@@ -75,42 +78,52 @@ export default function TextStickerView({ sticker, fixedDimensions }: TextSticke
 
     // Handle container layout to measure available space
     const handleLayout = useCallback((event: LayoutChangeEvent) => {
+        onLayout?.(event);
+        
         if (fixedDimensions) return;
         const { width, height } = event.nativeEvent.layout;
-        console.log('handleLayout', { width, height });
         setContainerSize({ width, height });
-    }, [fixedDimensions]);
+    }, [fixedDimensions, onLayout]);
+
+    // Initialize container size for fixed dimensions
+    useEffect(() => {
+        if (fixedDimensions && sticker.dimensions) {
+            setContainerSize(sticker.dimensions);
+        }
+    }, [fixedDimensions, sticker.dimensions]);
 
     // Calculate adjusted font size based on text length and container size
     useEffect(() => {
+
         if (containerSize.width <= 0 || containerSize.height <= 0 || !sticker.value) {
             return;
         }
 
         // Starting with a larger font size based on container dimensions
-        const availableWidth = containerSize.width;
-        const availableHeight = containerSize.height;
+        const availableWidth = containerSize.width - (padding * 1.5);
+        const availableHeight = containerSize.height - (padding * 1.5);
         
         // Estimate characters per line based on average character width (approximation)
-        const avgCharWidth = initialFontSize * 0.6;
+        const avgCharWidth = initialFontSize * 0.5;
         const textLength = sticker.value.length;
         
         // Calculate a font size that would fit width-wise
-        const maxFontSizeByWidth = availableWidth / (textLength * 0.6) * 1.8;
+        const maxFontSizeByWidth = availableWidth / (textLength * 0.5) * 2.2;
         
         // Ensure the text height also fits within container
         const estimatedLines = Math.ceil((textLength * avgCharWidth) / availableWidth);
-        const maxFontSizeByHeight = availableHeight / (estimatedLines * 1.3); // 1.3 is line height factor
+        const maxFontSizeByHeight = availableHeight / (estimatedLines * 1.2);
         
         // Use the smaller of the two calculated sizes to ensure fitting in both dimensions
-        const calculatedFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight, initialFontSize * 2);
+        const calculatedFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight, initialFontSize * 3);
         
         // Set a reasonable floor and ceiling
-        const finalFontSize = Math.max(8, Math.min(calculatedFontSize, 72));
+        const finalFontSize = Math.max(14, Math.min(calculatedFontSize, 90));
 
-        console.log('calculatedFontSize', { containerSize, finalFontSize, padding: padding / 4, maxFontSizeByWidth, maxFontSizeByHeight, availableWidth, availableHeight, textLength, estimatedLines });
+        console.log('calculatedFontSize', { containerSize, finalFontSize, padding, maxFontSizeByWidth, maxFontSizeByHeight, availableWidth, availableHeight, textLength, estimatedLines });
         
         setAdjustedFontSize(finalFontSize);
+        console.log("👉 SETTING ADJUSTED FONT SIZE", finalFontSize);
     }, [containerSize, sticker.value, initialFontSize, padding]);
 
     // Create text style with adjusted font size if available
@@ -119,8 +132,7 @@ export default function TextStickerView({ sticker, fixedDimensions }: TextSticke
         fontWeight,
         fontStyle,
         textAlign,
-        fontSize: false ? ( adjustedFontSize || initialFontSize) : textStyle.fontSize,
-    
+        fontSize: (textStyle.fontSize || 128),
         textShadowColor,
         textShadowOffset,
         textShadowRadius,
@@ -128,6 +140,11 @@ export default function TextStickerView({ sticker, fixedDimensions }: TextSticke
         alignItems: 'center',
         justifyContent: 'center',
     };
+
+    if (fixedDimensions && containerSize) {
+        formattedTextStyle.width = containerSize.width;
+        formattedTextStyle.height = containerSize.height;
+    }
 
     const handleLongPress = useCallback(() => {
         setEditSticker(sticker);
@@ -155,22 +172,25 @@ export default function TextStickerView({ sticker, fixedDimensions }: TextSticke
     // Create a tuple of at least two colors
     const safeGradientColors = gradientColors.length >= 2 ? ([gradientColors[0], gradientColors[1]] as const) : defaultColors;
 
+    console.log('view style', JSON.stringify(viewStyle));
+    console.log('text style', JSON.stringify(formattedTextStyle));
+
     return (
         <Pressable onLongPress={handleLongPress} delayLongPress={600}>
             {hasBackgroundGradient && containerStyle.backgroundGradient ? (
                 <LinearGradient
-                    style={viewStyle}
+                    style={[viewStyle, selectedStyle.container]}
                     colors={safeGradientColors}
                     start={containerStyle.backgroundGradient.start || { x: 0, y: 0 }}
                     end={containerStyle.backgroundGradient.end || { x: 1, y: 1 }}
                     onLayout={handleLayout}>
-                    <Text style={formattedTextStyle} adjustsFontSizeToFit numberOfLines={0}>
+                    <Text style={formattedTextStyle} adjustsFontSizeToFit>
                         {sticker.value}
                     </Text>
                 </LinearGradient>
             ) : (
-                <View style={viewStyle} onLayout={handleLayout}>
-                    <Text style={formattedTextStyle} adjustsFontSizeToFit numberOfLines={0}>
+                <View style={[viewStyle, selectedStyle.container]} onLayout={handleLayout}>
+                    <Text style={[formattedTextStyle]} numberOfLines={0}>
                         {sticker.value}
                     </Text>
                 </View>

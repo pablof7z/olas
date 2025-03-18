@@ -10,7 +10,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import * as User from '@/components/ui/user';
 import { useUserFlare } from '@/hooks/user-flare';
 import { BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
-import MentionSuggestions from './mention-suggestions';
+import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 
 export default function NewComment({ event, currentUser, autoFocus }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
     const { userProfile } = useUserProfile(currentUser?.pubkey);

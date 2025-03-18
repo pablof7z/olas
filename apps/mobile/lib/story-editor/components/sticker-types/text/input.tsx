@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { editStickerAtom, useStickerStore } from '../../../store';
+import { editStickerAtom, Sticker, useStickerStore } from '../../../store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom } from 'jotai';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function TextStickerInput() {
     const { addSticker, updateStickerValue } = useStickerStore();
-    const [editSticker, setEditSticker] = useAtom(editStickerAtom);
+    const [editSticker, setEditSticker] = useAtom(editStickerAtom) as [Sticker<NDKStoryStickerType.Text>, (sticker: Sticker<NDKStoryStickerType.Text> | null) => void];
     const [text, setText] = useState(editSticker?.value || '');
     const insets = useSafeAreaInsets();
 
     const handleDone = () => {
-        if (editSticker?.id) {
-            // Update existing sticker
-            const updatedSticker = {
-                ...editSticker,
-                value: text.trim() || 'Tap to edit',
-            };
+        if (!text) return;
 
-            // Use updateStickerContent from the store to update just the content
+        if (editSticker?.id) {
             updateStickerValue(editSticker.id, text.trim() || 'Tap to edit');
         } else {
             // Create new sticker
@@ -39,29 +34,27 @@ export default function TextStickerInput() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.overlay}>
-                <View style={[styles.header, { marginTop: insets.top }]}>
-                    <TouchableOpacity onPress={handleCancel} style={styles.button}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleDone} style={styles.button}>
-                        <Text style={styles.buttonText}>Done</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <KeyboardAvoidingView style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.textInput}
-                        value={text}
-                        onChangeText={setText}
-                        placeholder="Enter text here"
-                        placeholderTextColor="rgba(255, 255, 255, 0.7)"
-                        autoFocus
-                        multiline
-                        maxLength={100}
-                    />
-                </KeyboardAvoidingView>
+            <View style={[styles.header, { marginTop: insets.top }]}>
+                <TouchableOpacity onPress={handleCancel} style={styles.button}>
+                    <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDone} style={styles.button}>
+                    <Text style={styles.buttonText}>Done</Text>
+                </TouchableOpacity>
             </View>
+
+            <KeyboardAvoidingView style={styles.inputContainer}>
+                <TextInput
+                    style={styles.textInput}
+                    value={text}
+                    onChangeText={setText}
+                    placeholder="Enter text here"
+                    placeholderTextColor="rgba(255, 255, 255, 0.7)"
+                    autoFocus
+                    multiline
+                    maxLength={100}
+                />
+            </KeyboardAvoidingView>
         </View>
     );
 }
@@ -76,15 +69,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        width: '100%',
         paddingHorizontal: 20,
         paddingVertical: 16,
     },
@@ -110,5 +98,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         padding: 16,
         borderRadius: 8,
+        marginBottom: 50,
     },
 });

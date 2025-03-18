@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, ActivityIndicator, ViewStyle } from 'react-native';
+import { View, ActivityIndicator, ViewStyle, LayoutChangeEvent } from 'react-native';
 import { Sticker } from '@/lib/story-editor/store/index';
-import { NDKKind, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, NDKStoryStickerType, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { EventStickerStyle, getStyleFromName } from './styles';
 import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -14,9 +14,11 @@ const ARTICLE_KIND = 30023;
 
 interface EventStickerViewProps {
     sticker: Sticker<NDKStoryStickerType.Event>;
+    onLayout?: (event: LayoutChangeEvent) => void;
+    maxWidth?: number;
 }
 
-export default function EventStickerView({ sticker }: EventStickerViewProps) {
+export default function EventStickerView({ sticker, onLayout, maxWidth }: EventStickerViewProps) {
     const event = sticker.value;
 
     // Get the selected style or default to the first one if not set
@@ -24,11 +26,13 @@ export default function EventStickerView({ sticker }: EventStickerViewProps) {
 
     const { colors } = useColorScheme();
 
-    const content = (
-        <>{!event ? <ActivityIndicator size="small" color={colors.foreground} /> : <RenderEvent event={event} styles={selectedStyle} />}</>
-    );
-
-    return <View style={selectedStyle.container as ViewStyle}>{content}</View>;
+    return <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
+        {!event ? (
+            <ActivityIndicator size="small" color={colors.foreground} />
+        ) : (
+            <RenderEvent event={event} styles={selectedStyle} />
+        )}
+    </View>;
 }
 
 function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerStyle }) {

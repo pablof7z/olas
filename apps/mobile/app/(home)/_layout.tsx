@@ -151,21 +151,6 @@ export default function TabsLayout() {
                 }}
             />
 
-            <Tabs.Screen
-                name="story-viewer-demo"
-                options={{
-                    title: 'Story Demo',
-                    headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <Play size={24} color={color} strokeWidth={focused ? 3 : 2} />,
-                }}
-                listeners={{
-                    tabPress: (e) => {
-                        e.preventDefault();
-                        router.push('/story-viewer-demo');
-                    },
-                }}
-            />
-
             {WALLET_ENABLED ? (
                 <Tabs.Screen
                     name="(wallet)"

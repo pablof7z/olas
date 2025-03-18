@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Text } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Text, ActivityIndicator } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +11,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { TextStickerInput } from './sticker-types';
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import { useNDK, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, NDKStoryStickerType, NDKStory, NDKImetaTag, NDKEvent, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { uploadStory } from '../actions/upload';
 import { createAndPublishStoryEvent } from '../actions/event';
 
@@ -21,19 +21,27 @@ interface StoryPreviewScreenProps {
     path: string;
     type: 'photo' | 'video';
     onClose: () => void;
+    onPreview?: (story: NDKStory) => void;
 }
 
-export default function StoryPreviewContent({ path, type, onClose }: StoryPreviewScreenProps) {
+// Export a CloseButton component for reuse
+export const CloseButton = ({ onPress }: { onPress: () => void }) => (
+    <TouchableOpacity onPress={onPress} style={[styles.button, styles.closeButton]} testID="close-button">
+        <Ionicons name="close" size={20} color="white" />
+    </TouchableOpacity>
+);
+
+export default function StoryPreviewContent({ path, type, onClose, onPreview }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const canvasRef = useCanvasRef();
     const [canvasSize, setCanvasSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     const image = useImage(path);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-
-    const { stickers, removeSticker } = useStickerStore();
+    const { stickers, removeSticker, addSticker } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
     const [isUploading, setIsUploading] = useState(false);
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
 
@@ -65,8 +73,58 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             type: NDKStoryStickerType.Text,
             value: '',
             transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 },
-            dimensions: { width: 100, height: 100 },
         });
+    };
+
+    const handlePreview = async () => {
+        console.log('Preview button pressed', { ndk: !!ndk, onPreview: !!onPreview });
+        
+        if (!ndk || !onPreview) {
+            Alert.alert('Error', 'Preview is not available');
+            return;
+        }
+
+        try {
+            setIsGeneratingPreview(true);
+            console.log('Generating preview with local URI');
+
+            // Instead of uploading, create a local imeta with the file URI
+            const localImeta: NDKImetaTag = {
+                url: `file://${path}`, // Use local file URI
+                // We don't need other properties like hash for preview
+                m: type === 'photo' ? 'image/jpeg' : 'video/mp4', // Assumed mime types
+            };
+            
+            console.log('Local imeta created:', localImeta);
+
+            try {
+                console.log('Creating story event without publishing');
+                // Create and sign the story event without publishing
+                const storyEvent = await createAndPublishStoryEvent({
+                    ndk: ndk,
+                    imeta: localImeta,
+                    path,
+                    type,
+                    stickers,
+                    canvasSize,
+                    publish: false // Don't publish the event
+                });
+
+                if (storyEvent) {
+                    onPreview(storyEvent);
+                } else {
+                    Alert.alert('Preview Failed', 'Failed to create story preview. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error creating story preview:', error);
+                Alert.alert('Preview Failed', 'Failed to create preview. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error handling story preview:', error);
+            Alert.alert('Preview Failed', 'An unexpected error occurred. Please try again.');
+        } finally {
+            setIsGeneratingPreview(false);
+        }
     };
 
     const handleShare = async () => {
@@ -93,7 +151,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
                     // Create and publish the story event
                     await createAndPublishStoryEvent({
                         ndk: ndk,
-                    imeta: result.imeta,
+                        imeta: result.imeta,
                         path,
                         type,
                         stickers,
@@ -176,9 +234,7 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             </View>
 
             <View style={[styles.header]}>
-                <TouchableOpacity onPress={onClose} style={[styles.button, styles.closeButton]} testID="close-button">
-                    <Ionicons name="close" size={20} color="white" />
-                </TouchableOpacity>
+                <CloseButton onPress={onClose} />
                 <TouchableOpacity
                     style={[styles.button, styles.textButton]}
                     testID="add-text-button"
@@ -196,9 +252,37 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
             </View>
 
             <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
-                <TouchableOpacity style={styles.shareButton} testID="share-button" onPress={handleShare} disabled={isUploading}>
-                    <Ionicons name={isUploading ? 'hourglass' : 'arrow-forward-circle'} size={60} color="white" />
-                </TouchableOpacity>
+                {onPreview && (
+                    <TouchableOpacity 
+                        style={styles.previewButton} 
+                        testID="preview-button" 
+                        onPress={handlePreview} 
+                        disabled={isGeneratingPreview || isUploading}
+                    >
+                        <Ionicons 
+                            name="eye" 
+                            size={40} 
+                            color={"white"} 
+                        />
+                    </TouchableOpacity>
+                )}
+                <View style={{flex: 1}} />
+                {isUploading ? (
+                    <ActivityIndicator size="large" color="white" />
+                ) : (
+                    <TouchableOpacity 
+                        style={styles.shareButton} 
+                        testID="share-button" 
+                        onPress={handleShare} 
+                        disabled={isUploading || isGeneratingPreview}
+                    >
+                        <Ionicons 
+                            name={isUploading ? 'hourglass' : 'arrow-forward-circle'} 
+                            size={60} 
+                            color={isUploading || isGeneratingPreview ? "gray" : "white"} 
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <StickersBottomSheet />
@@ -211,6 +295,9 @@ export default function StoryPreviewContent({ path, type, onClose }: StoryPrevie
         </View>
     );
 }
+
+// Add these component exports to fix the reference issues
+StoryPreviewContent.CloseButton = CloseButton;
 
 const styles = StyleSheet.create({
     container: {
@@ -275,17 +362,22 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     footer: {
-        padding: 20,
         position: 'absolute',
-        bottom: 0,
+        bottom: 20,
         left: 0,
         right: 0,
-        alignItems: 'flex-end',
+        backgroundColor: 'transparent',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 30,
         zIndex: 2,
     },
+    previewButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     shareButton: {
-        width: 60,
-        height: 60,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -295,6 +387,17 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        zIndex: 100,
+    },
+    loadingIndicator: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

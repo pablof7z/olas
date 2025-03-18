@@ -4,14 +4,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as User from '@/components/ui/user';
 import { Sticker } from '@/lib/story-editor/store/index';
 import { NDKStoryStickerType, NDKUser } from '@nostr-dev-kit/ndk-mobile';
-import mentionStyles, { ExtendedViewStyle, getStyleFromName } from './styles';
+import mentionStyles, { ExtendedViewStyle, getStyleFromName, MentionStickerStyle } from './styles';
 
 interface MentionStickerViewProps {
     sticker: Sticker<NDKStoryStickerType.Pubkey>;
     fixedDimensions?: boolean;
+    onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function MentionStickerView({ sticker, fixedDimensions = false }: MentionStickerViewProps) {
+export default function MentionStickerView({ sticker, fixedDimensions = false, onLayout }: MentionStickerViewProps) {
     // Initialize containerSize with dimensions from sticker if fixedDimensions is true, otherwise empty
     const [containerSize, setContainerSize] = useState(fixedDimensions ? sticker.dimensions : { width: 0, height: 0 });
     
@@ -34,7 +35,7 @@ export default function MentionStickerView({ sticker, fixedDimensions = false }:
     // Calculate avatar size based on font size from name style
     const nameStyle = selectedStyle.nameStyle as TextStyle;
     const fontSize = nameStyle?.fontSize || 16;
-    const avatarSize = fontSize + 8;
+    let avatarSize = selectedStyle.avatarStyle ? selectedStyle.avatarStyle.width : 24;
 
     // Create view style with appropriate dimensions based on fixedDimensions
     const viewStyle = {
@@ -47,14 +48,44 @@ export default function MentionStickerView({ sticker, fixedDimensions = false }:
 
     // Handle container layout to measure available space
     const handleLayout = useCallback((event: LayoutChangeEvent) => {
+        onLayout?.(event);
         if (fixedDimensions) return;
         const { width, height } = event.nativeEvent.layout;
         console.log('handleLayout', { width, height });
         setContainerSize({ width, height });
-    }, [fixedDimensions]);
+    }, [fixedDimensions, onLayout]);
 
-    // Build the appropriate content with optional avatar
-    const content = (
+    if (hasBackgroundGradient && containerStyle.backgroundGradient) {
+        // Extract linear gradient props and regular style props
+        const { backgroundGradient, ...restStyle } = containerStyle;
+        
+        return (
+            <LinearGradient
+                style={{
+                    ...restStyle,
+                    width: viewStyle.width,
+                    height: viewStyle.height,
+                    alignItems: viewStyle.alignItems,
+                    justifyContent: viewStyle.justifyContent,
+                }}
+                colors={backgroundGradient.colors}
+                start={backgroundGradient.start || { x: 0, y: 0 }}
+                end={backgroundGradient.end || { x: 1, y: 1 }}
+                onLayout={handleLayout}>
+                <Content pubkey={pubkey} userProfile={userProfile} avatarSize={avatarSize} selectedStyle={selectedStyle} />
+            </LinearGradient>
+        );
+    }
+
+    console.log('viewStyle', viewStyle);
+
+    return <View style={viewStyle} onLayout={handleLayout}>
+        <Content pubkey={pubkey} userProfile={userProfile} avatarSize={avatarSize} selectedStyle={selectedStyle} />
+    </View>;
+}
+
+function Content({ pubkey, userProfile, avatarSize, selectedStyle }: { pubkey: string, userProfile: NDKUser, avatarSize: number, selectedStyle: MentionStickerStyle }) {
+    return (
         <>
             {selectedStyle.avatarStyle && (
                 <User.Avatar
@@ -68,32 +99,7 @@ export default function MentionStickerView({ sticker, fixedDimensions = false }:
             {selectedStyle.nameStyle && <User.Name pubkey={pubkey} userProfile={userProfile} style={selectedStyle.nameStyle} />}
         </>
     );
-
-    if (hasBackgroundGradient && containerStyle.backgroundGradient) {
-        // Extract linear gradient props and regular style props
-        const { backgroundGradient, ...restStyle } = containerStyle;
-        
-        return (
-            <LinearGradient
-                style={{
-                    ...restStyle,
-                    width: viewStyle.width,
-                    height: viewStyle.height,
-                    alignItems: viewStyle.alignItems,
-                    justifyContent: viewStyle.justifyContent
-                }}
-                colors={backgroundGradient.colors}
-                start={backgroundGradient.start || { x: 0, y: 0 }}
-                end={backgroundGradient.end || { x: 1, y: 1 }}
-                onLayout={handleLayout}>
-                {content}
-            </LinearGradient>
-        );
-    }
-
-    return <View style={viewStyle} onLayout={handleLayout}>{content}</View>;
 }
-
 const _styles = StyleSheet.create({
     container: {
         flexDirection: 'row',

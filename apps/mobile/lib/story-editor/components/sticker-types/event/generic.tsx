@@ -5,15 +5,14 @@ import EventContent from '@/components/ui/event/content';
 import { UserProfile } from "@/hooks/user-profile";
 import { EventStickerStyle } from "./styles";
 
-const width = Dimensions.get('window').width;
-
 export default function EventStickerGeneric({ event, userProfile, styles }: { event: NDKEvent, userProfile?: UserProfile, styles: EventStickerStyle }) {
+    console.log('event', event);
     let content = event.content;
     if (content.trim().length === 0 && event.alt) content = event.alt;
     if (content.trim().length === 0) content = event.kind.toString();
     
     return (
-        <View style={{width: width}}>
+        <View>
             {styles.author && (
                 <View style={_styles.userContainer}>
                     {styles.author.avatarStyle && (
@@ -21,7 +20,7 @@ export default function EventStickerGeneric({ event, userProfile, styles }: { ev
                             pubkey={event.pubkey}
                             userProfile={userProfile}
                             imageSize={styles.author.avatarStyle.width as number}
-                            style={[_styles.icon, styles.author.avatarStyle]}
+                            style={[_styles.icon]}
                         />
                     )}
                     {styles.author.nameStyle && (

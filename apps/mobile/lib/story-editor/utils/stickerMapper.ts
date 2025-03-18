@@ -1,4 +1,4 @@
-import { NDKStorySticker, NDKUser, NDKStoryStickerType, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKStorySticker } from '@nostr-dev-kit/ndk-mobile';
 import { Sticker } from '../store';
 
 /**
@@ -14,24 +14,21 @@ export const mapStickerToNDKFormat = (
     stickerDimensions: { width: number; height: number }
 ): NDKStorySticker => {
     // Create the base sticker
-    const baseSticker = {
-        type: sticker.type,
-        value: sticker.value,
-        position: {
-            x: Math.round(sticker.transform.translateX * 100) / 100,
-            y: Math.round(sticker.transform.translateY * 100) / 100,
-        },
-        dimension: {
-            width: Math.round(stickerDimensions.width),
-            height: Math.round(stickerDimensions.height)
-        },
-        properties: {} as Record<string, string>,
+    const ndkSticker = new NDKStorySticker(sticker.type);
+    ndkSticker.value = sticker.value;
+    ndkSticker.position = {
+        x: Math.round(sticker.transform.translateX * 100) / 100,
+        y: Math.round(sticker.transform.translateY * 100) / 100,
+    };
+    ndkSticker.dimension = {
+        width: Math.round(stickerDimensions.width),
+        height: Math.round(stickerDimensions.height)
     };
 
     // Add properties
-    if (sticker.style) baseSticker.properties.style = sticker.style;
-    if (sticker.transform.rotate) baseSticker.properties.rot = sticker.transform.rotate.toString();
+    if (sticker.style) ndkSticker.style = sticker.style;
+    if (sticker.transform.rotate) ndkSticker.rotation = sticker.transform.rotate;
 
     // Use type assertion to bypass the type checking
-    return baseSticker as unknown as NDKStorySticker;
+    return ndkSticker as unknown as NDKStorySticker;
 };

@@ -1,8 +1,7 @@
 import NDK, { NDKImetaTag, NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { getVideoMetaData } from 'react-native-compressor';
 import { Sticker } from '../store';
-import { mapStickerToNDKFormat } from '../utils';
-import { debugEvent } from '@/utils/debug';
+import { mapStickerToNDKFormat } from '../utils/stickerMapper';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { Dimensions } from 'react-native';
 
@@ -13,49 +12,72 @@ interface CreateStoryEventParams {
     type: 'photo' | 'video';
     stickers: Sticker[];
     canvasSize: { width: number; height: number };
+    publish?: boolean;
 }
 
 /**
  * Creates and publishes a story event with the given media and stickers
  */
 export const createAndPublishStoryEvent = async (params: CreateStoryEventParams): Promise<NDKStory | null> => {
-    const { ndk, imeta, path, type, stickers, canvasSize } = params;
+    console.log('createAndPublishStoryEvent called with params:', {
+        path: params.path,
+        type: params.type,
+        stickersCount: params.stickers.length,
+        canvasSize: params.canvasSize,
+        publish: params.publish
+    });
 
-    // Create a new story event
-    const event = new NDKStory(ndk);
-    
-    // Add video duration if it's a video
-    if (type === 'video') {
-        const metadata = await getVideoMetaData(path);
-        if (metadata && metadata.duration) {
-            event.duration = metadata.duration;
+    try {
+        const { ndk, imeta, path, type, stickers, canvasSize, publish = true } = params;
+
+        // Create a new story event
+        const event = new NDKStory(ndk);
+        
+        // Add video duration if it's a video
+        if (type === 'video') {
+            try {
+                const metadata = await getVideoMetaData(path);
+                if (metadata && metadata.duration) {
+                    event.duration = metadata.duration;
+                }
+            } catch (err) {
+                console.error('Error getting video metadata:', err);
+            }
         }
-    }
 
-    event.imetas = [imeta];
-    event.alt = `This is a story event created with Olas`;
+        console.log('Setting story event properties');
+        event.imeta = imeta;
+        event.alt = `This is a story event created with Olas`;
 
-    const dimensions = Dimensions.get('window');
-    event.dimensions = dimensions;
+        const dimensions = Dimensions.get('window');
+        event.dimensions = dimensions;
 
-    // Add stickers to the event
-    for (const sticker of stickers) {
-        try {   
-            // Use the utility function to map our sticker to NDK format
-            const dimensions = sticker.dimensions;
-            const ndkSticker = mapStickerToNDKFormat(sticker, dimensions);
-            event.addSticker(ndkSticker);
-        } catch (error: any) {
-            console.trace('Error adding sticker: ' + error?.message);
-            toast.error('Error adding sticker: ' + error?.message);
-            return null;
+        console.log('Adding stickers to event:', stickers.length);
+        // Add stickers to the event
+        for (const sticker of stickers) {
+            try {   
+                // Use the utility function to map our sticker to NDK format
+                const dimensions = sticker.dimensions;
+                const ndkSticker = mapStickerToNDKFormat(sticker, dimensions);
+                event.addSticker(ndkSticker);
+            } catch (error: any) {
+                console.trace('Error adding sticker: ' + error?.message);
+                toast.error('Error adding sticker: ' + error?.message);
+                // Continue with other stickers instead of returning null
+            }
         }
-    }
 
-    // Publish the story event
-    await event.sign();
-    debugEvent(event);
-    await event.publish();
-    
-    return event;
+        // Sign the story event
+        await event.sign();
+        
+        // Publish if requested
+        if (publish) {
+            await event.publish();
+        }
+        
+        return event;
+    } catch (error) {
+        console.error('Error in createAndPublishStoryEvent:', error);
+        return null;
+    }
 };
