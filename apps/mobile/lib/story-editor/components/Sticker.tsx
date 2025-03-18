@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     },
     debugCoordinates: {
         position: 'absolute',
-        top: 0,
+        top: -50,
         left: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         padding: 4,
@@ -28,14 +28,12 @@ const styles = StyleSheet.create({
     },
     debugText: {
         color: 'white',
-        fontSize: 30,
+        fontSize: 14,
     },
     contentContainer: {
         position: 'absolute',
         top: 0,
         left: 0,
-        borderWidth: 1,
-        borderColor: 'cyan',
     }
 });
 
@@ -85,6 +83,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     // Update store with new transform values
     const updateStickerTransform = useCallback(() => {
+        console.log('👉 In Sticker.updateStickerTransform with id:', sticker.id);
         const transform = {
             translateX: translateX.value,
             translateY: translateY.value,
@@ -105,10 +104,10 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     }, [sticker.id, translateX, translateY, scale, rotate, updateSticker, updateStickerDimensions, scaleFactor]);
 
     // Handle style change using the store's nextStyle function
-    const handleDoubleDoubleTap = () => {
-        console.log('handleDoubleDoubleTap', sticker.id);
+    const changeStyle = () => {
         // Use the store's nextStyle function to update the style
         nextStyle(sticker.id);
+        onSelect();
     };
 
     // Pan gesture for translation
@@ -158,23 +157,14 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
             runOnJS(updateStickerTransform)();
         });
 
-    // Double tap gesture for style cycling
-    const doubleTapGesture = Gesture.Tap()
-        .numberOfTaps(2)
-        .onEnd(() => {
-            runOnJS(handleDoubleDoubleTap)();
-        });
-
     // Single tap gesture for selection
     const tapGesture = Gesture.Tap()
-        .maxDuration(250)
         .onEnd(() => {
-            runOnJS(onSelect)();
+            runOnJS(changeStyle)();
         });
 
     // Compose gestures
     const gesture = Gesture.Exclusive(
-        doubleTapGesture,
         Gesture.Simultaneous(tapGesture, Gesture.Simultaneous(panGesture, Gesture.Simultaneous(pinchGesture, rotationGesture)))
     );
 
@@ -182,7 +172,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const handleLayout = useCallback((event: LayoutChangeEvent) => {
         'worklet';
         const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
-        console.log('Layout dimensions:', newWidth, newHeight);
         if (newWidth > 0 && newHeight > 0) {
             // Store the base dimensions (without scaling)
             baseDimensions.current = { width: newWidth, height: newHeight };
@@ -234,7 +223,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     const scaleStyle = useAnimatedStyle(() => {
         return {
-            borderWidth: 1, borderColor: 'blue',
             transform: [ { scale: scale.value * scaleFactor } ],
         };
     });
@@ -258,8 +246,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     useLayoutEffect(() => {
         setDerivedScaledMaxWidth(maxWidth / scale.value * scaleFactor);
     }, [scale, scaleFactor]);
-
-    console.log('rendering sticker', JSON.stringify(sticker));
 
     // Get the content component based on sticker type
     const renderContent = () => {
@@ -285,13 +271,14 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 <Animated.View style={scaleStyle} onLayout={handleLayout}>
                     <View style={styles.contentContainer} onLayout={handleContentLayout}>
                         {renderContent()}
-                        {/* <View style={styles.debugCoordinates}>
+                        <View style={styles.debugCoordinates}>
                             <Text style={styles.debugText}>
+                                {sticker.style}{"\n"}
                                 X: {Math.round(translateX.value)}, Y: {Math.round(translateY.value)}
                                 {"\n"}W: {Math.round(stickerDimensions.width)}, H: {Math.round(stickerDimensions.height)}
                                 {"\n"}Scale: {scale.value.toFixed(2)}
                             </Text>
-                        </View> */}
+                        </View>
                     </View>
                 </Animated.View>
             </Animated.View>

@@ -22,7 +22,6 @@ export default function TextStickerInput() {
             addSticker({
                 type: NDKStoryStickerType.Text,
                 value: text.trim() || 'Tap to edit',
-                style: 'default',
             });
         }
         setEditSticker(null);

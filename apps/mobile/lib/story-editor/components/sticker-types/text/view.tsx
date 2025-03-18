@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef, cloneElement } from 'react';
 import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent, Button } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sticker } from '@/lib/story-editor/store/index';
@@ -14,6 +14,7 @@ interface ExtendedViewStyle extends ViewStyle {
         start?: { x: number; y: number };
         end?: { x: number; y: number };
     };
+    padding?: number;
 }
 
 interface TextStickerViewProps {
@@ -31,7 +32,6 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
 
     const containerStyle = useMemo(() => {
         const _style: ViewStyle = {
-            borderWidth: 1, borderColor: 'orange',
             maxWidth,
             width: sticker.dimensions?.width,
         };
@@ -39,8 +39,19 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
         return _style;
     }, [])
 
+    // Check if container is a component (function) or a style object
+    const isContainerComponent = useMemo(() => {
+        return typeof selectedStyle.container === 'function';
+    }, [selectedStyle.container]);
+
     const textStyle = useMemo(() => {
-        const padding = Number(selectedStyle?.container?.padding || 0);
+        let padding = 0;
+        
+        // Only try to access padding if container is a style object
+        if (!isContainerComponent && selectedStyle.container) {
+            padding = Number((selectedStyle.container as ExtendedViewStyle)?.padding || 0);
+        }
+        
         let width = undefined;
         
         if (sticker.dimensions && typeof sticker.dimensions.width === 'number') {
@@ -49,13 +60,11 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
         
         const _style: TextStyle = {
             ...selectedStyle.text,
-            borderWidth: 1,
-            borderColor: 'yellow',
             fontSize: fontSize,
         }
 
         return _style;
-    }, [selectedStyle.text, fontSize])
+    }, [selectedStyle.text, fontSize, isContainerComponent])
 
     const handleTextLayout = useCallback((event: LayoutChangeEvent) => {
         if (!fixedDimensions || !sticker.dimensions) return;
@@ -137,11 +146,75 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
         }
     }, [fixedDimensions, fontSize, hasAdjustedLayout, onLayout]);
     
+    // Check if the container style has a background gradient
+    const hasBackgroundGradient = useMemo(() => {
+        if (isContainerComponent) return false;
+        return !!(selectedStyle.container as ExtendedViewStyle)?.backgroundGradient;
+    }, [selectedStyle.container, isContainerComponent]);
+
+    // Extract the gradient properties
+    const gradientProps = useMemo(() => {
+        if (!hasBackgroundGradient) return null;
+        
+        const { backgroundGradient } = (selectedStyle.container as ExtendedViewStyle);
+        // Ensure we have at least two colors for the gradient
+        const colors = backgroundGradient!.colors.length >= 2 
+            ? backgroundGradient!.colors as [string, string, ...string[]]
+            : ['rgba(0,0,0,0)', 'rgba(0,0,0,0)'] as [string, string];
+            
+        return {
+            colors,
+            start: backgroundGradient!.start || { x: 0, y: 0 },
+            end: backgroundGradient!.end || { x: 1, y: 1 }
+        };
+    }, [selectedStyle.container, hasBackgroundGradient]);
+
+    // Create a style without the backgroundGradient property for the LinearGradient component
+    const containerStyleWithoutGradient = useMemo(() => {
+        if (!hasBackgroundGradient || isContainerComponent) return {};
+        
+        const { backgroundGradient, ...rest } = (selectedStyle.container as ExtendedViewStyle);
+        return rest;
+    }, [selectedStyle.container, hasBackgroundGradient, isContainerComponent]);
+
+    // Render component based on container type
+    if (isContainerComponent) {
+        // Get the component from the container function
+        const containerElement = (selectedStyle.container as () => React.ReactNode)();
+        
+        // We need to clone the element to add our text as children
+        return (
+            <View style={containerStyle} onLayout={handleTextLayout}>
+                {React.cloneElement(containerElement as React.ReactElement, {}, 
+                    <Text style={[textStyle]} adjustsFontSizeToFit>
+                        {sticker.value}
+                    </Text>
+                )}
+            </View>
+        );
+    }
+
     return (
-        <View onLayout={handleTextLayout} style={[selectedStyle.container, containerStyle]}>
-            <Text style={[textStyle]} adjustsFontSizeToFit>
-                {sticker.value}
-            </Text>
-        </View>
+        <>
+            {hasBackgroundGradient && gradientProps ? (
+                <LinearGradient
+                    colors={gradientProps.colors}
+                    start={gradientProps.start}
+                    end={gradientProps.end}
+                    style={[containerStyleWithoutGradient as ViewStyle, containerStyle]}
+                    onLayout={handleTextLayout}
+                >
+                    <Text style={[textStyle]} adjustsFontSizeToFit>
+                        {sticker.value}
+                    </Text>
+                </LinearGradient>
+            ) : (
+                <View onLayout={handleTextLayout} style={[(selectedStyle.container as ViewStyle), containerStyle]}>
+                    <Text style={[textStyle]} adjustsFontSizeToFit>
+                        {sticker.value}
+                    </Text>
+                </View>
+            )}
+        </>
     );
 }

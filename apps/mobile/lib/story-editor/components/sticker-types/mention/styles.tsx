@@ -132,7 +132,7 @@ export function getStyleFromName(name?: string): MentionStickerStyle {
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
-    if (!currentStyleName) return styles[1].name;
+    if (!currentStyleName) return styles[0].name;
     const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
 }

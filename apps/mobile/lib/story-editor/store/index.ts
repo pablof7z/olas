@@ -74,7 +74,7 @@ export const useStickerStore = create<StickerState>((set, get) => ({
             id,
             type: stickerData.type,
             value: stickerData.value,
-            style: stickerData.style,
+            style: stickerData.style || getNextTextStyleName(),
             dimensions: stickerData.dimensions,
             transform: {
                 ...defaultTransform,
@@ -83,10 +83,8 @@ export const useStickerStore = create<StickerState>((set, get) => ({
             metadata: stickerData.metadata,
         };
 
-        console.log('Creating new sticker:', newSticker);
         set((state) => {
             const newState = { stickers: [...state.stickers, newSticker] };
-            console.log('New stickers state:', newState.stickers);
             return newState;
         });
         return id;

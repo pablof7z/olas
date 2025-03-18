@@ -1,114 +1,215 @@
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { BlurView } from 'expo-blur';
 import { TextStyle, View, ViewStyle } from 'react-native';
 
-interface SkiaConfig {
+interface GradientConfig {
     colors: string[];
-    type: 'text' | 'background';
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-    blur?: number;
+    start?: { x: number; y: number };
+    end?: { x: number; y: number };
+}
+
+// Extend ViewStyle to include backgroundGradient
+interface ExtendedViewStyle extends ViewStyle {
+    backgroundGradient?: GradientConfig;
 }
 
 // Define the TextStickerStyle interface
 export interface TextStickerStyle {
     name: string;
-    container: ViewStyle;
+    container: ExtendedViewStyle | (() => React.ReactNode);
     text: TextStyle;
-    useSkia?: boolean;
-    skiaConfig?: SkiaConfig;
     fontFamily?: string;
 }
 
-// Define styles for text stickers with nested structure
 const styles: TextStickerStyle[] = [
     {
-        name: 'Default',
-        container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: 16,
-            padding: 12,
-        },
-        text: {
-            color: 'white',
-            fontSize: 64,
-            fontWeight: 'bold',
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Neon',
-        container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            borderRadius: 16,
-            padding: 12,
-        },
-        text: {
-            color: '#0ff',
-            fontSize: 64,
-            fontWeight: 'bold',
-            textShadowColor: '#0ff',
-            textShadowOffset: { width: 0, height: 0 },
-            textShadowRadius: 10,
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Minimal',
-        container: {
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            borderRadius: 8,
-            padding: 12,
-        },
+        name: 'Glasss',
+        container: () => <BlurView style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 16, padding: 16 }} />,
         text: {
             color: '#000',
             fontSize: 64,
-            fontWeight: 'normal',
+            fontWeight: 'bold',
             textAlign: 'center',
+            fontFamily: 'Pacifico', // Fun, handwritten font
         },
     },
     {
-        name: 'Retro',
+        name: 'Candy Pop',
         container: {
-            backgroundColor: 'rgba(255, 220, 0, 0.8)',
-            borderRadius: 8,
+            backgroundGradient: {
+                colors: ['#ff4e50', '#ff9a9e'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
+            borderRadius: 32,
+            padding: 16,
             borderWidth: 2,
-            borderColor: '#000',
-            padding: 12,
-        },
-        text: {
-            color: '#000',
-            fontSize: 64,
-            fontWeight: 'bold',
-            fontStyle: 'italic',
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Glitch',
-        container: {
-            backgroundColor: 'rgba(255, 0, 128, 0.7)',
-            borderRadius: 8,
-            padding: 12,
+            borderColor: '#ff9a9e',
+            shadowColor: '#ff4e50',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.4,
+            shadowRadius: 10,
         },
         text: {
             color: '#fff',
             fontSize: 64,
             fontWeight: 'bold',
-            textShadowColor: '#0ff',
-            textShadowOffset: { width: 2, height: 2 },
-            textShadowRadius: 0,
             textAlign: 'center',
+            letterSpacing: 2,
+            fontFamily: 'Pacifico', // Fun, handwritten font
         },
     },
     {
-        name: 'Bubble',
+        name: 'Cyberpunk',
         container: {
-            backgroundColor: 'rgba(100, 200, 255, 0.8)',
+            backgroundGradient: {
+                colors: ['#ff00ff', '#00ffff'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
+            borderRadius: 16,
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#0ff',
+        },
+        text: {
+            color: '#0ff',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textShadowColor: '#ff00ff',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 10,
+            textAlign: 'center',
+            fontFamily: 'Orbitron', // Futuristic font
+        },
+    },
+    {
+        name: 'Soft Pastel',
+        container: {
+            backgroundColor: '#fdeff2',
+            borderRadius: 12,
+            padding: 16,
+            borderWidth: 2,
+            borderColor: '#ffb6c1',
+        },
+        text: {
+            color: '#d47f7f',
+            fontSize: 64,
+            fontWeight: '500',
+            textAlign: 'center',
+            fontFamily: 'Dancing Script', // Elegant handwritten font
+        },
+    },
+    {
+        name: 'Comic Boom',
+        container: {
+            backgroundColor: '#ffeb3b',
+            borderRadius: 16,
+            padding: 12,
+            borderWidth: 4,
+            borderColor: '#000',
+        },
+        text: {
+            color: '#ff0000',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            textShadowColor: '#000',
+            textShadowOffset: { width: 4, height: 4 },
+            textShadowRadius: 0,
+            fontFamily: 'Bangers', // Bold, comic-style font
+        },
+    },
+    {
+        name: 'Retro Arcade',
+        container: {
+            backgroundColor: '#000',
+            borderRadius: 8,
+            padding: 12,
+            borderWidth: 2,
+            borderColor: '#ffcc00',
+        },
+        text: {
+            color: '#ffcc00',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            fontFamily: 'Press Start 2P', // 8-bit arcade font
+        },
+    },
+    {
+        name: 'Neon Glow',
+        container: {
+            backgroundColor: '#111',
+            borderRadius: 12,
+            padding: 16,
+        },
+        text: {
+            color: '#00ffcc',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textShadowColor: '#00ffcc',
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 15,
+            textAlign: 'center',
+            fontFamily: 'Monoton', // Retro neon sign style
+        },
+    },
+    {
+        name: 'Graffiti Street',
+        container: {
+            backgroundGradient: {
+                colors: ['#ff0000', '#ff8c00', '#ff00ff'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
+            borderRadius: 16,
+            padding: 12,
+            borderWidth: 2,
+            borderColor: '#000',
+        },
+        text: {
+            color: '#fff',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            fontFamily: 'Permanent Marker', // Street graffiti-style font
+        },
+    },
+    {
+        name: 'Luxury Gold',
+        container: {
+            backgroundGradient: {
+                colors: ['#cfa75c', '#ffecb3'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
+            borderRadius: 10,
+            padding: 14,
+            borderWidth: 2,
+            borderColor: '#8b6f47',
+        },
+        text: {
+            color: '#704214',
+            fontSize: 64,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            fontFamily: 'Cinzel', // Classic serif style
+        },
+    },
+    {
+        name: 'Bubble Gum',
+        container: {
+            backgroundGradient: {
+                colors: ['#ff66b2', '#ff99cc'],
+                start: { x: 0, y: 0 },
+                end: { x: 1, y: 1 },
+            },
             borderRadius: 24,
             padding: 12,
-            shadowColor: '#000',
+            shadowColor: '#ff3399',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.4,
             shadowRadius: 6,
         },
         text: {
@@ -116,155 +217,43 @@ const styles: TextStickerStyle[] = [
             fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
+            fontFamily: 'Lobster', // Curvy, fun font
         },
     },
     {
-        name: 'Outline',
+        name: 'Chalkboard',
         container: {
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderColor: '#fff',
-            borderRadius: 16,
+            backgroundColor: '#3e3e3e',
+            borderRadius: 10,
             padding: 12,
+            borderWidth: 2,
+            borderColor: '#ffffff88',
         },
         text: {
             color: '#fff',
             fontSize: 64,
-            fontWeight: 'normal',
+            fontWeight: '400',
             textAlign: 'center',
+            fontFamily: 'Indie Flower', // Handwritten chalk style
         },
     },
     {
-        name: 'Paper',
-        container: {
-            backgroundColor: 'rgba(255, 252, 235, 0.9)',
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: '#d0c8b0',
-            padding: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 3,
-        },
-        text: {
-            color: '#6d4c41',
-            fontSize: 64,
-            fontWeight: 'normal',
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Gradient BG',
+        name: 'Crystal Ice',
         container: {
             backgroundGradient: {
-                colors: ['rgba(120, 0, 255, 0.7)', 'rgba(60, 0, 128, 0.7)'],
+                colors: ['#d0f0ff', '#a0d8ff'],
                 start: { x: 0, y: 0 },
                 end: { x: 1, y: 1 },
             },
             borderRadius: 12,
-            padding: 12,
+            padding: 16,
         },
         text: {
-            color: '#fff',
+            color: '#0066cc',
             fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
-        },
-    },
-    {
-        name: 'Typewriter',
-        container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            borderRadius: 8,
-            padding: 12,
-        },
-        text: {
-            color: '#7FFF00',
-            fontSize: 64,
-            fontWeight: '400',
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Rainbow',
-        container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: 12,
-            padding: 12,
-        },
-        text: {
-            fontSize: 64,
-            fontWeight: 'bold',
-            textAlign: 'center',
-        },
-        useSkia: true,
-        skiaConfig: {
-            colors: ['#FF0000', '#FFA500', '#FFFF00', '#008000', '#0000FF', '#4B0082', '#EE82EE'],
-            type: 'text',
-            start: { x: 0, y: 0 },
-            end: { x: 1, y: 0 },
-        },
-    },
-    {
-        name: 'Neon Glow',
-        container: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            borderRadius: 12,
-            padding: 12,
-        },
-        text: {
-            fontSize: 64,
-            fontWeight: 'bold',
-            textAlign: 'center',
-        },
-        useSkia: true,
-        skiaConfig: {
-            colors: ['#00FFFF', '#FF00FF'],
-            type: 'text',
-            start: { x: 0, y: 0 },
-            end: { x: 1, y: 1 },
-            blur: 4,
-        },
-    },
-    {
-        name: 'Subtle BG',
-        container: {
-            backgroundGradient: {
-                colors: ['rgba(240, 240, 240, 0.9)', 'rgba(220, 220, 220, 0.9)'],
-                start: { x: 0, y: 0 },
-                end: { x: 0, y: 1 },
-            },
-            borderRadius: 10,
-            padding: 12,
-            borderWidth: 1,
-            borderColor: 'rgba(200, 200, 200, 0.5)',
-        },
-        text: {
-            color: '#333',
-            fontSize: 64,
-            fontWeight: '500',
-            textAlign: 'center',
-        },
-    },
-    {
-        name: 'Metallic',
-        container: {
-            backgroundColor: 'rgba(40, 40, 40, 0.85)',
-            borderRadius: 12,
-            padding: 12,
-        },
-        text: {
-            fontSize: 64,
-            fontWeight: 'bold',
-            textAlign: 'center',
-        },
-        useSkia: true,
-        skiaConfig: {
-            colors: ['#C0C0C0', '#FFFFFF', '#A8A8A8', '#EFEFEF', '#8E8E8E'],
-            type: 'text',
-            start: { x: 0, y: 0 },
-            end: { x: 0, y: 1 },
+            fontFamily: 'Fjalla One', // Clean, icy look
         },
     },
 ];
@@ -275,7 +264,7 @@ export function getStyleFromName(name?: string): TextStickerStyle {
 }
 
 export function getNextStyleName(currentStyleName?: string): string {
-    if (!currentStyleName) return styles[1].name;
+    if (!currentStyleName) return styles[0].name;
     const index = styles.findIndex((style) => style.name === currentStyleName);
     return styles[index + 1]?.name || styles[0].name;
 }
