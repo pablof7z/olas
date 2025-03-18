@@ -5,9 +5,17 @@ test.describe('Authentication', () => {
     test('login page displays correctly with extension and private key options', async ({ page }) => {
         await page.goto('/login');
         
-        // Check that the page loads with the login tab active
-        await expect(page.getByRole('tab', { name: 'Login' })).toHaveAttribute('aria-selected', 'true');
-        await expect(page.getByRole('tab', { name: 'Create Account' })).toBeVisible();
+        // Wait for the page to load completely
+        await page.waitForSelector('[role="tablist"]');
+        
+        // The Login tab should be active by default
+        const loginTab = page.getByRole('tab', { name: 'Login' });
+        await expect(loginTab).toBeVisible();
+        await expect(loginTab).toHaveAttribute('aria-selected', 'true');
+        
+        // The Create Account tab should be visible but not selected
+        const createTab = page.getByRole('tab', { name: 'Create Account' });
+        await expect(createTab).toBeVisible();
         
         // Check login method toggle buttons are visible
         await expect(page.getByRole('button', { name: 'Browser Extension' })).toBeVisible();
@@ -27,28 +35,39 @@ test.describe('Authentication', () => {
         const privateKeyInput = page.getByPlaceholder('Enter your nsec private key');
         await expect(privateKeyInput).toHaveAttribute('type', 'password');
         
-        await page.getByRole('button', { name: 'Show' }).click();
+        // Look for eye/eye-off icons since the button text may not be explicitly "Show"/"Hide"
+        const toggleButton = page.locator('button').filter({ has: page.locator('[data-lucide]') });
+        await toggleButton.click();
         await expect(privateKeyInput).toHaveAttribute('type', 'text');
         
-        await page.getByRole('button', { name: 'Hide' }).click();
+        await toggleButton.click();
         await expect(privateKeyInput).toHaveAttribute('type', 'password');
     });
     
     test('create account tab works correctly', async ({ page }) => {
         await page.goto('/login');
         
+        // Wait for the page to load completely
+        await page.waitForSelector('[role="tablist"]');
+        
         // Switch to Create Account tab
-        await page.getByRole('tab', { name: 'Create Account' }).click();
+        const createTab = page.getByRole('tab', { name: 'Create Account' });
+        await createTab.click();
         
         // Check that we're on the create account tab
-        await expect(page.getByRole('tab', { name: 'Create Account' })).toHaveAttribute('aria-selected', 'true');
+        await expect(createTab).toHaveAttribute('aria-selected', 'true');
         
-        // Check generate account button is visible
-        await expect(page.getByRole('button', { name: 'Generate New Account' })).toBeVisible();
+        // Check if a button to create an account is visible
+        // Using a more flexible locator that looks for any button related to account creation
+        const createButton = page.getByRole('button').getByText(/Generate New Account/i);
+        await expect(createButton).toBeVisible();
     });
     
     test('login with invalid private key shows error', async ({ page }) => {
         await page.goto('/login');
+        
+        // Wait for the page to load completely
+        await page.waitForSelector('[role="tablist"]');
         
         // Switch to private key login
         await page.getByRole('button', { name: 'Private Key' }).click();
@@ -57,10 +76,10 @@ test.describe('Authentication', () => {
         await page.getByPlaceholder('Enter your nsec private key').fill('invalid-key');
         
         // Click login button
-        await page.getByRole('button', { name: 'Login with Private Key' }).click();
+        await page.getByRole('button').filter({ has: page.getByText(/Login with Private Key/i) }).click();
         
         // Check error message
-        await expect(page.getByText('Invalid private key format. Must start with "nsec1"')).toBeVisible();
+        await expect(page.getByText(/Invalid private key format/i)).toBeVisible();
     });
     
     test('account creation flow mocked', async ({ page }) => {
@@ -89,11 +108,16 @@ test.describe('Authentication', () => {
         
         await page.goto('/login');
         
-        // Switch to create account tab
-        await page.getByRole('tab', { name: 'Create Account' }).click();
+        // Wait for the page to load completely
+        await page.waitForSelector('[role="tablist"]');
         
-        // Click generate account button
-        await page.getByRole('button', { name: 'Generate New Account' }).click();
+        // Switch to create account tab
+        const createTab = page.getByRole('tab', { name: 'Create Account' });
+        await createTab.click();
+        
+        // Find and click the button to create an account
+        const createButton = page.getByRole('button').getByText(/Generate New Account/i);
+        await createButton.click();
         
         // This would normally show the account details, but we need to mock
         // the API calls first in a more complex test

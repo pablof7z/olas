@@ -30,8 +30,9 @@
   },
   "workspaces": [
     "apps/mobile",
+    "apps/web",
     "packages/eslint-config",
-    "packages/ndk/core",
+    "packages/ndk/ndk-core",
     "packages/ndk/ndk-wallet",
     "packages/ndk/ndk-mobile",
     "packages/ndk/ndk-svelte",

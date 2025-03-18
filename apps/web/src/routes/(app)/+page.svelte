@@ -4,6 +4,7 @@
 	import * as Post from '$lib/components/Post';
 	import { getCurrentUser } from '$lib/stores/currentUser.svelte';
 	import { myFollows } from '$lib/myfollows';
+	import Stories from '$lib/components/Stories.svelte';
 
 	const events = ndk.$subscribe([
 		{ kinds: [NDKKind.Image] },
@@ -41,7 +42,7 @@
 
 			</div>
 			
-			<!-- <Stories /> -->
+			<Stories />
 			<Post.List events={events} />
 		</div>
 	</div>

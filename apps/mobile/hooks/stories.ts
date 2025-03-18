@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useObserver } from './observer';
-import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo, NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo, NDKStory, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 
 type StoryEntry = {
     events: NDKEvent[];
@@ -12,8 +12,8 @@ export function useStories() {
     //     { kinds: [30311] }
     // ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
-    const events = useObserver<NDKImage | NDKVideo | NDKStory>(
-        [{ kinds: [20, NDKKind.ShortVideo, 25], since: twentyFourHoursAgo }],
+    const {events} = useSubscribe<NDKImage | NDKVideo | NDKStory>(
+        [{ kinds: [NDKKind.Story] }],
         // [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
         { wrap: true, cacheUnconstrainFilter: [] }
     );
@@ -26,9 +26,11 @@ export function useStories() {
         const map = new Map<Hexpubkey, StoryEntry>();
 
         for (const event of events) {
-            if (knownIds.current.has(event.id)) continue;
+            // if (knownIds.current.has(event.id)) continue;
             knownIds.current.add(event.id);
             changed = true;
+
+            console.log('event', event.dump());
 
             if (isStory(event) || isLiveEvent(event) || isNDKStory(event)) {
                 const pubkey = event.pubkey;
@@ -52,12 +54,13 @@ export function useStories() {
 
 function isStory(event: NDKImage | NDKVideo | NDKStory) {
     // Already an NDKStory event
-    if (event.kind === 25) return true;
+    if (event.kind === 23) return true;
     
     const expiration = event.tagValue('expiration');
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
     const videoInPast24Hours = event instanceof NDKVideo && event.created_at! > twentyFourHoursAgo;
-    if (!expiration && !videoInPast24Hours) return false;
+    const storyInPast24Hours = event instanceof NDKStory && event.created_at! > twentyFourHoursAgo;
+    if (!expiration && !videoInPast24Hours && !storyInPast24Hours) return false;
 
     const firstImeta = event.imetas?.[0];
     if (!firstImeta) return false;
@@ -74,7 +77,7 @@ function isStory(event: NDKImage | NDKVideo | NDKStory) {
  * Checks if an event is a kind 25 NDKStory
  */
 function isNDKStory(event: NDKEvent): boolean {
-    return event.kind === 25 && event.tags.some(tag => tag[0] === 'imeta');
+    return event.kind === 23 && event.tags.some(tag => tag[0] === 'imeta');
 }
 
 function isLiveEvent(event: NDKEvent) {

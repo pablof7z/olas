@@ -22,13 +22,13 @@
     // Event dispatcher for custom events
     const dispatch = createEventDispatcher();
 
-    // Use a single state object to manage file items
-    let fileItems: FileItem[] = [];
-    let content = '';
-    let uploadProgress: UploadProgress = {};
-    let uploading = false;
-    let dragActive = false;
-    let error = '';
+    // Use state variables with runes
+    let fileItems = $state<FileItem[]>([]);
+    let content = $state('');
+    let uploadProgress = $state<UploadProgress>({});
+    let uploading = $state(false);
+    let dragActive = $state(false);
+    let error = $state('');
     
     const MAX_FILE_SIZE_MB = 10;
     const MAX_FILES = 10;

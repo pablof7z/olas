@@ -15,8 +15,6 @@ export function SlideStory({ story }: { story: NDKStory }) {
     }, [story, setIsLoading, setDuration]);
 
     return (
-        <View style={{ flex: 1 }}>
-            <SimpleStoryViewer story={story} />
-        </View>
+        <SimpleStoryViewer story={story} />
     );
 } 

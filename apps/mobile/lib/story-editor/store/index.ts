@@ -44,6 +44,7 @@ export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
 
 interface StickerState {
     stickers: Sticker[];
+    duration: number; // Duration in seconds before story expires
     addSticker: (sticker: Omit<Sticker, 'id' | 'transform'> & { transform?: Partial<Sticker['transform']> }) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
     updateStickerStyle: (id: string, style: string) => void;
@@ -52,10 +53,13 @@ interface StickerState {
     removeSticker: (id: string) => void;
     getSticker: (id: string) => Sticker | undefined;
     nextStyle: (id: string) => void;
+    getDuration: () => number;
+    updateDuration: (seconds: number) => void;
 }
 
 export const useStickerStore = create<StickerState>((set, get) => ({
     stickers: [],
+    duration: 24 * 60 * 60, // Default: 24 hours in seconds
 
     addSticker: (stickerData) => {
         console.log('In useStickerStore.addSticker with data:', stickerData);
@@ -135,6 +139,14 @@ export const useStickerStore = create<StickerState>((set, get) => ({
 
             return { stickers };
         });
+    },
+
+    getDuration: () => {
+        return get().duration;
+    },
+
+    updateDuration: (seconds: number) => {
+        set({ duration: seconds });
     },
 }));
 

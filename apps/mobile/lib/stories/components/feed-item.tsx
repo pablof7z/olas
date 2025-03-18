@@ -93,7 +93,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
 }
 
 function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
-    const pubkey = events[0].tagValue('p') ?? events[0].pubkey;
+    const pubkey = events[0].pubkey;
     const { userProfile } = useUserProfile(pubkey);
     const flare = useUserFlare(pubkey);
 

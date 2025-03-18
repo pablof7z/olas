@@ -7,15 +7,15 @@ import { Canvas, Image as SkiaImage, useImage, Fill, Group, RoundedRect, useCanv
 import { useStickerStore, editStickerAtom } from '../store';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
+import SettingsBottomSheet from './settings';
 import { useAtom, useAtomValue } from 'jotai';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
+import { settingsSheetRefAtom } from '../atoms/settingsSheet';
 import { TextStickerInput } from './sticker-types';
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useNDK, NDKStoryStickerType, NDKStory, NDKImetaTag, NDKEvent, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { uploadStory } from '../actions/upload';
-import { createAndPublishStoryEvent } from '../actions/event';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { createStoryEvent } from '../actions/event';
 
 interface StoryPreviewScreenProps {
     path: string;
@@ -31,14 +31,17 @@ export const CloseButton = ({ onPress }: { onPress: () => void }) => (
     </TouchableOpacity>
 );
 
+const dimensions = Dimensions.get('window');
+
 export default function StoryPreviewContent({ path, type, onClose, onPreview }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const canvasRef = useCanvasRef();
-    const [canvasSize, setCanvasSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
+    const [canvasSize, setCanvasSize] = useState<{width: number, height: number}>(dimensions);
     const image = useImage(path);
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-    const { stickers, removeSticker, addSticker } = useStickerStore();
+    const { stickers, removeSticker, addSticker, getDuration } = useStickerStore();
     const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
+    const settingsSheetRef = useAtomValue(settingsSheetRefAtom);
     const [editSticker, setEditSticker] = useAtom(editStickerAtom);
     const [isUploading, setIsUploading] = useState(false);
     const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
@@ -65,6 +68,11 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
 
     const openStickersDrawer = () => {
         stickersSheetRef?.current?.present();
+    };
+
+    const openSettingsDrawer = () => {
+        console.log('Opening settings drawer', settingsSheetRef?.current);
+        settingsSheetRef?.current?.present();
     };
 
     const handleAddTextSticker = () => {
@@ -100,14 +108,14 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
             try {
                 console.log('Creating story event without publishing');
                 // Create and sign the story event without publishing
-                const storyEvent = await createAndPublishStoryEvent({
+                const storyEvent = await createStoryEvent({
                     ndk: ndk,
                     imeta: localImeta,
                     path,
                     type,
                     stickers,
-                    canvasSize,
-                    publish: false // Don't publish the event
+                    dimensions,
+                    duration: getDuration(),
                 });
 
                 if (storyEvent) {
@@ -149,14 +157,18 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
             if (result.success) {
                 try {
                     // Create and publish the story event
-                    await createAndPublishStoryEvent({
-                        ndk: ndk,
+                    const event = await createStoryEvent({
+                        ndk,
                         imeta: result.imeta,
                         path,
                         type,
                         stickers,
-                        canvasSize,
+                        dimensions,
+                        duration: getDuration(),
                     });
+                    console.log('Created story event:', event.dump());
+                    const publishedEvent = await event.publish();
+                    console.log('Published story event:', publishedEvent);
                 } catch (error) {
                     console.error('Error creating and publishing story event:', error);
                     Alert.alert('Error', 'Failed to create and publish story event. Please try again.');
@@ -286,6 +298,7 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
             </View>
 
             <StickersBottomSheet />
+            <SettingsBottomSheet />
 
             {isEditingText && (
                 <View style={styles.textInputOverlay}>
@@ -336,6 +349,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     stickersButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsButton: {
         width: 40,
         height: 40,
         alignItems: 'center',

@@ -46,7 +46,8 @@ const VideoContent = ({ url }: { url: string }) => {
 
     return <VideoView
         player={videoSource}
-        style={styles.media}
+        style={[styles.media]}
+        contentFit="cover"
     />;
 };
 
