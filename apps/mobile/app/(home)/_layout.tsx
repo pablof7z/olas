@@ -141,6 +141,9 @@ export default function TabsLayout() {
                             router.push('/(publish)');
                         }
                     },
+                    tabLongPress: (e) => {
+                        router.push('/story');
+                    },
                 }}
                 options={{
                     title: 'Publish',

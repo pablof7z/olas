@@ -6,6 +6,8 @@ import StoryStickersContainer from './StoryStickersContainer';
 import { StoryHeader } from './header';
 import StoryText from './StoryText';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { urlIsVideo } from '@/utils/media';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 interface SimpleStoryViewerProps {
     story: NDKStory;
@@ -19,21 +21,15 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function SimpleStoryViewer({ story, active = true, onNext, onPrev }: SimpleStoryViewerProps) {
     const imeta = story.imeta;
 
-    const imageSource = useImage({ uri: imeta!.url });
+    if (!imeta?.url) return null;
+    const isVideo = imeta?.m?.startsWith('video/') || urlIsVideo(imeta.url);
 
     return (
         <View style={[styles.container, { backgroundColor: 'black' }]}>
-            {/* Media Content */}
-            {imageSource ? (
-                <Image
-                    style={styles.media}
-                    source={imageSource}
-                    contentFit="cover"
-                />
+            {isVideo ? (
+                <VideoContent url={imeta.url} />
             ) : (
-                <View style={styles.noMedia}>
-                    <Text style={styles.noMediaText}>No media available</Text>
-                </View>
+                <ImageContent url={imeta.url} />
             )}
 
             {/* Stickers Layer */}
@@ -42,6 +38,26 @@ export default function SimpleStoryViewer({ story, active = true, onNext, onPrev
     );
 }
 
+const VideoContent = ({ url }: { url: string }) => {
+    const videoSource = useVideoPlayer({ uri: url }, (player) => {
+        player.play();
+        player.loop = true;
+    });
+
+    return <VideoView
+        player={videoSource}
+        style={styles.media}
+    />;
+};
+
+const ImageContent = ({ url }: { url: string }) => {
+    const imageSource = useImage({ uri: url });
+
+    return <Image
+        style={styles.media}
+        source={imageSource}
+    />;
+};
 const styles = StyleSheet.create({
     container: {
         flex: 1,

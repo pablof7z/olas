@@ -1,5 +1,5 @@
 import { showStoriesModalAtom, storiesAtom } from '@/lib/stories/store';
-import { NDKImage, NDKImetaTag, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { NDKImage, NDKImetaTag, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atom } from 'jotai';
@@ -23,6 +23,7 @@ import Animated, {
     SharedValue,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
+import SimpleStoryViewer from './components/SimpleStoryViewer';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -291,11 +292,13 @@ const Slide = ({
     if (!url) return null;
 
     const type = urlIsVideo(url) ? 'video' : 'image';
+    const story = item as unknown as NDKStory;
 
     return (
         <View style={{ width, height }}>
             <View style={[StyleSheet.absoluteFillObject]}>
-                {type === 'image' ? <SlideImage imeta={item.imetas[activeSlide]} /> : <SlideVideo imeta={item.imetas[activeSlide]} />}
+                <SimpleStoryViewer story={story} />
+                {/* {type === 'image' ? <SlideImage imeta={item.imetas[activeSlide]} /> : <SlideVideo imeta={item.imetas[activeSlide]} />} */}
             </View>
             <View style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}>
                 <TouchableWithoutFeedback

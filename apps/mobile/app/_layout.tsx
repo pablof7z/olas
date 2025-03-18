@@ -227,6 +227,7 @@ export default function RootLayout() {
                                         <Stack.Screen name="view" />
                                         <Stack.Screen name="eula" options={modalPresentation()} />
 
+                                        <Stack.Screen name="stories" options={{ headerShown: false }} />
                                         <Stack.Screen name="story" options={{ headerShown: false }} />
                                         <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }} />
 

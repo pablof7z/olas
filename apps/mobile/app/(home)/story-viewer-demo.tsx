@@ -5,7 +5,7 @@ import { NDKStory, NDKStoryStickerType, useNDK, useSubscribe } from '@nostr-dev-
 
 const screen = Dimensions.get('window');
 
-const mockStory = {
+export const mockStory = {
     "kind": 25,
     "id": "85691960b746439d894491c7afeb317e19907431d401026697f77d028cb110f2",
     "pubkey": "d0862635d042008f4832795159c42dd89a89eb4bf0506013b32e6c8c0aaa87a2",

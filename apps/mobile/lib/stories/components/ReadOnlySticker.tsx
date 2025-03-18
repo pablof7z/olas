@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Sticker } from '../utils';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { NDKStoryStickerType, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import {
     TextStickerView,
     EventStickerView,
@@ -34,11 +34,13 @@ export default function ReadOnlySticker({
     const top = sticker.transform.translateY * scaleFactorY;
     const width = sticker.dimensions.width * scaleFactorX;
     const height = sticker.dimensions.height * scaleFactorY;
+
+    const isTextSticker = sticker.type === NDKStoryStickerType.Text;
+    const isMentionSticker = sticker.type === NDKStoryStickerType.Pubkey;
+    const isCountdownSticker = sticker.type === NDKStoryStickerType.Countdown;
     
     // Render content based on sticker type
     const renderContent = () => {
-        if (sticker.type !== NDKStoryStickerType.Text) return null;
-        
         console.log('Will render sticker of type', sticker.type, { left, top, width, height });
         
         switch (sticker.type) {
@@ -64,8 +66,6 @@ export default function ReadOnlySticker({
                     left,
                     top,
                     width,
-                    borderWidth: 1,
-                    borderColor: 'yellow',
                     height,
                     flexDirection: 'row',
                     alignItems: 'stretch',
@@ -77,9 +77,33 @@ export default function ReadOnlySticker({
                 }
             ]}
         >
-            {renderContent()}
+            {isTextSticker && <TextSticker sticker={sticker as Sticker<NDKStoryStickerType.Text>} />}
+            {isMentionSticker && <MentionSticker sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>} />}
+            {isCountdownSticker && <CountdownSticker sticker={sticker as Sticker<NDKStoryStickerType.Countdown>} />}
         </View>
     );
+}
+
+function TextSticker({ sticker }: { sticker: Sticker<NDKStoryStickerType.Text> }) {
+    return <TextStickerView sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions={true} />;
+}
+
+function MentionSticker({ sticker }: { sticker: Sticker }) {
+    const { ndk } = useNDK();
+    const user = useMemo(() => ndk.getUser({pubkey: sticker.value as string}), [ndk, sticker.value]);
+    const { userProfile } = useUserProfile(user.pubkey);
+
+    const pubkeySticker = useMemo<Sticker<NDKStoryStickerType.Pubkey>>(() => ({
+        ...sticker,
+        value: user,
+        metadata: { profile: userProfile },
+    } as Sticker<NDKStoryStickerType.Pubkey>), [sticker, user, userProfile]);
+
+    return <MentionStickerView sticker={pubkeySticker} fixedDimensions={true} />;
+}
+
+function CountdownSticker({ sticker }: { sticker: Sticker<NDKStoryStickerType.Countdown> }) {
+    return <CountdownStickerView sticker={sticker as any} />;
 }
 
 const styles = StyleSheet.create({
