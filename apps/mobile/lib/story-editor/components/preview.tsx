@@ -1,21 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Alert, Text, ActivityIndicator } from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Canvas, Image as SkiaImage, useImage, Fill, Group, RoundedRect, useCanvasRef } from '@shopify/react-native-skia';
-import { useStickerStore, editStickerAtom } from '../store';
+import { useStickerStore } from '../store';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
 import SettingsBottomSheet from './settings';
-import { useAtom, useAtomValue } from 'jotai';
-import { stickersSheetRefAtom } from '../atoms/stickersSheet';
-import { settingsSheetRefAtom } from '../atoms/settingsSheet';
 import { TextStickerInput } from './sticker-types';
-import { useActiveBlossomServer } from '@/hooks/blossom';
-import { useNDK, NDKStoryStickerType, NDKStory, NDKImetaTag, NDKEvent, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { uploadStory } from '../actions/upload';
-import { createStoryEvent } from '../actions/event';
+import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import { useStoryActions } from '../hooks/useStoryActions';
+import { useMediaDimensions } from '../hooks/useMediaDimensions';
+import { useStickerManagement } from '../hooks/useStickerManagement';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import MediaRenderer from './MediaRenderer';
+import StoryControls from './StoryControls';
 
 interface StoryPreviewScreenProps {
     path: string;
@@ -35,160 +34,63 @@ const dimensions = Dimensions.get('window');
 
 export default function StoryPreviewContent({ path, type, onClose, onPreview }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
-    const canvasRef = useCanvasRef();
-    const [canvasSize, setCanvasSize] = useState<{width: number, height: number}>(dimensions);
-    const image = useImage(path);
-    const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-    const { stickers, removeSticker, addSticker, getDuration } = useStickerStore();
-    const stickersSheetRef = useAtomValue(stickersSheetRefAtom);
-    const settingsSheetRef = useAtomValue(settingsSheetRefAtom);
-    const [editSticker, setEditSticker] = useAtom(editStickerAtom);
-    const [isUploading, setIsUploading] = useState(false);
-    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-    const { ndk } = useNDK();
-    const activeBlossomServer = useActiveBlossomServer();
-
-    const isEditingText = useMemo(() => editSticker?.type === NDKStoryStickerType.Text, [editSticker]);
+    const { getDuration } = useStickerStore();
+    
+    // Use extracted custom hooks
+    const {
+        setCanvasSize,
+        containerWidthValue,
+        onImageLoad,
+        setMediaSize
+    } = useMediaDimensions();
+    
+    const {
+        selectedStickerId,
+        stickers,
+        isEditingText,
+        handleStickerSelect,
+        handleDeleteSelected,
+        openStickersDrawer,
+        handleAddTextSticker
+    } = useStickerManagement();
+    
+    const { isUploading, handlePreview, handleShare } = useStoryActions({
+        path,
+        type,
+        stickers,
+        dimensions,
+        getDuration,
+        onClose
+    });
 
     const videoPlayer = useVideoPlayer(type === 'video' ? path : null, player => {
         player.loop = true;
         player.play();
     });
 
-    const handleStickerSelect = (id: string) => {
-        setSelectedStickerId(id);
-    };
-
-    const handleDeleteSelected = () => {
-        if (selectedStickerId) {
-            removeSticker(selectedStickerId);
-            setSelectedStickerId(null);
-        }
-    };
-
-    const openStickersDrawer = () => {
-        stickersSheetRef?.current?.present();
-    };
-
-    const handleAddTextSticker = () => {
-        setEditSticker({
-            id: '',
-            type: NDKStoryStickerType.Text,
-            value: '',
-            transform: { translateX: 0, translateY: 0, scale: 1, rotate: 0 },
-        });
-    };
-
-    const handlePreview = async () => {
-        console.log('Preview button pressed', { ndk: !!ndk, onPreview: !!onPreview });
-        
-        if (!ndk || !onPreview) {
-            Alert.alert('Error', 'Preview is not available');
-            return;
-        }
-
-        try {
-            setIsGeneratingPreview(true);
-            console.log('Generating preview with local URI');
-
-            // Instead of uploading, create a local imeta with the file URI
-            const localImeta: NDKImetaTag = {
-                url: `file://${path}`, // Use local file URI
-                // We don't need other properties like hash for preview
-                m: type === 'photo' ? 'image/jpeg' : 'video/mp4', // Assumed mime types
-            };
+    // Get video dimensions when available
+    useEffect(() => {
+        if (type === 'video' && videoPlayer) {
+            const checkDimensions = setInterval(() => {
+                // Check for natural size properties on VideoPlayer
+                const naturalWidth = (videoPlayer as any).naturalWidth;
+                const naturalHeight = (videoPlayer as any).naturalHeight;
+                
+                if (naturalWidth > 0 && naturalHeight > 0) {
+                    console.log('Video dimensions:', naturalWidth, naturalHeight);
+                    setMediaSize({ width: naturalWidth, height: naturalHeight });
+                    clearInterval(checkDimensions);
+                }
+            }, 100);
             
-            console.log('Local imeta created:', localImeta);
-
-            try {
-                console.log('Creating story event without publishing');
-                // Create and sign the story event without publishing
-                const storyEvent = await createStoryEvent({
-                    ndk: ndk,
-                    imeta: localImeta,
-                    path,
-                    type,
-                    stickers,
-                    dimensions,
-                    duration: getDuration(),
-                });
-
-                if (storyEvent) {
-                    onPreview(storyEvent);
-                } else {
-                    Alert.alert('Preview Failed', 'Failed to create story preview. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error creating story preview:', error);
-                Alert.alert('Preview Failed', 'Failed to create preview. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error handling story preview:', error);
-            Alert.alert('Preview Failed', 'An unexpected error occurred. Please try again.');
-        } finally {
-            setIsGeneratingPreview(false);
+            return () => clearInterval(checkDimensions);
         }
+    }, [videoPlayer, type]);
+
+    // Use handlePreview from our hook
+    const onPreviewPress = async () => {
+        await handlePreview(onPreview);
     };
-
-    const handleShare = async () => {
-        if (!ndk) {
-            Alert.alert('Error', 'NDK instance not available');
-            return;
-        }
-
-        try {
-            setIsUploading(true);
-
-            const result = await uploadStory({
-                path,
-                type,
-                ndk: ndk,
-                blossomServer: activeBlossomServer,
-                onProgress: (type, progress) => {
-                    console.log(`${type} progress: ${progress}%`);
-                },
-            });
-
-            if (result.success) {
-                try {
-                    // Create and publish the story event
-                    const event = await createStoryEvent({
-                        ndk,
-                        imeta: result.imeta,
-                        path,
-                        type,
-                        stickers,
-                        dimensions,
-                        duration: getDuration(),
-                    });
-                    console.log('Created story event:', event.dump());
-                    const publishedEvent = await event.publish();
-                    console.log('Published story event:', publishedEvent);
-                } catch (error) {
-                    console.error('Error creating and publishing story event:', error);
-                    Alert.alert('Error', 'Failed to create and publish story event. Please try again.');
-                }
-
-                Alert.alert('Success', 'Story uploaded and published successfully!');
-                onClose();
-            } else {
-                Alert.alert('Upload Failed', result.error?.message || 'Failed to upload story. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error handling story upload:', error);
-            Alert.alert('Upload Failed', 'An unexpected error occurred. Please try again.');
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    const coordinatesToPaint = [
-        // [0, 0, 'red'],
-        // [Dimensions.get('window').width / 2, Dimensions.get('window').height / 2, 'blue'],
-        // [Dimensions.get('window').width / 3, Dimensions.get('window').height / 3, 'green'],
-        // [Dimensions.get('window').width / 4, Dimensions.get('window').height / 4, 'yellow'],
-        // [Dimensions.get('window').width / 3, 0, 'cyan'],
-    ] as [number, number, string][];
 
     return (
         <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, borderRadius: 20, overflow: 'hidden' }]}>
@@ -199,97 +101,36 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
                     const { width, height } = event.nativeEvent.layout;
                     setCanvasSize({ width, height });
                 }}>
-                {type === 'photo' ? (
-                    <Canvas style={styles.media} ref={canvasRef}>
-                        <Fill color="black" />
-                        {image && (
-                            <Group>
-                                <RoundedRect x={0} y={0} width={canvasSize.width} height={canvasSize.height} r={20}>
-                                    <SkiaImage image={image} fit="cover" width={canvasSize.width} height={canvasSize.height} />
-                                </RoundedRect>
-                            </Group>
-                        )}
-                    </Canvas>
-                ) : (
-                    <VideoView
-                        style={[styles.media, { borderRadius: 20 }]}
-                        player={videoPlayer}
-                        contentFit="cover"
-                        nativeControls={false}
-                    />
-                )}
-
-                {coordinatesToPaint.map(([x, y, color]) => (
-                    <React.Fragment key={`${x}-${y}`}>
-                        <View style={{ position: 'absolute', left: x as number, top: y as number, borderWidth: 5, width: 20, height: 20, borderColor: color }} />
-                        {/* Write the text */}
-                        <Text style={{ position: 'absolute', left: x as number, top: y as number, color: 'white', fontSize: 20, fontWeight: 'bold' }}>{`${x}, ${y}`}</Text>
-                    </React.Fragment>
-                ))}
+                <MediaRenderer 
+                    type={type}
+                    path={path}
+                    player={videoPlayer}
+                    containerWidthValue={containerWidthValue}
+                    onImageLoad={onImageLoad}
+                />
 
                 {/* Stickers Layer */}
-                {stickers.map((sticker) => {
-                    return (
-                        <Sticker
-                            key={sticker.id}
-                            sticker={sticker as any}
-                            onSelect={() => handleStickerSelect(sticker.id)}
-                        />
-                    );
-                })}
+                {stickers.map((sticker) => (
+                    <Sticker
+                        key={sticker.id}
+                        sticker={sticker as any}
+                        onSelect={() => handleStickerSelect(sticker.id)}
+                    />
+                ))}
             </View>
 
-            <View style={[styles.header]}>
-                <CloseButton onPress={onClose} />
-                <TouchableOpacity
-                    style={[styles.button, styles.textButton]}
-                    testID="add-text-button"
-                    onPress={handleAddTextSticker}>
-                    <Ionicons name="text" size={20} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={openStickersDrawer} style={[styles.button, styles.stickersButton]} testID="add-stickers-button">
-                    <Ionicons name="pricetag" size={20} color="white" />
-                </TouchableOpacity>
-                {selectedStickerId && (
-                    <TouchableOpacity onPress={handleDeleteSelected} style={[styles.button, styles.deleteButton]} testID="delete-button">
-                        <Ionicons name="trash" size={20} color="white" />
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
-                {onPreview && (
-                    <TouchableOpacity 
-                        style={styles.previewButton} 
-                        testID="preview-button" 
-                        onPress={handlePreview} 
-                        disabled={isGeneratingPreview || isUploading}
-                    >
-                        <Ionicons 
-                            name="eye" 
-                            size={40} 
-                            color={"white"} 
-                        />
-                    </TouchableOpacity>
-                )}
-                <View style={{flex: 1}} />
-                {isUploading ? (
-                    <ActivityIndicator size="large" color="white" />
-                ) : (
-                    <TouchableOpacity 
-                        style={styles.shareButton} 
-                        testID="share-button" 
-                        onPress={handleShare} 
-                        disabled={isUploading || isGeneratingPreview}
-                    >
-                        <Ionicons 
-                            name={isUploading ? 'hourglass' : 'arrow-forward-circle'} 
-                            size={60} 
-                            color={isUploading || isGeneratingPreview ? "gray" : "white"} 
-                        />
-                    </TouchableOpacity>
-                )}
-            </View>
+            <StoryControls 
+                insets={insets}
+                onClose={onClose}
+                onAddText={handleAddTextSticker}
+                onOpenStickers={openStickersDrawer}
+                onDeleteSelected={handleDeleteSelected}
+                onPreview={onPreviewPress}
+                onShare={handleShare}
+                isUploading={isUploading}
+                selectedStickerId={selectedStickerId}
+                showPreviewButton={!!onPreview && false}
+            />
 
             <StickersBottomSheet />
             <SettingsBottomSheet />
@@ -311,17 +152,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'black',
     },
-    header: {
-        position: 'absolute',
-        top: 10,
-        left: 0,
-        right: 0,
-        backgroundColor: 'transparent',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        zIndex: 2,
-    },
     button: {
         width: 40,
         height: 40,
@@ -336,27 +166,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    textButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    stickersButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    settingsButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    deleteButton: {
-        backgroundColor: 'rgba(255, 0, 0, 0.5)',
-    },
     previewContainer: {
         flex: 1,
         position: 'absolute',
@@ -364,35 +173,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-    },
-    media: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
-    roundedMedia: {
-        borderRadius: 20,
-        overflow: 'hidden',
-    },
-    footer: {
-        position: 'absolute',
-        bottom: 20,
-        left: 0,
-        right: 0,
-        backgroundColor: 'transparent',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 30,
-        zIndex: 2,
-    },
-    previewButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    shareButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     textInputOverlay: {
         position: 'absolute',
@@ -402,15 +182,5 @@ const styles = StyleSheet.create({
         bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         zIndex: 100,
-    },
-    loadingIndicator: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
 });

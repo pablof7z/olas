@@ -30,11 +30,6 @@ export default function StoryPreviewScreen() {
 
     const insets = useSafeAreaInsets();
 
-    // Log when the component renders with path and type
-    useEffect(() => {
-        console.log("StoryPreviewScreen rendered with:", { path, type });
-    }, [path, type]);
-
     if (!path || !type) {
         return <View style={styles.container} />;
     }
