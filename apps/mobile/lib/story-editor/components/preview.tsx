@@ -15,6 +15,7 @@ import { useStickerManagement } from '../hooks/useStickerManagement';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import MediaRenderer from './MediaRenderer';
 import StoryControls from './StoryControls';
+import CloseButton from './CloseButton';
 
 interface StoryPreviewScreenProps {
     path: string;
@@ -22,13 +23,6 @@ interface StoryPreviewScreenProps {
     onClose: () => void;
     onPreview?: (story: NDKStory) => void;
 }
-
-// Export a CloseButton component for reuse
-export const CloseButton = ({ onPress }: { onPress: () => void }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.button, styles.closeButton]} testID="close-button">
-        <Ionicons name="close" size={20} color="white" />
-    </TouchableOpacity>
-);
 
 const dimensions = Dimensions.get('window');
 
@@ -144,9 +138,6 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
     );
 }
 
-// Add these component exports to fix the reference issues
-StoryPreviewContent.CloseButton = CloseButton;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -159,12 +150,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 40,
-    },
-    closeButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     previewContainer: {
         flex: 1,

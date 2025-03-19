@@ -15,7 +15,6 @@ import { router } from 'expo-router';
 import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { createNip60Wallet } from '@/utils/wallet';
 import { IconView } from '@/components/icon-view';
-import { DEV_BUILD } from '@/utils/const';
 import { useNip60Wallet } from '@/hooks/wallet';
 
 export default function WalletsScreen() {

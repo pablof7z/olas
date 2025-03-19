@@ -8,6 +8,8 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import Generic from './generic';
 import Kind30402 from './kind30402';
 import Kind30023 from './kind30023';
+import Kind20 from './kind20';
+import KindVideo from './kind_video';
 
 // Define NDKKind.Article if it doesn't exist
 const ARTICLE_KIND = 30023;
@@ -26,9 +28,11 @@ export default function EventStickerView({ sticker, onLayout, maxWidth }: EventS
 
     const { colors } = useColorScheme();
 
-    return <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
+    return <View style={{ maxWidth }} onLayout={onLayout}>
         {!event ? (
-            <ActivityIndicator size="small" color={colors.foreground} />
+            <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
+                <ActivityIndicator size="small" color={colors.foreground} />
+            </View>
         ) : (
             <RenderEvent event={event} styles={selectedStyle} />
         )}
@@ -49,6 +53,13 @@ function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerS
             return <Kind30402 event={event} userProfile={profile} styles={styles} />;
         case (NDKKind as any).Article || ARTICLE_KIND:
             return <Kind30023 event={event} userProfile={profile} styles={styles} />;
+        case NDKKind.Image:
+            return <Kind20 event={event} userProfile={profile} styles={styles} />;
+        case 22:
+        case 21:
+        case NDKKind.HorizontalVideo:
+        case NDKKind.VerticalVideo:
+            return <KindVideo event={event} userProfile={profile} styles={styles} />;
         default:
             return <Generic event={event} userProfile={profile} styles={styles} />;
     }

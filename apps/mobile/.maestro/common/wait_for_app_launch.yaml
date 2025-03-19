@@ -6,3 +6,13 @@ appId: com.pablof7z.snapstr
 - launchApp
 - waitForAnimationToEnd:
       timeout: 10000
+
+- tapOn: "http://localhost:8081" # Change this if needed
+- extendedWaitUntil:
+    notVisible: "Development servers"
+    timeout: 10000
+- tapOn: "Continue"
+- waitForAnimationToEnd:
+    timeout: 10000
+- tapOn:
+    point: 10%, 10%

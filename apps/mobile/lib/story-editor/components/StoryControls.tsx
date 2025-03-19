@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CloseButton } from './preview';
+import CloseButton from './CloseButton';
 import { EdgeInsets } from 'react-native-safe-area-context';
 
 interface StoryControlsProps {

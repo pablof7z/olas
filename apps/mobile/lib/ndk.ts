@@ -3,6 +3,9 @@ import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
 
 export const timeZero = Date.now();
+console.log(`[${Date.now() - timeZero}ms] starting sqlite adapter`)
+const cacheAdapter = new NDKCacheAdapterSqlite('olas', false);
+console.log(`[${Date.now() - timeZero}ms] sqlite adapter started`)
 
 /**
  * 1. Starts the app-database (which contains information about the relay list and stuff like that)
@@ -12,7 +15,7 @@ export const timeZero = Date.now();
  * @returns
  */
 export function initializeNDK(currentUser?: Hexpubkey) {
-    const cacheAdapter = new NDKCacheAdapterSqlite('olas', false);
+    
 
     const relays = getRelays();
     const filteredRelays = relays.filter((r) => {

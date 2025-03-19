@@ -46,11 +46,15 @@ export default function LoaderScreen({
     }, [currentUser?.pubkey, userProfile?.name]);
 
     useEffect(() => {
-        if (!ndk) return;
+        if (!ndk?.cacheAdapter?.ready) {
+            console.log('cache adapter not ready');
+            return;
+        }
+        console.log('cache adapter ready');
 
         initUserProfileStore(ndk, (ndk.cacheAdapter as NDKCacheAdapterSqlite).db);
         initUserFlareStore();
-    }, [!!ndk]);
+    }, [ndk?.cacheAdapter?.ready]);
 
     useEffect(() => {
         if (appReady && wotReady) {

@@ -1,10 +1,9 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { NDKArticle, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { View, Text, StyleSheet } from 'react-native';
+import { Image, useImage } from 'expo-image';
 import { UserProfile } from '@/hooks/user-profile';
 import { EventStickerStyle } from './styles';
-
-// Define the kind number for NDKArticle
-const ARTICLE_KIND = 30023;
+import { useMemo } from 'react';
 
 export default function EventStickerKind30023({
     event,
@@ -15,15 +14,17 @@ export default function EventStickerKind30023({
     userProfile?: UserProfile;
     styles: EventStickerStyle;
 }) {
-    const article = NDKArticle.from(event);
+    const article = useMemo(() => NDKArticle.from(event), [event.id]);
     
     // Calculate reading time based on content
-    const readingTime = calculateReadingTime(article.content);
+    const readingTime = useMemo(() => calculateReadingTime(article.content), [article.id]);
     
     // Get the first two lines of the summary
     const summaryPreview = article.summary 
         ? article.summary.split('\n').slice(0, 2).join('\n') 
         : undefined;
+
+    const image = useImage({ uri: article.image });
 
     return (
         <View style={[_styles.outerContainer, styles.container]}>
@@ -34,9 +35,9 @@ export default function EventStickerKind30023({
                     </Text>
                 )}
 
-                {article.image && (
+                {image && (
                     <View style={_styles.imageContainer}>
-                        <Image source={{ uri: article.image }} style={_styles.image} resizeMode="cover" />
+                        <Image source={image} style={_styles.image} contentFit="cover" />
                     </View>
                 )}
 
@@ -74,45 +75,6 @@ function calculateReadingTime(content?: string): number {
     
     // Minimum reading time of 1 minute
     return Math.max(1, readingTime);
-}
-
-// NDKArticle class to handle kind 30023 events
-class NDKArticle {
-    static kind = ARTICLE_KIND;
-    event: NDKEvent;
-    
-    constructor(event: NDKEvent) {
-        this.event = event;
-    }
-    
-    static from(event: NDKEvent): NDKArticle {
-        return new NDKArticle(event);
-    }
-    
-    get title(): string | undefined {
-        return this.event.tagValue('title');
-    }
-    
-    get image(): string | undefined {
-        return this.event.tagValue('image');
-    }
-    
-    get summary(): string | undefined {
-        return this.event.tagValue('summary');
-    }
-    
-    get content(): string {
-        return this.event.content;
-    }
-    
-    get published_at(): number | undefined {
-        const tag = this.event.tagValue('published_at');
-        return tag ? parseInt(tag) : undefined;
-    }
-    
-    get author(): string | undefined {
-        return this.event.pubkey;
-    }
 }
 
 const _styles = StyleSheet.create({
