@@ -208,7 +208,7 @@ export default function RootLayout() {
 
                                         <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="(publish)" options={{ headerShown: false }} />
+                                        <Stack.Screen name="publish" options={{ headerShown: false }} />
 
                                         <Stack.Screen name="(home)" options={{ headerShown: false, title: 'Home' }} />
 

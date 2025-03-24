@@ -1,0 +1,180 @@
+import { useState, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, FlatList, Dimensions, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useEditorStore, captionBottomSheetRefAtom } from "@/lib/publish/store/editor";
+import { useAtom } from "jotai";
+import PostCaptionBottomSheet from "./components/PostCaptionBottomSheet";
+import { VideoView } from "expo-video";
+import { FlashList } from "@shopify/flash-list";
+import { Stack, router } from "expo-router";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { useNDK } from "@nostr-dev-kit/ndk-mobile";
+import { useActiveBlossomServer } from "@/hooks/blossom";
+import React from "react";
+import Caption from "@/lib/publish/components/composer/metadata/caption";
+import Expiration from "@/lib/publish/components/composer/metadata/expiration";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
+const dimensions = Dimensions.get('window');
+
+export default function PostMetadataScreen() {
+    const selectedMedia = useEditorStore(state => state.selectedMedia);
+    const isPublishing = useEditorStore(state => state.isPublishing);
+    const state = useEditorStore(state => state.state);
+    const publish = useEditorStore(state => state.publish);
+    const { ndk } = useNDK();
+    const blossomServer = useActiveBlossomServer();
+
+    const mediaSize = dimensions.height / 4;
+
+    const handlePublish = useCallback(async () => {
+        if (!ndk || !blossomServer) {
+            console.error("NDK or blossom server not available");
+            return;
+        }
+        
+        try {
+            await publish(ndk, blossomServer);
+            // Navigate back after successful publish
+            router.back();
+        } catch (error) {
+            console.error("Failed to publish post:", error);
+        }
+    }, [ndk, blossomServer, publish]);
+
+    const renderMediaPreview = () => {
+        if (selectedMedia.length === 0) {
+            return (
+                <View style={styles.emptyMediaContainer}>
+                    <Text style={styles.emptyMediaText}>No media selected</Text>
+                </View>
+            );
+        }
+
+        return (
+            <ScrollView
+                horizontal
+                pagingEnabled
+                style={{ flex: 1, height: mediaSize }}
+                showsHorizontalScrollIndicator={false}
+            >
+                {selectedMedia.map((item) => (
+                    <View key={item.id} style={{ width: dimensions.width, height: mediaSize, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                        {item.mediaType === 'image' ? (
+                            <Image
+                                key={item.id}
+                                source={{ uri: item.uris[0] }}
+                                style={[styles.media, { width: '100%', height: mediaSize }]}
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <View
+                                key={item.id}
+                                style={[styles.media, { width: mediaSize, height: mediaSize, backgroundColor: "#000" }]}
+                            >
+                                <Text style={{ color: "#fff", textAlign: "center" }}>Video Preview</Text>
+                            </View>
+                        )}
+                    </View>
+                ))}
+            </ScrollView>
+        );
+    };
+
+    const { colors } = useColorScheme();
+
+    return (
+        <BottomSheetModalProvider>
+            <Stack.Screen options={{
+                contentStyle: {
+                    backgroundColor: 'white'
+                },
+                headerShown: true,
+                title: 'New Post',
+                headerRight: () => (
+                    <TouchableOpacity 
+                        onPress={handlePublish} 
+                        disabled={isPublishing || selectedMedia.length === 0}
+                    >
+                        {isPublishing ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                            <Text style={{
+                                color: selectedMedia.length === 0 ? colors.grey2 : colors.primary,
+                                fontWeight: '600',
+                                fontSize: 16,
+                                opacity: selectedMedia.length === 0 ? 0.5 : 1
+                            }}>Publish</Text>
+                        )}
+                    </TouchableOpacity>
+                )
+            }} />
+            <View style={styles.container}>
+                {isPublishing && (
+                    <View style={styles.publishingOverlay}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                        <Text style={styles.publishingText}>{state}</Text>
+                    </View>
+                )}
+                
+                <ScrollView>
+                    {renderMediaPreview()}
+                    <Caption />
+                    <Expiration />
+                </ScrollView>
+
+                <PostCaptionBottomSheet />
+            </View>
+        </BottomSheetModalProvider>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        position: 'relative',
+    },
+    header: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee"
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "600"
+    },
+    emptyMediaContainer: {
+        height: 300,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f5f5f5"
+    },
+    emptyMediaText: {
+        color: "#999"
+    },
+    mediaContainer: {
+        width: '100%',
+        height: 300,
+        backgroundColor: 'red'
+    },
+    media: {
+        width: '100%',
+        height: '100%'
+    },
+    publishingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        zIndex: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    publishingText: {
+        marginTop: 16,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+});

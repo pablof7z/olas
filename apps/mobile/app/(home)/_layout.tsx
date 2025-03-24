@@ -137,8 +137,7 @@ export default function TabsLayout() {
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            openPickerIfEmpty();
-                            router.push('/(publish)');
+                            router.push('/publish');
                         }
                     },
                     tabLongPress: (e) => {

@@ -1,12 +1,11 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { usePostEditorStore } from './NewPost/store';
+import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet, Image } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { Button } from './nativewindui/Button';
 import { X } from 'lucide-react-native';
-import { MediaPreview as PostEditorMediaPreview } from '@/lib/post-editor/components/MediaPreview';
 import { useAtomValue } from 'jotai';
 import { scrollDirAtom } from './Feed/store';
 
@@ -24,8 +23,8 @@ const styles = StyleSheet.create({
 
 export default function UploadingIndicator() {
     const bottomHeight = useBottomTabBarHeight();
-    const readyToPublish = usePostEditorStore((s) => s.readyToPublish);
-    const resetPostEditor = usePostEditorStore((s) => s.reset);
+    const isPublishing = useEditorStore((s) => s.isPublishing);
+    const reset = useEditorStore((s) => s.reset);
     const { colors } = useColorScheme();
     const scrollDir = useAtomValue(scrollDirAtom);
 
@@ -41,19 +40,19 @@ export default function UploadingIndicator() {
         };
     }, [bottomHeight, scrollDir]);
 
-    if (!readyToPublish) return null;
+    if (!isPublishing) return null;
 
     return (
         <Animated.View style={[styles.container, { borderTopColor: colors.grey3, backgroundColor: colors.card }, animStyle]}>
             <Pressable
                 style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                 <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden' }}>
-                    <PostEditorMediaPreview limit={1} withEdit={false} maxWidth={60} maxHeight={60} forceImage={true} />
+                    <MediaPreview />
                 </View>
 
                 <Status />
 
-                <Button variant="plain" onPress={resetPostEditor}>
+                <Button variant="plain" onPress={reset}>
                     <X size={24} color={colors.foreground} />
                 </Button>
             </Pressable>
@@ -61,20 +60,34 @@ export default function UploadingIndicator() {
     );
 }
 
+function MediaPreview() {
+    const selectedMedia = useEditorStore((s) => s.selectedMedia);
+    if (!selectedMedia.length) return null;
+    
+    const media = selectedMedia[0];
+    return (
+        <View style={{ width: '100%', height: '100%' }}>
+            {media.mediaType === 'image' && (
+                <Image source={{ uri: media.uris[0] }} style={{ width: '100%', height: '100%' }} />
+            )}
+        </View>
+    );
+}
+
 function Status() {
-    const state = usePostEditorStore((s) => s.state);
-    const metadata = usePostEditorStore((s) => s.metadata);
-    const uploadError = usePostEditorStore((s) => s.error);
+    const state = useEditorStore((s) => s.state);
+    const caption = useEditorStore((s) => s.caption);
+    const error = useEditorStore((s) => s.error);
 
     return (
         <View className="flex-1 flex-col items-start">
-            {uploadError ? (
-                <Text className="text-sm text-red-500">{uploadError}</Text>
+            {error ? (
+                <Text className="text-sm text-red-500">{error}</Text>
             ) : (
                 <Text className="text-lg font-medium">{stateLabel(state)}</Text>
             )}
             <Text variant="caption1" numberOfLines={1} className="text-muted-foreground">
-                {metadata.caption}
+                {caption}
             </Text>
         </View>
     );

@@ -1,6 +1,6 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { ActivityIndicator, Dimensions, Pressable, Switch, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -12,7 +12,7 @@ import { MediaPreview } from './MediaPreview';
 import { useGroup } from '@/lib/groups/store';
 import { communityBottomSheetRefAtom, locationBottomSheetRefAtom, usePostEditorStore } from '../store';
 import { GroupEntry } from '@/lib/groups/types';
-import { COMMUNITIES_ENABLED, PUBLISH_ENABLED } from '@/utils/const';
+import { COMMUNITIES_ENABLED } from '@/utils/const';
 import {
     mountTagSelectorAtom,
     tagSelectorBottomSheetCbAtom,
