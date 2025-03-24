@@ -6,6 +6,7 @@ import { useActiveBlossomServer } from '@/hooks/blossom';
 import { uploadStory } from '../actions/upload';
 import { createStoryEvent } from '../actions/event';
 import { Sticker } from '../store';
+import { useStickerStore } from '../store';
 
 interface UseStoryActionsProps {
     path: string;
@@ -27,6 +28,7 @@ export const useStoryActions = ({
     const [isUploading, setIsUploading] = useState(false);
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
+    const resetStickers = useStickerStore(state => state.reset);
 
     const handlePreview = async (onPreview?: (story: NDKStory) => void) => {
         console.log('Preview button pressed', { ndk: !!ndk, onPreview: !!onPreview });
@@ -110,6 +112,7 @@ export const useStoryActions = ({
                     console.log('Created story event:', event.dump());
                     const publishedEvent = await event.publish();
                     console.log('Published story event:', publishedEvent);
+                    resetStickers(); // Reset sticker store after successful publication
                 } catch (error) {
                     console.error('Error creating and publishing story event:', error);
                     Alert.alert('Error', 'Failed to create and publish story event. Please try again.');

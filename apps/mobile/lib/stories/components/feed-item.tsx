@@ -109,8 +109,8 @@ function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
             <Pressable
                 style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}
                 onPress={() => {
+                    console.log(JSON.stringify(events[0].rawEvent(), null, 4));
                     if (live) {
-                        console.log(JSON.stringify(events[0].rawEvent(), null, 4));
                         setActiveEvent(events[0]);
                         router.push('/live');
                     } else {

@@ -1,12 +1,10 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, Pressable, Text, Linking } from 'react-native';
+import { Pressable, Text, Linking } from 'react-native';
 import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '../user';
 import { Image } from 'expo-image';
 import { nip19 } from 'nostr-tools';
-import { router, usePathname } from 'expo-router';
-import { useSetAtom } from 'jotai';
-import { feedTypeAtom } from '@/components/FeedType/store';
+import { router } from 'expo-router';
 import { useSearchQuery } from '@/components/Headers/Home/store';
 
 interface EventContentProps {

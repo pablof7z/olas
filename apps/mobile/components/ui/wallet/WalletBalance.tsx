@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet, Text } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { formatMoney } from '~/utils/bitcoin';
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -8,7 +8,7 @@ export default function WalletBalance({
     onLongPress,
     unit,
 }: {
-    amount: number;
+    amount?: number
     unit: string;
     onPress?: () => void;
     onLongPress?: () => void;
@@ -21,10 +21,14 @@ export default function WalletBalance({
     return (
         <TouchableOpacity style={styles.container} onPress={onPress} onLongPress={onLongPress}>
             <View style={styles.balanceContainer}>
-                <Text style={[styles.balanceText, { color: colors.foreground }]} numberOfLines={1}>
-                    {numberWithThousandsSeparator(amount)}
-                </Text>
-                <Text style={[styles.satText, { color: colors.foreground }]}>{formatMoney({ amount, unit: 'sat', hideAmount: true })}</Text>
+                {typeof amount === 'number' ? (<>
+                    <Text style={[styles.balanceText, { color: colors.foreground }]} numberOfLines={1} testID='balance-text'>
+                        {numberWithThousandsSeparator(amount)}
+                    </Text>
+                    <Text style={[styles.satText, { color: colors.foreground }]}>{formatMoney({ amount, unit: 'sat', hideAmount: true })}</Text>
+                </>) : (
+                    <ActivityIndicator />
+                )}
             </View>
         </TouchableOpacity>
     );

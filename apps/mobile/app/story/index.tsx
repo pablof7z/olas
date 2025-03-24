@@ -90,10 +90,6 @@ export default function StoryCameraScreen() {
         console.log('- Mic permission:', hasMicPermission);
     }, [availableDevices, devices, device, format, cameraPosition, hasCameraPermission, hasMicPermission]);
 
-    const pinchGesture = Gesture.Pinch().onUpdate((event) => {
-        scale.value = event.scale;
-    });
-
     const cameraStyle = useAnimatedStyle(() => ({
         flex: 1,
         borderRadius: 20,
@@ -219,24 +215,22 @@ export default function StoryCameraScreen() {
         <>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-                {/* <GestureDetector gesture={pinchGesture}> */}
-                    <View style={{ flex: 1 }}>
-                        {device ? (
-                            <ReanimatedCamera
-                                ref={camera}
-                                style={cameraStyle}
-                                device={device}
-                                isActive={true}
-                                photo={true}
-                                video={true}
-                                audio={true}
-                                enableZoomGesture={true}
-                                onError={handleCameraError}
-                                testID="camera-view"
-                            />
-                        ) : null}
-                    </View>
-                {/* </GestureDetector> */}
+                <View style={{ flex: 1 }}>
+                    {device ? (
+                        <ReanimatedCamera
+                            ref={camera}
+                            style={cameraStyle}
+                            device={device}
+                            isActive={true}
+                            photo={true}
+                            video={true}
+                            audio={true}
+                            enableZoomGesture={true}
+                            onError={handleCameraError}
+                            testID="camera-view"
+                        />
+                    ) : null}
+                </View>
 
                 <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
                     <TouchableOpacity onPress={() => router.push('/story/selector')} style={styles.selectorButton} testID="selector-button">

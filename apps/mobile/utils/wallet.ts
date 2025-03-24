@@ -9,7 +9,7 @@ export function humanWalletType(type: string) {
 
 export async function createNip60Wallet(ndk: NDK) {
     const wallet = new NDKCashuWallet(ndk);
-    wallet.mints = ['https://mint.coinos.io', 'https://stablenut.umint.cash', 'https://mint.minibits.cash/Bitcoin'];
+    wallet.mints = ['https://mint.coinos.io', 'https://mint.minibits.cash/Bitcoin'];
     await wallet.getP2pk();
     await wallet.publish();
     wallet.backup();

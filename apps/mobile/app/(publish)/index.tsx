@@ -15,7 +15,7 @@ export default function NewPostScreen() {
     const { colors } = useColorScheme();
 
     const addMoreMedia = usePostEditorStore((s) => s.newMediaFromSelector);
-    const isEditing = usePostEditorStore((s) => s.editingIndex !== null);
+    const isEditing = false; //usePostEditorStore((s) => s.editingIndex !== null);
     const hasEditUri = useEditImageStore((s) => s.imageUri !== null);
     const reset = usePostEditorStore((s) => s.reset);
 

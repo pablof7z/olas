@@ -54,6 +54,7 @@ interface StickerState {
     nextStyle: (id: string) => void;
     getDuration: () => number;
     updateDuration: (seconds: number) => void;
+    reset: () => void;
 }
 
 export const useStickerStore = create<StickerState>((set, get) => ({
@@ -146,6 +147,13 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     updateDuration: (seconds: number) => {
         set({ duration: seconds });
     },
+
+    reset: () => {
+        set({ 
+            stickers: [],
+            duration: 24 * 60 * 60 // Reset to default duration
+        });
+    }
 }));
 
 /**

@@ -20,7 +20,7 @@ export default function MediaRenderer({
 }: MediaRendererProps) {
     return (
         type === 'photo' ? (
-            <Animated.View style={[{ flex: 1, width: containerWidthValue, height: '100%' }]}>
+            <Animated.View style={[{ flex: 1, width: '100%', height: '100%' }]}>
                 <Image 
                     source={{ uri: path }} 
                     style={{ width: '100%', height: '100%', borderRadius: 20 }} 

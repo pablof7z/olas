@@ -53,8 +53,6 @@ const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, 
         ],
     }));
 
-    console.log('story item', item.id);
-
     return (
         <Animated.View style={animatedStyle}>
             <Slide
@@ -62,7 +60,6 @@ const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, 
                 index={index}
                 active={index === activeIndex}
                 onNextSlide={() => {
-                    console.log('onNextSlide', index, storiesLength);
                     if (index + 1 >= storiesLength) {
                         onClose();
                     } else {

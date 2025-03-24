@@ -1,21 +1,13 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
 import {
     NDKCashuMintList,
     NDKKind,
-    NDKUser,
-    useNDK,
-    useNDKCurrentUser,
-    useNDKSessionEventKind,
-    useNDKSessionEvents,
-    useNDKWallet,
-    useSubscribe,
-    useUserProfile,
+    NDKUser, useNDKCurrentUser,
+    useNDKSessionEventKind, useNDKWallet, useUserProfile
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { router, Stack, Tabs } from 'expo-router';
-import { BlurView } from 'expo-blur';
-import { Button } from '@/components/nativewindui/Button';
+import { router, Stack } from 'expo-router';
 import { QrCode, Settings, SettingsIcon } from 'lucide-react-native';
 import * as User from '@/components/ui/user';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -185,7 +177,8 @@ export default function WalletScreen() {
 
                         <View style={{ paddingTop: 50, paddingBottom: 10 }}>
                             <WalletBalance
-                                amount={balance.amount}
+                                amount={balance?.amount}
+                                unit="sats"
                                 onPress={() => activeWallet?.updateBalance?.()}
                                 onLongPress={onLongPress}
                             />

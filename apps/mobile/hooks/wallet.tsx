@@ -10,6 +10,7 @@ import { atom, useAtom } from 'jotai';
 import { useNDKNutzapMonitor, NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { migrateCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { useObserver } from './observer';
 
 // Define an atom for the wallet instance to prevent race conditions
 const walletAtom = atom<NDKCashuWallet | undefined>(undefined);
@@ -18,17 +19,18 @@ const loadingEventIdsAtom = atom<Set<string>>(new Set<string>());
 
 export function useNip60Wallet() {
     const [wallet, setWallet] = useAtom(walletAtom);
+    const currentUser = useNDKCurrentUser();
     const [loadingEventIds, setLoadingEventIds] = useAtom(loadingEventIdsAtom);
-    const event = useNDKSessionEventKind(NDKKind.CashuWallet);
+    const events = useObserver(currentUser ? [
+        { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey] }
+    ] : false, { wrap: false });
+    const event = events[0];
 
     useEffect(() => {
         // If no event, nothing to do
         if (!event) return;
 
-        // If we already have the correct wallet instance, use it
-        if (wallet?.event && event.created_at! <= wallet.event.created_at!) {
-            return;
-        }
+        console.log('useNip60Wallet', event?.id, loadingEventIds.size);
 
         // If already loading this event ID, skip duplicate processing
         if (loadingEventIds.has(event.id)) return;
@@ -37,6 +39,7 @@ export function useNip60Wallet() {
         const newLoadingIds = new Set(loadingEventIds);
         newLoadingIds.add(event.id);
         setLoadingEventIds(newLoadingIds);
+        console.log('useNip60Wallet adding event to loading set', event.id, newLoadingIds.size);
 
         NDKCashuWallet.from(event)
             .then((newWallet) => {
@@ -47,13 +50,7 @@ export function useNip60Wallet() {
                 }
             })
             .catch((e) => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)))
-            .finally(() => {
-                // Remove this event ID from loading set
-                const newLoadingIds = new Set(loadingEventIds);
-                newLoadingIds.delete(event.id);
-                setLoadingEventIds(newLoadingIds);
-            });
-    }, [event?.id, wallet, loadingEventIds, setWallet, setLoadingEventIds]);
+    }, [event?.id]);
 
     return wallet;
 }

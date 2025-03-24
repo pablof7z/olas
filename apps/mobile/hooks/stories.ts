@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useObserver } from './observer';
-import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo, NDKStory, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo, NDKStory, useSubscribe, useFollows, NDKFilter } from '@nostr-dev-kit/ndk-mobile';
 
 type StoryEntry = {
     events: NDKEvent[];
@@ -11,12 +11,17 @@ export function useStories() {
     // useSubscribe([
     //     { kinds: [30311] }
     // ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
-    const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
-    const {events} = useSubscribe<NDKImage | NDKVideo | NDKStory>(
-        [{ kinds: [NDKKind.Story] }],
-        // [{ kinds: [20, 30311], since: twentyFourHoursAgo }],
-        { wrap: true, cacheUnconstrainFilter: [] }
-    );
+    const follows = useFollows();
+    const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60 * 10;
+    const filters = useMemo(() => {
+        const filters: NDKFilter[] = [{ kinds: [NDKKind.Story], since: twentyFourHoursAgo }];
+        if (follows.length > 0) {
+            filters.push({ kinds: [NDKKind.VerticalVideo, NDKKind.ShortVideo], authors: follows, since: twentyFourHoursAgo });
+        }
+        return filters;
+    }, [follows.length]);
+    console.log('filters', filters);
+    const {events} = useSubscribe<NDKImage | NDKVideo | NDKStory>(filters, { wrap: true, cacheUnconstrainFilter: [] }, [filters]);
 
     const [stories, setStories] = useState<Map<Hexpubkey, StoryEntry>>(new Map());
     const knownIds = useRef<Set<string>>(new Set());
@@ -29,8 +34,6 @@ export function useStories() {
             // if (knownIds.current.has(event.id)) continue;
             knownIds.current.add(event.id);
             changed = true;
-
-            console.log('event', event.dump());
 
             if (isStory(event) || isLiveEvent(event) || isNDKStory(event)) {
                 const pubkey = event.pubkey;

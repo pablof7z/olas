@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, LayoutChangeEvent, Button } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, Dimensions, LayoutChangeEvent, TouchableOpacity } from 'react-native';
 import { Sticker } from '../utils';
 import { NDKStoryStickerType, useNDK, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import {
@@ -46,7 +46,6 @@ export default function ReadOnlySticker({
 
     const handleLayout = (event: LayoutChangeEvent) => {
         const { width: renderedWidth, height: renderedHeight } = event.nativeEvent.layout;
-        console.log('👋 parent handleLayout');
         
         if (renderedWidth === 0 || renderedHeight === 0) {
             console.warn('Layout dimensions are 0, skipping');
@@ -63,22 +62,23 @@ export default function ReadOnlySticker({
         if (originalAspectRatio > renderedAspectRatio) {
             // Width is the limiting factor
             newScale = width / renderedWidth;
-            console.log('👋 parent handleLayout will change scale by using width', { newScale, width, renderedWidth });
         } else {
             // Height is the limiting factor
             newScale = height / renderedHeight;
-            console.log('👋 parent handleLayout will change scale by using heighto', { newScale, height, renderedHeight });
         }
 
         pendingScale.current = newScale;
-
-        console.log('👋 parent handleLayout will change scale to', { newScale });
         
         // setScale(newScale);
     };
 
+    const handleLongPress = useCallback(() => {
+        console.log('👋 parent handleLongPress', sticker);
+    }, [sticker]);
+
     return (
-        <View
+        <TouchableOpacity
+            onLongPress={handleLongPress}
             style={[
                 styles.container,
                 {
@@ -90,22 +90,22 @@ export default function ReadOnlySticker({
                     height,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center', borderWidth: 1, borderColor: 'blue',
+                    justifyContent: 'center',
                     transform: [
                         { rotate: `${sticker.transform.rotate}deg` }
                     ]
                 }
             ]}
         >
-            <View style={{ transform: [{ scale }], borderWidth: 1, borderColor: 'cyan' }}>
-                <View style={{ borderWidth: 1, borderColor: 'cyan' }}>
+            <View style={{ transform: [{ scale }], width: '100%', height: '100%' }}>
+                <View style={{ width: '100%', height: '100%' }}>
                     {isTextSticker && <TextSticker sticker={sticker as Sticker<NDKStoryStickerType.Text>} onLayout={handleLayout} />}
                     {isMentionSticker && <MentionSticker sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>} onLayout={handleLayout} />}
                     {isCountdownSticker && <CountdownSticker sticker={sticker as Sticker<NDKStoryStickerType.Countdown>} onLayout={handleLayout} />}
                     {isEventSticker && <EventSticker sticker={sticker as Sticker<NDKStoryStickerType.Event>} onLayout={handleLayout} />}
                 </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 
@@ -137,9 +137,7 @@ function EventSticker({ sticker, onLayout }: { sticker: Sticker<NDKStoryStickerT
     const [ event, setEvent ] = useState<NDKEvent | null>(null);
 
     useEffect(() => {
-        console.log('👋 fetching event', sticker.value);
         ndk.fetchEvent(sticker.value as unknown as string).then((event) => {
-            console.log('👋 event', event);
             if (event) setEvent(event);
         });
     }, [sticker.value])

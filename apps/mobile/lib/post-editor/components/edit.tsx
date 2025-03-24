@@ -107,24 +107,24 @@ export function Actions() {
     }, [resetStore]);
 
     const handleContinue = useCallback(async () => {
-        if (!cropped && !filtersApplied) {
-            const newState = [...media];
-            newState[editingIndex].uris.unshift(imageUri);
-            setMedia(newState);
-            setEditImageUri(null);
-        } else {
-            if (!filtersApplied) {
+        try {
+            if (!cropped && !filtersApplied) {
                 const newState = [...media];
-                newState[editingIndex].uris.unshift(editImageState.editedImageUri);
-                editImageState.setEditedImageUri(null);
+                newState[editingIndex].uris.unshift(imageUri);
                 setMedia(newState);
+                setEditImageUri(null);
             } else {
-                if (!viewShotRef.current) {
-                    alert("You've discovered an Olas bug. Congrats! Can you tell Pablo?");
-                    return;
-                }
+                if (!filtersApplied) {
+                    const newState = [...media];
+                    newState[editingIndex].uris.unshift(editImageState.editedImageUri);
+                    editImageState.setEditedImageUri(null);
+                    setMedia(newState);
+                } else {
+                    if (!viewShotRef?.current) {
+                        alert("You've discovered an Olas bug. Congrats! Can you tell Pablo?");
+                        return;
+                    }
 
-                try {
                     const uri = await viewShotRef.current.capture();
                     const filename = `${FileSystem.cacheDirectory}filtered-${Date.now()}.jpg`;
                     await FileSystem.copyAsync({
@@ -132,20 +132,33 @@ export function Actions() {
                         to: filename,
                     });
 
-                    // editImageState.setEditedImageUri(uri);
                     const newState = [...media];
                     newState[editingIndex].uris.unshift(uri);
                     setMedia(newState);
-                } catch (error) {
-                    console.error('Error saving filtered image:', error);
                 }
             }
-        }
 
-        setEditingIndex(null);
-        setEditedImageUri(null);
-        onComplete();
-    }, [cropped, filtersApplied, media, setMedia, editImageState, onComplete, viewShotRef?.current]);
+            setEditingIndex(null);
+            setEditedImageUri(null);
+            onComplete();
+        } catch (error) {
+            console.error('Error in handleContinue:', error);
+            alert('Failed to process image. Please try again.');
+        }
+    }, [
+        cropped,
+        filtersApplied,
+        media,
+        editingIndex,
+        imageUri,
+        editImageState,
+        viewShotRef,
+        setMedia,
+        setEditImageUri,
+        setEditingIndex,
+        setEditedImageUri,
+        onComplete
+    ]);
 
     return (
         <View className="w-full flex-col p-4 pt-0">
@@ -196,9 +209,12 @@ export function ImageWithAppliedFilters({ image }: { image: ImageRef }) {
     const activeFilters = useEditImageStore((s) => s.activeFilters);
     const setViewShotRef = useSetAtom(viewShotRefAtom);
 
+    // Set viewShotRef only once on mount
     useEffect(() => {
-        if (ref.current) setViewShotRef(ref);
-    }, [ref.current]);
+        setViewShotRef(ref);
+        // Cleanup on unmount
+        return () => setViewShotRef(null);
+    }, []); // Empty dependency array since we only want this to run once
 
     const activeFilter = useAtomValue(activeFilterAtom);
 

@@ -67,3 +67,4 @@ git:
         - dist
         - .env
 
+Whenever you finish running an agent task, publish to nostr the summary of what you have done.

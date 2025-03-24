@@ -14,5 +14,7 @@ appId: com.pablof7z.snapstr
 - tapOn: "Continue"
 - waitForAnimationToEnd:
     timeout: 10000
-- tapOn:
-    point: 10%, 10%
+- runFlow:
+    when:
+        visible: "Runtime version: exposdk"
+    file: "dismiss-dev-modal.yaml"

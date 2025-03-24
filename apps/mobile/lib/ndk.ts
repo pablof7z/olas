@@ -2,10 +2,8 @@ import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKRelay } from '@nostr-dev-kit/
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
 
-export const timeZero = Date.now();
-console.log(`[${Date.now() - timeZero}ms] starting sqlite adapter`)
-const cacheAdapter = new NDKCacheAdapterSqlite('olas', false);
-console.log(`[${Date.now() - timeZero}ms] sqlite adapter started`)
+const cacheAdapter = new NDKCacheAdapterSqlite('olas');
+cacheAdapter.initialize();
 
 /**
  * 1. Starts the app-database (which contains information about the relay list and stuff like that)
@@ -53,8 +51,6 @@ export function initializeNDK(currentUser?: Hexpubkey) {
     if (currentUser) ndk.activeUser = ndk.getUser({ pubkey: currentUser });
 
     ndk.connect();
-
-    cacheAdapter.initialize();
 
     return ndk;
 }

@@ -81,7 +81,7 @@ export const usePostEditorStore = create<PostEditorStore>((set, get) => ({
                 } else if (selectedAsset?.type === 'image') {
                     mapImagePickerAssetToPostMedia(selectedAsset).then((item) => {
                         const currentMedia = get().media;
-                        set({ media: [...currentMedia, item], editingIndex: currentMedia.length });
+                        set({ media: [...currentMedia, item], editingIndex: null });
                     });
                 }
             })
