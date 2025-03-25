@@ -9,51 +9,86 @@ import { uploadMedia } from '@/lib/post-editor/actions/upload';
 import { generateEvent } from '@/lib/post-editor/event';
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { ExpirationBottomSheetRef } from "@/lib/publish/components/composer/metadata/ExpirationBottomSheet";
+import { FilterParameters } from '../filters/presets';
+import { PublishBottomSheetRef } from '@/components/publish/PublishBottomSheet';
+import { getRealPath } from 'react-native-compressor';
+
+export interface MediaItem {
+    id: string;
+    uris: string[];
+    type: 'image' | 'video';
+    filter?: {
+        id: string;
+        parameters: FilterParameters;
+    };
+}
 
 interface EditorState {
-    selectedMedia: PostMedia[];
+    selectedMedia: MediaItem[];
+    selectedMediaIndex: number;
     isMultipleSelectionMode: boolean;
     caption: string;
     expiration: number | null;
-    state: PostState;
+    expirationRef: ExpirationBottomSheetRef | null;
+    bottomSheetRef: PublishBottomSheetRef | null;
+    state: string;
     error: string | null;
     isPublishing: boolean;
-    addMedia: (media: PostMedia) => void;
-    removeMedia: (mediaId: string) => void;
+    addMedia: (mediaItem: MediaItem) => Promise<void>;
+    removeMedia: (id: string) => void;
     clearMedia: () => void;
-    updateMedia: (mediaId: string, updatedMedia: Partial<PostMedia>) => void;
+    updateMedia: (mediaId: string, updatedMedia: Partial<MediaItem>) => void;
     reorderMedia: (fromIndex: number, toIndex: number) => void;
     toggleSelectionMode: () => void;
-    setMedia: (media: PostMedia) => void;
+    setMedia: (media: MediaItem) => Promise<void>;
     setCaption: (caption: string) => void;
     setExpiration: (expiration: number | null) => void;
     setState: (state: PostState) => void;
     publish: (ndk: NDK, blossomServer: string) => Promise<void>;
     reset: () => void;
+    setSelectedMediaIndex: (index: number) => void;
+    applyFilter: (mediaId: string, filterId: string, parameters: FilterParameters) => void;
+    clearFilter: (mediaId: string) => void;
+}
+
+async function convertMediaPath(mediaItem: MediaItem): Promise<MediaItem> {
+    const convertedUris = await Promise.all(
+        mediaItem.uris.map(async (uri) => {
+            const path = await getRealPath(uri, mediaItem.type);
+            return path.startsWith('file://') ? path : `file://${path}`;
+        })
+    );
+    return { ...mediaItem, uris: convertedUris };
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
     selectedMedia: [],
+    selectedMediaIndex: 0,
     isMultipleSelectionMode: false,
     caption: '',
     expiration: null,
-    state: 'editing',
+    expirationRef: null,
+    bottomSheetRef: null,
+    state: 'idle',
     error: null,
     isPublishing: false,
     
-    addMedia: (media) => set((state) => {
-        if (!state.isMultipleSelectionMode) {
-            return { selectedMedia: [media] };
-        }
-        return { selectedMedia: [...state.selectedMedia, media] };
-    }),
+    addMedia: async (mediaItem) => {
+        const convertedMedia = await convertMediaPath(mediaItem);
+        set((state) => ({
+            selectedMedia: [...state.selectedMedia, convertedMedia]
+        }));
+    },
     
-    setMedia: (media) => set(() => ({
-        selectedMedia: [media]
-    })),
+    setMedia: async (media) => {
+        const convertedMedia = await convertMediaPath(media);
+        set(() => ({
+            selectedMedia: [convertedMedia]
+        }));
+    },
     
-    removeMedia: (mediaId) => set((state) => ({
-        selectedMedia: state.selectedMedia.filter(item => item.id !== mediaId)
+    removeMedia: (id) => set((state) => ({
+        selectedMedia: state.selectedMedia.filter(item => item.id !== id)
     })),
     
     clearMedia: () => set({ selectedMedia: [] }),
@@ -83,21 +118,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     setState: (state) => set({ state }),
 
     publish: async (ndk: NDK, blossomServer: string) => {
-        set({ isPublishing: true, state: 'Preparing' });
+        if (!PUBLISH_ENABLED) return;
         
-        // Create PostMetadata from caption and expiration
-        const metadata: PostMetadata = { 
-            caption: get().caption,
-            expiration: get().expiration || undefined
-        };
-
+        set({ isPublishing: true, error: null });
+        
         try {
-            const media = await prepareMedia(get().selectedMedia, (type, progress) => {
+            const media = await prepareMedia(get().selectedMedia.map(item => item.uris[0]), (type, progress) => {
                 set({ state: type + ' ' + (progress * 100).toFixed(0) + '%' });
             });
             
             set({ state: 'uploading' });
-            let uploadedMedia: PostMedia[] = [];
+            let uploadedMedia: MediaItem[] = [];
             
             try {
                 uploadedMedia = await uploadMedia(media, ndk, blossomServer);
@@ -109,7 +140,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
             set({ state: 'uploaded' });
 
-            const result = await generateEvent(ndk, metadata, uploadedMedia);
+            const result = await generateEvent(ndk, { 
+                caption: get().caption,
+                expiration: get().expiration || undefined
+            }, uploadedMedia);
             
             if (!result) {
                 set({ state: 'error', error: 'Failed to generate event' });
@@ -119,12 +153,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             const { event, relaySet } = result;
             await event.sign();
             set({ state: 'publishing' });
-
-            if (!PUBLISH_ENABLED) {
-                alert('Publish disabled in dev mode');
-                set({ isPublishing: false, selectedMedia: [], state: 'editing', caption: '', expiration: null });
-                return;
-            }
 
             await event.publish(relaySet);
             
@@ -149,10 +177,46 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         isMultipleSelectionMode: false,
         caption: '',
         expiration: null,
-        state: 'editing',
+        state: 'idle',
         error: null,
         isPublishing: false
-    })
+    }),
+
+    setSelectedMediaIndex: (index) => set({
+        selectedMediaIndex: index
+    }),
+
+    applyFilter: (mediaId, filterId, parameters) => {
+        console.log('Editor Store - Applying filter:', {
+            mediaId,
+            filterId,
+            parameters
+        });
+        set((state) => ({
+            selectedMedia: state.selectedMedia.map(item => {
+                if (item.id === mediaId) {
+                    console.log('Found media item, applying filter:', {
+                        itemId: item.id,
+                        oldFilter: item.filter,
+                        newFilter: { id: filterId, parameters }
+                    });
+                    return { ...item, filter: { id: filterId, parameters } };
+                }
+                return item;
+            })
+        }));
+    },
+    
+    clearFilter: (mediaId) => {
+        console.log('Editor Store - Clearing filter:', { mediaId });
+        set((state) => ({
+            selectedMedia: state.selectedMedia.map(item => 
+                item.id === mediaId 
+                    ? { ...item, filter: undefined } 
+                    : item
+            )
+        }));
+    }
 }));
 
 export const publishPostTypeAtom = atom<"post" | "story" | "video">("post");

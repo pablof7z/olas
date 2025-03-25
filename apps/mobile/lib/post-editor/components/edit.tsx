@@ -111,14 +111,14 @@ export function Actions() {
             if (!cropped && !filtersApplied) {
                 const newState = [...media];
                 newState[editingIndex].uris.unshift(imageUri);
-                setMedia(newState);
+                await setMedia(newState);
                 setEditImageUri(null);
             } else {
                 if (!filtersApplied) {
                     const newState = [...media];
                     newState[editingIndex].uris.unshift(editImageState.editedImageUri);
                     editImageState.setEditedImageUri(null);
-                    setMedia(newState);
+                    await setMedia(newState);
                 } else {
                     if (!viewShotRef?.current) {
                         alert("You've discovered an Olas bug. Congrats! Can you tell Pablo?");
@@ -134,7 +134,7 @@ export function Actions() {
 
                     const newState = [...media];
                     newState[editingIndex].uris.unshift(uri);
-                    setMedia(newState);
+                    await setMedia(newState);
                 }
             }
 

@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Dimensions, View, Pressable, TouchableOpacity, Text, NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from "react-native";
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEditorStore } from "../store/editor";
+import { useEditorStore, MediaItem as EditorMediaItem } from "../store/editor";
 import { Image } from "expo-image";
 import * as MediaLibrary from 'expo-media-library';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
@@ -73,19 +73,19 @@ export default function PostScreen() {
                 };
                 
                 const { assets } = await MediaLibrary.getAssetsAsync(options);
-                const formattedMedia = await Promise.all(assets.map(async (asset) => {
+                const formattedMedia: MediaItem[] = await Promise.all(assets.map(async (asset) => {
                     if (asset.mediaType === 'video') {
                         const assetInfo = await MediaLibrary.getAssetInfoAsync(asset.id);
                         return {
                             id: asset.id,
-                            type: 'video',
+                            type: 'video' as const,
                             uri: asset.uri,
                             thumbnailUri: assetInfo.localUri
                         };
                     }
                     return {
                         id: asset.id,
-                        type: 'image',
+                        type: 'image' as const,
                         uri: asset.uri
                     };
                 }));
@@ -93,46 +93,13 @@ export default function PostScreen() {
                 setMediaItems(formattedMedia);
                 if (formattedMedia.length > 0) {
                     const postMedia = await mapAssetToPostMedia(assets[0]);
-                    addMedia(postMedia);
-                }
-            }
-        })();
-    }, []);
-
-    useEffect(() => {
-        (async () => {
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            setHasPermission(status === 'granted');
-            
-            if (status === 'granted') {
-                const options: MediaLibrary.AssetsOptions = {
-                    first: 100,
-                    mediaType: [MediaLibrary.MediaType.photo],
-                    sortBy: [MediaLibrary.SortBy.creationTime]
-                };
-                
-                const { assets } = await MediaLibrary.getAssetsAsync(options);
-                const formattedMedia = await Promise.all(assets.map(async (asset) => {
-                    if (asset.mediaType === 'video') {
-                        const assetInfo = await MediaLibrary.getAssetInfoAsync(asset.id);
-                        return {
-                            id: asset.id,
-                            type: 'video',
-                            uri: asset.uri,
-                            thumbnailUri: assetInfo.localUri
-                        };
-                    }
-                    return {
-                        id: asset.id,
+                    // Convert postMedia to EditorMediaItem format
+                    const mediaItem: EditorMediaItem = {
+                        id: postMedia.id,
                         type: 'image',
-                        uri: asset.uri
+                        uris: postMedia.uris
                     };
-                }));
-                
-                setMediaItems(formattedMedia);
-                if (formattedMedia.length > 0) {
-                    const postMedia = await mapAssetToPostMedia(assets[0]);
-                    addMedia(postMedia);
+                    await addMedia(mediaItem);
                 }
             }
         })();
@@ -144,7 +111,15 @@ export default function PostScreen() {
 
     const selectMedia = useCallback(async (asset: MediaLibrary.Asset) => {
         const postMedia = await mapAssetToPostMedia(asset);
-        addMedia(postMedia);
+        
+        // Convert postMedia to EditorMediaItem format
+        const mediaItem: EditorMediaItem = {
+            id: postMedia.id,
+            type: postMedia.mediaType === 'video' ? 'video' : 'image',
+            uris: postMedia.uris
+        };
+        
+        await addMedia(mediaItem);
         openPreview();
     }, [addMedia, openPreview]);
     
@@ -202,7 +177,7 @@ export default function PostScreen() {
                 <Animated.View style={[animatedStyle, { height: 500 }]}>
                     <PreviewContainer
                         selectedMedia={selectedMedia?.length > 0 ? {
-                            type: selectedMedia[selectedMedia.length - 1].mediaType,
+                            type: selectedMedia[selectedMedia.length - 1].type,
                             uri: selectedMedia[selectedMedia.length - 1].uris[0]
                         } : null} 
                         height={gridSize * 3}

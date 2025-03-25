@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import Video from 'react-native-video';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 interface PreviewProps {
     selectedMedia: {
@@ -9,7 +9,7 @@ interface PreviewProps {
     } | null;
 }
 
-export function Preview({ selectedMedia }: PreviewProps) {
+export function Preview({ selectedMedia, ...props }: PreviewProps) {
     if (!selectedMedia) {
         return null;
     }
@@ -18,30 +18,38 @@ export function Preview({ selectedMedia }: PreviewProps) {
         return (
             <Image
                 source={{ uri: selectedMedia.uri }}
-                style={styles.content}
+                style={[styles.content, props.style]}
                 contentFit="contain"
                 accessible={true}
                 accessibilityLabel="Selected media preview"
+                {...props}
             />
         );
     }
 
     if (selectedMedia.type === 'video') {
-        return (
-            <Video
-                source={{ uri: selectedMedia.uri }}
-                style={styles.content}
-                resizeMode="contain"
-                controls
-                repeat
-                paused={true}
-                accessible={true}
-                accessibilityLabel="Selected video preview"
-            />
-        );
+        return <PreviewVideo uri={selectedMedia.uri} {...props} />;
     }
 
     return null;
+}
+
+function PreviewVideo({ uri, ...props }: { uri: string }) {
+    const player = useVideoPlayer(uri, (player) => {
+        player.loop = true;
+        player.muted = true;
+        player.play();
+    });
+
+    return (
+        <VideoView
+            player={player}
+            style={[styles.content, props.style]}
+            contentFit="contain"
+            nativeControls={false}
+            {...props}
+        />
+    );
 }
 
 const styles = StyleSheet.create({

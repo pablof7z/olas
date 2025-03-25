@@ -58,10 +58,10 @@ export function MediaPreview({
     const setMedia = usePostEditorStore((s) => s.setMedia);
 
     const handleRevertPress = useCallback(
-        (index: number) => {
+        async (index: number) => {
             const newState = [...media];
             newState[index].uris.shift();
-            setMedia(newState);
+            await setMedia(newState);
         },
         [media, setMedia]
     );
@@ -80,10 +80,10 @@ export function MediaPreview({
     );
 
     const deleteMedia = useCallback(
-        (index: number) => {
+        async (index: number) => {
             const newState = [...media];
             newState.splice(index, 1);
-            setMedia(newState);
+            await setMedia(newState);
 
             if (newState.length === 0) {
                 router.replace('/(home)');

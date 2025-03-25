@@ -3,6 +3,8 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { ImagePickerAsset } from 'expo-image-picker';
 import { PostMedia, PostMediaType } from '@/lib/post-editor/types';
+import { convertHeicToJpeg, isHeicImage } from './image-format';
+import { getRealPath } from 'react-native-compressor';
 
 export const imageOrVideoUrlRegexp = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
 
@@ -28,15 +30,24 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
         mediaType = 'image';
     }
 
+    // get the real path of the asset
+    const realPath = await getRealPath(asset.uri, asset.mediaType === 'video' ? 'video' : 'image');
+
+    // Check if the image is HEIC and convert if needed
+    let uri = realPath;
+    if (mediaType === 'image' && isHeicImage(uri)) {
+        uri = await convertHeicToJpeg(uri);
+    }
+
     // get the size of the file
-    const file = await FileSystem.getInfoAsync(asset.uri);
+    const file = await FileSystem.getInfoAsync(uri);
     let size: number | undefined;
 
     if (file.exists) size = file.size;
 
     return {
         id: asset.id ?? asset.uri,
-        uris: [asset.uri],
+        uris: [uri], // Use the potentially converted URI
         mediaType,
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
@@ -47,8 +58,14 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
 }
 
 export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): Promise<PostMedia> {
+    // Check if the image is HEIC and convert if needed
+    let uri = asset.uri;
+    if (asset.type === 'image' && isHeicImage(uri)) {
+        uri = await convertHeicToJpeg(uri);
+    }
+    
     // get the size of the file
-    const file = await FileSystem.getInfoAsync(asset.uri);
+    const file = await FileSystem.getInfoAsync(uri);
     let size: number | undefined;
 
     if (file.exists) size = file.size;
@@ -61,7 +78,7 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
 
     return {
         id: asset.uri,
-        uris: [asset.uri],
+        uris: [uri], // Use the potentially converted URI
         mediaType: imagePickerAssetTypeToPostType(asset.type),
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
