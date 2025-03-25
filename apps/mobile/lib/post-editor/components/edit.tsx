@@ -11,7 +11,6 @@ import { availableFilters } from '@/lib/post-editor/const';
 import { Slider } from '@/components/nativewindui/Slider';
 import { Fullscreen, SquareDashed } from 'lucide-react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { usePostEditorStore } from '@/components/NewPost/store';
 
 type AppliedFilter = {
     name: string;
@@ -85,9 +84,6 @@ export function Actions() {
     const editImageState = useEditImageStore();
     const setEditedImageUri = useEditImageStore((s) => s.setEditedImageUri);
     const activeFilter = useAtomValue(activeFilterAtom);
-    const editingIndex = usePostEditorStore((s) => s.editingIndex);
-    const media = usePostEditorStore((s) => s.media);
-    const setMedia = usePostEditorStore((s) => s.setMedia);
     const [imageUri, setEditImageUri] = useEditImageStore((s) => [s.imageUri, s.setImageUri]);
 
     const filtersApplied = useMemo(() => {
@@ -100,7 +96,6 @@ export function Actions() {
     }, [editImageState.editedImageUri]);
 
     const resetStore = useEditImageStore((s) => s.reset);
-    const setEditingIndex = usePostEditorStore((s) => s.setEditingIndex);
 
     const onComplete = useCallback(() => {
         resetStore();
@@ -361,8 +356,6 @@ export function Filters() {
         [activeFilter, setActiveFilter]
     );
 
-    const editingIndex = usePostEditorStore((s) => s.editingIndex);
-    const media = usePostEditorStore((s) => s.media);
     const activeImagePath = media[editingIndex].uris?.[0];
 
     const crop = useCallback(

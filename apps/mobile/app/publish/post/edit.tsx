@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useEditorStore } from "@/lib/publish/store/editor";
 import { Image } from "expo-image";
@@ -12,6 +12,7 @@ import { useFilter } from "@/lib/publish/filters/hooks/useFilter";
 import { useImage } from "@shopify/react-native-skia";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Preview } from "@/lib/publish/components/preview/Preview";
+import { saveFilteredImage } from "@/lib/publish/filters/utils/saveFilteredImage";
 
 function HeaderLeft() {
     const handlePress = useCallback(() => {
@@ -44,8 +45,9 @@ interface PreviewContentProps {
 }
 
 function PreviewContent({ previewHeight }: PreviewContentProps) {
-    const { selectedMedia, selectedMediaIndex, setSelectedMediaIndex } = useEditorStore();
-    const { currentMedia } = useFilter();
+    const { selectedMedia, selectedMediaIndex, setSelectedMediaIndex, updateMedia } = useEditorStore();
+    const { currentMedia, currentFilterId, selectFilter } = useFilter();
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleScroll = useCallback((event: any) => {
         const offsetX = event.nativeEvent.contentOffset.x;
@@ -55,17 +57,72 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
         }
     }, [dimensions.width, selectedMediaIndex, selectedMedia.length, setSelectedMediaIndex]);
 
-    if (currentMedia?.filter) {
-        return <FilteredImage
-            filePath={currentMedia.uris[0]}
-            filterParams={currentMedia.filter?.parameters || {}}
-            style={{ flex: 1, width: '100%', minHeight: previewHeight }}
-            width={dimensions.width}
-            height={previewHeight}
-            contentFit="contain"
-        />
-    }
+    const handleSaveFilteredImage = async () => {
+        if (!currentMedia || !currentMedia.filter) return;
+        
+        try {
+            setIsSaving(true);
+            
+            // Save the filtered image
+            const sourceUri = currentMedia.uris[0];
+            const newUri = await saveFilteredImage(sourceUri, currentMedia.filter.parameters);
+            
+            if (newUri) {
+                // Update the media item with the new URI at the beginning of the uris array
+                updateMedia(currentMedia.id, {
+                    uris: [newUri, ...currentMedia.uris]
+                });
+                
+                // Apply the filter selection (this will update the filter state in the editor store)
+                selectFilter(currentMedia.filter.id);
+            }
+        } catch (error) {
+            console.error('Error saving filtered image:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
+    const handleResetFilter = () => {
+        selectFilter('normal');
+    };
+
+    if (currentMedia?.filter) {
+        return (
+            <View style={{ flex: 1, width: '100%', minHeight: previewHeight, position: 'relative' }}>
+                <FilteredImage
+                    filePath={currentMedia.uris[0]}
+                    filterParams={currentMedia.filter?.parameters || {}}
+                    style={{ flex: 1, width: '100%', minHeight: previewHeight }}
+                    width={dimensions.width}
+                    height={previewHeight}
+                    contentFit="contain"
+                />
+                
+                <View style={styles.applyFilterButtonContainer}>
+                    <TouchableOpacity 
+                        style={styles.applyFilterButton} 
+                        onPress={handleResetFilter}
+                        disabled={isSaving}
+                    >
+                        <Text style={styles.applyFilterButtonText}>Reset Filter</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        style={styles.applyFilterButton}
+                        onPress={handleSaveFilteredImage}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                            <Text style={styles.applyFilterButtonText}>Apply Filter</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
 
     return (
         <ScrollView 
@@ -86,8 +143,6 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
                                 type: item.type,
                                 uri: item.uris[0]
                             }}
-                            style={{ width: '100%', minHeight: previewHeight }}
-                            contentFit="contain"
                         />
                     </View>
                 );
@@ -224,5 +279,23 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginRight: 6,
+    },
+    applyFilterButtonContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
+    applyFilterButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        backgroundColor: '#0091FF',
+        borderRadius: 24,
+    },
+    applyFilterButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

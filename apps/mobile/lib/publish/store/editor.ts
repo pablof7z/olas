@@ -40,7 +40,6 @@ interface EditorState {
     updateMedia: (mediaId: string, updatedMedia: Partial<MediaItem>) => void;
     reorderMedia: (fromIndex: number, toIndex: number) => void;
     toggleSelectionMode: () => void;
-    setMedia: (media: MediaItem) => Promise<void>;
     setCaption: (caption: string) => void;
     setExpiration: (expiration: number | null) => void;
     setState: (state: PostState) => void;
@@ -75,16 +74,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     
     addMedia: async (mediaItem) => {
         const convertedMedia = await convertMediaPath(mediaItem);
-        set((state) => ({
-            selectedMedia: [...state.selectedMedia, convertedMedia]
-        }));
-    },
-    
-    setMedia: async (media) => {
-        const convertedMedia = await convertMediaPath(media);
-        set(() => ({
-            selectedMedia: [convertedMedia]
-        }));
+        set((state) => {
+            if (state.isMultipleSelectionMode) {
+                // Check if the media item is already selected
+                const mediaExists = state.selectedMedia.some(item => item.id === convertedMedia.id);
+                
+                if (mediaExists) {
+                    // If the item exists, remove it (toggle off)
+                    return { 
+                        selectedMedia: state.selectedMedia.filter(item => item.id !== convertedMedia.id) 
+                    };
+                } else {
+                    // If the item doesn't exist, add it (toggle on)
+                    return { 
+                        selectedMedia: [...state.selectedMedia, convertedMedia] 
+                    };
+                }
+            } else {
+                // In single selection mode, just replace the selection
+                return { selectedMedia: [convertedMedia] };
+            }
+        });
     },
     
     removeMedia: (id) => set((state) => ({
@@ -108,7 +118,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     toggleSelectionMode: () => set((state) => ({
         isMultipleSelectionMode: !state.isMultipleSelectionMode,
-        selectedMedia: [] // Clear selection when toggling modes
+        selectedMedia: state.isMultipleSelectionMode ? state.selectedMedia : [state.selectedMedia[0]]
     })),
     
     setCaption: (caption) => set({ caption }),

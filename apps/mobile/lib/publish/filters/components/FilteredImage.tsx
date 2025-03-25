@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 import {
     Canvas,
@@ -7,12 +7,19 @@ import {
     Skia,
     Paint,
     SkImage,
-    ColorMatrix
+    ColorMatrix,
+    useCanvasRef,
+    makeImageSnapshot,
+    ImageFormat
 } from '@shopify/react-native-skia';
 import { FilterParameters } from '../presets';
 import { createColorMatrix, createVignettePaint } from '../utils';
 import { getRealPath } from 'react-native-compressor';
 import { Text } from '@/components/nativewindui/Text';
+
+export interface FilteredImageRef {
+    captureImage: () => Promise<Uint8Array | null>;
+}
 
 interface FilteredImageProps {
     style?: StyleProp<ViewStyle>;
@@ -23,15 +30,19 @@ interface FilteredImageProps {
     filePath?: string;
 }
 
-export function FilteredImage({
-    style,
-    filterParams,
-    contentFit = 'contain',
-    width,
-    height,
-    filePath
-}: FilteredImageProps) {
+export const FilteredImage = forwardRef<FilteredImageRef, FilteredImageProps>((
+    {
+        style,
+        filterParams,
+        contentFit = 'contain',
+        width,
+        height,
+        filePath
+    }, 
+    ref
+) => {
     const image = useImage(filePath);
+    const canvasRef = useCanvasRef();
     
     console.log('FilteredImage render:', {
         hasImage: !!image,
@@ -46,14 +57,40 @@ export function FilteredImage({
         return createColorMatrix(filterParams);
     }, [filterParams]);
     
+    useImperativeHandle(ref, () => ({
+        captureImage: async () => {
+            try {
+                if (!canvasRef.current || !image) {
+                    console.error('Canvas or image not available for capture');
+                    return null;
+                }
+                
+                // Capture the current canvas state as an image
+                const snapshot = makeImageSnapshot(canvasRef.current);
+                if (!snapshot) {
+                    console.error('Failed to create snapshot from canvas');
+                    return null;
+                }
+                
+                // Encode the image as PNG bytes
+                const bytes = snapshot.encodeToBytes(ImageFormat.PNG);
+                
+                return bytes;
+            } catch (error) {
+                console.error('Error capturing filtered image:', error);
+                return null;
+            }
+        }
+    }), [canvasRef, image]);
+    
     if (!image) {
         return <View style={[styles.container, style]}>
-            <Text style={{ color: 'white',  }}>filepath = {filePath}</Text>
+            <Text style={{ color: 'white' }}>No image found, this is a bug: {filePath}</Text>
         </View>;
     }
 
     return (
-        <Canvas style={[styles.container, style ]}>
+        <Canvas ref={canvasRef} style={[styles.container, style ]}>
             <FilteredImageInner 
                 image={image} 
                 colorMatrix={colorMatrix} 
@@ -64,7 +101,7 @@ export function FilteredImage({
             />
         </Canvas>
     );
-}
+});
 
 // Separated inner component to prevent re-renders
 interface FilteredImageInnerProps {

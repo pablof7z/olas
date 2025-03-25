@@ -15,7 +15,7 @@ export default function PreviewToolbar() {
 }
 
 function SystemMediaSelectorButton() {
-    const { setMedia, isMultipleSelectionMode } = useEditorStore();
+    const { addMedia, isMultipleSelectionMode } = useEditorStore();
 
     const handleSelectMedia = async () => {
         try {
@@ -30,7 +30,7 @@ function SystemMediaSelectorButton() {
                 const selectedAsset = result.assets[0];
                 const postMedia = await mapImagePickerAssetToPostMedia(selectedAsset);
                 
-                await setMedia({
+                await addMedia({
                     id: postMedia.id,
                     uris: postMedia.uris,
                     type: postMedia.mediaType,

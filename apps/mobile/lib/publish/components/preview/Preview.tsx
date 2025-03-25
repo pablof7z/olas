@@ -6,7 +6,7 @@ interface PreviewProps {
     selectedMedia: {
         type: 'image' | 'video';
         uri: string;
-    } | null;
+    };
 }
 
 export function Preview({ selectedMedia, ...props }: PreviewProps) {

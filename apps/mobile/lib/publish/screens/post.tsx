@@ -5,14 +5,14 @@ import { FlashList } from "@shopify/flash-list";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Stack, router } from "expo-router";
 import { X } from "lucide-react-native";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Dimensions, View, Pressable, TouchableOpacity, Text, NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from "react-native";
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEditorStore, MediaItem as EditorMediaItem } from "../store/editor";
 import { Image } from "expo-image";
 import * as MediaLibrary from 'expo-media-library';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, SharedValue } from "react-native-reanimated";
 
 const COLUMNS = 4;
 
@@ -27,8 +27,9 @@ export default function PostScreen() {
     const { colors } = useColorScheme();
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [hasPermission, setHasPermission] = useState(false);
-    const { selectedMedia, addMedia, isMultipleSelectionMode } = useEditorStore();
+    const { selectedMedia, addMedia } = useEditorStore();
     const heightValue = useSharedValue(0);
+    const gridSize = Dimensions.get('window').width / COLUMNS;
 
     const openPreview = useCallback(() => {
         heightValue.value = withSpring(0, {
@@ -54,11 +55,7 @@ export default function PostScreen() {
         }
     }, [openPreview, closePreview]);
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            marginTop: heightValue.value,
-        };
-    });
+    
 
     useEffect(() => {
         (async () => {
@@ -105,58 +102,24 @@ export default function PostScreen() {
         })();
     }, []);
 
-    const gridSize = Dimensions.get('window').width / COLUMNS;
     const headerHeight = useHeaderHeight();
     const insets = useSafeAreaInsets();
 
-    const selectMedia = useCallback(async (asset: MediaLibrary.Asset) => {
-        const postMedia = await mapAssetToPostMedia(asset);
-        
+    const selectMedia = useCallback(async (item: MediaItem) => {
         // Convert postMedia to EditorMediaItem format
         const mediaItem: EditorMediaItem = {
-            id: postMedia.id,
-            type: postMedia.mediaType === 'video' ? 'video' : 'image',
-            uris: postMedia.uris
+            id: item.id,
+            type: item.type === 'video' ? 'video' : 'image',
+            uris: [item.uri]
         };
         
         await addMedia(mediaItem);
         openPreview();
     }, [addMedia, openPreview]);
-    
-    const renderMediaItem = ({ item }: { item: MediaItem }) => {
-        const isSelected = selectedMedia.some(media => media.id === item.id);
-        
-        return (
-            <View style={[styles.gridItem, { width: gridSize, height: gridSize }]}>
-                <Pressable 
-                    style={styles.mediaPressable}
-                    onPress={async () => {
-                        const asset = await MediaLibrary.getAssetInfoAsync(item.id);
-                        await selectMedia(asset);
-                    }}
-                >
-                    <Image
-                        source={{ uri: item.type === 'video' ? item.thumbnailUri || item.uri : item.uri }}
-                        style={styles.mediaContent}
-                        contentFit="cover"
-                    />
-                    {item.type === 'video' && (
-                        <View style={styles.videoIndicator}>
-                            <Ionicons name="play-circle" size={24} color="white" />
-                        </View>
-                    )}
-                    {isSelected && (
-                        <>
-                            <View style={styles.selectedOverlay} />
-                            <View style={styles.checkmarkContainer}>
-                                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-                            </View>
-                        </>
-                    )}
-                </Pressable>
-            </View>
-        );
-    };
+
+    // Key that changes when selectedMedia changes to force re-render
+    const selectedMediaKey = useMemo(() => 
+        selectedMedia.map(m => m.id).join(','), [selectedMedia]);
 
     return (
         <>
@@ -174,21 +137,22 @@ export default function PostScreen() {
                 headerRight: () => <HeaderRight />
             }} />
             <View style={[ styles.outerContainer, { paddingTop: headerHeight }]}>
-                <Animated.View style={[animatedStyle, { height: 500 }]}>
-                    <PreviewContainer
-                        selectedMedia={selectedMedia?.length > 0 ? {
-                            type: selectedMedia[selectedMedia.length - 1].type,
-                            uri: selectedMedia[selectedMedia.length - 1].uris[0]
-                        } : null} 
-                        height={gridSize * 3}
-                    />
-                </Animated.View>
+                <PreviewView heightValue={heightValue} height={gridSize * 3} />
                 <Animated.View 
                     style={[styles.container, { paddingBottom: insets.bottom }]}
                 >
                     <FlashList
                         data={mediaItems}
-                        renderItem={renderMediaItem}
+                        extraData={selectedMediaKey}
+                        renderItem={({ item }) => (
+                            <MediaGridItem 
+                                item={item} 
+                                gridSize={gridSize} 
+                                selectMedia={selectMedia} 
+                                selectedMedia={selectedMedia}
+                                colors={colors}
+                            />
+                        )}
                         estimatedItemSize={gridSize}
                         numColumns={COLUMNS}
                         keyExtractor={(item) => item.id}
@@ -208,6 +172,78 @@ export default function PostScreen() {
                 </Animated.View>
             </View>
         </>
+    );
+}
+
+const MediaGridItem = memo(({ 
+    item, 
+    gridSize, 
+    selectMedia, 
+    selectedMedia,
+    colors
+}: { 
+    item: MediaItem; 
+    gridSize: number;
+    selectMedia: (item: MediaItem) => Promise<void>;
+    selectedMedia: EditorMediaItem[];
+    colors: { primary: string };
+}) => {
+    const isSelected = selectedMedia.some(media => media.id === item.id);
+    
+    return (
+        <View style={[styles.gridItem, { width: gridSize, height: gridSize }]}>
+            <Pressable 
+                style={styles.mediaPressable}
+                onPress={() => selectMedia(item)}
+            >
+                <Image
+                    source={{ uri: item.type === 'video' ? item.thumbnailUri || item.uri : item.uri }}
+                    style={styles.mediaContent}
+                    contentFit="cover"
+                />
+                {item.type === 'video' && (
+                    <View style={styles.videoIndicator}>
+                        <Ionicons name="play-circle" size={24} color="white" />
+                    </View>
+                )}
+                {isSelected && (
+                    <>
+                        <View style={styles.selectedOverlay} />
+                        <View style={styles.checkmarkContainer}>
+                            <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                        </View>
+                    </>
+                )}
+            </Pressable>
+        </View>
+    );
+});
+
+function PreviewView({
+    heightValue,
+    height,
+}: {
+    heightValue: SharedValue<number>;
+    height: number;
+}) {
+    const { selectedMedia } = useEditorStore();
+
+    // Transform the data to match what PreviewContainer expects
+    const formattedMedia = selectedMedia.map(item => ({
+        type: item.type,
+        uri: item.uris[0] // Use the first URI from the array
+    }));
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            marginTop: heightValue.value,
+        };
+    });
+
+    return (
+        <Animated.View style={[animatedStyle, { height: 500 }]}>
+            <PreviewContainer selectedMedia={formattedMedia} height={height} />
+        </Animated.View>
     );
 }
 

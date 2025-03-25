@@ -8,7 +8,6 @@ import { router } from 'expo-router';
 import { MapPin, Repeat, Timer, Users2 } from 'lucide-react-native';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import { MediaPreview } from './MediaPreview';
 import { useGroup } from '@/lib/groups/store';
 import { communityBottomSheetRefAtom, locationBottomSheetRefAtom, usePostEditorStore } from '../store';
 import { GroupEntry } from '@/lib/groups/types';
@@ -27,7 +26,6 @@ export default function MainScreen() {
     return (
         <View className="flex-1 flex-col justify-between">
             <View style={{ flex: 1, position: 'relative' }}>
-                <MediaPreview>{isSelecting && <ActivityIndicator />}</MediaPreview>
             </View>
 
             <PostOptions />
