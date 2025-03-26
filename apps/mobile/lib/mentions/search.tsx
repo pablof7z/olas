@@ -11,83 +11,74 @@ interface MentionProps extends TextInputProps {
     mentionSuggestionsStyle?: ViewStyle;
 }
 
-const Mention = forwardRef<TextInput, MentionProps>(({
-    onMentionSelect,
-    CustomInput,
-    suggestionsContainerStyle,
-    mentionSuggestionsStyle,
-    style,
-    ...restProps
-}, ref) => {
-    const { colors } = useColorScheme();
-    const [text, setText] = useState<string>('');
-    const localInputRef = useRef<TextInput>(null);
+const Mention = forwardRef<TextInput, MentionProps>(
+    ({ onMentionSelect, CustomInput, suggestionsContainerStyle, mentionSuggestionsStyle, style, ...restProps }, ref) => {
+        const { colors } = useColorScheme();
+        const [text, setText] = useState<string>('');
+        const localInputRef = useRef<TextInput>(null);
 
-    const handleTextChange = (value: string) => {
-        setText(value);
-        
-        // Call the original onChangeText if provided
-        if (restProps.onChangeText) {
-            restProps.onChangeText(value);
-        }
-    };
+        const handleTextChange = (value: string) => {
+            setText(value);
 
-    const handleProfileSelect = useCallback(
-        (pubkey: Hexpubkey, profile: NDKUserProfile) => {
-            // Hide suggestions after selection
-            // Call the callback if provided
-            if (onMentionSelect) {
-                onMentionSelect(pubkey, profile);
+            // Call the original onChangeText if provided
+            if (restProps.onChangeText) {
+                restProps.onChangeText(value);
             }
-        },
-        [onMentionSelect]
-    );
+        };
 
-    const inputStyles = [
-        styles.input,
-        {
-            backgroundColor: colors.card,
-            color: colors.foreground,
-            borderColor: colors.grey3,
-        },
-        style,
-    ];
+        const handleProfileSelect = useCallback(
+            (pubkey: Hexpubkey, profile: NDKUserProfile) => {
+                // Hide suggestions after selection
+                // Call the callback if provided
+                if (onMentionSelect) {
+                    onMentionSelect(pubkey, profile);
+                }
+            },
+            [onMentionSelect]
+        );
 
-    const inputProps = {
-        style: inputStyles,
-        value: text,
-        onChangeText: handleTextChange,
-        autoCapitalize: "none" as const,
-        autoCorrect: false,
-        ...restProps
-    };
+        const inputStyles = [
+            styles.input,
+            {
+                backgroundColor: colors.card,
+                color: colors.foreground,
+                borderColor: colors.grey3,
+            },
+            style,
+        ];
 
-    return (
-        <View style={styles.container}>
-            {CustomInput ? (
-                <CustomInput {...inputProps} />
-            ) : (
-                <TextInput ref={ref} {...inputProps} />
-            )}
+        const inputProps = {
+            style: inputStyles,
+            value: text,
+            onChangeText: handleTextChange,
+            autoCapitalize: 'none' as const,
+            autoCorrect: false,
+            ...restProps,
+        };
 
-            <View
-                style={[
-                    styles.suggestionsContainer,
-                    {
-                        backgroundColor: colors.card,
-                        borderColor: colors.grey3,
-                    },
-                    suggestionsContainerStyle,
-                ]}>
-                <MentionSuggestions 
-                    query={text.substring(text.lastIndexOf('@'))} 
-                    onPress={handleProfileSelect}
-                    style={mentionSuggestionsStyle}
-                />
+        return (
+            <View style={styles.container}>
+                {CustomInput ? <CustomInput {...inputProps} /> : <TextInput ref={ref} {...inputProps} />}
+
+                <View
+                    style={[
+                        styles.suggestionsContainer,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: colors.grey3,
+                        },
+                        suggestionsContainerStyle,
+                    ]}>
+                    <MentionSuggestions
+                        query={text.substring(text.lastIndexOf('@'))}
+                        onPress={handleProfileSelect}
+                        style={mentionSuggestionsStyle}
+                    />
+                </View>
             </View>
-        </View>
-    );
-});
+        );
+    }
+);
 
 const styles = StyleSheet.create({
     container: {
@@ -116,4 +107,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Mention; 
+export default Mention;

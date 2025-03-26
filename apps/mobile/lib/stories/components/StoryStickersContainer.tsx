@@ -20,7 +20,7 @@ export default function StoryStickersContainer({ event, onLayout }: StorySticker
     // Extract stickers from the NDKStory event
     useEffect(() => {
         if (!event) return;
-        
+
         try {
             const mappedStickers = mapNDKStickersToAppFormat(event);
             setStickers(mappedStickers);
@@ -34,7 +34,7 @@ export default function StoryStickersContainer({ event, onLayout }: StorySticker
     const handleLayout = (e: LayoutChangeEvent) => {
         const { width, height } = e.nativeEvent.layout;
         // setContainerDimensions({ width, height });
-        
+
         if (onLayout) {
             onLayout({ width, height });
         }
@@ -45,11 +45,11 @@ export default function StoryStickersContainer({ event, onLayout }: StorySticker
         return <View style={styles.container} onLayout={handleLayout} />;
     }
 
-    console.log('sticker', {containerDimensions, originalDimensions});
+    console.log('sticker', { containerDimensions, originalDimensions });
 
     return (
         <View style={styles.container} onLayout={handleLayout}>
-            {stickers.map(sticker => (
+            {stickers.map((sticker) => (
                 <ReadOnlySticker
                     key={sticker.id}
                     sticker={sticker}
@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
         bottom: 0,
         zIndex: 10,
         overflow: 'hidden',
-    }
-}); 
+    },
+});

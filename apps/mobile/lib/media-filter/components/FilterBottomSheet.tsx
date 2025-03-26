@@ -28,16 +28,16 @@ interface FilterBottomSheetProps {
     onDismiss?: () => void;
 }
 
-export default function FilterBottomSheet({ 
-    selectedFilterId, 
-    onSelectFilter, 
-    previewImageUri, 
+export default function FilterBottomSheet({
+    selectedFilterId,
+    onSelectFilter,
+    previewImageUri,
     visible,
     onFilterApplied,
     onResetFilter,
     isApplying = false,
     handleSaveFilteredImage,
-    onDismiss
+    onDismiss,
 }: FilterBottomSheetProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(filterBottomSheetRefAtom);
@@ -73,14 +73,11 @@ export default function FilterBottomSheet({
         }
     };
 
-    const renderBackdrop = useCallback(
-        (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} />,
-        []
-    );
+    const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} />, []);
 
     return (
-        <Sheet 
-            ref={ref} 
+        <Sheet
+            ref={ref}
             enablePanDownToClose
             backgroundStyle={{ backgroundColor: '#111' }}
             handleIndicatorStyle={{ backgroundColor: '#333' }}
@@ -89,34 +86,24 @@ export default function FilterBottomSheet({
                 borderTopStartRadius: 16,
                 borderTopEndRadius: 16,
             }}
-            onDismiss={onDismiss}
-        >
-            <BottomSheetView style={{ 
-                flexDirection: 'column', 
-                width: '100%', 
-                paddingBottom: insets.bottom 
-            }}>
+            onDismiss={onDismiss}>
+            <BottomSheetView
+                style={{
+                    flexDirection: 'column',
+                    width: '100%',
+                    paddingBottom: insets.bottom,
+                }}>
                 <View style={styles.actionButtonsContainer}>
                     <Pressable onPress={handleReset} style={styles.actionButton}>
                         <Text style={styles.actionButtonText}>Reset</Text>
                     </Pressable>
-                    
-                    <Pressable 
-                        onPress={handleApplyFilter} 
-                        style={styles.actionButton}
-                        disabled={isApplying}
-                    >
-                        <Text style={styles.actionButtonText}>
-                            {isApplying ? 'Applying...' : 'Apply'}
-                        </Text>
+
+                    <Pressable onPress={handleApplyFilter} style={styles.actionButton} disabled={isApplying}>
+                        <Text style={styles.actionButtonText}>{isApplying ? 'Applying...' : 'Apply'}</Text>
                     </Pressable>
                 </View>
-                
-                <FilterList
-                    selectedFilterId={selectedFilterId || ''}
-                    onSelectFilter={onSelectFilter}
-                    previewImageUri={previewImageUri}
-                />
+
+                <FilterList selectedFilterId={selectedFilterId || ''} onSelectFilter={onSelectFilter} previewImageUri={previewImageUri} />
             </BottomSheetView>
         </Sheet>
     );
@@ -138,5 +125,5 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '500',
-    }
-}); 
+    },
+});

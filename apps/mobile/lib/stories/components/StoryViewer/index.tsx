@@ -26,11 +26,7 @@ export default function SimpleStoryViewer({ story, active = true, onNext, onPrev
 
     return (
         <View style={[styles.container, { backgroundColor: 'black' }]}>
-            {isVideo ? (
-                <VideoContent url={imeta.url} />
-            ) : (
-                <ImageContent url={imeta.url} />
-            )}
+            {isVideo ? <VideoContent url={imeta.url} /> : <ImageContent url={imeta.url} />}
 
             {/* Stickers Layer */}
             <StoryStickersContainer event={story} />
@@ -44,11 +40,7 @@ const VideoContent = ({ url }: { url: string }) => {
         player.loop = true;
     });
 
-    return <VideoView
-        player={videoSource}
-        style={[styles.media]}
-        contentFit="cover"
-    />;
+    return <VideoView player={videoSource} style={[styles.media]} contentFit="cover" />;
 };
 
 const ImageContent = ({ url }: { url: string }) => {
@@ -56,12 +48,14 @@ const ImageContent = ({ url }: { url: string }) => {
     // Local URIs will be in the format "file:///path/to/file"
     const imageSource = useImage({ uri: url });
 
-    return <Image
-        style={styles.media}
-        source={imageSource}
-        // Add contentFit to ensure it displays properly
-        contentFit="cover"
-    />;
+    return (
+        <Image
+            style={styles.media}
+            source={imageSource}
+            // Add contentFit to ensure it displays properly
+            contentFit="cover"
+        />
+    );
 };
 const styles = StyleSheet.create({
     container: {
@@ -115,4 +109,4 @@ const styles = StyleSheet.create({
     nextTouch: {
         flex: 2,
     },
-}); 
+});

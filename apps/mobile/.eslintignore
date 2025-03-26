@@ -1,0 +1,13 @@
+node_modules
+.expo
+.expo-shared
+build
+dist
+*.d.ts
+ios
+android
+.turbo
+.vscode
+.goose
+.maestro
+__mocks__ 

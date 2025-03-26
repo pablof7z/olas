@@ -2,7 +2,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { View, TextInput, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { NDKEvent, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { nip19 } from 'nostr-tools';
 import { Text } from '@/components/nativewindui/Text';
 import { Button } from '@/components/nativewindui/Button';
 import { ArrowRight } from 'lucide-react-native';
@@ -38,8 +37,7 @@ export function SignUp() {
         }
 
         const signer = NDKPrivateKeySigner.generate();
-        const nsec = nip19.nsecEncode(signer._privateKey!);
-        await login(nsec);
+        await login(signer.nsec);
 
         let imageUrl = 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username;
 

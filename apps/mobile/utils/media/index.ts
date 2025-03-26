@@ -64,7 +64,7 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
     if (asset.type === 'image' && isHeicImage(uri)) {
         uri = await convertHeicToJpeg(uri);
     }
-    
+
     // get the size of the file
     const file = await FileSystem.getInfoAsync(uri);
     let size: number | undefined;
@@ -127,21 +127,21 @@ export async function extractLocationFromMedia(uri: string): Promise<Location | 
         const cleanUri = uri.startsWith('file://') ? uri.slice(7) : uri;
 
         console.log('extract location from media', cleanUri);
-        
+
         // Extract EXIF data using exify
         const exifData = await Exify.readAsync(cleanUri);
         const hasLocation = exifData?.GPSLatitude !== undefined && exifData?.GPSLongitude !== undefined;
 
         console.log('exifData', exifData);
-        
+
         // Check if GPS data exists
         if (hasLocation) {
             return {
                 latitude: exifData.GPSLatitude!,
-                longitude: exifData.GPSLongitude!
+                longitude: exifData.GPSLongitude!,
             };
         }
-        
+
         return null;
     } catch (error) {
         console.log('Failed to extract location from media:', error);

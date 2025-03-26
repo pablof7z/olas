@@ -15,13 +15,12 @@ export function useStories() {
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60 * 10;
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [{ kinds: [NDKKind.Story], since: twentyFourHoursAgo }];
-        if (follows.length > 0) {
+        if (follows?.length > 0) {
             filters.push({ kinds: [NDKKind.VerticalVideo, NDKKind.ShortVideo], authors: follows, since: twentyFourHoursAgo });
         }
         return filters;
-    }, [follows.length]);
-    console.log('filters', filters);
-    const {events} = useSubscribe<NDKImage | NDKVideo | NDKStory>(filters, { wrap: true, cacheUnconstrainFilter: [] }, [filters]);
+    }, [follows?.length]);
+    const { events } = useSubscribe<NDKImage | NDKVideo | NDKStory>(filters, { wrap: true, cacheUnconstrainFilter: [] }, [filters]);
 
     const [stories, setStories] = useState<Map<Hexpubkey, StoryEntry>>(new Map());
     const knownIds = useRef<Set<string>>(new Set());
@@ -35,6 +34,8 @@ export function useStories() {
             knownIds.current.add(event.id);
             changed = true;
 
+            if (!isInRightTimeframe(event)) continue;
+            
             if (isStory(event) || isLiveEvent(event) || isNDKStory(event)) {
                 const pubkey = event.pubkey;
                 const current = map.get(pubkey) ?? { events: [], live: false };
@@ -58,7 +59,7 @@ export function useStories() {
 function isStory(event: NDKImage | NDKVideo | NDKStory) {
     // Already an NDKStory event
     if (event.kind === 23) return true;
-    
+
     const expiration = event.tagValue('expiration');
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
     const videoInPast24Hours = event instanceof NDKVideo && event.created_at! > twentyFourHoursAgo;
@@ -80,9 +81,16 @@ function isStory(event: NDKImage | NDKVideo | NDKStory) {
  * Checks if an event is a kind 25 NDKStory
  */
 function isNDKStory(event: NDKEvent): boolean {
-    return event.kind === 23 && event.tags.some(tag => tag[0] === 'imeta');
+    return event.kind === NDKKind.Story && event.tags.some((tag) => tag[0] === 'imeta');
 }
 
 function isLiveEvent(event: NDKEvent) {
     return event.kind === 30311 && event.tagValue('status') === 'live';
+}
+
+function isInRightTimeframe(event: NDKEvent) {
+    // must be in the last 24 hours
+    const now = Math.floor(Date.now() / 1000);
+    const twentyFourHoursAgo = now - 24 * 60 * 60;
+    return event.created_at! >= twentyFourHoursAgo && event.created_at! <= now;
 }

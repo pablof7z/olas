@@ -1,11 +1,11 @@
-import { PostMedia } from "@/lib/post-editor/types";
-import { determineMimeType } from "../url";
-import compressFile from "./compress";
-import removeExifFromFile from "./remove-exif";
-import generateThumbnail from "./generate-thumbnail";
-import calculateSha256 from "./sha256";
-import generateBlurhash from "./generate-blurhash";
-import getDimensions from "./dimensions";
+import { PostMedia } from '@/lib/post-editor/types';
+import { determineMimeType } from '../url';
+import compressFile from './compress';
+import removeExifFromFile from './remove-exif';
+import generateThumbnail from './generate-thumbnail';
+import calculateSha256 from './sha256';
+import generateBlurhash from './generate-blurhash';
+import getDimensions from './dimensions';
 
 export type ProgressCb = (type: string, progress: number) => void;
 

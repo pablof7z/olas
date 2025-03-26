@@ -6,13 +6,12 @@ import {
     searchProfiles,
     NDKUserProfile,
     NDKUser,
-    useUserProfile,
     Hexpubkey,
+    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import AvatarAndName from '@/components/ui/user/avatar-name';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { UserProfile } from '@/hooks/user-profile';
 
 interface MentionSuggestionsProps {
     query: string;
@@ -107,4 +106,4 @@ const styles = StyleSheet.create({
         width: '94%',
         alignSelf: 'center',
     },
-}); 
+});

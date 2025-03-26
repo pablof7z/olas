@@ -15,7 +15,7 @@ export default function SettingsBottomSheet() {
     useEffect(() => {
         console.log('SettingsBottomSheet mounted, setting ref', sheetRef);
         setSettingsSheetRef(sheetRef);
-        
+
         return () => {
             console.log('SettingsBottomSheet unmounted');
             setSettingsSheetRef(null);
@@ -28,8 +28,7 @@ export default function SettingsBottomSheet() {
             snapPoints={['50%']}
             backgroundComponent={({ style }) => <BlurView intensity={90} tint="dark" style={[style, styles.sheetBlur]} />}
             handleIndicatorStyle={styles.handleIndicator}
-            style={styles.sheet}
-        >
+            style={styles.sheet}>
             <BottomSheetView style={[styles.container, { paddingBottom: insets.bottom }]}>
                 <Text style={styles.text}>Hello world</Text>
             </BottomSheetView>
@@ -68,4 +67,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
     },
-}); 
+});

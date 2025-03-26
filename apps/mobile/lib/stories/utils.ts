@@ -22,12 +22,15 @@ interface StickerMetadata {
 }
 
 // Type mapping for sticker value types
-type StickerValueType<T extends NDKStoryStickerType> = 
-    T extends NDKStoryStickerType.Pubkey ? NDKUser :
-    T extends NDKStoryStickerType.Text ? string :
-    T extends NDKStoryStickerType.Countdown ? string :
-    T extends NDKStoryStickerType.Event ? NDKEvent :
-    string | NDKUser;
+type StickerValueType<T extends NDKStoryStickerType> = T extends NDKStoryStickerType.Pubkey
+    ? NDKUser
+    : T extends NDKStoryStickerType.Text
+      ? string
+      : T extends NDKStoryStickerType.Countdown
+        ? string
+        : T extends NDKStoryStickerType.Event
+          ? NDKEvent
+          : string | NDKUser;
 
 export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
     id: string;
@@ -41,7 +44,7 @@ export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
 
 /**
  * Converts NDK Story stickers to the app's internal Sticker format
- * 
+ *
  * @param ndkStory The NDK Story event containing stickers
  * @returns Array of Stickers in the app's format
  */
@@ -52,8 +55,9 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
 
     return ndkStory.stickers.map((ndkSticker) => {
         // Parse dimensions from the dimension property
-        let width = 100, height = 100;
-        
+        let width = 100,
+            height = 100;
+
         // Handle dimension parsing
         width = ndkSticker.dimension.width || 100;
         height = ndkSticker.dimension.height || 100;
@@ -72,8 +76,8 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
             },
             dimensions: {
                 width,
-                height
-            }
+                height,
+            },
         };
 
         // Additional processing based on sticker type
@@ -87,17 +91,15 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
                     sticker.value = endTimeStr as any;
                 }
                 break;
-                
+
             case NDKStoryStickerType.Event:
                 // For event stickers, value should be an NDKEvent
                 if (ndkSticker.value && typeof ndkSticker.value === 'object') {
-                    const eventId = typeof ndkSticker.value === 'string' 
-                        ? ndkSticker.value 
-                        : (ndkSticker.value as any).id;
+                    const eventId = typeof ndkSticker.value === 'string' ? ndkSticker.value : (ndkSticker.value as any).id;
                     // Note: The actual NDKEvent object needs to be fetched/created separately
-                    sticker.metadata = { 
+                    sticker.metadata = {
                         event: ndkSticker.value as NDKEvent,
-                        title: ndkSticker.properties?.title
+                        title: ndkSticker.properties?.title,
                     };
                 }
                 break;
@@ -114,12 +116,12 @@ export function getCanvasDimensions(ndkStory: NDKStory): { width: number; height
     if (ndkStory.dimensions) return ndkStory.dimensions;
 
     // Look for canvas dimensions in event tags
-    const canvasTag = ndkStory.tags.find(tag => tag[0] === 'canvas');
+    const canvasTag = ndkStory.tags.find((tag) => tag[0] === 'canvas');
     if (canvasTag && canvasTag.length >= 3) {
         try {
             const width = parseInt(canvasTag[1], 10);
             const height = parseInt(canvasTag[2], 10);
-            
+
             if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
                 return { width, height };
             }
@@ -129,4 +131,4 @@ export function getCanvasDimensions(ndkStory: NDKStory): { width: number; height
     }
 
     return { width: 1080, height: 1920 };
-} 
+}

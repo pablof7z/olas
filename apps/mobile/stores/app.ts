@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { ZapOption } from '@/app/(home)/(settings)/zaps';
 import { db } from './db';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from '@nostr-dev-kit/ndk-wallet';
+import { atom } from 'jotai';
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
@@ -312,3 +313,6 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         });
     },
 }));
+
+
+export const appReadyAtom = atom(false);

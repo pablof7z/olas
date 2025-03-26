@@ -29,15 +29,10 @@ const dimensions = Dimensions.get('window');
 export default function StoryPreviewContent({ path, type, onClose, onPreview }: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const { getDuration } = useStickerStore();
-    
+
     // Use extracted custom hooks
-    const {
-        setCanvasSize,
-        containerWidthValue,
-        onImageLoad,
-        setMediaSize
-    } = useMediaDimensions();
-    
+    const { setCanvasSize, containerWidthValue, onImageLoad, setMediaSize } = useMediaDimensions();
+
     const {
         selectedStickerId,
         stickers,
@@ -45,19 +40,19 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
         handleStickerSelect,
         handleDeleteSelected,
         openStickersDrawer,
-        handleAddTextSticker
+        handleAddTextSticker,
     } = useStickerManagement();
-    
+
     const { isUploading, handlePreview, handleShare } = useStoryActions({
         path,
         type,
         stickers,
         dimensions,
         getDuration,
-        onClose
+        onClose,
     });
 
-    const videoPlayer = useVideoPlayer(type === 'video' ? path : null, player => {
+    const videoPlayer = useVideoPlayer(type === 'video' ? path : null, (player) => {
         player.loop = true;
         player.play();
     });
@@ -69,14 +64,14 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
                 // Check for natural size properties on VideoPlayer
                 const naturalWidth = (videoPlayer as any).naturalWidth;
                 const naturalHeight = (videoPlayer as any).naturalHeight;
-                
+
                 if (naturalWidth > 0 && naturalHeight > 0) {
                     console.log('Video dimensions:', naturalWidth, naturalHeight);
                     setMediaSize({ width: naturalWidth, height: naturalHeight });
                     clearInterval(checkDimensions);
                 }
             }, 100);
-            
+
             return () => clearInterval(checkDimensions);
         }
     }, [videoPlayer, type]);
@@ -95,7 +90,7 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
                     const { width, height } = event.nativeEvent.layout;
                     setCanvasSize({ width, height });
                 }}>
-                <MediaRenderer 
+                <MediaRenderer
                     type={type}
                     path={path}
                     player={videoPlayer}
@@ -105,15 +100,11 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
 
                 {/* Stickers Layer */}
                 {stickers.map((sticker) => (
-                    <Sticker
-                        key={sticker.id}
-                        sticker={sticker as any}
-                        onSelect={() => handleStickerSelect(sticker.id)}
-                    />
+                    <Sticker key={sticker.id} sticker={sticker as any} onSelect={() => handleStickerSelect(sticker.id)} />
                 ))}
             </View>
 
-            <StoryControls 
+            <StoryControls
                 insets={insets}
                 onClose={onClose}
                 onAddText={handleAddTextSticker}

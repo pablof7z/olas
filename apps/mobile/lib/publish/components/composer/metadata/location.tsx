@@ -7,9 +7,9 @@ import { locationBottomSheetRefAtom } from '@/lib/publish/components/composer/me
 import { useAtomValue } from 'jotai';
 
 export default function Location() {
-    const location = useEditorStore(state => state.location);
-    const includeLocation = useEditorStore(state => state.includeLocation);
-    const setIncludeLocation = useEditorStore(state => state.setIncludeLocation);
+    const location = useEditorStore((state) => state.location);
+    const includeLocation = useEditorStore((state) => state.includeLocation);
+    const setIncludeLocation = useEditorStore((state) => state.setIncludeLocation);
     const { colors } = useColorScheme();
     const locationBottomSheetRef = useAtomValue(locationBottomSheetRefAtom);
 
@@ -26,11 +26,7 @@ export default function Location() {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity 
-                style={styles.rowContainer} 
-                onPress={openLocationBottomSheet}
-                activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.rowContainer} onPress={openLocationBottomSheet} activeOpacity={0.7}>
                 <Ionicons name="location-outline" size={22} color={colors.primary} />
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>Location</Text>
@@ -71,4 +67,4 @@ const styles = StyleSheet.create({
         color: '#666666',
         marginTop: 2,
     },
-}); 
+});

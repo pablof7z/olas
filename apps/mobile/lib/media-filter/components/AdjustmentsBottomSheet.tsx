@@ -37,8 +37,8 @@ export default function AdjustmentsBottomSheet({ visible }: AdjustmentsBottomShe
     }, [visible, ref]);
 
     return (
-        <Sheet 
-            ref={ref} 
+        <Sheet
+            ref={ref}
             snapPoints={['50%']}
             enablePanDownToClose
             backgroundStyle={{ backgroundColor: '#111' }}
@@ -46,15 +46,15 @@ export default function AdjustmentsBottomSheet({ visible }: AdjustmentsBottomShe
             style={{
                 borderTopStartRadius: 16,
                 borderTopEndRadius: 16,
-            }}
-        >
-            <BottomSheetView style={{ 
-                flexDirection: 'column', 
-                width: '100%', 
-                paddingBottom: insets.bottom 
             }}>
+            <BottomSheetView
+                style={{
+                    flexDirection: 'column',
+                    width: '100%',
+                    paddingBottom: insets.bottom,
+                }}>
                 <FilterAdjustments />
             </BottomSheetView>
         </Sheet>
     );
-} 
+}

@@ -8,7 +8,7 @@ import { Toasts } from '@backpackapp-io/react-native-toast';
 import { StyleSheet } from 'react-native';
 import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { NDKEventWithFrom, useNDKCurrentUser, useNDKInit, NDKUser } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
 import { ScreenProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -16,13 +16,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
-import { NDKKind, NDKList } from '@nostr-dev-kit/ndk-mobile';
-import React, { useEffect, useRef, useState } from 'react';
-import { useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
-import { useSetAtom } from 'jotai';
+import React, { useEffect } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
 import LoaderScreen from '@/components/LoaderScreen';
 import { relayNoticesAtom } from '@/stores/relays';
-import { useAppSettingsStore } from '@/stores/app';
+import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { PromptForNotifications } from './notification-prompt';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import { Platform, View } from 'react-native';
@@ -39,17 +37,13 @@ import { settingsStore } from '@/lib/settings-store';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
 import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
-import { useAppSub } from '@/hooks/app-sub';
+import { useAppSub, useSessionSub } from '@/hooks/app-sub';
+import SignerReady from '@/components/SignerReady';
 
 // LogBox.ignoreAllLogs();
 
 const currentUserInSettings = SecureStore.getItem('currentUser') ?? undefined;
 const ndk = initializeNDK(currentUserInSettings);
-
-const sessionKinds = new Map([
-    [NDKKind.BlossomList, { wrapper: NDKList }],
-    [NDKKind.SimpleGroupList, { wrapper: NDKList }],
-] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
 
 const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
     const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
@@ -58,28 +52,31 @@ const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platfor
     return { presentation, headerShown, ...opts };
 };
 
-export default function RootLayout() {
-    const [appReady, setAppReady] = useState(!!currentUserInSettings);
-    // const [wotReady, setWotReady] = useState(false);
+let appRenderCount = 0;
 
+export default function App() {
+    const [appReady, setAppReady] = useAtom(appReadyAtom);
+    useNDKInit(ndk, settingsStore);
+
+    useEffect(() => {
+        setAppReady(true);
+    }, [])
+
+    console.log('<App> rendering', appRenderCount++);
+    return (
+        <LoaderScreen appReady={appReady} wotReady={true}>
+           {!!ndk && <RootLayout />} 
+        </LoaderScreen>
+    )
+}
+
+let rootLayoutRenderCount = 0;
+
+export function RootLayout() {
     useInitialAndroidBarSync();
     const { colorScheme, isDarkColorScheme } = useColorScheme();
 
-    // // check if we have relay.olas.app, if not, add it
-    // if (!relays.find((r) => r.match(/^relay\.olas\.app/))) {
-    //     relays.unshift('wss://relay.olas.app/');
-    // }
-
-    // if (!relays.find((r) => r.match(/^purplepag\.es/))) {
-    //     relays.unshift('wss://purplepag.es/');
-    // }
-
-    useNDKInit(ndk, settingsStore);
-
-    const initializeSession = useNDKSessionInit();
     const setRelayNotices = useSetAtom(relayNoticesAtom);
-    const currentUser = useNDKCurrentUser();
-    const timeoutRef = useRef(null);
     const setFeedType = useSetAtom(feedTypeAtom);
 
     useEffect(() => {
@@ -107,48 +104,8 @@ export default function RootLayout() {
         setFeedType(feedType);
     }, []);
 
-    useAppSub(currentUser?.pubkey, [!ndk || !currentUser?.pubkey || !appReady, currentUser?.pubkey]);
-
-    useEffect(() => {
-        if (!currentUser?.pubkey) return;
-
-        initializeSession(
-            ndk,
-            currentUser,
-            settingsStore,
-            {
-                follows: { kinds: [NDKKind.Image, NDKKind.VerticalVideo] },
-                muteList: true,
-                wot: false,
-                kinds: sessionKinds,
-                filters: (user: NDKUser) => [
-                    {
-                        kinds: [NDKKind.CashuMintList, NDKKind.CashuWallet],
-                        authors: [user.pubkey],
-                    },
-                ],
-                subOpts: { wrap: true, skipVerification: true },
-            },
-            {
-                onReady: () => {
-                    if (!appReady) {
-                        console.log('setting app ready in onReady');
-                        setAppReady(true);
-                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                    }
-                },
-                // onWotReady: () => setWotReady(true),
-            }
-        );
-    }, [currentUser?.pubkey]);
-
-    useEffect(() => {
-        if (!currentUserInSettings) {
-            console.log('there was no current user in settings, so setting app ready');
-            setAppReady(true);
-            // setWotReady(true);
-        }
-    }, []);
+    // useAppSub();
+    useSessionSub();
 
     useEffect(() => {
         if (!ndk) return;
@@ -166,35 +123,16 @@ export default function RootLayout() {
 
     useEffect(() => {
         initAppSettings();
-        // Configure push notifications
-        // configurePushNotifications();
-
-        // Notification received while app is running
-        // const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-        //     console.log('Notification received:', notification);
-        // });
-
-        // // Notification tapped by user
-        // const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-        //     console.log('Notification response:', response);
-        //     // Here you can handle notification taps
-        // });
-
-        // return () => {
-        //     Notifications.removeNotificationSubscription(notificationListener);
-        //     Notifications.removeNotificationSubscription(responseListener);
-        // };
     }, []);
 
-    useWalletMonitor();
-    useNutzapMonitor();
+    console.log('<RootLayout> rendering', rootLayoutRenderCount++);
 
     return (
         <>
+            {!!ndk?.signer && <SignerReady />}
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
-                    <LoaderScreen appReady={appReady} wotReady={true}>
                         <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                             <ActionSheetProvider>
                                 <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -253,7 +191,6 @@ export default function RootLayout() {
                             <Toasts />
                             <DevelopmentStatus />
                         </KeyboardProvider>
-                    </LoaderScreen>
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
         </>

@@ -15,7 +15,7 @@ interface MentionStickerViewProps {
 export default function MentionStickerView({ sticker, fixedDimensions = false, onLayout }: MentionStickerViewProps) {
     // Initialize containerSize with dimensions from sticker if fixedDimensions is true, otherwise empty
     const [containerSize, setContainerSize] = useState(fixedDimensions ? sticker.dimensions : { width: 0, height: 0 });
-    
+
     // Get user data from sticker value or metadata
     // Since we're using the generic type, value is guaranteed to be NDKUser
     const ndkUser = sticker.value;
@@ -47,18 +47,21 @@ export default function MentionStickerView({ sticker, fixedDimensions = false, o
     };
 
     // Handle container layout to measure available space
-    const handleLayout = useCallback((event: LayoutChangeEvent) => {
-        onLayout?.(event);
-        if (fixedDimensions) return;
-        const { width, height } = event.nativeEvent.layout;
-        console.log('handleLayout', { width, height });
-        setContainerSize({ width, height });
-    }, [fixedDimensions, onLayout]);
+    const handleLayout = useCallback(
+        (event: LayoutChangeEvent) => {
+            onLayout?.(event);
+            if (fixedDimensions) return;
+            const { width, height } = event.nativeEvent.layout;
+            console.log('handleLayout', { width, height });
+            setContainerSize({ width, height });
+        },
+        [fixedDimensions, onLayout]
+    );
 
     if (hasBackgroundGradient && containerStyle.backgroundGradient) {
         // Extract linear gradient props and regular style props
         const { backgroundGradient, ...restStyle } = containerStyle;
-        
+
         return (
             <LinearGradient
                 style={{
@@ -79,12 +82,24 @@ export default function MentionStickerView({ sticker, fixedDimensions = false, o
 
     console.log('viewStyle', viewStyle);
 
-    return <View style={viewStyle} onLayout={handleLayout}>
-        <Content pubkey={pubkey} userProfile={userProfile} avatarSize={avatarSize} selectedStyle={selectedStyle} />
-    </View>;
+    return (
+        <View style={viewStyle} onLayout={handleLayout}>
+            <Content pubkey={pubkey} userProfile={userProfile} avatarSize={avatarSize} selectedStyle={selectedStyle} />
+        </View>
+    );
 }
 
-function Content({ pubkey, userProfile, avatarSize, selectedStyle }: { pubkey: string, userProfile: NDKUser, avatarSize: number, selectedStyle: MentionStickerStyle }) {
+function Content({
+    pubkey,
+    userProfile,
+    avatarSize,
+    selectedStyle,
+}: {
+    pubkey: string;
+    userProfile: NDKUser;
+    avatarSize: number;
+    selectedStyle: MentionStickerStyle;
+}) {
     return (
         <>
             {selectedStyle.avatarStyle && (

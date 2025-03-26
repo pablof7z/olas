@@ -8,12 +8,12 @@ import PostScreen from '@/lib/publish/screens/post';
 
 export default function PublishScreen() {
     const postType = useAtomValue(publishPostTypeAtom);
-    
+
     return (
         <>
             <PostTypeSwitcher />
-            {postType === "post" && <PostScreen />}
-            {postType === "story" && <StoryScreen />}
+            {postType === 'post' && <PostScreen />}
+            {postType === 'story' && <StoryScreen />}
         </>
-    )
+    );
 }

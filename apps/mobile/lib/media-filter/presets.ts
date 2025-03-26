@@ -4,16 +4,16 @@ export const FILTER_PRESETS: FilterPreset[] = [
     {
         id: 'normal',
         name: 'Normal',
-        parameters: {}
+        parameters: {},
     },
     {
         id: 'clarendon',
         name: 'Clarendon',
         parameters: {
             contrast: 1.2,
-            saturation: 1.35
+            saturation: 1.35,
         },
-        thumbnailColor: '#3D85C6'
+        thumbnailColor: '#3D85C6',
     },
     {
         id: 'gingham',
@@ -21,9 +21,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
         parameters: {
             brightness: 1.05,
             saturation: 0.85,
-            temperature: 0.2
+            temperature: 0.2,
         },
-        thumbnailColor: '#E6BB8A'
+        thumbnailColor: '#E6BB8A',
     },
     {
         id: 'moon',
@@ -31,9 +31,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
         parameters: {
             grayscale: true,
             contrast: 1.9,
-            brightness: 1.1
+            brightness: 1.1,
         },
-        thumbnailColor: '#CCCCCC'
+        thumbnailColor: '#CCCCCC',
     },
     {
         id: 'lark',
@@ -41,9 +41,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
         parameters: {
             brightness: 1.2,
             saturation: 0.8,
-            temperature: -0.1
+            temperature: -0.1,
         },
-        thumbnailColor: '#A2C4DD'
+        thumbnailColor: '#A2C4DD',
     },
     {
         id: 'valencia',
@@ -52,25 +52,25 @@ export const FILTER_PRESETS: FilterPreset[] = [
             saturation: 1.1,
             contrast: 1.1,
             temperature: 0.3,
-            sepia: 0.15
+            sepia: 0.15,
         },
-        thumbnailColor: '#E6A57E'
+        thumbnailColor: '#E6A57E',
     },
     {
         id: 'grayscale',
         name: 'Grayscale',
         parameters: {
-            grayscale: true
+            grayscale: true,
         },
-        thumbnailColor: '#808080'
+        thumbnailColor: '#808080',
     },
     {
         id: 'sepia',
         name: 'Sepia',
         parameters: {
-            sepia: 1
+            sepia: 1,
         },
-        thumbnailColor: '#808080'
+        thumbnailColor: '#808080',
     },
     {
         id: 'mayfair',
@@ -79,9 +79,9 @@ export const FILTER_PRESETS: FilterPreset[] = [
             brightness: 1.05,
             saturation: 1.1,
             temperature: 0.15,
-            vignette: 0.1
+            vignette: 0.1,
         },
-        thumbnailColor: '#E6C1D6'
+        thumbnailColor: '#E6C1D6',
     },
     {
         id: 'xpro',
@@ -90,8 +90,8 @@ export const FILTER_PRESETS: FilterPreset[] = [
             contrast: 1.2,
             saturation: 1.2,
             temperature: 0.2,
-            sepia: 0.25
+            sepia: 0.25,
         },
-        thumbnailColor: '#7E5746'
-    }
-]; 
+        thumbnailColor: '#7E5746',
+    },
+];

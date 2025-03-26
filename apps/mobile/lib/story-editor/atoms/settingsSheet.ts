@@ -4,4 +4,4 @@ import { RefObject } from 'react';
 
 type SettingsBottomSheetRef = RefObject<BottomSheetModal> | null;
 
-export const settingsSheetRefAtom = atom<SettingsBottomSheetRef>(null); 
+export const settingsSheetRefAtom = atom<SettingsBottomSheetRef>(null);

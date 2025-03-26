@@ -1,26 +1,26 @@
-import { useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from "react-native";
-import { useEditorStore } from "@/lib/publish/store/editor";
-import PostCaptionBottomSheet from "@/lib/publish/components/composer/metadata/CaptionBottomSheet";
-import LocationBottomSheet from "@/lib/publish/components/composer/metadata/LocationBottomSheet";
-import { Stack, router } from "expo-router";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { useNDK } from "@nostr-dev-kit/ndk-mobile";
-import { useActiveBlossomServer } from "@/hooks/blossom";
-import React from "react";
-import Caption from "@/lib/publish/components/composer/metadata/caption";
-import Expiration from "@/lib/publish/components/composer/metadata/expiration";
-import Location from "@/lib/publish/components/composer/metadata/location";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { Preview } from "@/lib/publish/components/preview";
+import { useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { useEditorStore } from '@/lib/publish/store/editor';
+import PostCaptionBottomSheet from '@/lib/publish/components/composer/metadata/CaptionBottomSheet';
+import LocationBottomSheet from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
+import { Stack, router } from 'expo-router';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useActiveBlossomServer } from '@/hooks/blossom';
+import React from 'react';
+import Caption from '@/lib/publish/components/composer/metadata/caption';
+import Expiration from '@/lib/publish/components/composer/metadata/expiration';
+import Location from '@/lib/publish/components/composer/metadata/location';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { Preview } from '@/lib/publish/components/preview';
 
 const dimensions = Dimensions.get('window');
 
 export default function PostMetadataScreen() {
-    const media = useEditorStore(state => state.media);
-    const isPublishing = useEditorStore(state => state.isPublishing);
-    const state = useEditorStore(state => state.state);
-    const publish = useEditorStore(state => state.publish);
+    const media = useEditorStore((state) => state.media);
+    const isPublishing = useEditorStore((state) => state.isPublishing);
+    const state = useEditorStore((state) => state.state);
+    const publish = useEditorStore((state) => state.publish);
     const { ndk } = useNDK();
     const blossomServer = useActiveBlossomServer();
 
@@ -28,15 +28,15 @@ export default function PostMetadataScreen() {
 
     const handlePublish = useCallback(async () => {
         if (!ndk || !blossomServer) {
-            console.error("NDK or blossom server not available");
+            console.error('NDK or blossom server not available');
             return;
         }
-        
+
         try {
             router.replace('/(home)');
             await publish(ndk, blossomServer);
         } catch (error) {
-            console.error("Failed to publish post:", error);
+            console.error('Failed to publish post:', error);
         }
     }, [ndk, blossomServer, publish]);
 
@@ -50,14 +50,17 @@ export default function PostMetadataScreen() {
         }
 
         return (
-            <ScrollView
-                horizontal
-                pagingEnabled
-                style={{ flex: 1, height: mediaSize }}
-                showsHorizontalScrollIndicator={false}
-            >
+            <ScrollView horizontal pagingEnabled style={{ flex: 1, height: mediaSize }} showsHorizontalScrollIndicator={false}>
                 {media.map((item) => (
-                    <View key={item.id} style={{ width: dimensions.width, height: mediaSize, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                    <View
+                        key={item.id}
+                        style={{
+                            width: dimensions.width,
+                            height: mediaSize,
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
                         <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} />
                     </View>
                 ))}
@@ -69,30 +72,32 @@ export default function PostMetadataScreen() {
 
     return (
         <BottomSheetModalProvider>
-            <Stack.Screen options={{
-                contentStyle: {
-                    backgroundColor: 'white'
-                },
-                headerShown: true,
-                title: 'New Post',
-                headerRight: () => (
-                    <TouchableOpacity 
-                        onPress={handlePublish} 
-                        disabled={isPublishing || media.length === 0}
-                    >
-                        {isPublishing ? (
-                            <ActivityIndicator size="small" color={colors.primary} />
-                        ) : (
-                            <Text style={{
-                                color: media.length === 0 ? colors.grey2 : colors.primary,
-                                fontWeight: '600',
-                                fontSize: 16,
-                                opacity: media.length === 0 ? 0.5 : 1
-                            }}>Publish</Text>
-                        )}
-                    </TouchableOpacity>
-                )
-            }} />
+            <Stack.Screen
+                options={{
+                    contentStyle: {
+                        backgroundColor: 'white',
+                    },
+                    headerShown: true,
+                    title: 'New Post',
+                    headerRight: () => (
+                        <TouchableOpacity onPress={handlePublish} disabled={isPublishing || media.length === 0}>
+                            {isPublishing ? (
+                                <ActivityIndicator size="small" color={colors.primary} />
+                            ) : (
+                                <Text
+                                    style={{
+                                        color: media.length === 0 ? colors.grey2 : colors.primary,
+                                        fontWeight: '600',
+                                        fontSize: 16,
+                                        opacity: media.length === 0 ? 0.5 : 1,
+                                    }}>
+                                    Publish
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    ),
+                }}
+            />
             <View style={styles.container}>
                 {isPublishing && (
                     <View style={styles.publishingOverlay}>
@@ -100,7 +105,7 @@ export default function PostMetadataScreen() {
                         <Text style={styles.publishingText}>{state}</Text>
                     </View>
                 )}
-                
+
                 <ScrollView>
                     {renderMediaPreview()}
                     <Caption />
@@ -123,29 +128,29 @@ const styles = StyleSheet.create({
     header: {
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "#eee"
+        borderBottomColor: '#eee',
     },
     title: {
         fontSize: 20,
-        fontWeight: "600"
+        fontWeight: '600',
     },
     emptyMediaContainer: {
         height: 300,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f5f5f5"
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
     },
     emptyMediaText: {
-        color: "#999"
+        color: '#999',
     },
     mediaContainer: {
         width: '100%',
         height: 300,
-        backgroundColor: 'red'
+        backgroundColor: 'red',
     },
     media: {
         width: '100%',
-        height: '100%'
+        height: '100%',
     },
     publishingOverlay: {
         position: 'absolute',

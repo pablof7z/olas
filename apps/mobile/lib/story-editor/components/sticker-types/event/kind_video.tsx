@@ -1,11 +1,14 @@
-import { NDKEvent, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import React, { useEffect, useState } from 'react';
+import { NDKEvent, NDKVideo, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { EventStickerStyle } from './styles';
 import { useMemo } from 'react';
-import { useUserProfile } from '@/hooks/user-profile';
 import * as User from '@/components/ui/user';
 import RelativeTime from '@/components/relative-time';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 // Get screen width for responsive sizing
 const { width: screenWidth } = Dimensions.get('window');
@@ -20,21 +23,21 @@ export default function EventStickerKindVideo({
     styles: EventStickerStyle;
 }) {
     const ndkVideo = useMemo(() => NDKVideo.from(event), [event]);
-    
+
     // Get video URL and dimensions from imetas
     const { videoUrl, aspectRatio } = useMemo(() => {
         let videoUrl = '';
         let width = 16;
         let height = 9;
-        
+
         if (ndkVideo.imetas && ndkVideo.imetas.length > 0) {
             const imeta = ndkVideo.imetas[0];
-            
+
             // Get URL
             if (imeta.url) {
                 videoUrl = imeta.url;
             }
-            
+
             // Get dimensions if available
             if (imeta.dim) {
                 const dimensions = imeta.dim.split('x');
@@ -48,13 +51,13 @@ export default function EventStickerKindVideo({
                 }
             }
         }
-        
-        return { 
+
+        return {
             videoUrl,
-            aspectRatio: height / width 
+            aspectRatio: height / width,
         };
     }, [ndkVideo]);
-    
+
     const player = useVideoPlayer(videoUrl || '', (player) => {
         // Configure player to autoplay muted and loop
         player.muted = true;
@@ -70,41 +73,26 @@ export default function EventStickerKindVideo({
     return (
         <View style={[_styles.outerContainer, styles.container]}>
             <View style={[_styles.videoContainer, { height: videoHeight }]}>
-                {videoUrl && (
-                    <VideoView 
-                        player={player}
-                        style={_styles.video}
-                        contentFit="cover"
-                    />
-                )}
-                
+                {videoUrl && <VideoView player={player} style={_styles.video} contentFit="cover" />}
+
                 <View style={_styles.overlayContainer}>
                     {ndkVideo.content && (
                         <Text style={[_styles.description, styles.text]} numberOfLines={3}>
                             {ndkVideo.content}
                         </Text>
                     )}
-                    
+
                     <View style={_styles.footer}>
                         <View style={_styles.userContainer}>
-                            <User.Avatar 
-                                pubkey={event.pubkey} 
+                            <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={24} />
+                            <User.Name
+                                pubkey={event.pubkey}
                                 userProfile={userProfile}
-                                imageSize={24}
-                            />
-                            <User.Name 
-                                pubkey={event.pubkey} 
-                                userProfile={userProfile} 
-                                style={[_styles.username, styles.author && styles.author.nameStyle]} 
+                                style={[_styles.username, styles.author && styles.author.nameStyle]}
                             />
                         </View>
-                        
-                        {event.created_at && (
-                            <RelativeTime 
-                                timestamp={event.created_at} 
-                                style={_styles.timestamp}
-                            />
-                        )}
+
+                        {event.created_at && <RelativeTime timestamp={event.created_at} style={_styles.timestamp} />}
                     </View>
                 </View>
             </View>
@@ -166,4 +154,4 @@ const _styles = StyleSheet.create({
         fontSize: 12,
         color: '#eee',
     },
-}); 
+});

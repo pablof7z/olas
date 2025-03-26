@@ -58,27 +58,32 @@ const ADJUSTMENT_OPTIONS: AdjustmentOption[] = [
 
 export function FilterAdjustments() {
     const { currentFilterParams, updateFilterParams } = useMediaFilter();
-    
-    const handleValueChange = useCallback((parameter: keyof FilterParameters, value: number) => {
-        updateFilterParams({ [parameter]: value });
-    }, [updateFilterParams]);
-    
-    const handleReset = useCallback((parameter: keyof FilterParameters) => {
-        const option = ADJUSTMENT_OPTIONS.find(opt => opt.id === parameter);
-        if (option) {
-            updateFilterParams({ [parameter]: option.defaultValue });
-        }
-    }, [updateFilterParams]);
-    
+
+    const handleValueChange = useCallback(
+        (parameter: keyof FilterParameters, value: number) => {
+            updateFilterParams({ [parameter]: value });
+        },
+        [updateFilterParams]
+    );
+
+    const handleReset = useCallback(
+        (parameter: keyof FilterParameters) => {
+            const option = ADJUSTMENT_OPTIONS.find((opt) => opt.id === parameter);
+            if (option) {
+                updateFilterParams({ [parameter]: option.defaultValue });
+            }
+        },
+        [updateFilterParams]
+    );
+
     return (
         <View style={styles.container}>
             {ADJUSTMENT_OPTIONS.map((option) => {
-                const currentValue = (currentFilterParams[option.id] !== undefined) 
-                    ? currentFilterParams[option.id] as number 
-                    : option.defaultValue;
-                
+                const currentValue =
+                    currentFilterParams[option.id] !== undefined ? (currentFilterParams[option.id] as number) : option.defaultValue;
+
                 const isDefault = Math.abs(currentValue - option.defaultValue) < 0.001;
-                
+
                 return (
                     <View key={option.id} style={styles.adjustmentRow}>
                         <View style={styles.labelContainer}>
@@ -100,9 +105,7 @@ export function FilterAdjustments() {
                             maximumTrackTintColor="#444"
                             thumbTintColor="#fff"
                         />
-                        <Text style={styles.valueText}>
-                            {currentValue.toFixed(2)}
-                        </Text>
+                        <Text style={styles.valueText}>{currentValue.toFixed(2)}</Text>
                     </View>
                 );
             })}
@@ -140,4 +143,4 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'center',
     },
-}); 
+});

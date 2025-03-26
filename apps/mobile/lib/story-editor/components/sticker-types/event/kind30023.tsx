@@ -15,14 +15,12 @@ export default function EventStickerKind30023({
     styles: EventStickerStyle;
 }) {
     const article = useMemo(() => NDKArticle.from(event), [event.id]);
-    
+
     // Calculate reading time based on content
     const readingTime = useMemo(() => calculateReadingTime(article.content), [article.id]);
-    
+
     // Get the first two lines of the summary
-    const summaryPreview = article.summary 
-        ? article.summary.split('\n').slice(0, 2).join('\n') 
-        : undefined;
+    const summaryPreview = article.summary ? article.summary.split('\n').slice(0, 2).join('\n') : undefined;
 
     const image = useImage({ uri: article.image });
 
@@ -56,9 +54,7 @@ export default function EventStickerKind30023({
                 )}
 
                 <View style={_styles.metaContainer}>
-                    <Text style={_styles.readingTime}>
-                        {readingTime} min read
-                    </Text>
+                    <Text style={_styles.readingTime}>{readingTime} min read</Text>
                 </View>
             </View>
         </View>
@@ -68,11 +64,11 @@ export default function EventStickerKind30023({
 // Helper to calculate reading time from content
 function calculateReadingTime(content?: string): number {
     if (!content) return 1;
-    
+
     // Average reading speed: 200 words per minute
     const words = content.trim().split(/\s+/).length;
     const readingTime = Math.ceil(words / 200);
-    
+
     // Minimum reading time of 1 minute
     return Math.max(1, readingTime);
 }
@@ -122,4 +118,4 @@ const _styles = StyleSheet.create({
         color: '#888',
         fontStyle: 'italic',
     },
-}); 
+});

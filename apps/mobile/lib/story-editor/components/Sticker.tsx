@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
-    }
+    },
 });
 
 const maxWidth = Dimensions.get('window').width * 0.9;
@@ -44,7 +44,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const nextStyle = useStickerStore((state) => state.nextStyle);
     const updateSticker = useStickerStore((state) => state.updateSticker);
     const updateStickerDimensions = useStickerStore((state) => state.updateStickerDimensions);
-    
+
     // Add state to track sticker dimensions
     const [stickerDimensions, setStickerDimensions] = useState({ width: 0, height: 0 });
     // Store the base dimensions (without scaling)
@@ -66,7 +66,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         if (sticker.type === NDKStoryStickerType.Countdown) return 0.4;
         if (sticker.type === NDKStoryStickerType.Event) return 0.4;
         return 1;
-    }, [sticker.type])
+    }, [sticker.type]);
 
     // Add a shared value for the width and height
     const width = useSharedValue(0);
@@ -91,14 +91,14 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
             rotate: rotate.value,
         };
         updateSticker(sticker.id, transform);
-        
+
         // Update dimensions in the store
         if (baseDimensions.current.width > 0 && baseDimensions.current.height > 0) {
             const scaledWidth = baseDimensions.current.width * scale.value * scaleFactor;
             const scaledHeight = baseDimensions.current.height * scale.value * scaleFactor;
             updateStickerDimensions(sticker.id, {
                 width: scaledWidth,
-                height: scaledHeight
+                height: scaledHeight,
             });
         }
     }, [sticker.id, translateX, translateY, scale, rotate, updateSticker, updateStickerDimensions, scaleFactor]);
@@ -158,10 +158,9 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         });
 
     // Single tap gesture for selection
-    const tapGesture = Gesture.Tap()
-        .onEnd(() => {
-            runOnJS(changeStyle)();
-        });
+    const tapGesture = Gesture.Tap().onEnd(() => {
+        runOnJS(changeStyle)();
+    });
 
     // Compose gestures
     const gesture = Gesture.Exclusive(
@@ -169,61 +168,70 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     );
 
     // Handle layout changes to get dimensions
-    const handleLayout = useCallback((event: LayoutChangeEvent) => {
-        'worklet';
-        const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
-        if (newWidth > 0 && newHeight > 0) {
+    const handleLayout = useCallback(
+        (event: LayoutChangeEvent) => {
+            'worklet';
+            const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
+            if (newWidth > 0 && newHeight > 0) {
+                // Store the base dimensions (without scaling)
+                baseDimensions.current = { width: newWidth, height: newHeight };
+
+                // Use a worklet to access shared values
+                const currentScale = scale.value;
+                const scaledWidth = newWidth * currentScale * scaleFactor;
+                const scaledHeight = newHeight * currentScale * scaleFactor;
+
+                setStickerDimensions({ width: scaledWidth, height: scaledHeight });
+                width.value = scaledWidth;
+                height.value = scaledHeight;
+
+                // Update dimensions in the store with scaled values
+                updateStickerDimensions(sticker.id, {
+                    width: scaledWidth,
+                    height: scaledHeight,
+                });
+            }
+        },
+        [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]
+    );
+
+    // Handle content layout specifically
+    const handleContentLayout = useCallback(
+        (event: LayoutChangeEvent) => {
+            'worklet';
+            const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
+
             // Store the base dimensions (without scaling)
             baseDimensions.current = { width: newWidth, height: newHeight };
-            
+
             // Use a worklet to access shared values
             const currentScale = scale.value;
             const scaledWidth = newWidth * currentScale * scaleFactor;
             const scaledHeight = newHeight * currentScale * scaleFactor;
-            
-            setStickerDimensions({ width: scaledWidth, height: scaledHeight });
-            width.value = scaledWidth;
-            height.value = scaledHeight;
-            
-            // Update dimensions in the store with scaled values
-            updateStickerDimensions(sticker.id, {
-                width: scaledWidth,
-                height: scaledHeight
+
+            console.log('Content dimensions:', {
+                raw: { width: newWidth, height: newHeight },
+                scaled: { width: scaledWidth, height: scaledHeight },
             });
-        }
-    }, [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]);
 
-    // Handle content layout specifically
-    const handleContentLayout = useCallback((event: LayoutChangeEvent) => {
-        'worklet';
-        const { width: newWidth, height: newHeight } = event.nativeEvent.layout;
-        
-        // Store the base dimensions (without scaling)
-        baseDimensions.current = { width: newWidth, height: newHeight };
-        
-        // Use a worklet to access shared values
-        const currentScale = scale.value;
-        const scaledWidth = newWidth * currentScale * scaleFactor;
-        const scaledHeight = newHeight * currentScale * scaleFactor;
+            if (scaledWidth > 0 && scaledHeight > 0) {
+                setStickerDimensions({ width: scaledWidth, height: scaledHeight });
+                width.value = scaledWidth;
+                height.value = scaledHeight;
 
-        console.log('Content dimensions:', { raw: { width: newWidth, height: newHeight }, scaled: { width: scaledWidth, height: scaledHeight } });
-
-        if (scaledWidth > 0 && scaledHeight > 0) {
-            setStickerDimensions({ width: scaledWidth, height: scaledHeight });
-            width.value = scaledWidth;
-            height.value = scaledHeight;
-            
-            // Update dimensions in the store with scaled values
-            updateStickerDimensions(sticker.id, {
-                width: scaledWidth,
-                height: scaledHeight
-            });
-        }
-    }, [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]);
+                // Update dimensions in the store with scaled values
+                updateStickerDimensions(sticker.id, {
+                    width: scaledWidth,
+                    height: scaledHeight,
+                });
+            }
+        },
+        [sticker.id, scale, scaleFactor, updateStickerDimensions, width, height]
+    );
 
     const scaleStyle = useAnimatedStyle(() => {
         return {
-            transform: [ { scale: scale.value * scaleFactor } ],
+            transform: [{ scale: scale.value * scaleFactor }],
         };
     });
 
@@ -231,34 +239,30 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         return {
             position: 'absolute',
             maxWidth,
-            transform: [
-                { translateX: translateX.value },
-                { translateY: translateY.value },
-                { rotate: `${rotate.value}deg` },
-            ],
+            transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { rotate: `${rotate.value}deg` }],
         };
     });
 
     // Create a derived state for scaledMaxWidth to avoid direct .value access in render
     const [derivedScaledMaxWidth, setDerivedScaledMaxWidth] = useState(maxWidth);
-    
+
     // Update derivedScaledMaxWidth when scale changes using a layout effect
     useLayoutEffect(() => {
-        setDerivedScaledMaxWidth(maxWidth / scale.value * scaleFactor);
+        setDerivedScaledMaxWidth((maxWidth / scale.value) * scaleFactor);
     }, [scale, scaleFactor]);
 
     // Get the content component based on sticker type
     const renderContent = () => {
         switch (sticker.type) {
-            case NDKStoryStickerType.Text: 
+            case NDKStoryStickerType.Text:
                 return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} maxWidth={derivedScaledMaxWidth} />;
-            case NDKStoryStickerType.Pubkey: 
+            case NDKStoryStickerType.Pubkey:
                 return <MentionStickerView sticker={sticker as StickerType<NDKStoryStickerType.Pubkey>} />;
-            case NDKStoryStickerType.Event: 
+            case NDKStoryStickerType.Event:
                 return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} maxWidth={derivedScaledMaxWidth} />;
-            case NDKStoryStickerType.Countdown: 
+            case NDKStoryStickerType.Countdown:
                 return <CountdownStickerView sticker={sticker} />;
-            case NDKStoryStickerType.Prompt: 
+            case NDKStoryStickerType.Prompt:
                 return <PromptStickerView sticker={sticker} />;
             default:
                 return null;
@@ -273,10 +277,11 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                         {renderContent()}
                         <View style={styles.debugCoordinates}>
                             <Text style={styles.debugText}>
-                                {sticker.style}{"\n"}
+                                {sticker.style}
+                                {'\n'}
                                 X: {Math.round(translateX.value)}, Y: {Math.round(translateY.value)}
-                                {"\n"}W: {Math.round(stickerDimensions.width)}, H: {Math.round(stickerDimensions.height)}
-                                {"\n"}Scale: {scale.value.toFixed(2)}
+                                {'\n'}W: {Math.round(stickerDimensions.width)}, H: {Math.round(stickerDimensions.height)}
+                                {'\n'}Scale: {scale.value.toFixed(2)}
                             </Text>
                         </View>
                     </View>

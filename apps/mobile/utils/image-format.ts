@@ -19,11 +19,7 @@ export async function convertHeicToJpeg(uri: string): Promise<string> {
     if (isHeicImage(uri)) {
         console.log('Converting HEIC image to JPEG:', uri);
         try {
-            const result = await ImageManipulator.manipulateAsync(
-                uri,
-                [],
-                { format: ImageManipulator.SaveFormat.JPEG }
-            );
+            const result = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.JPEG });
             console.log('Converted image URI:', result.uri);
             return result.uri;
         } catch (error) {
@@ -40,7 +36,7 @@ export async function convertHeicToJpeg(uri: string): Promise<string> {
  * @returns Promise resolving to an array of converted image URIs
  */
 export async function convertHeicUrisToJpeg(uris: string[]): Promise<string[]> {
-    return Promise.all(uris.map(uri => convertHeicToJpeg(uri)));
+    return Promise.all(uris.map((uri) => convertHeicToJpeg(uri)));
 }
 
 /**
@@ -48,9 +44,9 @@ export async function convertHeicUrisToJpeg(uris: string[]): Promise<string[]> {
  * @param uri URI of the file
  * @returns Promise resolving to an object with file info
  */
-export async function getFileInfo(uri: string): Promise<{ 
-    exists: boolean; 
-    size?: number; 
+export async function getFileInfo(uri: string): Promise<{
+    exists: boolean;
+    size?: number;
     mimeType?: string;
 }> {
     try {
@@ -58,7 +54,7 @@ export async function getFileInfo(uri: string): Promise<{
         return {
             exists: fileInfo.exists,
             size: fileInfo.size,
-            mimeType: getMimeTypeFromUri(uri)
+            mimeType: getMimeTypeFromUri(uri),
         };
     } catch (error) {
         console.error('Error getting file info:', error);
@@ -74,20 +70,20 @@ export async function getFileInfo(uri: string): Promise<{
 function getMimeTypeFromUri(uri: string): string | undefined {
     const extension = uri.split('.').pop()?.toLowerCase();
     if (!extension) return undefined;
-    
+
     const mimeTypes: Record<string, string> = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'heic': 'image/heic',
-        'heif': 'image/heif',
-        'webp': 'image/webp',
-        'mp4': 'video/mp4',
-        'mov': 'video/quicktime',
-        'avi': 'video/x-msvideo',
-        'webm': 'video/webm'
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        heic: 'image/heic',
+        heif: 'image/heif',
+        webp: 'image/webp',
+        mp4: 'video/mp4',
+        mov: 'video/quicktime',
+        avi: 'video/x-msvideo',
+        webm: 'video/webm',
     };
-    
+
     return mimeTypes[extension];
-} 
+}

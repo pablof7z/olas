@@ -35,12 +35,14 @@ const styles: TextStickerStyle[] = [
             fontSize: 64,
             fontWeight: 'bold',
             textAlign: 'center',
-            fontFamily: 'Inter'
+            fontFamily: 'Inter',
         },
     },
     {
         name: 'Glasss',
-        container: () => <BlurView style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 16, padding: 16 }} />,
+        container: () => (
+            <BlurView style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 16, padding: 16 }} />
+        ),
         text: {
             color: '#000',
             fontSize: 64,
@@ -51,7 +53,9 @@ const styles: TextStickerStyle[] = [
     },
     {
         name: 'Dark Glasss',
-        container: () => <BlurView tint="dark" style={{ flex: 1, borderWidth: 1, borderColor: '#00000099', borderRadius: 16, padding: 16 }} />,
+        container: () => (
+            <BlurView tint="dark" style={{ flex: 1, borderWidth: 1, borderColor: '#00000099', borderRadius: 16, padding: 16 }} />
+        ),
         text: {
             color: '#fff',
             fontSize: 64,

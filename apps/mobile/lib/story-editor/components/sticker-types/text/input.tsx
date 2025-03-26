@@ -8,7 +8,10 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export default function TextStickerInput() {
     const { addSticker, updateStickerValue } = useStickerStore();
-    const [editSticker, setEditSticker] = useAtom(editStickerAtom) as [Sticker<NDKStoryStickerType.Text>, (sticker: Sticker<NDKStoryStickerType.Text> | null) => void];
+    const [editSticker, setEditSticker] = useAtom(editStickerAtom) as [
+        Sticker<NDKStoryStickerType.Text>,
+        (sticker: Sticker<NDKStoryStickerType.Text> | null) => void,
+    ];
     const [text, setText] = useState(editSticker?.value || '');
     const insets = useSafeAreaInsets();
 

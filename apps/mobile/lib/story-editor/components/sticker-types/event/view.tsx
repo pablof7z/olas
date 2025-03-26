@@ -28,25 +28,29 @@ export default function EventStickerView({ sticker, onLayout, maxWidth }: EventS
 
     const { colors } = useColorScheme();
 
-    return <View style={{ maxWidth }} onLayout={onLayout}>
-        {!event ? (
-            <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
-                <ActivityIndicator size="small" color={colors.foreground} />
-            </View>
-        ) : (
-            <RenderEvent event={event} styles={selectedStyle} />
-        )}
-    </View>;
+    return (
+        <View style={{ maxWidth }} onLayout={onLayout}>
+            {!event ? (
+                <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
+                    <ActivityIndicator size="small" color={colors.foreground} />
+                </View>
+            ) : (
+                <RenderEvent event={event} styles={selectedStyle} />
+            )}
+        </View>
+    );
 }
 
 function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerStyle }) {
     const { userProfile } = useUserProfile(event?.pubkey);
-    
+
     // Convert NDKUserProfile to UserProfile if needed
-    const profile = userProfile ? {
-        pubkey: event.pubkey,
-        ...userProfile
-    } : undefined;
+    const profile = userProfile
+        ? {
+              pubkey: event.pubkey,
+              ...userProfile,
+          }
+        : undefined;
 
     switch (event.kind) {
         case NDKKind.Classified:

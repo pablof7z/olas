@@ -1,13 +1,65 @@
 import { useRef, useEffect } from 'react';
-import { NDKKind, NDKSubscriptionCacheUsage, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEventWithFrom, NDKKind, NDKList, NDKSubscriptionCacheUsage, NDKUser, useNDK, useNDKCurrentUser, useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
 import { mainKinds } from '@/utils/const';
+import { settingsStore } from '@/lib/settings-store';
 import { useReactionsStore } from '@/stores/reactions';
 import { usePaymentStore } from '@/stores/payments';
 import { useUserFlareStore } from './user-flare';
 import { useObserver } from './observer';
+import { useAtom } from 'jotai';
+import { appReadyAtom } from '@/stores/app';
 
-export function useAppSub(pubkey: string | null, dependencies: any[]) {
+const sessionKinds = new Map([
+    [NDKKind.BlossomList, { wrapper: NDKList }],
+    [NDKKind.SimpleGroupList, { wrapper: NDKList }],
+] as [NDKKind, { wrapper: NDKEventWithFrom<any> }][]);
+
+export function useSessionSub() {
+    const { ndk } = useNDK();
+    const currentUser = useNDKCurrentUser();
+    const initializeSession = useNDKSessionInit();
+    const [appReady, setAppReady] = useAtom(appReadyAtom);
+    const timeoutRef = useRef(null);
+
+    useEffect(() => {
+        if (!currentUser) return;
+        if (!currentUser?.pubkey) return;
+
+        initializeSession(
+            ndk,
+            currentUser,
+            settingsStore,
+            {
+                follows: { kinds: [NDKKind.Image, NDKKind.VerticalVideo] },
+                muteList: true,
+                wot: false,
+                kinds: sessionKinds,
+                filters: (user: NDKUser) => [
+                    {
+                        kinds: [NDKKind.CashuMintList, NDKKind.CashuWallet],
+                        authors: [user.pubkey],
+                    },
+                ],
+                subOpts: { wrap: true, skipVerification: true },
+            },
+            {
+                onReady: () => {
+                    if (!appReady) {
+                        console.log('setting app ready in onReady');
+                        setAppReady(true);
+                        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    }
+                },
+                // onWotReady: () => setWotReady(true),
+            }
+        );
+    }, [currentUser?.pubkey, appReady]);
+}
+
+export function useAppSub() {
+    const currentUser = useNDKCurrentUser();
+    const pubkey = currentUser?.pubkey;
     const addReactionEvents = useReactionsStore((state) => state.addEvents);
     const addPayments = usePaymentStore((state) => state.addPayments);
     const setUserFlare = useUserFlareStore((state) => state.setFlare);
@@ -66,5 +118,5 @@ export function useAppSub(pubkey: string | null, dependencies: any[]) {
                 addPayments(cachedEvents);
             }
         }, 10000);
-    }, dependencies);
+    }, [pubkey]);
 }

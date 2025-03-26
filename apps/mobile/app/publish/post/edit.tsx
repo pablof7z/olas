@@ -1,29 +1,29 @@
-import React, { useCallback, useState, useEffect } from "react";
-import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text, ActivityIndicator } from "react-native";
-import { useHeaderHeight } from "@react-navigation/elements";
-import { useEditorStore } from "@/lib/publish/store/editor";
-import { Stack, router } from "expo-router";
-import { X, Sliders } from "lucide-react-native";
-import { useAtom, useAtomValue, atom } from "jotai";
-import { Preview } from "@/lib/publish/components/preview/Preview";
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useEditorStore } from '@/lib/publish/store/editor';
+import { Stack, router } from 'expo-router';
+import { X, Sliders } from 'lucide-react-native';
+import { useAtom, useAtomValue, atom } from 'jotai';
+import { Preview } from '@/lib/publish/components/preview/Preview';
 
 // Create atom for selectedMediaIndex
 export const selectedMediaIndexAtom = atom(0);
 
 // Import the new media filter components
-import { FilteredImage } from "@/lib/media-filter/components/FilteredImage";
-import { useMediaFilter } from "@/lib/media-filter/hooks/useMediaFilter";
-import FilterBottomSheet, { filterBottomSheetRefAtom } from "@/lib/media-filter/components/FilterBottomSheet";
-import AdjustmentsBottomSheet, { adjustmentsBottomSheetRefAtom } from "@/lib/media-filter/components/AdjustmentsBottomSheet";
-import { Button } from "@/components/nativewindui/Button";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FilteredImage } from '@/lib/media-filter/components/FilteredImage';
+import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
+import FilterBottomSheet, { filterBottomSheetRefAtom } from '@/lib/media-filter/components/FilterBottomSheet';
+import AdjustmentsBottomSheet, { adjustmentsBottomSheetRefAtom } from '@/lib/media-filter/components/AdjustmentsBottomSheet';
+import { Button } from '@/components/nativewindui/Button';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function HeaderLeft() {
     const handlePress = useCallback(() => {
         router.back();
     }, []);
-    
+
     return (
         <Pressable onPress={handlePress}>
             <X color="white" />
@@ -42,14 +42,9 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
     const [selectedMediaIndex, setSelectedMediaIndex] = useAtom(selectedMediaIndexAtom);
 
     const currentMedia = media[selectedMediaIndex];
-    
+
     // Use the media filter hook
-    const { 
-        currentFilterId, 
-        currentFilterParams, 
-        setSource,
-        sourceUri,
-    } = useMediaFilter();
+    const { currentFilterId, currentFilterParams, setSource, sourceUri } = useMediaFilter();
 
     // Set the source URI when the selected media changes
     useEffect(() => {
@@ -58,13 +53,16 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
         }
     }, [currentMedia, setSource]);
 
-    const handleScroll = useCallback((event: any) => {
-        const offsetX = event.nativeEvent.contentOffset.x;
-        const newIndex = Math.round(offsetX / dimensions.width);
-        if (newIndex !== selectedMediaIndex && newIndex >= 0 && newIndex < media.length) {
-            setSelectedMediaIndex(newIndex);
-        }
-    }, [dimensions.width, selectedMediaIndex, media.length, setSelectedMediaIndex]);
+    const handleScroll = useCallback(
+        (event: any) => {
+            const offsetX = event.nativeEvent.contentOffset.x;
+            const newIndex = Math.round(offsetX / dimensions.width);
+            if (newIndex !== selectedMediaIndex && newIndex >= 0 && newIndex < media.length) {
+                setSelectedMediaIndex(newIndex);
+            }
+        },
+        [dimensions.width, selectedMediaIndex, media.length, setSelectedMediaIndex]
+    );
 
     if (currentFilterId !== 'normal' && sourceUri) {
         return (
@@ -82,23 +80,21 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
     }
 
     return (
-        <ScrollView 
-            horizontal 
-            pagingEnabled 
+        <ScrollView
+            horizontal
+            pagingEnabled
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleScroll}
-            style={{ flex: 1, width: '100%', minHeight: previewHeight }}
-        >
+            style={{ flex: 1, width: '100%', minHeight: previewHeight }}>
             {media.map((item, index) => {
                 return (
-                    <View 
-                        key={`media-item-${item.id}-${index}`} 
-                        style={[styles.mediaContainer, { width: dimensions.width, height: previewHeight}]}
-                    >
+                    <View
+                        key={`media-item-${item.id}-${index}`}
+                        style={[styles.mediaContainer, { width: dimensions.width, height: previewHeight }]}>
                         <Preview
                             selectedMedia={{
                                 type: item.mediaType,
-                                uri: item.uris[0]
+                                uri: item.uris[0],
                             }}
                         />
                     </View>
@@ -114,40 +110,43 @@ export default function PostEditScreen() {
     const previewHeight = dimensions.height * 0.6;
     const headerHeight = useHeaderHeight();
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const filterSheetRef = useAtomValue(filterBottomSheetRefAtom);
     const adjustmentsSheetRef = useAtomValue(adjustmentsBottomSheetRefAtom);
-    
+
     // Use the media filter hook
     const { currentFilterId, selectFilter, sourceUri, saveImage } = useMediaFilter();
 
     const currentMedia = media[selectedMediaIndex];
-    
+
     const handleFilters = useCallback(() => {
         filterSheetRef?.current?.present();
     }, [filterSheetRef]);
-    
+
     const handleAdjustments = useCallback(() => {
         adjustmentsSheetRef?.current?.present();
     }, [adjustmentsSheetRef]);
 
-    const handleFilterSelect = useCallback((filterId: string) => {
-        selectFilter(filterId);
-    }, [selectFilter]);
+    const handleFilterSelect = useCallback(
+        (filterId: string) => {
+            selectFilter(filterId);
+        },
+        [selectFilter]
+    );
 
     const handleSaveFilteredImage = async () => {
         if (!currentMedia || currentFilterId === 'normal') return;
-        
+
         try {
             setIsSaving(true);
-            
+
             // Save the filtered image
             const newUri = await saveImage();
-            
+
             if (newUri) {
                 // Update the media item with the new URI at the beginning of the uris array
                 updateMedia(currentMedia.id, {
-                    uris: [newUri, ...currentMedia.uris]
+                    uris: [newUri, ...currentMedia.uris],
                 });
                 return newUri;
             }
@@ -170,35 +169,31 @@ export default function PostEditScreen() {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerShown: true,
-                headerTransparent: true,
-                headerTitle: 'Edit',
-                headerStyle: {
-                    backgroundColor: 'black',
-                },
-                headerTitleStyle: {
-                    color: 'white'
-                },
-                headerLeft: () => <HeaderLeft />,
-            }} />
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    headerTransparent: true,
+                    headerTitle: 'Edit',
+                    headerStyle: {
+                        backgroundColor: 'black',
+                    },
+                    headerTitleStyle: {
+                        color: 'white',
+                    },
+                    headerLeft: () => <HeaderLeft />,
+                }}
+            />
             <View style={[styles.container, { paddingTop: headerHeight }]}>
                 <View style={[styles.previewContainer, { height: previewHeight }]}>
                     <PreviewContent previewHeight={previewHeight} />
                 </View>
 
-                <View style={[styles.bottomActions, { bottom: insets.bottom}]}>
-                    <Pressable 
-                        style={styles.actionButton}
-                        onPress={handleFilters}
-                    >
+                <View style={[styles.bottomActions, { bottom: insets.bottom }]}>
+                    <Pressable style={styles.actionButton} onPress={handleFilters}>
                         <Text style={styles.actionButtonText}>Filters</Text>
                     </Pressable>
-                    
-                    <Pressable
-                        style={styles.actionButton}
-                        onPress={handleAdjustments}
-                    >
+
+                    <Pressable style={styles.actionButton} onPress={handleAdjustments}>
                         <Sliders width={16} height={16} color="#fff" style={styles.actionIcon} />
                         <Text style={styles.actionButtonText}>Adjust</Text>
                     </Pressable>
@@ -231,8 +226,8 @@ const headerStyles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: 'white'
-    }
+        color: 'white',
+    },
 });
 
 const styles = StyleSheet.create({
@@ -243,8 +238,7 @@ const styles = StyleSheet.create({
     previewContainer: {
         width: '100%',
     },
-    mediaContainer: {
-    },
+    mediaContainer: {},
     mediaPreview: {
         width: '100%',
     },
@@ -284,5 +278,5 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginRight: 6,
-    }
+    },
 });

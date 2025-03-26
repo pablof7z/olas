@@ -34,7 +34,7 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
             value: event,
             dimensions: {
                 width: 300,
-                height: 150
+                height: 150,
             },
             metadata: { event },
         });
@@ -55,10 +55,7 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
                 autoCorrect={false}
             />
             <TouchableOpacity
-                style={[
-                    sharedStyles.button,
-                    !eventIdInput.trim() && sharedStyles.buttonDisabled
-                ]}
+                style={[sharedStyles.button, !eventIdInput.trim() && sharedStyles.buttonDisabled]}
                 onPress={handleAddEventSticker}
                 disabled={!eventIdInput.trim()}>
                 <Text style={sharedStyles.buttonText}>Done</Text>

@@ -1,11 +1,10 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, TouchableOpacity, View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from './nativewindui/ActivityIndicator';
-import { useEffect, useRef, useState } from 'react';
 import { usePaymentStore } from '@/stores/payments';
 import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useUsersStore } from '@/hooks/user-profile';
 import { useUserFlareStore } from '@/hooks/user-flare';
 import Animated, { useAnimatedStyle, withTiming, ZoomIn, runOnJS } from 'react-native-reanimated';
 import { useAppSettingsStore } from '@/stores/app';
@@ -27,32 +26,36 @@ export default function LoaderScreen({
     const { ndk, logout } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
-    const initUserProfileStore = useUsersStore((state) => state.init);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
-    useEffect(() => {
-        initPaymentStore(currentUser?.pubkey);
-    }, [currentUser?.pubkey]);
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const profileData = useUserProfile(currentUser?.pubkey);
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     useEffect(() => {
-        if (!userProfile?.name || !currentUser?.pubkey) return;
+        initPaymentStore(currentUser?.pubkey);
+    }, [currentUser?.pubkey]);
 
-        if (userProfile.name === 'deleted-account') {
+    useEffect(() => {
+        if (!profileData?.userProfile?.name || !currentUser?.pubkey) return;
+
+        if (profileData.userProfile.name === 'deleted-account') {
             alert('This account has been deleted. You need to create a new account to continue.');
             logout();
             resetAppSettings();
         }
-    }, [currentUser?.pubkey, userProfile?.name]);
+    }, [currentUser?.pubkey, profileData?.userProfile?.name]);
 
     useEffect(() => {
+        if (!ndk) {
+            console.log('ndk not ready');
+            return;
+        }
         if (!ndk?.cacheAdapter?.ready) {
             console.log('cache adapter not ready');
             return;
         }
         console.log('cache adapter ready');
 
-        initUserProfileStore(ndk, (ndk.cacheAdapter as NDKCacheAdapterSqlite).db);
+        // Profile store is now initialized by ndk-mobile library
         initUserFlareStore();
     }, [ndk?.cacheAdapter?.ready]);
 

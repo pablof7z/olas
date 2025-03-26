@@ -86,4 +86,4 @@ export const sharedStyles = StyleSheet.create({
     buttonDisabled: {
         opacity: 0.5,
     },
-}); 
+});

@@ -1,9 +1,9 @@
-import { NDKEvent, NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKImage, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
 import * as User from '@/components/ui/user';
-import { useUserProfile } from '@/hooks/user-profile';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StoryData } from '@/lib/stories/interfaces';
 
 export type StoryHeaderProps = {
     item?: NDKEvent | NDKImage;
@@ -15,7 +15,8 @@ export type StoryHeaderProps = {
 export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) {
     // Get pubkey from item or use direct pubkey
     const userPubkey = item ? item.pubkey : pubkey;
-    const { userProfile, flare } = useUserProfile(userPubkey);
+    const profileData = useUserProfile(userPubkey);
+    const userProfile = profileData?.userProfile;
     const insets = useSafeAreaInsets();
 
     return (
@@ -24,12 +25,8 @@ export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) 
                 <Pressable
                     style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
                     onPress={() => router.push(`/profile?pubkey=${userPubkey}`)}>
-                    <User.Avatar pubkey={userPubkey} userProfile={userProfile} imageSize={32} flare={flare} />
-                    <User.Name
-                        userProfile={userProfile}
-                        pubkey={userPubkey}
-                        style={{ color: 'white', marginLeft: 8, fontWeight: '600' }}
-                    />
+                    <User.Avatar pubkey={userPubkey} userProfile={userProfile} imageSize={32} />
+                    <User.Name userProfile={userProfile} pubkey={userPubkey} style={{ color: 'white', marginLeft: 8, fontWeight: '600' }} />
                 </Pressable>
 
                 {onClose && (

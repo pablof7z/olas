@@ -11,12 +11,15 @@ import { getNextStyleName as getNextEventStyleName } from '../components/sticker
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Type mapping for sticker value types
-type StickerValueType<T extends NDKStoryStickerType> = 
-    T extends NDKStoryStickerType.Pubkey ? NDKUser :
-    T extends NDKStoryStickerType.Text ? string :
-    T extends NDKStoryStickerType.Countdown ? string :
-    T extends NDKStoryStickerType.Event ? NDKEvent :
-    string | NDKUser;
+type StickerValueType<T extends NDKStoryStickerType> = T extends NDKStoryStickerType.Pubkey
+    ? NDKUser
+    : T extends NDKStoryStickerType.Text
+      ? string
+      : T extends NDKStoryStickerType.Countdown
+        ? string
+        : T extends NDKStoryStickerType.Event
+          ? NDKEvent
+          : string | NDKUser;
 
 export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
     id: string;
@@ -149,11 +152,11 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     },
 
     reset: () => {
-        set({ 
+        set({
             stickers: [],
-            duration: 24 * 60 * 60 // Reset to default duration
+            duration: 24 * 60 * 60, // Reset to default duration
         });
-    }
+    },
 }));
 
 /**

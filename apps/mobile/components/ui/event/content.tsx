@@ -83,7 +83,8 @@ function RenderMention({
         else if (type === 'nprofile') pubkey = (data as { pubkey: string }).pubkey;
         else return <Text style={{ fontSize }}>{entity.substring(0, 6)}...</Text>;
 
-        const { userProfile } = useUserProfile(pubkey);
+        const profileData = useUserProfile(pubkey);
+        const userProfile = profileData?.userProfile;
 
         return (
             <Text style={{ fontSize }} className="font-bold text-primary" onPress={() => handlePress(pubkey)}>

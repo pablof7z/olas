@@ -63,13 +63,11 @@ export default function UploadingIndicator() {
 function MediaPreview() {
     const media = useEditorStore((s) => s.media);
     if (!media.length) return null;
-    
+
     const firstMedia = media[0];
     return (
         <View style={{ width: '100%', height: '100%' }}>
-            {firstMedia.mediaType === 'image' && (
-                <Image source={{ uri: firstMedia.uris[0] }} style={{ width: '100%', height: '100%' }} />
-            )}
+            {firstMedia.mediaType === 'image' && <Image source={{ uri: firstMedia.uris[0] }} style={{ width: '100%', height: '100%' }} />}
         </View>
     );
 }

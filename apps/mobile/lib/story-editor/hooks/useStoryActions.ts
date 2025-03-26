@@ -17,22 +17,15 @@ interface UseStoryActionsProps {
     onClose?: () => void;
 }
 
-export const useStoryActions = ({
-    path,
-    type,
-    stickers,
-    dimensions,
-    getDuration,
-    onClose
-}: UseStoryActionsProps) => {
+export const useStoryActions = ({ path, type, stickers, dimensions, getDuration, onClose }: UseStoryActionsProps) => {
     const [isUploading, setIsUploading] = useState(false);
     const { ndk } = useNDK();
     const activeBlossomServer = useActiveBlossomServer();
-    const resetStickers = useStickerStore(state => state.reset);
+    const resetStickers = useStickerStore((state) => state.reset);
 
     const handlePreview = async (onPreview?: (story: NDKStory) => void) => {
         console.log('Preview button pressed', { ndk: !!ndk, onPreview: !!onPreview });
-        
+
         if (!ndk || !onPreview) {
             Alert.alert('Error', 'Preview is not available');
             return;
@@ -47,7 +40,7 @@ export const useStoryActions = ({
                 // We don't need other properties like hash for preview
                 m: type === 'photo' ? 'image/jpeg' : 'video/mp4', // Assumed mime types
             };
-            
+
             console.log('Local imeta created:', localImeta);
 
             try {
@@ -134,6 +127,6 @@ export const useStoryActions = ({
     return {
         isUploading,
         handlePreview,
-        handleShare
+        handleShare,
     };
-}; 
+};

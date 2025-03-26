@@ -9,10 +9,7 @@ import { Sticker } from '../store';
  * @param stickerDimensions The actual dimensions of the sticker
  * @returns An object that can be passed to NDKStory.addSticker()
  */
-export const mapStickerToNDKFormat = (
-    sticker: Sticker, 
-    stickerDimensions: { width: number; height: number }
-): NDKStorySticker => {
+export const mapStickerToNDKFormat = (sticker: Sticker, stickerDimensions: { width: number; height: number }): NDKStorySticker => {
     // Create the base sticker
     const ndkSticker = new NDKStorySticker(sticker.type);
     ndkSticker.value = sticker.value;
@@ -22,7 +19,7 @@ export const mapStickerToNDKFormat = (
     };
     ndkSticker.dimension = {
         width: Math.round(stickerDimensions.width),
-        height: Math.round(stickerDimensions.height)
+        height: Math.round(stickerDimensions.height),
     };
 
     // Add properties

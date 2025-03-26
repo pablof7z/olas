@@ -1,9 +1,4 @@
-import NDK, {
-    NDKImage,
-    NDKImetaTag,
-    NDKKind,
-    NDKRelaySet, NDKVideo
-} from '@nostr-dev-kit/ndk-mobile';
+import NDK, { NDKImage, NDKImetaTag, NDKKind, NDKRelaySet, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 import { PostMedia, PostMetadata } from '../types';
 
@@ -113,14 +108,4 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
         event,
         relaySet,
     };
-}
-
-function getKind(metadata: PostMetadata, media: PostMedia) {
-    // if (metadata.boost) return NDKKind.Text;
-
-    if (media.mediaType === 'image') return NDKKind.Image;
-
-    if (media.contentMode === 'portrait') return NDKKind.VerticalVideo;
-
-    return NDKKind.HorizontalVideo;
 }

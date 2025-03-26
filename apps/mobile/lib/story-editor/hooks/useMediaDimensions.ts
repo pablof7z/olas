@@ -11,14 +11,14 @@ export const useMediaDimensions = () => {
     const [canvasSize, setCanvasSize] = useState<MediaDimensions>(dimensions);
     const [mediaSize, setMediaSize] = useState<MediaDimensions | null>(null);
     const [containerWidth, setContainerWidth] = useState('100%');
-    
+
     // Calculate the container width for panning properly - make it exactly match the media's visible width
     useEffect(() => {
         if (!mediaSize || !canvasSize) return;
-        
+
         const mediaAspect = mediaSize.width / mediaSize.height;
         const canvasAspect = canvasSize.width / canvasSize.height;
-        
+
         if (mediaAspect > canvasAspect) {
             // Media is wider than canvas aspect - set container width to exactly match visible width
             const visibleMediaWidth = mediaSize.width * (canvasSize.height / mediaSize.height);
@@ -57,4 +57,4 @@ export const useMediaDimensions = () => {
         containerWidthValue,
         onImageLoad,
     };
-}; 
+};

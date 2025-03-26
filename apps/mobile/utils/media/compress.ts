@@ -1,8 +1,8 @@
-import { ProgressCb } from "./prepare";
-import { Dimensions } from "react-native";
+import { ProgressCb } from './prepare';
+import { Dimensions } from 'react-native';
 import { getVideoMetaData, Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
 import * as RNFS from 'react-native-fs';
-import { determineMimeType } from "../url";
+import { determineMimeType } from '../url';
 
 const MAX_WIDTH = 2048;
 const MAX_HEIGHT = 1024;
@@ -12,7 +12,7 @@ type Result = {
     duration?: number;
     size?: number;
     mimeType?: string;
-}
+};
 
 /**
  * Compresses images and videos
@@ -43,7 +43,7 @@ export default async function compress(file: string, mediaType: 'image' | 'video
         const maxHeight = Math.max(screenDimensions.height * 2, metadata.height);
         const maxSize = Math.max(maxWidth, maxHeight);
 
-        console.log('calculating max size', {maxWidth, maxHeight, maxSize}, JSON.stringify(metadata, null, 2));
+        console.log('calculating max size', { maxWidth, maxHeight, maxSize }, JSON.stringify(metadata, null, 2));
 
         compressedUri = await CompressedVideo.compress(
             file,

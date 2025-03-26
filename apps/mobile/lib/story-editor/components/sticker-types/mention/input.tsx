@@ -23,7 +23,7 @@ export default function MentionStickerInput({ onStickerAdded }: MentionStickerIn
 
             if (profile && pubkey && ndk) {
                 const user = ndk.getUser({ pubkey });
-                
+
                 const stickerData = {
                     type: NDKStoryStickerType.Pubkey,
                     value: user,

@@ -65,21 +65,17 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
             // Both NDKImage and NDKVideo have imetas property
             const imeta = item.imetas[activeSlide];
             if (!imeta?.url) return null;
-            
+
             // Determine if it's video based on the instance type
-            return item instanceof NDKVideo 
-                ? <SlideVideo imeta={imeta} />
-                : <SlideImage imeta={imeta} />;
+            return item instanceof NDKVideo ? <SlideVideo imeta={imeta} /> : <SlideImage imeta={imeta} />;
         }
         return null;
     };
 
     return (
         <View style={{ width, height }}>
-            <View style={[StyleSheet.absoluteFillObject]}>
-                {renderContent()}
-            </View>
-            
+            <View style={[StyleSheet.absoluteFillObject]}>{renderContent()}</View>
+
             {/* Touch handlers for navigation */}
             <View style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}>
                 <TouchableWithoutFeedback
@@ -105,7 +101,7 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
                     <View style={{ backgroundColor: 'transparent', flex: 1 }} />
                 </TouchableWithoutFeedback>
             </View>
-            
+
             {/* Progress indicators */}
             <View
                 key={`story-progress-${index}`}
@@ -132,10 +128,10 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
                     );
                 })}
             </View>
-            
+
             {/* Header */}
             <StoryHeader item={item} onClose={onClose} />
-            
+
             {/* Show text only for NDKImage and NDKVideo */}
             {!(item instanceof NDKStory) && (
                 <View style={{ position: 'absolute', bottom: 50, left: 0, right: 0, padding: 10 }}>
@@ -144,4 +140,4 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
             )}
         </View>
     );
-} 
+}

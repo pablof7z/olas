@@ -24,7 +24,7 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
 
     // Create a new story event
     const event = new NDKStory(ndk);
-    
+
     // Add video duration if it's a video
     if (type === 'video') {
         try {
@@ -40,7 +40,7 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
     console.log('Setting story event properties');
     event.imeta = imeta;
     event.alt = `This is a story event created with Olas`;
-    
+
     // Set expiration time (current timestamp + duration in seconds)
     const now = Math.floor(Date.now() / 1000);
     event.tags.push(['expiration', (now + duration).toString()]);
@@ -50,7 +50,7 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
     console.log('Adding stickers to event:', stickers.length);
     // Add stickers to the event
     for (const sticker of stickers) {
-        try {   
+        try {
             // Use the utility function to map our sticker to NDK format
             const dimensions = sticker.dimensions;
             const ndkSticker = mapStickerToNDKFormat(sticker, dimensions || { width: 0, height: 0 });

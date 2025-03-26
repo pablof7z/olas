@@ -1,12 +1,5 @@
 import React, { useCallback } from 'react';
-import { 
-    StyleSheet, 
-    FlatList, 
-    View, 
-    Text, 
-    TouchableOpacity, 
-    Dimensions 
-} from 'react-native';
+import { StyleSheet, FlatList, View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { FILTER_PRESETS } from '../presets';
 import { FilteredImage } from './FilteredImage';
 import { useImage } from '@shopify/react-native-skia';
@@ -18,65 +11,48 @@ interface FilterListProps {
     previewImageUri?: string;
 }
 
-export function FilterList({ 
-    selectedFilterId, 
-    onSelectFilter,
-    previewImageUri
-}: FilterListProps) {
+export function FilterList({ selectedFilterId, onSelectFilter, previewImageUri }: FilterListProps) {
     const image = useImage(previewImageUri || '');
 
-    const renderItem = useCallback(({ item }: { item: FilterPreset }) => {
-        const isSelected = item.id === selectedFilterId;
-        
-        const handlePress = () => {
-            onSelectFilter(item.id);
-        };
-        
-        return (
-            <TouchableOpacity 
-                style={[
-                    styles.filterItem,
-                    isSelected && styles.selectedFilterItem
-                ]} 
-                onPress={handlePress}
-            >
-                <View style={styles.filterPreview}>
-                    {image ? (
-                        <FilteredImage
-                            image={image}
-                            filterParams={item.parameters}
-                            style={styles.filterPreviewImage}
-                            contentFit="cover"
-                            width={FILTER_ITEM_WIDTH}
-                            height={FILTER_ITEM_WIDTH}
-                        />
-                    ) : (
-                        <View 
-                            style={[
-                                styles.filterPreviewPlaceholder,
-                                { backgroundColor: item.thumbnailColor || '#333' }
-                            ]} 
-                        />
-                    )}
-                </View>
-                <Text style={[
-                    styles.filterName,
-                    isSelected && styles.selectedFilterName,
-                ]}>
-                    {item.name}
-                </Text>
-            </TouchableOpacity>
-        );
-    }, [selectedFilterId, onSelectFilter, image, previewImageUri]);
+    const renderItem = useCallback(
+        ({ item }: { item: FilterPreset }) => {
+            const isSelected = item.id === selectedFilterId;
+
+            const handlePress = () => {
+                onSelectFilter(item.id);
+            };
+
+            return (
+                <TouchableOpacity style={[styles.filterItem, isSelected && styles.selectedFilterItem]} onPress={handlePress}>
+                    <View style={styles.filterPreview}>
+                        {image ? (
+                            <FilteredImage
+                                image={image}
+                                filterParams={item.parameters}
+                                style={styles.filterPreviewImage}
+                                contentFit="cover"
+                                width={FILTER_ITEM_WIDTH}
+                                height={FILTER_ITEM_WIDTH}
+                            />
+                        ) : (
+                            <View style={[styles.filterPreviewPlaceholder, { backgroundColor: item.thumbnailColor || '#333' }]} />
+                        )}
+                    </View>
+                    <Text style={[styles.filterName, isSelected && styles.selectedFilterName]}>{item.name}</Text>
+                </TouchableOpacity>
+            );
+        },
+        [selectedFilterId, onSelectFilter, image, previewImageUri]
+    );
 
     if (!image) return null;
-    
+
     return (
         <View style={styles.container}>
             <FlatList
                 data={FILTER_PRESETS}
                 renderItem={renderItem}
-                keyExtractor={item => item.id}
+                keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
@@ -128,4 +104,4 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
-}); 
+});

@@ -30,9 +30,10 @@ export default function AvatarAndName({
     nameStyle,
     pressableStyle,
 }: AvatarAndNameProps) {
-    const { userProfile: _userProfile, user, loading } = useUserProfile(!userProfile ? pubkey : undefined);
+    const profileData = useUserProfile(!userProfile ? pubkey : undefined);
+    const _userProfile = profileData?.userProfile;
     const __userProfile = userProfile || _userProfile;
-    const flare = useUserFlare(skipFlare ? undefined : pubkey);
+    const flare = skipFlare ? undefined : useUserFlare(pubkey);
 
     const viewProfile = useCallback(() => {
         if (onPress) {

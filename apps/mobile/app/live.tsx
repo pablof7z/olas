@@ -4,26 +4,17 @@ import { useVideoPlayer, VideoContentFit, VideoView } from 'expo-video';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Dimensions, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, View } from 'react-native';
-import { NDKEvent, type NDKUserProfile, useSubscribe, useNDKCurrentUser, useNDK, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, type NDKUserProfile, useSubscribe, useNDKCurrentUser, useNDK, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import EventContent from '@/components/ui/event/content';
 import UserAvatar from '@/components/ui/user/avatar';
-import UserName from '@/components/ui/user/name';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import BottomSheet, {
-    BottomSheetFlashList,
-    BottomSheetFlatList,
-    BottomSheetScrollView,
-    BottomSheetTextInput,
-    BottomSheetView,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { Fullscreen, MessageCircle, Send } from 'lucide-react-native';
 import { atom } from 'jotai';
-import { useUserProfile } from '@/hooks/user-profile';
-import { BlurView } from 'expo-blur';
 
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 

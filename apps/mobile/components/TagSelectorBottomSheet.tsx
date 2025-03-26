@@ -35,11 +35,7 @@ export type TagSelectorProps = {
     onTagsChanged?: (tags: string[]) => void;
 };
 
-export function TagSelectorBottomSheet({ 
-    initialTags = [], 
-    onTagsSelected,
-    onTagsChanged
-}: TagSelectorProps) {
+export function TagSelectorBottomSheet({ initialTags = [], onTagsSelected, onTagsChanged }: TagSelectorProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
@@ -68,12 +64,15 @@ export function TagSelectorBottomSheet({
         tagSelectorCb?.(selectedTagsArray);
     }, [onTagsSelected, tagSelectorCb]);
 
-    const handleTagsChanged = useCallback((newTags: string[]) => {
-        setTags(newTags);
-        if (onTagsChanged) {
-            onTagsChanged(newTags);
-        }
-    }, [onTagsChanged]);
+    const handleTagsChanged = useCallback(
+        (newTags: string[]) => {
+            setTags(newTags);
+            if (onTagsChanged) {
+                onTagsChanged(newTags);
+            }
+        },
+        [onTagsChanged]
+    );
 
     return (
         <Sheet ref={ref}>
@@ -91,23 +90,20 @@ export function TagSelectorBottomSheet({
                     <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
                 </View>
 
-                <TagSelector 
-                    initialTags={tags} 
-                    onTagsChanged={handleTagsChanged} 
-                />
+                <TagSelector initialTags={tags} onTagsChanged={handleTagsChanged} />
             </BottomSheetView>
         </Sheet>
     );
 }
 
-export function TagSelector({ 
-    initialTags = [], 
+export function TagSelector({
+    initialTags = [],
     onTagsChanged,
-    onSelected 
-}: { 
-    initialTags?: string[]; 
+    onSelected,
+}: {
+    initialTags?: string[];
     onTagsChanged?: (tags: string[]) => void;
-    onSelected?: (tag: string) => void; 
+    onSelected?: (tag: string) => void;
 }) {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
@@ -153,11 +149,14 @@ export function TagSelector({
         return result;
     }, [ndk, currentUser?.pubkey, follows?.length, search, selectedTags.current, mountTagSelector]);
 
-    const updateSelectedTags = useCallback((tags: string[]) => {
-        if (onTagsChanged) {
-            onTagsChanged(tags);
-        }
-    }, [onTagsChanged]);
+    const updateSelectedTags = useCallback(
+        (tags: string[]) => {
+            if (onTagsChanged) {
+                onTagsChanged(tags);
+            }
+        },
+        [onTagsChanged]
+    );
 
     const addTagManually = useCallback(() => {
         if (!search) return;

@@ -2,8 +2,11 @@ import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleP
 import {
     NDKCashuMintList,
     NDKKind,
-    NDKUser, useNDKCurrentUser,
-    useNDKSessionEventKind, useNDKWallet, useUserProfile
+    NDKUser,
+    useNDKCurrentUser,
+    useNDKSessionEventKind,
+    useNDKWallet,
+    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -142,6 +145,9 @@ export default function WalletScreen() {
 
     const insets = useSafeAreaInsets();
 
+    const profileData = useUserProfile(currentUser?.pubkey);
+    const userProfile = profileData?.userProfile;
+
     return (
         <>
             <Stack.Screen
@@ -203,8 +209,8 @@ export default function WalletScreen() {
 function HeaderLeft() {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
-
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const profileData = useUserProfile(currentUser?.pubkey);
+    const userProfile = profileData?.userProfile;
 
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>

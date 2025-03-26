@@ -20,6 +20,8 @@ import {
     NDKUserProfile,
     NostrEvent,
     useNDKCurrentUser,
+    useUserProfile,
+    useUsersStore,
 } from '@nostr-dev-kit/ndk-mobile';
 import ReelIcon from '@/components/icons/reel';
 import * as Clipboard from 'expo-clipboard';
@@ -35,7 +37,6 @@ import EventContent from '@/components/ui/event/content';
 import { ArrowLeft, Check, Copy, Grid, ImageIcon, ShoppingCart, Wind, X } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import Feed from '@/components/Feed';
-import { useUserProfile, useUsersStore } from '@/hooks/user-profile';
 import { useUserFlare } from '@/hooks/user-flare';
 import { BlurView } from 'expo-blur';
 import { useObserver } from '@/hooks/observer';

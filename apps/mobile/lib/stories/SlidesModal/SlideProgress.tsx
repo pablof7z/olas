@@ -1,11 +1,5 @@
 import { Dimensions, View } from 'react-native';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withTiming,
-    Easing,
-    runOnJS,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const { width } = Dimensions.get('screen');

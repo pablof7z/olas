@@ -11,7 +11,7 @@ export const PUBLISH_ENABLED = !DEV_BUILD || false;
 
 export const COMMUNITIES_ENABLED = DEV_BUILD && false;
 
-export const NET_DEBUG = DEV_BUILD && true;
+export const NET_DEBUG = DEV_BUILD && false;
 
 export const ZAPS_DISABLED = DEV_BUILD && false;
 

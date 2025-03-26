@@ -1,4 +1,4 @@
-import { NDKCacheAdapterSqlite, NDKKind, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKKind, NDKSubscriptionCacheUsage, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { db } from '@/stores/db';
@@ -6,71 +6,59 @@ import { useDebounce } from '@/utils/debounce';
 import { useAppSettingsStore } from '@/stores/app';
 import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from '@/stores/db/cashu';
 import { usePaymentStore } from '@/stores/payments';
-import { atom, useAtom } from 'jotai';
 import { useNDKNutzapMonitor, NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { migrateCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { useObserver } from './observer';
+import { create } from 'zustand';
 
-// Define an atom for the wallet instance to prevent race conditions
-const walletAtom = atom<NDKCashuWallet | undefined>(undefined);
-// Define an atom to track loading state by event ID
-const loadingEventIdsAtom = atom<Set<string>>(new Set<string>());
+interface Nip60WalletStoreState {
+    wallet: NDKCashuWallet | undefined;
+    init: (ndk: NDK, pubkey: Hexpubkey) => void;
+}
+
+export const useNip60WalletStore = create<Nip60WalletStoreState>((set, get) => ({
+    wallet: undefined,
+
+    init: (ndk: NDK, pubkey: Hexpubkey) => {
+        const loadingEventIds = new Set<string>();
+        
+        ndk.subscribe([
+            { kinds: [NDKKind.CashuWallet], authors: [pubkey] }
+        ], {
+            subId: 'nip60-wallet',
+            skipVerification: true,
+            cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE
+        }, undefined, {
+            onEvent: (event) => {
+                if (loadingEventIds.has(event.id)) return;
+
+                loadingEventIds.add(event.id);
+                NDKCashuWallet.from(event)
+                    .then((newWallet) => set({ wallet: newWallet }))
+                    .catch((e) => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)));
+            }
+        })
+    }
+}))
 
 export function useNip60Wallet() {
-    const [wallet, setWallet] = useAtom(walletAtom);
-    const currentUser = useNDKCurrentUser();
-    const [loadingEventIds, setLoadingEventIds] = useAtom(loadingEventIdsAtom);
-    const events = useObserver(currentUser ? [
-        { kinds: [NDKKind.CashuWallet], authors: [currentUser.pubkey] }
-    ] : false, { wrap: false });
-    const event = events[0];
-
-    useEffect(() => {
-        // If no event, nothing to do
-        if (!event) return;
-
-        console.log('useNip60Wallet', event?.id, loadingEventIds.size);
-
-        // If already loading this event ID, skip duplicate processing
-        if (loadingEventIds.has(event.id)) return;
-
-        // Start loading process for new wallet
-        const newLoadingIds = new Set(loadingEventIds);
-        newLoadingIds.add(event.id);
-        setLoadingEventIds(newLoadingIds);
-        console.log('useNip60Wallet adding event to loading set', event.id, newLoadingIds.size);
-
-        NDKCashuWallet.from(event)
-            .then((newWallet) => {
-                console.log('new wallet in useNip60Wallet', event.id);
-                if (newWallet) {
-                    // Store in the atom
-                    setWallet(newWallet);
-                }
-            })
-            .catch((e) => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)))
-    }, [event?.id]);
-
-    return wallet;
+    return useNip60WalletStore((state) => state.wallet);
 }
 
 /**
  * This wallet monitor keeps all known proofs from a NIP-60 wallet in a local database.
  */
-export function useWalletMonitor() {
-    const { ndk } = useNDK();
+export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const nip60Wallet = useNip60Wallet();
-    const currentUser = useNDKCurrentUser();
     const timer = useRef<NodeJS.Timeout | null>(null);
     const walletType = useAppSettingsStore((s) => s.walletType);
     const walletPayload = useAppSettingsStore((s) => s.walletPayload);
     const setCurrentUser = usePaymentStore((s) => s.setCurrentUser);
 
     useEffect(() => {
-        setCurrentUser(currentUser?.pubkey);
-    }, [currentUser?.pubkey]);
+        setCurrentUser(pubkey);
+    }, [pubkey]);
 
     useEffect(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
@@ -106,7 +94,7 @@ export function useWalletMonitor() {
     }, [activeWallet?.walletId]);
 
     const delayedInitWallet = useCallback(async () => {
-        if (!currentUser?.pubkey) return;
+        if (!pubkey) return;
         let wallet: NDKWallet | undefined;
 
         if (walletType === 'none') return;
@@ -119,7 +107,7 @@ export function useWalletMonitor() {
                 const { db } = cacheAdapter;
                 const mostRecentCachedEvent = db.getFirstSync(
                     'SELECT created_at FROM events WHERE kind = ? AND pubkey = ? ORDER BY created_at DESC LIMIT 1',
-                    [NDKKind.CashuToken, currentUser.pubkey]
+                    [NDKKind.CashuToken, pubkey]
                 ) as { created_at: number };
                 since = mostRecentCachedEvent?.created_at;
             }
@@ -130,16 +118,16 @@ export function useWalletMonitor() {
         }
 
         setActiveWallet(wallet);
-    }, [currentUser?.pubkey, !!nip60Wallet, walletType, walletPayload]);
+    }, [pubkey, !!nip60Wallet, walletType, walletPayload]);
 
     useEffect(() => {
-        if (!currentUser?.pubkey || activeWallet) return;
+        if (!pubkey || activeWallet) return;
 
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => {
             delayedInitWallet();
         }, 1000);
-    }, [currentUser?.pubkey, activeWallet?.walletId, nip60Wallet]);
+    }, [pubkey, activeWallet?.walletId, nip60Wallet]);
 
     const updateStorage = useCallback(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
@@ -181,15 +169,13 @@ export function useWalletMonitor() {
 /**
  * Hook to monitor and process nutzaps automatically
  */
-export function useNutzapMonitor() {
+export function useNutzapMonitor(ndk: NDK, pubkey: Hexpubkey) {
     const [start, setStart] = useState(false);
     const { activeWallet } = useNDKWallet();
     const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
     const { nutzapMonitor } = useNDKNutzapMonitor(mintList, start);
-    const currentUser = useNDKCurrentUser();
-    const { ndk } = useNDK();
-    const [hasOldWallets, setHasOldWallets] = useState<boolean | null>(null);
     const cashuWallet = useNip60Wallet();
+    const [hasOldWallets, setHasOldWallets] = useState<boolean | null>(null);
 
     useEffect(() => {
         if (!cashuWallet || !nutzapMonitor) return;
@@ -201,9 +187,7 @@ export function useNutzapMonitor() {
     }, [cashuWallet, nutzapMonitor, activeWallet]);
 
     useEffect(() => {
-        if (!ndk || !currentUser) return;
-
-        ndk.fetchEvents({ kinds: [NDKKind.LegacyCashuWallet], authors: [currentUser.pubkey] }).then((events) => {
+        ndk.fetchEvents({ kinds: [NDKKind.LegacyCashuWallet], authors: [pubkey] }).then((events) => {
             const nonDeleted = Array.from(events.values()).filter((event) => !event.hasTag('deleted'));
             const hasNonDeleted = nonDeleted.length > 0;
             setHasOldWallets(hasNonDeleted);
@@ -212,12 +196,9 @@ export function useNutzapMonitor() {
                 migrateCashuWallet(ndk).then(() => setHasOldWallets(false));
             }
         });
-    }, [!!ndk, currentUser?.pubkey]);
+    }, [!!ndk, pubkey]);
 
     useEffect(() => {
-        // don't start until there's a user
-        if (!currentUser?.pubkey) return;
-
         // if we need to do a migration, don't start
         if (hasOldWallets !== false) return;
 
@@ -233,5 +214,5 @@ export function useNutzapMonitor() {
             console.log('setting start to true');
             setStart(true);
         }, 2000);
-    }, [currentUser?.pubkey, start, hasOldWallets, activeWallet?.walletId]);
+    }, [pubkey, start, hasOldWallets, activeWallet?.walletId]);
 }

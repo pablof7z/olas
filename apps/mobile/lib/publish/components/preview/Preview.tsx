@@ -41,20 +41,12 @@ function PreviewVideo({ uri, ...props }: { uri: string }) {
         player.play();
     });
 
-    return (
-        <VideoView
-            player={player}
-            style={[styles.content, props.style]}
-            contentFit="contain"
-            nativeControls={false}
-            {...props}
-        />
-    );
+    return <VideoView player={player} style={[styles.content, props.style]} contentFit="contain" nativeControls={false} {...props} />;
 }
 
 const styles = StyleSheet.create({
     content: {
         width: '100%',
-        flex: 1
-    }
+        flex: 1,
+    },
 });

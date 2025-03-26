@@ -7,4 +7,4 @@ export { showStoriesModalAtom, storiesAtom } from '@/lib/stories/store';
 // Local atoms for SlidesModal
 export const isLoadingAtom = atom(false);
 export const durationAtom = atom(-1);
-export const activeSlideAtom = atom(0); 
+export const activeSlideAtom = atom(0);

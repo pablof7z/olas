@@ -39,10 +39,7 @@ export default function StoryPreviewScreen() {
             <View style={[styles.container, { paddingTop: insets.top }]}>
                 <SimpleStoryViewer story={previewStory} />
                 <View style={[styles.closePreviewContainer, { top: insets.top + 10 }]}>
-                    <TouchableOpacity 
-                        onPress={handlePreviewClose} 
-                        style={styles.closeButton}
-                    >
+                    <TouchableOpacity onPress={handlePreviewClose} style={styles.closeButton}>
                         <Ionicons name="close" size={24} color="white" />
                     </TouchableOpacity>
                 </View>
@@ -52,12 +49,7 @@ export default function StoryPreviewScreen() {
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StoryPreview 
-                path={path} 
-                type={type as 'photo' | 'video'} 
-                onClose={handleClose}
-                onPreview={handlePreviewStory}
-            />
+            <StoryPreview path={path} type={type as 'photo' | 'video'} onClose={handleClose} onPreview={handlePreviewStory} />
         </View>
     );
 }
@@ -101,5 +93,5 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 5,
         zIndex: 100,
-    }
+    },
 });

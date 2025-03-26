@@ -4,7 +4,7 @@ import Toolbar from './toolbar';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 interface PreviewContainerProps {
-    selectedMedia: {    
+    selectedMedia: {
         type: 'image' | 'video';
         uri: string;
     }[];
@@ -16,23 +16,20 @@ const dimensions = Dimensions.get('window');
 export default function PreviewContainer({ selectedMedia, height }: PreviewContainerProps) {
     return (
         <View style={[styles.previewContainer, { height }]}>
-                <Animated.View 
-                    style={styles.previewWrapper}
-                >
-                    <ScrollView 
-                        horizontal 
-                        pagingEnabled 
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.scrollView}
-                        contentContainerStyle={styles.scrollContent}
-                    >
-                        {selectedMedia.map((media, index) => (
-                            <View key={`${media.uri}-${index}`} style={[styles.mediaContainer, { width: dimensions.width * 0.8  }]}>
-                                <Preview selectedMedia={media} />
-                            </View>
-                        ))}
-                    </ScrollView>
-                </Animated.View>
+            <Animated.View style={styles.previewWrapper}>
+                <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}>
+                    {selectedMedia.map((media, index) => (
+                        <View key={`${media.uri}-${index}`} style={[styles.mediaContainer, { width: dimensions.width * 0.8 }]}>
+                            <Preview selectedMedia={media} />
+                        </View>
+                    ))}
+                </ScrollView>
+            </Animated.View>
             <Toolbar />
         </View>
     );
@@ -58,5 +55,5 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         flex: 1,
-    }
+    },
 });

@@ -40,22 +40,17 @@ export function PreviewVideo({ uri }: { uri: string }) {
         player.play();
     });
 
-    return (
-        <VideoView
-            player={player}
-            style={styles.previewContent}
-        />
-    );
+    return <VideoView player={player} style={styles.previewContent} />;
 }
 
 const styles = StyleSheet.create({
     previewContainer: {
         width: '100%',
         backgroundColor: '#000',
-        flex: 1
+        flex: 1,
     },
     previewContent: {
         width: '100%',
-        height: '100%'
-    }
+        height: '100%',
+    },
 });

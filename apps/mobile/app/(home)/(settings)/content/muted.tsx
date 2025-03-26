@@ -1,3 +1,4 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { NDKList, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlatList, ScrollView, TextInput, View } from 'react-native';
@@ -5,7 +6,6 @@ import { Text } from '@/components/nativewindui/Text';
 import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
 import * as User from '@/components/ui/user';
 import { RenderTarget } from '@shopify/flash-list';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/nativewindui/Button';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { router, Stack } from 'expo-router';
@@ -133,7 +133,8 @@ function HashtagItem({ hashtag, index, target }: { hashtag: string; index: numbe
 }
 
 function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: RenderTarget; index: number }) {
-    const { userProfile } = useUserProfile(pubkey);
+    const profileData = useUserProfile(pubkey);
+    const userProfile = profileData?.userProfile;
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {

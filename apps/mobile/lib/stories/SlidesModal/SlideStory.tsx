@@ -14,7 +14,5 @@ export function SlideStory({ story }: { story: NDKStory }) {
         setDuration(8000); // Default duration for stories
     }, [story, setIsLoading, setDuration]);
 
-    return (
-        <SimpleStoryViewer story={story} />
-    );
-} 
+    return <SimpleStoryViewer story={story} />;
+}

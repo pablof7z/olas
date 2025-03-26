@@ -1,4 +1,4 @@
-import { Blurhash } from "react-native-blurhash";
+import { Blurhash } from 'react-native-blurhash';
 import { getVideoMetaData, Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
 
 export default async function generateBlurhash(uri: string) {

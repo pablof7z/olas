@@ -20,15 +20,19 @@ const MAX_HEIGHT = Dimensions.get('window').height * 0.8;
 const LocationBottomSheet = forwardRef<LocationBottomSheetRef, {}>((_, ref) => {
     const sheetRef = useSheetRef();
     const setBottomSheetRef = useSetAtom(locationBottomSheetRefAtom);
-    const location = useEditorStore(state => state.location);
-    const includeLocation = useEditorStore(state => state.includeLocation);
-    const setIncludeLocation = useEditorStore(state => state.setIncludeLocation);
+    const location = useEditorStore((state) => state.location);
+    const includeLocation = useEditorStore((state) => state.includeLocation);
+    const setIncludeLocation = useEditorStore((state) => state.setIncludeLocation);
     const { colors } = useColorScheme();
 
-    useImperativeHandle(ref, () => ({
-        present: () => sheetRef.current?.present(),
-        dismiss: () => sheetRef.current?.dismiss()
-    }), [sheetRef]);
+    useImperativeHandle(
+        ref,
+        () => ({
+            present: () => sheetRef.current?.present(),
+            dismiss: () => sheetRef.current?.dismiss(),
+        }),
+        [sheetRef]
+    );
 
     useEffect(() => {
         setBottomSheetRef(sheetRef);
@@ -41,21 +45,12 @@ const LocationBottomSheet = forwardRef<LocationBottomSheetRef, {}>((_, ref) => {
     if (!location) return null;
 
     return (
-        <Sheet 
-            ref={sheetRef}
-            maxDynamicContentSize={MAX_HEIGHT}
-            enablePanDownToClose
-        >
+        <Sheet ref={sheetRef} maxDynamicContentSize={MAX_HEIGHT} enablePanDownToClose>
             <BottomSheetView style={styles.contentContainer}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Location</Text>
-                    <TouchableOpacity 
-                        style={styles.toggleButton} 
-                        onPress={handleToggleLocation}
-                    >
-                        <Text style={[styles.toggleText, { color: colors.primary }]}>
-                            {includeLocation ? 'Exclude' : 'Include'}
-                        </Text>
+                    <TouchableOpacity style={styles.toggleButton} onPress={handleToggleLocation}>
+                        <Text style={[styles.toggleText, { color: colors.primary }]}>{includeLocation ? 'Exclude' : 'Include'}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -121,8 +116,8 @@ const LocationBottomSheet = forwardRef<LocationBottomSheetRef, {}>((_, ref) => {
                         </Text>
                     </View>
                     <Text style={styles.disclaimer}>
-                        {includeLocation 
-                            ? 'Location data will be included in your post' 
+                        {includeLocation
+                            ? 'Location data will be included in your post'
                             : 'Location data will not be included in your post'}
                     </Text>
                 </View>
@@ -182,4 +177,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default LocationBottomSheet; 
+export default LocationBottomSheet;

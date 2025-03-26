@@ -48,7 +48,7 @@ const selectOptimalFormat = (device: CameraDevice) => {
     console.log('formats', JSON.stringify(formats, null, 2));
 
     // Find the smallest format that is at least 720p
-    const optimalFormat = null;// formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
+    const optimalFormat = null; // formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
 
     // If no 720p format is found, use the highest resolution format available
     return optimalFormat || formats[formats.length - 1];
@@ -139,16 +139,19 @@ export default function StoryCameraScreen() {
         }
     }, [cameraPosition, devices, isRecording, isSwitchingCamera]);
 
-    const onMediaCaptured = useCallback((media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
-        console.log('Media captured:', { path: media.path, type });
-        router.push({
-            pathname: '/story/preview',
-            params: {
-                path: media.path,
-                type: type
-            }
-        });
-    }, [router]);
+    const onMediaCaptured = useCallback(
+        (media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
+            console.log('Media captured:', { path: media.path, type });
+            router.push({
+                pathname: '/story/preview',
+                params: {
+                    path: media.path,
+                    type: type,
+                },
+            });
+        },
+        [router]
+    );
 
     const handleBackToCamera = useCallback(() => {
         setIsRecording(false);

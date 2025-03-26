@@ -11,7 +11,8 @@ interface AvatarGroupProps {
 }
 
 const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: number }> = ({ pubkey, avatarSize, index }) => {
-    const { userProfile } = useUserProfile(pubkey);
+    const profileData = useUserProfile(pubkey);
+    const userProfile = profileData?.userProfile;
 
     const style = useMemo(() => {
         return {

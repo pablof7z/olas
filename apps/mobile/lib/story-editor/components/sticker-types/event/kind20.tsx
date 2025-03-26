@@ -15,15 +15,15 @@ export default function EventStickerKind20({
     styles: EventStickerStyle;
 }) {
     const ndkImage = useMemo(() => NDKImage.from(event), [event]);
-    
+
     const createdAt = useMemo(() => {
         if (!event.created_at) return '';
-        
+
         const date = new Date(event.created_at * 1000);
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
-        
+
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
         return `${Math.floor(diffMins / 1440)}d ago`;
@@ -37,47 +37,30 @@ export default function EventStickerKind20({
         <View style={[_styles.outerContainer, styles.container]}>
             <View style={_styles.container}>
                 {hasImages && (
-                    <ScrollView 
-                        horizontal 
-                        pagingEnabled 
-                        showsHorizontalScrollIndicator={false} 
-                        style={_styles.carousel}
-                    >
+                    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={_styles.carousel}>
                         {ndkImage.imetas.map((imeta, index) => (
                             <View key={index} style={_styles.imageContainer}>
-                                <Image 
-                                    source={{ uri: imeta.url }}
-                                    style={_styles.image} 
-                                    contentFit="cover"
-                                />
+                                <Image source={{ uri: imeta.url }} style={_styles.image} contentFit="cover" />
                             </View>
                         ))}
                     </ScrollView>
                 )}
-                
+
                 {ndkImage.content && (
                     <Text style={[_styles.description, styles.text]} numberOfLines={3}>
                         {ndkImage.content}
                     </Text>
                 )}
-                
+
                 <View style={_styles.footer}>
                     <View style={_styles.userContainer}>
-                        {userProfile?.picture && (
-                            <Image 
-                                source={{ uri: userProfile.picture }}
-                                style={_styles.avatar} 
-                                contentFit="cover"
-                            />
-                        )}
+                        {userProfile?.picture && <Image source={{ uri: userProfile.picture }} style={_styles.avatar} contentFit="cover" />}
                         <Text style={[_styles.username, styles.author && styles.author.nameStyle]}>
                             {userProfile?.displayName || userProfile?.name || 'Anonymous'}
                         </Text>
                     </View>
-                    
-                    <Text style={_styles.timestamp}>
-                        {createdAt}
-                    </Text>
+
+                    <Text style={_styles.timestamp}>{createdAt}</Text>
                 </View>
             </View>
         </View>
@@ -144,4 +127,4 @@ const _styles = StyleSheet.create({
         fontSize: 12,
         color: '#888',
     },
-}); 
+});

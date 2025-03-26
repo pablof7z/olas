@@ -8,6 +8,7 @@ import {
     useNDKWallet,
     useNDKNutzapMonitor,
     NDKCacheAdapterSqlite,
+    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as User from '@/components/ui/user';
 import { FlashList } from '@shopify/flash-list';
@@ -19,7 +20,6 @@ import { formatMoney } from '@/utils/bitcoin';
 import { Button } from '@/components/nativewindui/Button';
 import { Proof } from '@cashu/cashu-ts';
 import { ListItem } from '@/components/nativewindui/List';
-import { useUserProfile } from '@/hooks/user-profile';
 
 export default function NutzapsScreen() {
     const { activeWallet } = useNDKWallet();

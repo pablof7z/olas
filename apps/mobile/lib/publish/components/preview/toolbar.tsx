@@ -14,7 +14,7 @@ export default function PreviewToolbar() {
 }
 
 function SystemMediaSelectorButton() {
-    const addMedia = useEditorStore(state => state.addMedia);
+    const addMedia = useEditorStore((state) => state.addMedia);
 
     const handleSelectMedia = async () => {
         try {
@@ -27,7 +27,7 @@ function SystemMediaSelectorButton() {
 
             if (!result.canceled && result.assets.length > 0) {
                 const selectedAsset = result.assets[0];
-                
+
                 await addMedia(selectedAsset.uri, selectedAsset.type as 'image' | 'video');
 
                 // Navigate to edit screen
@@ -47,14 +47,10 @@ function SystemMediaSelectorButton() {
 
 function SelectionModeToggle() {
     const { isMultipleSelectionMode, toggleSelectionMode } = useEditorStore();
-    
+
     return (
         <Pressable style={styles.button} onPress={toggleSelectionMode}>
-            <Ionicons 
-                name={isMultipleSelectionMode ? "grid" : "square-outline"} 
-                size={24} 
-                color="white" 
-            />
+            <Ionicons name={isMultipleSelectionMode ? 'grid' : 'square-outline'} size={24} color="white" />
         </Pressable>
     );
 }
@@ -64,10 +60,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 12
+        gap: 12,
     },
     button: {
         padding: 10,
         borderRadius: 5,
-    }
+    },
 });
