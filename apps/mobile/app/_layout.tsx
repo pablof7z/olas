@@ -28,13 +28,11 @@ import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import { Platform, View } from 'react-native';
 import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
-import { COMMUNITIES_ENABLED, DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import { useNutzapMonitor, useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
-import { LocationBottomSheet } from '@/lib/post-editor/sheets/LocationBottomSheet';
 import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
-import { CommunityBottomSheet } from '@/lib/post-editor/sheets/CommunityBottomSheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
 import { initializeNDK } from '@/lib/ndk';
 import { settingsStore } from '@/lib/settings-store';
@@ -239,8 +237,6 @@ export default function RootLayout() {
                                     </Stack>
 
                                     <PostOptionsMenu />
-                                    <LocationBottomSheet />
-                                    {COMMUNITIES_ENABLED && <CommunityBottomSheet />}
                                     {/* <AlbumsBottomSheet /> */}
                                     {/* <PostTypeSelectorBottomSheet /> */}
                                     <FeedTypeBottomSheet />

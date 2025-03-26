@@ -46,8 +46,8 @@ import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { FeedEntry } from '@/components/Feed/hook';
 import { SHOP_ENABLED } from '@/utils/const';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { prepareMedia } from '@/lib/post-editor/actions/prepare';
-import { uploadMedia } from '@/lib/post-editor/actions/upload';
+import { prepareMedia } from '@/utils/media/prepare';
+import { uploadMedia } from '@/lib/publish/actions/upload';
 import BackButton from '@/components/buttons/back-button';
 import { toast } from '@backpackapp-io/react-native-toast';
 

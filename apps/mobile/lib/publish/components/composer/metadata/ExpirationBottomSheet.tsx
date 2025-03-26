@@ -9,10 +9,10 @@ import { Text } from '@/components/nativewindui/Text';
 
 export const EXPIRATION_OPTIONS = [
     { label: "No expiration", value: null },
-    { label: "1 day", value: 24 * 60 * 60 * 1000 },
-    { label: "3 days", value: 3 * 24 * 60 * 60 * 1000 },
-    { label: "7 days", value: 7 * 24 * 60 * 60 * 1000 },
-    { label: "30 days", value: 30 * 24 * 60 * 60 * 1000 },
+    { label: "1 day", value: 24 * 60 * 60 },
+    { label: "3 days", value: 3 * 24 * 60 * 60 },
+    { label: "7 days", value: 7 * 24 * 60 * 60 },
+    { label: "30 days", value: 30 * 24 * 60 * 60 },
 ];
 
 // Atoms for state management

@@ -1,4 +1,5 @@
-import { useEditorStore, captionBottomSheetRefAtom } from "@/lib/publish/store/editor";
+import { useEditorStore } from "@/lib/publish/store/editor";
+import { captionBottomSheetRefAtom } from "./CaptionBottomSheet";
 import { useAtom } from "jotai";
 import { useCallback } from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
@@ -16,7 +17,6 @@ export default function Caption() {
         style={styles.captionContainer}
         onPress={openCaptionSheet}
     >
-        <Text style={styles.captionLabel}>Caption</Text>
         <Text style={styles.captionText}>
             {caption || "Add a caption..."}
         </Text>
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     },
     captionText: {
         fontSize: 16,
-        color: "#666"
+        color: "#666",
+        minHeight: 50
     }
 })

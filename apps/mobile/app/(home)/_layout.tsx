@@ -1,6 +1,6 @@
 import { router, Tabs, usePathname } from 'expo-router';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, Search, UserCircle2, WalletIcon, Play } from 'lucide-react-native';
+import { Home, UserCircle2 } from 'lucide-react-native';
 import { useScrollToTop } from '@react-navigation/native';
 import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
@@ -8,24 +8,19 @@ import { useAtomValue } from 'jotai';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { usePostEditorStore } from '@/lib/post-editor/store';
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import WalletButton from '@/components/buttons/wallet';
 import { useUserFlare } from '@/hooks/user-flare';
 import { WALLET_ENABLED } from '@/utils/const';
-import { Button } from '@/components/nativewindui/Button';
 import { scrollDirAtom } from '@/components/Feed/store';
-import { Animated, Platform, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, interpolate, runOnJS } from 'react-native-reanimated';
+import { ViewStyle } from 'react-native';
+import { useSharedValue, useAnimatedStyle, withSpring, interpolate } from 'react-native-reanimated';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const tabBarAnim = useSharedValue(0);
-
-    const openPickerIfEmpty = usePostEditorStore((s) => s.openPickerIfEmpty);
 
     // Create a ref that we can safely pass to useScrollToTop
     const safeScrollRef = useMemo(() => {

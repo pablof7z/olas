@@ -10,7 +10,6 @@ import Animated from 'react-native-reanimated';
 import { storiesAtom, showStoriesModalAtom } from '../store';
 import { useUserFlare } from '@/hooks/user-flare';
 import { useCallback } from 'react';
-import { usePostEditorStore } from '@/lib/post-editor/store';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 const AVATAR_SIZE = 80;
@@ -18,11 +17,9 @@ const AVATAR_SIZE = 80;
 function StoryPrompt() {
     const currentUser = useNDKCurrentUser();
     const { userProfile } = useUserProfile(currentUser?.pubkey);
-    const setPostMetadata = usePostEditorStore((s) => s.setMetadata);
     const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
-        setPostMetadata({ caption: '', expiration: Date.now() + 24 * 60 * 60 * 1000 });
         router.push('/story');
     }, []);
 

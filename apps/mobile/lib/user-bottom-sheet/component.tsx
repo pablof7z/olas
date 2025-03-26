@@ -1,22 +1,18 @@
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { userBottomSheetAtom } from './store';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { Dimensions, StyleProp, ViewStyle } from 'react-native';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { StyleProp, ViewStyle } from 'react-native';
+import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '@/components/nativewindui/Button';
-import { ChevronRight, List, ListFilter, Lock, UserMinus, UserPlus, WheatIcon } from 'lucide-react-native';
 import { useColorScheme } from '../useColorScheme';
-import { NDKUser, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
+import { NDKUser, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import usePrivateFollows from '@/stores/db/private-follows';
 import { useFollowType } from '@/hooks/follows';
 import FollowIcon from '@/components/icons/follow';
 import PrivateFollowIcon from '@/components/icons/private-follow';
-import Bookmark from '@/components/icons/bookmark';
-import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from '../feed-editor/store';
 import { publishFollow } from '@/components/buttons/follow';
 
 export default function BottomSheet() {

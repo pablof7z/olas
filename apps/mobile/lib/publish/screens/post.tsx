@@ -9,13 +9,15 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Dimensions, View, Pressable, TouchableOpacity, Text, NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from "react-native";
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEditorStore, MediaItem as EditorMediaItem } from "../store/editor";
+import { useEditorStore } from "../store/editor";
+import { PostMedia } from "@/lib/post-editor/types";
 import { Image } from "expo-image";
 import * as MediaLibrary from 'expo-media-library';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, SharedValue } from "react-native-reanimated";
 
 const COLUMNS = 4;
 
+// Local media item from the device media library
 interface MediaItem {
     id: string;
     type: 'image' | 'video';
@@ -27,7 +29,7 @@ export default function PostScreen() {
     const { colors } = useColorScheme();
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [hasPermission, setHasPermission] = useState(false);
-    const { selectedMedia, addMedia } = useEditorStore();
+    const { media, addMedia } = useEditorStore();
     const heightValue = useSharedValue(0);
     const gridSize = Dimensions.get('window').width / COLUMNS;
 
@@ -90,13 +92,7 @@ export default function PostScreen() {
                 setMediaItems(formattedMedia);
                 if (formattedMedia.length > 0) {
                     const postMedia = await mapAssetToPostMedia(assets[0]);
-                    // Convert postMedia to EditorMediaItem format
-                    const mediaItem: EditorMediaItem = {
-                        id: postMedia.id,
-                        type: 'image',
-                        uris: postMedia.uris
-                    };
-                    await addMedia(mediaItem);
+                    await addMedia(postMedia.uris[0], postMedia.mediaType, postMedia.id);
                 }
             }
         })();
@@ -106,20 +102,14 @@ export default function PostScreen() {
     const insets = useSafeAreaInsets();
 
     const selectMedia = useCallback(async (item: MediaItem) => {
-        // Convert postMedia to EditorMediaItem format
-        const mediaItem: EditorMediaItem = {
-            id: item.id,
-            type: item.type === 'video' ? 'video' : 'image',
-            uris: [item.uri]
-        };
-        
-        await addMedia(mediaItem);
+        const mediaType = item.type === 'video' ? 'video' : 'image';
+        await addMedia(item.uri, mediaType, item.id);
         openPreview();
     }, [addMedia, openPreview]);
 
-    // Key that changes when selectedMedia changes to force re-render
-    const selectedMediaKey = useMemo(() => 
-        selectedMedia.map(m => m.id).join(','), [selectedMedia]);
+    // Key that changes when media changes to force re-render
+    const mediaKey = useMemo(() => 
+        media.map(m => m.id).join(','), [media]);
 
     return (
         <>
@@ -143,13 +133,13 @@ export default function PostScreen() {
                 >
                     <FlashList
                         data={mediaItems}
-                        extraData={selectedMediaKey}
+                        extraData={mediaKey}
                         renderItem={({ item }) => (
                             <MediaGridItem 
                                 item={item} 
                                 gridSize={gridSize} 
                                 selectMedia={selectMedia} 
-                                selectedMedia={selectedMedia}
+                                selectedMedia={media}
                                 colors={colors}
                             />
                         )}
@@ -185,7 +175,7 @@ const MediaGridItem = memo(({
     item: MediaItem; 
     gridSize: number;
     selectMedia: (item: MediaItem) => Promise<void>;
-    selectedMedia: EditorMediaItem[];
+    selectedMedia: PostMedia[];
     colors: { primary: string };
 }) => {
     const isSelected = selectedMedia.some(media => media.id === item.id);
@@ -226,11 +216,11 @@ function PreviewView({
     heightValue: SharedValue<number>;
     height: number;
 }) {
-    const { selectedMedia } = useEditorStore();
+    const { media } = useEditorStore();
 
     // Transform the data to match what PreviewContainer expects
-    const formattedMedia = selectedMedia.map(item => ({
-        type: item.type,
+    const formattedMedia = media.map(item => ({
+        type: item.mediaType === 'video' ? 'video' : 'image',
         uri: item.uris[0] // Use the first URI from the array
     }));
 

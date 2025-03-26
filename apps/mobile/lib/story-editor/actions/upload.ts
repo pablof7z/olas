@@ -1,8 +1,7 @@
-import { Alert } from 'react-native';
 import NDK, { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
-import { prepareMediaItem } from '@/lib/post-editor/actions/prepare';
-import { uploadMedia } from '@/lib/post-editor/actions/upload';
-import { PostMedia, PostMediaType } from '@/lib/post-editor/types';
+import { prepareMediaItem } from '@/utils/media/prepare';
+import { uploadMedia } from '@/lib/publish/actions/upload';
+import { PostMedia, PostMediaType } from '@/lib/publish/types';
 
 interface StoryUploadParams {
     path: string;

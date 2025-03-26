@@ -1,21 +1,22 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Text } from '@/components/nativewindui/Text';
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dimensions, FlatList, TextInput, View } from 'react-native';
 import { getPostsByUser } from '@/utils/db';
-import NDK, { type Hexpubkey, NDKUser, useNDK, useNDKCurrentUser, useFollows, generateHashtags } from '@nostr-dev-kit/ndk-mobile';
-import { List, ListItem } from './nativewindui/List';
+import NDK, { type Hexpubkey, NDKUser, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { ListItem } from './nativewindui/List';
 import { cn } from '@/lib/cn';
 import { myFollows } from '@/utils/myfollows';
 import { Button } from './nativewindui/Button';
-import { usePostEditorStore } from '@/lib/post-editor/store';
 import { Hash } from 'lucide-react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 
-export const mountTagSelectorAtom = atom<boolean, [boolean], null>(false, (get, set, value) => set(mountTagSelectorAtom, value));
+export const mountTagSelectorAtom = atom<boolean>(false);
+export const tagSelectorBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
+export const tagSelectorBottomSheetCbAtom = atom<((tags: string[]) => void) | null>(null);
 
 type TagEntry = {
     // This is the tag as we match for internally
@@ -28,55 +29,51 @@ type TagEntry = {
     count: number;
 };
 
-export type TagSelectorSheetRefAtomType = RefObject<BottomSheetModal> | null;
+export type TagSelectorProps = {
+    initialTags?: string[];
+    onTagsSelected?: (tags: string[]) => void;
+    onTagsChanged?: (tags: string[]) => void;
+};
 
-export const tagSelectorBottomSheetRefAtom = atom<TagSelectorSheetRefAtomType, [TagSelectorSheetRefAtomType], null>(
-    null,
-    (get, set, value) => set(tagSelectorBottomSheetRefAtom, value)
-);
-
-export type TagSelectorBottomSheetCbType = (tags: string[]) => void;
-
-export const tagSelectorBottomSheetCbAtom = atom<TagSelectorBottomSheetCbType, [TagSelectorBottomSheetCbType], null>(
-    null,
-    (get, set, value) => set(tagSelectorBottomSheetCbAtom, value)
-);
-
-export function TagSelectorBottomSheet() {
+export function TagSelectorBottomSheet({ 
+    initialTags = [], 
+    onTagsSelected,
+    onTagsChanged
+}: TagSelectorProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const metadata = usePostEditorStore((s) => s.metadata);
-    const setMetadata = usePostEditorStore((s) => s.setMetadata);
-    const selectedTags = useRef<Set<string>>(new Set());
-    const [selectedCount, setSelectedCount] = useState(0);
-    const tagSelectorCb = useAtomValue<TagSelectorBottomSheetCbType>(tagSelectorBottomSheetCbAtom);
+    const [tags, setTags] = useState<string[]>(initialTags);
+    const selectedTags = useRef<Set<string>>(new Set(initialTags));
+    const [selectedCount, setSelectedCount] = useState(initialTags.length);
+    const tagSelectorCb = useAtomValue(tagSelectorBottomSheetCbAtom);
 
     useEffect(() => {
         selectedTags.current.clear();
-        for (const tag of metadata.tags ?? []) {
+        for (const tag of tags) {
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length]);
+    }, [tags]);
 
     useEffect(() => {
         setBottomSheetRef(ref);
     }, [ref, setBottomSheetRef]);
 
-    const updateCaption = useCallback(() => {
-        const currentCaptionTags = generateHashtags(metadata?.caption ?? '');
+    const handleTagsSelected = useCallback(() => {
+        const selectedTagsArray = Array.from(selectedTags.current);
+        if (onTagsSelected) {
+            onTagsSelected(selectedTagsArray);
+        }
+        tagSelectorCb?.(selectedTagsArray);
+    }, [onTagsSelected, tagSelectorCb]);
 
-        // see if the caption has tags we don't have, if it does, let's remove them
-        const tagsToRemove = currentCaptionTags.filter((tag) => !selectedTags.current.has(tag));
-        const newCaption = (metadata?.caption ?? '')
-            .replace(/#(\w+)/g, (match, tag) => {
-                if (tagsToRemove.includes(tag)) return '';
-                return match;
-            })
-            .trim();
-        setMetadata({ ...metadata, caption: newCaption });
-    }, [metadata, setMetadata]);
+    const handleTagsChanged = useCallback((newTags: string[]) => {
+        setTags(newTags);
+        if (onTagsChanged) {
+            onTagsChanged(newTags);
+        }
+    }, [onTagsChanged]);
 
     return (
         <Sheet ref={ref}>
@@ -87,38 +84,47 @@ export function TagSelectorBottomSheet() {
                         <Text variant="title1" className="text-foreground">
                             Tag your post
                         </Text>
-                        <Button size="sm" variant="primary" onPress={() => tagSelectorCb?.(Array.from(selectedTags.current))}>
+                        <Button size="sm" variant="primary" onPress={handleTagsSelected}>
                             <Text>Done</Text>
                         </Button>
                     </View>
                     <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
                 </View>
 
-                <TagSelector />
+                <TagSelector 
+                    initialTags={tags} 
+                    onTagsChanged={handleTagsChanged} 
+                />
             </BottomSheetView>
         </Sheet>
     );
 }
 
-export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void }) {
-    const metadata = usePostEditorStore((s) => s.metadata);
-    const setMetadata = usePostEditorStore((s) => s.setMetadata);
+export function TagSelector({ 
+    initialTags = [], 
+    onTagsChanged,
+    onSelected 
+}: { 
+    initialTags?: string[]; 
+    onTagsChanged?: (tags: string[]) => void;
+    onSelected?: (tag: string) => void; 
+}) {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
     const [search, setSearch] = useState('');
-    const selectedTags = useRef<Set<string>>(new Set());
-    const [selectedCount, setSelectedCount] = useState(0);
+    const selectedTags = useRef<Set<string>>(new Set(initialTags));
+    const [selectedCount, setSelectedCount] = useState(initialTags.length);
 
     const mountTagSelector = useAtomValue(mountTagSelectorAtom);
 
     useEffect(() => {
         selectedTags.current.clear();
-        for (const tag of metadata.tags ?? []) {
+        for (const tag of initialTags) {
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length]);
+    }, [initialTags]);
 
     const tagsToShow = useMemo(() => {
         if (!ndk || !currentUser || !mountTagSelector) return [];
@@ -147,12 +153,11 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         return result;
     }, [ndk, currentUser?.pubkey, follows?.length, search, selectedTags.current, mountTagSelector]);
 
-    const setTagsInMetadata = useCallback(
-        (tags: string[]) => {
-            setMetadata({ ...metadata, tags });
-        },
-        [metadata, setMetadata]
-    );
+    const updateSelectedTags = useCallback((tags: string[]) => {
+        if (onTagsChanged) {
+            onTagsChanged(tags);
+        }
+    }, [onTagsChanged]);
 
     const addTagManually = useCallback(() => {
         if (!search) return;
@@ -163,10 +168,10 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         }
 
         selectedTags.current.add(search);
-        setTagsInMetadata(Array.from(selectedTags.current));
+        updateSelectedTags(Array.from(selectedTags.current));
         setSelectedCount(selectedTags.current.size);
         setSearch('');
-    }, [search, setSearch, setTagsInMetadata, onSelected]);
+    }, [search, setSearch, updateSelectedTags, onSelected]);
 
     const onItemPress = useCallback(
         (tag: string) => {
@@ -178,18 +183,18 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
 
             if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
             else selectedTags.current.add(tag);
-            setTagsInMetadata(Array.from(selectedTags.current));
+            updateSelectedTags(Array.from(selectedTags.current));
             setSelectedCount(selectedTags.current.size);
             setSearch('');
         },
-        [setTagsInMetadata, setSelectedCount, setSearch, onSelected]
+        [updateSelectedTags, setSelectedCount, setSearch, onSelected]
     );
 
     const { colors } = useColorScheme();
 
     const keyExtractor = (item: TagEntry) => item.tag;
     const renderItem = useCallback(
-        ({ item, index }: { item: TagEntry; index: number; target }) => {
+        ({ item, index }: { item: TagEntry; index: number }) => {
             const isSelected = selectedTags.current.has(item.tag);
             return (
                 <ListItem
@@ -204,12 +209,12 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
                 />
             );
         },
-        [selectedCount, onItemPress]
+        [selectedCount, onItemPress, colors]
     );
 
     const data = useMemo(() => {
         return tagsToShow;
-    }, [tagsToShow, selectedCount, renderItem, onItemPress]);
+    }, [tagsToShow, selectedCount]);
 
     return (
         <View className="flex-col gap-2 px-4">
@@ -264,8 +269,6 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
     });
 
     return tagsToReturn;
-
-    // return tagsFromUser;
 }
 
 /**
@@ -320,8 +323,10 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
     // get the most common tag variation of each top tag and add it to the topTags array
     topTags.forEach((tag) => {
         const variations = tagVariations.get(tag.id);
-        const mostCommonVariation = Object.entries(variations).sort((a, b) => b[1] - a[1])[0];
-        tag.tag = mostCommonVariation[0];
+        if (variations) {
+            const mostCommonVariation = Object.entries(variations).sort((a, b) => b[1] - a[1])[0];
+            tag.tag = mostCommonVariation[0];
+        }
     });
 
     return topTags;

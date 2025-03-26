@@ -1,11 +1,8 @@
-import { useState, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, FlatList, Dimensions, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useEditorStore, captionBottomSheetRefAtom } from "@/lib/publish/store/editor";
-import { useAtom } from "jotai";
-import PostCaptionBottomSheet from "./components/PostCaptionBottomSheet";
-import { VideoView } from "expo-video";
-import { FlashList } from "@shopify/flash-list";
+import { useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { useEditorStore } from "@/lib/publish/store/editor";
+import PostCaptionBottomSheet from "@/lib/publish/components/composer/metadata/CaptionBottomSheet";
+import LocationBottomSheet from "@/lib/publish/components/composer/metadata/LocationBottomSheet";
 import { Stack, router } from "expo-router";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { useNDK } from "@nostr-dev-kit/ndk-mobile";
@@ -13,19 +10,21 @@ import { useActiveBlossomServer } from "@/hooks/blossom";
 import React from "react";
 import Caption from "@/lib/publish/components/composer/metadata/caption";
 import Expiration from "@/lib/publish/components/composer/metadata/expiration";
+import Location from "@/lib/publish/components/composer/metadata/location";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { Preview } from "@/lib/publish/components/preview";
 
 const dimensions = Dimensions.get('window');
 
 export default function PostMetadataScreen() {
-    const selectedMedia = useEditorStore(state => state.selectedMedia);
+    const media = useEditorStore(state => state.media);
     const isPublishing = useEditorStore(state => state.isPublishing);
     const state = useEditorStore(state => state.state);
     const publish = useEditorStore(state => state.publish);
     const { ndk } = useNDK();
     const blossomServer = useActiveBlossomServer();
 
-    const mediaSize = dimensions.height / 4;
+    const mediaSize = dimensions.height * 0.3;
 
     const handlePublish = useCallback(async () => {
         if (!ndk || !blossomServer) {
@@ -34,16 +33,15 @@ export default function PostMetadataScreen() {
         }
         
         try {
+            router.replace('/(home)');
             await publish(ndk, blossomServer);
-            // Navigate back after successful publish
-            router.back();
         } catch (error) {
             console.error("Failed to publish post:", error);
         }
     }, [ndk, blossomServer, publish]);
 
     const renderMediaPreview = () => {
-        if (selectedMedia.length === 0) {
+        if (media.length === 0) {
             return (
                 <View style={styles.emptyMediaContainer}>
                     <Text style={styles.emptyMediaText}>No media selected</Text>
@@ -58,23 +56,9 @@ export default function PostMetadataScreen() {
                 style={{ flex: 1, height: mediaSize }}
                 showsHorizontalScrollIndicator={false}
             >
-                {selectedMedia.map((item) => (
+                {media.map((item) => (
                     <View key={item.id} style={{ width: dimensions.width, height: mediaSize, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                        {item.mediaType === 'image' ? (
-                            <Image
-                                key={item.id}
-                                source={{ uri: item.uris[0] }}
-                                style={[styles.media, { width: '100%', height: mediaSize }]}
-                                resizeMode="contain"
-                            />
-                        ) : (
-                            <View
-                                key={item.id}
-                                style={[styles.media, { width: mediaSize, height: mediaSize, backgroundColor: "#000" }]}
-                            >
-                                <Text style={{ color: "#fff", textAlign: "center" }}>Video Preview</Text>
-                            </View>
-                        )}
+                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} />
                     </View>
                 ))}
             </ScrollView>
@@ -94,16 +78,16 @@ export default function PostMetadataScreen() {
                 headerRight: () => (
                     <TouchableOpacity 
                         onPress={handlePublish} 
-                        disabled={isPublishing || selectedMedia.length === 0}
+                        disabled={isPublishing || media.length === 0}
                     >
                         {isPublishing ? (
                             <ActivityIndicator size="small" color={colors.primary} />
                         ) : (
                             <Text style={{
-                                color: selectedMedia.length === 0 ? colors.grey2 : colors.primary,
+                                color: media.length === 0 ? colors.grey2 : colors.primary,
                                 fontWeight: '600',
                                 fontSize: 16,
-                                opacity: selectedMedia.length === 0 ? 0.5 : 1
+                                opacity: media.length === 0 ? 0.5 : 1
                             }}>Publish</Text>
                         )}
                     </TouchableOpacity>
@@ -121,9 +105,11 @@ export default function PostMetadataScreen() {
                     {renderMediaPreview()}
                     <Caption />
                     <Expiration />
+                    <Location />
                 </ScrollView>
 
                 <PostCaptionBottomSheet />
+                <LocationBottomSheet />
             </View>
         </BottomSheetModalProvider>
     );

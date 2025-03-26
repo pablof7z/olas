@@ -8,7 +8,7 @@ const Sheet = React.forwardRef<BottomSheetModal, React.ComponentPropsWithoutRef<
         const { colors } = useColorScheme();
 
         const renderBackdrop = React.useCallback(
-            (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />,
+            (props: BottomSheetBackdropProps) => <BottomSheetBackdrop disappearsOnIndex={-1} {...props} />,
             []
         );
         return (

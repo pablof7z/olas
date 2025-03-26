@@ -1,144 +1,184 @@
 import { create } from 'zustand';
-import { PostMedia, PostState, PostMetadata } from '@/lib/post-editor/types';
+import { PostMedia, PostMetadata, PostState } from '@/lib/publish/types';
 import { atom } from 'jotai';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { RefObject } from 'react';
-import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { prepareMedia } from '@/lib/post-editor/actions/prepare';
-import { uploadMedia } from '@/lib/post-editor/actions/upload';
-import { generateEvent } from '@/lib/post-editor/event';
+import NDK from '@nostr-dev-kit/ndk-mobile';
+import { prepareMedia } from '@/utils/media/prepare';
+import { uploadMedia } from '@/lib/publish/actions/upload';
+import { generateEvent } from '@/lib/publish/actions/event';
 import { PUBLISH_ENABLED } from '@/utils/const';
-import { ExpirationBottomSheetRef } from "@/lib/publish/components/composer/metadata/ExpirationBottomSheet";
-import { FilterParameters } from '../filters/presets';
-import { PublishBottomSheetRef } from '@/components/publish/PublishBottomSheet';
-import { getRealPath } from 'react-native-compressor';
-
-export interface MediaItem {
-    id: string;
-    uris: string[];
-    type: 'image' | 'video';
-    filter?: {
-        id: string;
-        parameters: FilterParameters;
-    };
-}
+import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
+import { Location } from '@/lib/publish/types';
 
 interface EditorState {
-    selectedMedia: MediaItem[];
-    selectedMediaIndex: number;
+    /** Array of media items (images/videos) to be published */
+    media: PostMedia[];
+    
+    /** Flag to determine if multiple media items can be selected at once */
     isMultipleSelectionMode: boolean;
+    
+    /** Text caption for the post */
     caption: string;
+    
+    /** Post expiration time in seconds, null means no expiration */
     expiration: number | null;
-    expirationRef: ExpirationBottomSheetRef | null;
-    bottomSheetRef: PublishBottomSheetRef | null;
+    
+    /** Geographic location associated with the post */
+    location: Location | null;
+    
+    /** Whether to include location data in published post */
+    includeLocation: boolean;
+    
+    /** Current state of the publishing process (editing, uploading, etc.) */
     state: string;
+    
+    /** Error message if publishing fails, null otherwise */
     error: string | null;
+    
+    /** Flag to indicate whether a publish operation is in progress */
     isPublishing: boolean;
-    addMedia: (mediaItem: MediaItem) => Promise<void>;
+    
+    /** Add a new media item to the post */
+    addMedia: (uri: string, mediaType: 'image' | 'video', id?: string) => Promise<void>;
+    
+    /** Remove a media item from the post by its id */
     removeMedia: (id: string) => void;
+    
+    /** Remove all media items from the post */
     clearMedia: () => void;
-    updateMedia: (mediaId: string, updatedMedia: Partial<MediaItem>) => void;
+    
+    /** Update properties of a specific media item */
+    updateMedia: (mediaId: string, updatedMedia: Partial<PostMedia>) => void;
+    
+    /** Reorder media items in the collection */
     reorderMedia: (fromIndex: number, toIndex: number) => void;
+    
+    /** Toggle between single and multiple selection modes */
     toggleSelectionMode: () => void;
+    
+    /** Set the post caption text */
     setCaption: (caption: string) => void;
+    
+    /** Set the post expiration time */
     setExpiration: (expiration: number | null) => void;
+    
+    /** Set the geographic location associated with the post */
+    setLocation: (location: Location | null) => void;
+    
+    /** Control whether location data should be included in the published post */
+    setIncludeLocation: (include: boolean) => void;
+    
+    /** Update the current state of the publishing process */
     setState: (state: PostState) => void;
+    
+    /** Publish the post */
     publish: (ndk: NDK, blossomServer: string) => Promise<void>;
+    
+    /** Reset all editor state to default values */
     reset: () => void;
-    setSelectedMediaIndex: (index: number) => void;
-    applyFilter: (mediaId: string, filterId: string, parameters: FilterParameters) => void;
-    clearFilter: (mediaId: string) => void;
-}
-
-async function convertMediaPath(mediaItem: MediaItem): Promise<MediaItem> {
-    const convertedUris = await Promise.all(
-        mediaItem.uris.map(async (uri) => {
-            const path = await getRealPath(uri, mediaItem.type);
-            return path.startsWith('file://') ? path : `file://${path}`;
-        })
-    );
-    return { ...mediaItem, uris: convertedUris };
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
-    selectedMedia: [],
-    selectedMediaIndex: 0,
+    media: [],
     isMultipleSelectionMode: false,
     caption: '',
     expiration: null,
-    expirationRef: null,
-    bottomSheetRef: null,
+    location: null,
+    includeLocation: true,
     state: 'idle',
     error: null,
     isPublishing: false,
     
-    addMedia: async (mediaItem) => {
-        const convertedMedia = await convertMediaPath(mediaItem);
+    addMedia: async (uri, mediaType) => {
+        const convertedUri = await convertMediaPath(uri, mediaType);
+        const id = convertedUri;
+        
         set((state) => {
+            const newPostMedia: PostMedia = {
+                id,
+                mediaType,
+                uris: [convertedUri],
+                contentMode: 'portrait', // Default value, should be updated later
+            };
+
+            console.log('newPostMedia', newPostMedia);
+            
             if (state.isMultipleSelectionMode) {
                 // Check if the media item is already selected
-                const mediaExists = state.selectedMedia.some(item => item.id === convertedMedia.id);
+                const mediaExists = state.media.some(item => item.id === id);
                 
                 if (mediaExists) {
                     // If the item exists, remove it (toggle off)
                     return { 
-                        selectedMedia: state.selectedMedia.filter(item => item.id !== convertedMedia.id) 
+                        media: state.media.filter(item => item.id !== id) 
                     };
                 } else {
                     // If the item doesn't exist, add it (toggle on)
                     return { 
-                        selectedMedia: [...state.selectedMedia, convertedMedia] 
+                        media: [...state.media, newPostMedia] 
                     };
                 }
             } else {
                 // In single selection mode, just replace the selection
-                return { selectedMedia: [convertedMedia] };
+                return { media: [newPostMedia] };
             }
         });
+
+        // Extract location from EXIF data if available and no location is set yet
+        if (mediaType === 'image') {
+            const location = await extractLocationFromMedia(uri);
+            console.log('location', location);
+            if (location) {
+                set({ location });
+            }
+        }
     },
     
     removeMedia: (id) => set((state) => ({
-        selectedMedia: state.selectedMedia.filter(item => item.id !== id)
+        media: state.media.filter(item => item.id !== id)
     })),
     
-    clearMedia: () => set({ selectedMedia: [] }),
+    clearMedia: () => set({ media: [] }),
     
     updateMedia: (mediaId, updatedMedia) => set((state) => ({
-        selectedMedia: state.selectedMedia.map(item => 
+        media: state.media.map(item => 
             item.id === mediaId ? { ...item, ...updatedMedia } : item
         )
     })),
     
     reorderMedia: (fromIndex, toIndex) => set((state) => {
-        const newMedia = [...state.selectedMedia];
+        const newMedia = [...state.media];
         const [movedItem] = newMedia.splice(fromIndex, 1);
         newMedia.splice(toIndex, 0, movedItem);
-        return { selectedMedia: newMedia };
+        return { media: newMedia };
     }),
 
     toggleSelectionMode: () => set((state) => ({
         isMultipleSelectionMode: !state.isMultipleSelectionMode,
-        selectedMedia: state.isMultipleSelectionMode ? state.selectedMedia : [state.selectedMedia[0]]
+        media: state.isMultipleSelectionMode ? state.media : [state.media[0]]
     })),
     
     setCaption: (caption) => set({ caption }),
     
     setExpiration: (expiration) => set({ expiration }),
 
+    setLocation: (location) => set({ location }),
+
+    setIncludeLocation: (include) => set({ includeLocation: include }),
+
     setState: (state) => set({ state }),
 
     publish: async (ndk: NDK, blossomServer: string) => {
-        if (!PUBLISH_ENABLED) return;
-        
         set({ isPublishing: true, error: null });
         
         try {
-            const media = await prepareMedia(get().selectedMedia.map(item => item.uris[0]), (type, progress) => {
+            const media = await prepareMedia(get().media, (type, progress) => {
                 set({ state: type + ' ' + (progress * 100).toFixed(0) + '%' });
             });
             
             set({ state: 'uploading' });
-            let uploadedMedia: MediaItem[] = [];
+            let uploadedMedia: PostMedia[] = [];
             
             try {
                 uploadedMedia = await uploadMedia(media, ndk, blossomServer);
@@ -150,10 +190,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
             set({ state: 'uploaded' });
 
-            const result = await generateEvent(ndk, { 
-                caption: get().caption,
-                expiration: get().expiration || undefined
-            }, uploadedMedia);
+            const { location, includeLocation, caption, expiration } = get();
+            const metadata: PostMetadata = { caption, expiration: expiration || undefined };
+            
+            // Add location data to metadata if it exists and should be included
+            if (location && includeLocation) {
+                metadata.location = location;
+            }
+
+            console.log('metadata', metadata);
+
+            const result = await generateEvent(ndk, metadata, uploadedMedia);
             
             if (!result) {
                 set({ state: 'error', error: 'Failed to generate event' });
@@ -164,15 +211,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             await event.sign();
             set({ state: 'publishing' });
 
-            await event.publish(relaySet);
+            if (PUBLISH_ENABLED) {
+                await event.publish(relaySet);
+            }
             
             // Reset state after successful publish
             set({ 
                 isPublishing: false, 
-                selectedMedia: [], 
+                media: [], 
                 state: 'editing', 
                 caption: '',
                 expiration: null,
+                location: null,
+                includeLocation: true,
                 error: null 
             });
             
@@ -183,54 +234,23 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     },
 
     reset: () => set({
-        selectedMedia: [],
+        media: [],
         isMultipleSelectionMode: false,
         caption: '',
         expiration: null,
+        location: null,
+        includeLocation: true,
         state: 'idle',
         error: null,
         isPublishing: false
     }),
-
-    setSelectedMediaIndex: (index) => set({
-        selectedMediaIndex: index
-    }),
-
-    applyFilter: (mediaId, filterId, parameters) => {
-        console.log('Editor Store - Applying filter:', {
-            mediaId,
-            filterId,
-            parameters
-        });
-        set((state) => ({
-            selectedMedia: state.selectedMedia.map(item => {
-                if (item.id === mediaId) {
-                    console.log('Found media item, applying filter:', {
-                        itemId: item.id,
-                        oldFilter: item.filter,
-                        newFilter: { id: filterId, parameters }
-                    });
-                    return { ...item, filter: { id: filterId, parameters } };
-                }
-                return item;
-            })
-        }));
-    },
-    
-    clearFilter: (mediaId) => {
-        console.log('Editor Store - Clearing filter:', { mediaId });
-        set((state) => ({
-            selectedMedia: state.selectedMedia.map(item => 
-                item.id === mediaId 
-                    ? { ...item, filter: undefined } 
-                    : item
-            )
-        }));
-    }
 }));
 
+/** Atom that controls what type of content is being published (post, story, or video) */
 export const publishPostTypeAtom = atom<"post" | "story" | "video">("post");
 
+/** Reference to the caption input bottom sheet */
 export const captionBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
 
+/** Reference to the expiration settings bottom sheet */
 export const expirationBottomSheetRefAtom = atom<RefObject<ExpirationBottomSheetRef> | null>(null);

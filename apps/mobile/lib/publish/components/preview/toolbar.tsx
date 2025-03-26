@@ -2,7 +2,6 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import * as ImagePicker from 'expo-image-picker';
-import { mapImagePickerAssetToPostMedia } from '@/utils/media';
 import { router } from 'expo-router';
 
 export default function PreviewToolbar() {
@@ -15,7 +14,7 @@ export default function PreviewToolbar() {
 }
 
 function SystemMediaSelectorButton() {
-    const { addMedia, isMultipleSelectionMode } = useEditorStore();
+    const addMedia = useEditorStore(state => state.addMedia);
 
     const handleSelectMedia = async () => {
         try {
@@ -28,14 +27,8 @@ function SystemMediaSelectorButton() {
 
             if (!result.canceled && result.assets.length > 0) {
                 const selectedAsset = result.assets[0];
-                const postMedia = await mapImagePickerAssetToPostMedia(selectedAsset);
                 
-                await addMedia({
-                    id: postMedia.id,
-                    uris: postMedia.uris,
-                    type: postMedia.mediaType,
-                    filter: undefined
-                });
+                await addMedia(selectedAsset.uri, selectedAsset.type as 'image' | 'video');
 
                 // Navigate to edit screen
                 router.push('/publish/post/edit');
