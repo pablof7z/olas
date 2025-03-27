@@ -1,15 +1,17 @@
 import { NDKEvent, NDKFilter, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
-import { FlashList } from '@shopify/flash-list';
-import Post from '../events/Post';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
-import { Pressable, RefreshControl, Text, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { useSetAtom } from 'jotai';
-import { activeEventAtom } from '@/stores/event';
-import { router } from 'expo-router';
 import { useScrollToTop } from '@react-navigation/native';
-import { EventMediaGridContainer } from '../media/event';
+import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, RefreshControl, Text, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+
+import { FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
 import { scrollDirAtom } from './store';
+import Post from '../events/Post';
+import { EventMediaGridContainer } from '../media/event';
+
+import { activeEventAtom } from '@/stores/event';
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -99,7 +101,7 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
     }, [updateEntries, refreshCount]);
 
     const renderEntries = useMemo(() => {
-        let ret: (FeedEntry | PrependEntry)[] = [...entries];
+        const ret: (FeedEntry | PrependEntry)[] = [...entries];
 
         if (numColumns > 1) {
             // sort entries by whether they have an imeta tag, if they do, sort by timestamp
@@ -119,7 +121,7 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
 
     const handleGridPress = useCallback((event: NDKEvent) => {
         setActiveEvent(event);
-        router.push(`/view`);
+        router.push('/view');
     }, []);
 
     const renderItem = useCallback(
@@ -133,7 +135,7 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
                     <EventMediaGridContainer
                         event={item.event}
                         index={index}
-                        forceProxy={true}
+                        forceProxy
                         numColumns={numColumns}
                         onPress={() => handleGridPress(item.event)}
                     />
@@ -195,7 +197,7 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
                     getItemType={(item) => (item.id === 'prepend' ? 'prepend' : 'post')}
                     renderItem={renderItem}
-                    disableIntervalMomentum={true}
+                    disableIntervalMomentum
                 />
             )}
         </>

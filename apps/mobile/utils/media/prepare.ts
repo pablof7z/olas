@@ -1,11 +1,12 @@
-import { PostMedia } from '@/lib/post-editor/types';
 import { determineMimeType } from '../url';
 import compressFile from './compress';
-import removeExifFromFile from './remove-exif';
-import generateThumbnail from './generate-thumbnail';
-import calculateSha256 from './sha256';
-import generateBlurhash from './generate-blurhash';
 import getDimensions from './dimensions';
+import generateBlurhash from './generate-blurhash';
+import generateThumbnail from './generate-thumbnail';
+import removeExifFromFile from './remove-exif';
+import calculateSha256 from './sha256';
+
+import { PostMedia } from '@/lib/post-editor/types';
 
 export type ProgressCb = (type: string, progress: number) => void;
 
@@ -22,7 +23,7 @@ export async function prepareMedia(media: PostMedia[], onProgress?: ProgressCb):
 }
 
 export async function prepareMediaItem(media: PostMedia, onProgress?: ProgressCb): Promise<PostMedia> {
-    let result: PostMedia = { ...media };
+    const result: PostMedia = { ...media };
 
     result.mimeType ??= await determineMimeType(result.uris[0]);
 

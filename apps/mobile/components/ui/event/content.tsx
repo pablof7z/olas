@@ -1,10 +1,12 @@
+import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import { nip19 } from 'nostr-tools';
 import React, { useCallback } from 'react';
 import { Pressable, Text, Linking } from 'react-native';
-import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+
 import * as User from '../user';
-import { Image } from 'expo-image';
-import { nip19 } from 'nostr-tools';
-import { router } from 'expo-router';
+
 import { useSearchQuery } from '@/components/Headers/Home/store';
 
 interface EventContentProps {
@@ -88,7 +90,7 @@ function RenderMention({
 
         return (
             <Text style={{ fontSize }} className="font-bold text-primary" onPress={() => handlePress(pubkey)}>
-                @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare={true} />
+                @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare />
             </Text>
         );
     } catch (e) {

@@ -1,11 +1,12 @@
+import { useState } from 'react';
+import { View } from 'react-native';
+
+import { Button } from '@/components/nativewindui/Button';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { TextField } from '@/components/nativewindui/TextField';
 import { useAppSettingsStore } from '@/stores/app';
-import { View } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-import { useState } from 'react';
 
 export default function BlacklistScreen() {
     const [newWord, setNewWord] = useState('');

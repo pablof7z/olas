@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { NDKEvent, NDKVideo, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { EventStickerStyle } from './styles';
-import { useMemo } from 'react';
-import * as User from '@/components/ui/user';
-import RelativeTime from '@/components/relative-time';
+import { NDKEvent, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image';
-import { useNetInfo } from '@react-native-community/netinfo';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+
+import { EventStickerStyle } from './styles';
+
+import RelativeTime from '@/components/relative-time';
+import * as User from '@/components/ui/user';
 
 // Get screen width for responsive sizing
 const { width: screenWidth } = Dimensions.get('window');
@@ -68,7 +66,7 @@ export default function EventStickerKindVideo({
     // Calculate video height based on aspect ratio
     const videoHeight = useMemo(() => {
         return screenWidth * aspectRatio;
-    }, [screenWidth, aspectRatio]);
+    }, [aspectRatio]);
 
     return (
         <View style={[_styles.outerContainer, styles.container]}>

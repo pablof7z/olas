@@ -1,4 +1,5 @@
 import { NDKStorySticker } from '@nostr-dev-kit/ndk-mobile';
+
 import { Sticker } from '../store';
 
 /**

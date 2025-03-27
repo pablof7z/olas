@@ -1,17 +1,17 @@
 // Import necessary components and types from libraries and files
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useWindowDimensions, StyleSheet } from 'react-native';
-import { useCallback } from 'react';
-import Animated, { FadeIn, FadeOut, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { BlurView } from 'expo-blur';
-import React from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useAtomValue } from 'jotai';
+import React, { useCallback } from 'react';
+import { useWindowDimensions, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeIn, FadeOut, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { AnimatedImage } from '../components/animated-image';
-import { router, useLocalSearchParams } from 'expo-router';
-import { activeEventAtom } from '@/stores/event';
-import { useAtomValue } from 'jotai';
+
 import EventContent from '@/components/ui/event/content';
+import { activeEventAtom } from '@/stores/event';
 
 // Define the ExpandedImageScreen component to display an enlarged image
 export default function ExpandedImageScreen() {
@@ -100,9 +100,9 @@ export default function ExpandedImageScreen() {
                             source={{
                                 uri: String(imageUri),
                             }}
-                            priority={'high'} // Set priority for image loading
+                            priority="high" // Set priority for image loading
                             recyclingKey={String(imageUri)} // Set recycling key for the image
-                            cachePolicy={'memory-disk'} // Set cache policy
+                            cachePolicy="memory-disk" // Set cache policy
                             style={{
                                 height: imageSize, // Set height of the image
                                 width: windowWidth * 0.9, // Set width of the image

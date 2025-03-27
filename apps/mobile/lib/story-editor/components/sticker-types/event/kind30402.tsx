@@ -1,9 +1,11 @@
-import { NDKClassifiedListing } from '@/lib/product-view';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { View, Text, Image, StyleSheet, TextStyle } from 'react-native';
-import { UserProfile } from '@/hooks/user-profile';
-import { formatMoney } from '@/utils/bitcoin';
+
 import { EventStickerStyle } from './styles';
+
+import { UserProfile } from '@/hooks/user-profile';
+import { NDKClassifiedListing } from '@/lib/product-view';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function EventStickerKind30402({
     event,

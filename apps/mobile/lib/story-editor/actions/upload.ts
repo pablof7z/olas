@@ -1,7 +1,8 @@
 import NDK, { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
-import { prepareMediaItem } from '@/utils/media/prepare';
+
 import { uploadMedia } from '@/lib/publish/actions/upload';
 import { PostMedia, PostMediaType } from '@/lib/publish/types';
+import { prepareMediaItem } from '@/utils/media/prepare';
 
 interface StoryUploadParams {
     path: string;

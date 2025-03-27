@@ -1,10 +1,3 @@
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Text } from '@/components/nativewindui/Text';
-import { TextInput, View } from 'react-native';
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
-import { Button } from '@/components/nativewindui/Button';
-import { useCallback, useEffect, useState } from 'react';
-import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import {
     NDKEvent,
     NDKKind,
@@ -15,7 +8,15 @@ import {
     useNDKSessionEventKind,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
+import { useCallback, useEffect, useState } from 'react';
+import { TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button } from '@/components/nativewindui/Button';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
+import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
+import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
     const currentUser = useNDKCurrentUser();
@@ -129,7 +130,7 @@ export default function NewGroup() {
                     />
                 </View>
 
-                <View className="flex-1 flex-col gap-2"></View>
+                <View className="flex-1 flex-col gap-2" />
 
                 <View className="flex-col items-stretch justify-between gap-6">
                     <Button size="lg" variant="primary" onPress={createGroup}>

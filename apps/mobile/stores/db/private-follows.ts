@@ -1,5 +1,6 @@
 import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
+
 import { db } from '.';
 
 interface PrivateFollowsStore {

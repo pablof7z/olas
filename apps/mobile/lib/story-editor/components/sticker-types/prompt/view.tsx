@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Sticker } from '@/lib/story-editor/store/index';
+
 import { getStyleFromName } from './styles';
+
+import { Sticker } from '@/lib/story-editor/store/index';
 
 interface PromptStickerViewProps {
     sticker: Sticker;

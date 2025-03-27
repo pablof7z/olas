@@ -1,12 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
+import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import StoryPreview from '@/lib/story-editor/components/preview';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import SimpleStoryViewer from '@/lib/stories/components/StoryViewer';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
-import { Ionicons } from '@expo/vector-icons';
+import StoryPreview from '@/lib/story-editor/components/preview';
 
 export default function StoryPreviewScreen() {
     const router = useRouter();

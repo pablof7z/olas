@@ -1,10 +1,12 @@
-import React, { useCallback } from 'react';
-import { View, Image } from 'react-native';
 import { useAtom, useAtomValue } from 'jotai';
 import { Camera, Plus } from 'lucide-react-native';
+import React, { useCallback } from 'react';
+import { View, Image } from 'react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { Button } from '@/components/nativewindui/Button';
+
 import { avatarAtom, usernameAtom } from '../store';
+
+import { Button } from '@/components/nativewindui/Button';
 
 export function AvatarChooser() {
     const username = useAtomValue(usernameAtom);

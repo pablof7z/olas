@@ -1,15 +1,16 @@
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import { useMuteList } from '@nostr-dev-kit/ndk-mobile';
+import { RenderTarget } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
+import { useCallback, useMemo } from 'react';
+import { Switch, View } from 'react-native';
+
+import { IconView } from '@/components/icon-view';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
-import { useCallback, useMemo } from 'react';
-import { IconView } from '@/components/icon-view';
 import { Text } from '@/components/nativewindui/Text';
-import { useMuteList } from '@nostr-dev-kit/ndk-mobile';
-import { router } from 'expo-router';
-import { Switch, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
-import { RenderTarget } from '@shopify/flash-list';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import { useAppSettingsStore, VideosInFeed } from '@/stores/app';
 
 const videosInFeedToText = (value: VideosInFeed) => {

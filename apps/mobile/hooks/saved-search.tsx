@@ -1,8 +1,9 @@
+import { useAtom, useAtomValue } from 'jotai';
+import { useMemo } from 'react';
+
 import { feedTypeAtom } from '@/components/FeedType/store';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
 import { useAppSettingsStore } from '@/stores/app';
-import { useAtom, useAtomValue } from 'jotai';
-import { useMemo } from 'react';
 
 export function useIsSavedSearch() {
     const [feedType, setFeedType] = useAtom(feedTypeAtom);

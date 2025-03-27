@@ -1,10 +1,12 @@
-import React, { ForwardedRef, forwardRef, useMemo } from 'react';
-import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle, StyleProp } from 'react-native';
-import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageProps, useImage } from 'expo-image';
+import React, { ForwardedRef, forwardRef, useMemo } from 'react';
+import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle, StyleProp } from 'react-native';
+
 import FlareLabel, { FlareElement } from './flare';
+
 import { useColorScheme } from '@/lib/useColorScheme';
+import { getProxiedImageUrl } from '@/utils/imgproxy';
 
 interface AvatarProps extends Omit<ImageProps, 'style'> {
     pubkey: Hexpubkey;

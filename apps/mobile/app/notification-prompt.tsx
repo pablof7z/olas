@@ -1,5 +1,3 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import {
     NDKKind,
     NDKRelaySet,
@@ -8,12 +6,15 @@ import {
     useNDK,
     useNDKCurrentUser,
     useSubscribe,
+    NDKEvent,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { MediaSection } from '@/components/events/Post';
-import { useAppSettingsStore } from '@/stores/app';
 import { atom, useAtom, useSetAtom } from 'jotai';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+
+import { MediaSection } from '@/components/events/Post';
 import { useEnableNotifications, useNotificationPermission } from '@/hooks/notifications';
+import { useAppSettingsStore } from '@/stores/app';
 
 const opts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true };
 
@@ -69,7 +70,7 @@ const EnableNotificationsModal = ({ visible, onClose, event }: { visible: boolea
     if (!event) return null;
 
     return (
-        <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+        <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
             <View style={styles.overlay}>
                 <View
                     style={{

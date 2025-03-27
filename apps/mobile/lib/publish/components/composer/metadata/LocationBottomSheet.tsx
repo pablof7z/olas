@@ -1,12 +1,14 @@
+import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { atom, useSetAtom } from 'jotai';
 import React, { forwardRef, RefObject, useCallback, useImperativeHandle, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions } from 'react-native';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
+
 // import { AppleMaps, GoogleMaps } from 'expo-maps';
-import { atom, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 export const locationBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
 
@@ -17,7 +19,7 @@ export interface LocationBottomSheetRef {
 
 const MAX_HEIGHT = Dimensions.get('window').height * 0.8;
 
-const LocationBottomSheet = forwardRef<LocationBottomSheetRef, {}>((_, ref) => {
+const LocationBottomSheet = forwardRef<LocationBottomSheetRef, object>((_, ref) => {
     const sheetRef = useSheetRef();
     const setBottomSheetRef = useSetAtom(locationBottomSheetRefAtom);
     const location = useEditorStore((state) => state.location);

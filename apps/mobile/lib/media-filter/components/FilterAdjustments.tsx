@@ -1,8 +1,9 @@
+import Slider from '@react-native-community/slider';
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Slider from '@react-native-community/slider';
-import { FilterParameters } from '../types';
+
 import { useMediaFilter } from '../hooks/useMediaFilter';
+import { FilterParameters } from '../types';
 
 interface AdjustmentOption {
     id: keyof FilterParameters;

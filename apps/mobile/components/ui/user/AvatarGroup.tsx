@@ -1,7 +1,8 @@
+import { Hexpubkey, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
+
 import * as User from '../user';
-import { Hexpubkey, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 
 interface AvatarGroupProps {
     events?: NDKEvent[];

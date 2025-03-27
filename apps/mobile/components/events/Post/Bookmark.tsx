@@ -2,6 +2,7 @@ import { NDKKind, NDKEvent, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk-mobil
 import { Bookmark } from 'lucide-react-native';
 import { useCallback, useMemo } from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 import { useObserver } from '@/hooks/observer';
 

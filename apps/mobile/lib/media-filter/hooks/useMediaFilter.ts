@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { useMediaFilterStore } from '../store';
+
 import { FILTER_PRESETS } from '../presets';
+import { useMediaFilterStore } from '../store';
 import { FilterParameters } from '../types';
 import { saveFilteredImage } from '../utils/saveFilteredImage';
 

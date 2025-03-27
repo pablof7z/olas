@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
+
+import { Ruler } from '../Ruler';
+
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
-import { Ruler } from '../Ruler';
 
 type ReactionPickerProps = {
     onSelect: (emoji: string) => void;

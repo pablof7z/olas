@@ -1,18 +1,20 @@
 import { useNDK, useNDKWallet, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import { RefreshControl, StyleSheet, View } from 'react-native';
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { FlashList } from '@shopify/flash-list';
-import { ListItem } from '@/components/nativewindui/List';
-import { cn } from '@/lib/cn';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import * as User from '@/components/ui/user';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { RefreshControl, StyleSheet, View } from 'react-native';
+
+import { Counterparty } from '../transactions/counterparty';
+import { ItemRightColumn } from '../transactions/item-right-column';
+
+import { ListItem } from '@/components/nativewindui/List';
 import RelativeTime from '@/components/relative-time';
+import * as User from '@/components/ui/user';
+import { cn } from '@/lib/cn';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { getNWCZap, getNWCZapsByPendingPaymentId } from '@/stores/db/zaps';
 import { PendingZap, usePendingPayments } from '@/stores/payments';
-import { ItemRightColumn } from '../transactions/item-right-column';
-import { Counterparty } from '../transactions/counterparty';
 
 export default function NWCListTansactions() {
     const { activeWallet } = useNDKWallet();
@@ -88,7 +90,7 @@ function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTrans
         let recipientPubkey = null;
         let amount = null;
         let createdAt = null;
-        let type: 'incoming' | 'outgoing' = 'outgoing';
+        const type: 'incoming' | 'outgoing' = 'outgoing';
 
         if ((item as NDKNWCTransaction).invoice) {
             const tx = item as NDKNWCTransaction;
@@ -116,7 +118,7 @@ function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTrans
             className={cn('!bg-transparent px-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
             target={target}
             leftView={<LeftView direction={type} pubkey={recipientPubkey} />}
-            rightView={<ItemRightColumn amount={amount} unit={'msats'} isPending={isPending} />}
+            rightView={<ItemRightColumn amount={amount} unit="msats" isPending={isPending} />}
             index={index}
             onPress={onPress}
             item={{}}>

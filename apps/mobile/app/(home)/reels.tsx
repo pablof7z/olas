@@ -1,22 +1,21 @@
-import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo, NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
+import { Image } from 'expo-image';
+import { router, usePathname } from 'expo-router';
+import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
 import { ActivityIndicator, Dimensions, Pressable, StatusBar, View, ViewToken } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as User from '@/components/ui/user';
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { router, usePathname } from 'expo-router';
-import EventContent from '@/components/ui/event/content';
-import { Image } from 'expo-image';
+
 import { Reactions } from '@/components/events/Post/Reactions';
 import { getImetas } from '@/components/media/event';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
-import { getClientName } from '@/utils/event';
+import EventContent from '@/components/ui/event/content';
+import * as User from '@/components/ui/user';
 import { useObserver } from '@/hooks/observer';
+import { getClientName } from '@/utils/event';
 
 const visibleItemAtom = atom<string | null, [string | null], void>(null, (get, set, update) => {
     set(visibleItemAtom, update);
@@ -167,7 +166,7 @@ export default function ReelsScreen() {
 
     return (
         <>
-            <StatusBar hidden={true} />
+            <StatusBar hidden />
             <View className="flex-1 bg-card">
                 <FlashList
                     data={sortedEvents}

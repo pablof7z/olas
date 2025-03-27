@@ -1,8 +1,10 @@
+import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { useRef } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import MentionBottomSheet, { MentionBottomSheetRef } from './mention-bottom-sheet';
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 interface MentionButtonProps {
     onSelectUser: (profile: NDKUserProfile) => void;

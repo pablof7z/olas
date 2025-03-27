@@ -1,5 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Pressable, Text, Alert } from 'react-native';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Reanimated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
     CameraPosition,
@@ -11,11 +16,6 @@ import {
     useMicrophonePermission,
     CameraRuntimeError,
 } from 'react-native-vision-camera';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Reanimated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -145,7 +145,7 @@ export default function StoryCameraScreen() {
                 pathname: '/story/preview',
                 params: {
                     path: media.path,
-                    type: type,
+                    type,
                 },
             });
         },
@@ -212,11 +212,11 @@ export default function StoryCameraScreen() {
                             ref={camera}
                             style={cameraStyle}
                             device={device}
-                            isActive={true}
-                            photo={true}
-                            video={true}
-                            audio={true}
-                            enableZoomGesture={true}
+                            isActive
+                            photo
+                            video
+                            audio
+                            enableZoomGesture
                             onError={handleCameraError}
                             testID="camera-view"
                         />

@@ -1,8 +1,9 @@
 import { NDKEvent, NDKImage, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
-import * as User from '@/components/ui/user';
 import { router } from 'expo-router';
+import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import * as User from '@/components/ui/user';
 import { StoryData } from '@/lib/stories/interfaces';
 
 export type StoryHeaderProps = {

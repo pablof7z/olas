@@ -1,13 +1,14 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import NDK, { NDKPublishError, useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
+import { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile/src/stores/ndk';
+import { RenderTarget } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { useMemo } from 'react';
+import { TouchableOpacity, View } from 'react-native';
+
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
-import { TouchableOpacity, View } from 'react-native';
-import { RenderTarget } from '@shopify/flash-list';
-import { router } from 'expo-router';
-import NDK, { NDKPublishError, useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
-import { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile/src/stores/ndk';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { useMemo } from 'react';
 
 const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, target: RenderTarget) => {
     const discard = () => {
@@ -56,7 +57,7 @@ export default function Unpublished() {
     const unpublishedEvents = useNDKUnpublishedEvents();
 
     const discardAll = () => {
-        for (let entry of unpublishedEvents) {
+        for (const entry of unpublishedEvents) {
             ndk?.cacheAdapter?.discardUnpublishedEvent?.(entry.event.id);
         }
 
@@ -64,7 +65,7 @@ export default function Unpublished() {
     };
 
     const publishAll = async () => {
-        for (let entry of unpublishedEvents.values()) {
+        for (const entry of unpublishedEvents.values()) {
             console.log('publishing', entry.event.id);
             try {
                 entry.event.ndk = ndk;

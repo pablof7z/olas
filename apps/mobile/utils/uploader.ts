@@ -1,7 +1,7 @@
-import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
+import NDK, { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
+
 import { generateMediaEventFromBlobDescriptor, signWith } from './blossom';
-import { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
-import NDK from '@nostr-dev-kit/ndk-mobile';
+import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
 
 export class Uploader {
     private fileUri: string;
@@ -85,7 +85,7 @@ export class Uploader {
         }
     }
 
-    private xhrOnLoad(e: Event) {
+    private xhrOnLoad() {
         const status = this.xhr.status;
         if (status >= 200 && status < 300) {
             try {

@@ -1,5 +1,3 @@
-import { db } from '@/stores/db';
-import { amountInSats } from '@/utils/bitcoin';
 import {
     Hexpubkey,
     NDKEvent,
@@ -12,8 +10,11 @@ import {
     NDKZapSplit,
     zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk-mobile';
-import { create } from 'zustand';
 import { useMemo } from 'react';
+import { create } from 'zustand';
+
+import { db } from '@/stores/db';
+import { amountInSats } from '@/utils/bitcoin';
 
 const PaymentKinds = new Set([NDKKind.Nutzap, NDKKind.Zap]);
 const isPaymentEvent = (event: NDKEvent) => PaymentKinds.has(event.kind);
@@ -201,7 +202,7 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
     addPendingPayment: (zapper: NDKZapper, sender: Hexpubkey, status?: 'delayed' | 'pending') => {
         const splits = zapper.getZapSplits();
         const { id: targetId, type: targetType } = getZapperTarget(zapper);
-        let pendingPayments: Payment[] = [];
+        const pendingPayments: Payment[] = [];
 
         set((state) => {
             const _entries = new Map(state.entries);

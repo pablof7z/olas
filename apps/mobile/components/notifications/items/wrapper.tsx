@@ -1,16 +1,17 @@
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import RelativeTime from '@/components/relative-time';
-import EventContent from '@/components/ui/event/content';
-import { activeEventAtom } from '@/stores/event';
 import { getRootEventId, NDKEvent, NDKKind, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
+import { MailOpen, Reply } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+
 import { Text } from '@/components/nativewindui/Text';
+import RelativeTime from '@/components/relative-time';
+import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { MailOpen, Reply } from 'lucide-react-native';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
+import { activeEventAtom } from '@/stores/event';
 
 export function NotificationContainer({ event, label, children }: { event: NDKEvent; label: string; children: React.ReactNode }) {
     const { ndk } = useNDK();
@@ -25,7 +26,7 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
                 console.log('result', event);
                 if (!event) return;
                 setActiveEvent(event);
-                router.push(`/view`);
+                router.push('/view');
             });
         } else {
             console.log(JSON.stringify(event.rawEvent(), null, 2));

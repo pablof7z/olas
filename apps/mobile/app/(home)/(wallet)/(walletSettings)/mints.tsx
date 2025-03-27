@@ -1,17 +1,16 @@
+import { GetInfoResponse } from '@cashu/cashu-ts';
+import { NDKCashuMintList, useNDKWallet, useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
-import { GetInfoResponse } from '@cashu/cashu-ts';
-import { NDKCashuMintList, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export default function MintsScreen() {
     const { ndk } = useNDK();
@@ -53,7 +52,7 @@ export default function MintsScreen() {
             }))
             .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(regexp!));
 
-        m.push({ id: 'add', addFn: addFn, set: setUrl });
+        m.push({ id: 'add', addFn, set: setUrl });
 
         for (const event of mintList) {
             const url = event.tagValue('u');

@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { AnimatePresence, MotiView } from 'moti';
 import { useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
+
 import { useColorScheme } from '../useColorScheme';
 
 const Button = ({ icon = 'plus', onPress }) => {

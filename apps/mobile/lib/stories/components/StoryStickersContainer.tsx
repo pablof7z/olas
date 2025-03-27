@@ -1,6 +1,7 @@
+import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, LayoutChangeEvent, Dimensions } from 'react-native';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+
 import { mapNDKStickersToAppFormat, getCanvasDimensions, Sticker } from '../utils';
 import ReadOnlySticker from './ReadOnlySticker';
 

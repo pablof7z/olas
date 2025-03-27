@@ -1,4 +1,5 @@
 import { Hexpubkey, useFollows } from '@nostr-dev-kit/ndk-mobile';
+
 import { usePrivateFollows } from '@/stores/db/private-follows';
 
 export function usePublicFollowSet() {

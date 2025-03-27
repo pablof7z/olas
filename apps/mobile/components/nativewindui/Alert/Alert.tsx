@@ -8,8 +8,8 @@ import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useAnimatedStyle } 
 
 import { AlertProps, AlertRef } from './types';
 
-import { Text } from '~/components/nativewindui/Text';
 import { Button } from '~/components/nativewindui/Button';
+import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
 import { TextFieldRef } from '~/components/nativewindui/TextField/types';
 import { cn } from '~/lib/cn';
@@ -103,7 +103,7 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                             <Icon color={colors.foreground} size={27} {...materialIcon} />
                                         </View>
                                     )}
-                                    {!!message ? (
+                                    {message ? (
                                         <>
                                             <AlertDialogPrimitive.Title asChild>
                                                 <Text variant="title2" className={cn(!!materialIcon && 'text-center', 'pb-4')}>
@@ -116,7 +116,7 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                                 </Text>
                                             </AlertDialogPrimitive.Description>
                                         </>
-                                    ) : !!materialIcon ? (
+                                    ) : materialIcon ? (
                                         <AlertDialogPrimitive.Title asChild>
                                             <Text variant="title2" className={cn(!!materialIcon && 'text-center', 'pb-4')}>
                                                 {title}
@@ -129,7 +129,7 @@ const Alert = React.forwardRef<AlertRef, AlertProps>(
                                             </Text>
                                         </AlertDialogPrimitive.Title>
                                     )}
-                                    {!!prompt ? (
+                                    {prompt ? (
                                         <View className="gap-4 pb-8">
                                             <TextField
                                                 autoFocus

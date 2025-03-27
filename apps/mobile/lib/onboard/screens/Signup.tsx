@@ -1,17 +1,18 @@
+import { NDKEvent, NDKPrivateKeySigner, NostrEvent, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ArrowRight } from 'lucide-react-native';
 import React, { useCallback, useState, useEffect } from 'react';
 import { View, TextInput, Alert } from 'react-native';
-import { router } from 'expo-router';
-import { NDKEvent, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { Text } from '@/components/nativewindui/Text';
+
+import { AvatarChooser } from '../components/AvatarChooser';
+import { avatarAtom, modeAtom, usernameAtom } from '../store';
+
 import { Button } from '@/components/nativewindui/Button';
-import { ArrowRight } from 'lucide-react-native';
-import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { Text } from '@/components/nativewindui/Text';
 import { uploadMedia } from '@/lib/publish/actions/upload';
 import { prepareMedia } from '@/utils/media/prepare';
 import { createNip60Wallet } from '@/utils/wallet';
-import { AvatarChooser } from '../components/AvatarChooser';
-import { avatarAtom, modeAtom, usernameAtom } from '../store';
 
 export function SignUp() {
     const [username, setUsername] = useAtom(usernameAtom);

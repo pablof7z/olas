@@ -1,44 +1,44 @@
 import '../global.css';
 import 'expo-dev-client';
 import '@bacons/text-decoder/install';
-import { PortalHost } from '@rn-primitives/portal';
-import * as SecureStore from 'expo-secure-store';
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Toasts } from '@backpackapp-io/react-native-toast';
-import { StyleSheet } from 'react-native';
-import UserBottomSheet from '@/lib/user-bottom-sheet/component';
-import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
-import { ScreenProps, Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
+import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+import { PortalHost } from '@rn-primitives/portal';
+import { ScreenProps, Stack } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import * as SettingsStore from 'expo-secure-store';
+import { StatusBar } from 'expo-status-bar';
+import { useAtom, useSetAtom } from 'jotai';
+import React, { useEffect } from 'react';
+import { StyleSheet, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
-import { NAV_THEME } from '~/theme';
-import React, { useEffect } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
-import LoaderScreen from '@/components/LoaderScreen';
-import { relayNoticesAtom } from '@/stores/relays';
-import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
-import { PromptForNotifications } from './notification-prompt';
-import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
-import { Platform, View } from 'react-native';
-import * as SettingsStore from 'expo-secure-store';
-import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
-import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
-import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
-import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
-import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
-import { initializeNDK } from '@/lib/ndk';
-import { settingsStore } from '@/lib/settings-store';
-import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
-import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
-import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
 
+import { PromptForNotifications } from './notification-prompt';
+
+import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
+import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
+import LoaderScreen from '@/components/LoaderScreen';
+import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
+import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import AppReady from '@/components/headless/AppReady';
 import SignerReady from '@/components/headless/SignerReady';
+import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
+import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
+import { initializeNDK } from '@/lib/ndk';
+import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
+import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
+import { settingsStore } from '@/lib/settings-store';
+import UserBottomSheet from '@/lib/user-bottom-sheet/component';
+import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
+import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
+import { relayNoticesAtom } from '@/stores/relays';
+import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
+import { NAV_THEME } from '~/theme';
 
 // LogBox.ignoreAllLogs();
 
@@ -64,7 +64,7 @@ export default function App() {
 
     console.log('<App> rendering', appRenderCount++);
     return (
-        <LoaderScreen appReady={appReady} wotReady={true}>
+        <LoaderScreen appReady={appReady} wotReady>
             {!!ndk && <RootLayout />}
         </LoaderScreen>
     );

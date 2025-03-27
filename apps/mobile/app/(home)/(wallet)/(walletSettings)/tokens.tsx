@@ -1,7 +1,3 @@
-import { ActivityIndicator, Modal, Pressable, SafeAreaView, ScrollView, View, StyleSheet } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-import { Text } from '@/components/nativewindui/Text';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {
     NDKCashuToken,
     NDKCashuMintList,
@@ -12,14 +8,19 @@ import {
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { consolidateMintTokens, NDKCashuWallet, ProofEntry, WalletProofChange } from '@nostr-dev-kit/ndk-wallet';
-import { Stack } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
-import { useMintInfo } from '@/hooks/mint';
 import { Image } from 'expo-image';
-import { Check, Delete, Trash } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+import { Stack } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
+import { Check, Delete, Trash } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, SafeAreaView, ScrollView, View, StyleSheet } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import { useMintInfo } from '@/hooks/mint';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function TokensScreen() {
     const { activeWallet } = useNDKWallet();
@@ -221,7 +222,7 @@ function TokenItem({
                         {token && (
                             <View className="flex-row justify-between">
                                 <Button variant="tonal" onPress={handlePublish}>
-                                    <Text>{'Publish'}</Text>
+                                    <Text>Publish</Text>
                                 </Button>
 
                                 <Button variant="tonal" onPress={() => setShowProofs(!showProofs)}>
@@ -231,7 +232,7 @@ function TokenItem({
                                 <InspectButton token={token} />
 
                                 <Button variant="tonal" onPress={handleValidate}>
-                                    <Text>{'Validate'}</Text>
+                                    <Text>Validate</Text>
                                 </Button>
                             </View>
                         )}

@@ -1,9 +1,10 @@
+import { toast } from '@backpackapp-io/react-native-toast';
 import NDK, { NDKImetaTag, NDKStory, NDKStoryDimension } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions } from 'react-native';
 import { getVideoMetaData } from 'react-native-compressor';
+
 import { Sticker } from '../store';
 import { mapStickerToNDKFormat } from '../utils/stickerMapper';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { Dimensions } from 'react-native';
 
 interface CreateStoryEventParams {
     ndk: NDK;
@@ -39,7 +40,7 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
 
     console.log('Setting story event properties');
     event.imeta = imeta;
-    event.alt = `This is a story event created with Olas`;
+    event.alt = 'This is a story event created with Olas';
 
     // Set expiration time (current timestamp + duration in seconds)
     const now = Math.floor(Date.now() / 1000);

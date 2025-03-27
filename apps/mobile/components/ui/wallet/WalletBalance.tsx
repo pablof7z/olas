@@ -1,6 +1,7 @@
 import { TouchableOpacity, View, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { formatMoney } from '~/utils/bitcoin';
+
 import { useColorScheme } from '@/lib/useColorScheme';
+import { formatMoney } from '~/utils/bitcoin';
 
 export default function WalletBalance({
     amount,

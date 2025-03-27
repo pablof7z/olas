@@ -1,29 +1,22 @@
-import { Pressable, View, ViewStyle, StyleSheet } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-
-import { useColorScheme } from '@/lib/useColorScheme';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom } from 'jotai';
-import { useMemo } from 'react';
-import { StyleProp } from 'react-native';
-import { useObserver } from '@/hooks/observer';
-import { useCallback } from 'react';
-import { replyEventAtom } from '../store';
 import { toast } from '@backpackapp-io/react-native-toast';
+import { NDKKind, useNDKCurrentUser, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { cn } from '@/lib/cn';
-import * as User from '@/components/ui/user';
-import EventContent from '@/components/ui/event/content';
-import { Text } from '@/components/nativewindui/Text';
+import { useAtom } from 'jotai';
+import { useCallback, useMemo } from 'react';
+import { StyleProp, Pressable, View, ViewStyle, StyleSheet } from 'react-native';
+
+import { replyEventAtom } from '../store';
+
 import React from '@/components/events/React';
+import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
+import EventContent from '@/components/ui/event/content';
+import * as User from '@/components/ui/user';
+import { useObserver } from '@/hooks/observer';
 import { useUserFlare } from '@/hooks/user-flare';
+import { cn } from '@/lib/cn';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { colorWithOpacity } from '@/theme/colors';
 
 export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<ViewStyle> }) {

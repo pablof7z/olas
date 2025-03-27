@@ -1,6 +1,7 @@
-import { db } from '@/stores/db';
 import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
+
+import { db } from '@/stores/db';
 
 interface UserFlareStore {
     flares: Map<Hexpubkey, string>;

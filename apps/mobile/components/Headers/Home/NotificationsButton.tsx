@@ -1,8 +1,9 @@
-import { Pressable, View } from 'react-native';
-import { Bell } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { router } from 'expo-router';
+import { Bell } from 'lucide-react-native';
+import { Pressable, View } from 'react-native';
+
 import { useNotifications } from '@/hooks/notifications';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function NotificationsButton() {
     const { colors } = useColorScheme();

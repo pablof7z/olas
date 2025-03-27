@@ -1,9 +1,10 @@
 import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+
 import { isLoadingAtom, durationAtom } from './store';
-import { useSetAtom } from 'jotai';
 
 export function SlideVideo({ imeta }: { imeta: NDKImetaTag }) {
     const setLoading = useSetAtom(isLoadingAtom);

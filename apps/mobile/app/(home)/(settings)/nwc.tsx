@@ -1,12 +1,13 @@
 import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Text } from '~/components/nativewindui/Text';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { router, Stack, useGlobalSearchParams, usePathname } from 'expo-router';
-import { TextField } from '@/components/nativewindui/TextField';
-import { View } from 'react-native';
 import { NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { router, Stack, useGlobalSearchParams, usePathname } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { View } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+
 import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
+import { TextField } from '@/components/nativewindui/TextField';
+import { Text } from '~/components/nativewindui/Text';
 
 export default function NwcScreen() {
     const { ndk } = useNDK();
@@ -53,7 +54,7 @@ export default function NwcScreen() {
             <Stack.Screen
                 options={{
                     headerShown: true,
-                    title: `Nostr Wallet Connect`,
+                    title: 'Nostr Wallet Connect',
                     headerRight: () =>
                         !status ? (
                             <TouchableOpacity onPress={save}>
@@ -73,7 +74,7 @@ export default function NwcScreen() {
                         keyboardType="default"
                         className="min-h-[100px] w-full rounded-lg bg-card"
                         value={connectString}
-                        multiline={true}
+                        multiline
                         onChangeText={setConnectString}
                     />
                 </View>

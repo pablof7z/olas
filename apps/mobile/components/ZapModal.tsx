@@ -10,8 +10,10 @@ import Animated, {
     runOnJS,
     useDerivedValue,
 } from 'react-native-reanimated';
-import Lightning from '@/components/icons/lightning';
+
 import { AnimatedText } from './AnimatedText';
+
+import Lightning from '@/components/icons/lightning';
 
 interface ZapModalProps {
     visible: boolean;

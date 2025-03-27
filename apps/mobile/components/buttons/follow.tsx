@@ -1,15 +1,15 @@
-import NDK, { Hexpubkey, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
-import { Button } from '../nativewindui/Button';
-import { ButtonProps } from '../nativewindui/Button';
-import { Text } from '../nativewindui/Text';
+import NDK, { Hexpubkey, NDKKind, NDKEvent, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { useSetAtom } from 'jotai';
+import { Check, ChevronDown, Lock } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Check, ChevronDown, Lock } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useSetAtom } from 'jotai';
-import { userBottomSheetAtom } from '@/lib/user-bottom-sheet/store';
+
+import { Button, ButtonProps } from '../nativewindui/Button';
+import { Text } from '../nativewindui/Text';
+
 import { useFollowType } from '@/hooks/follows';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { userBottomSheetAtom } from '@/lib/user-bottom-sheet/store';
 
 export function publishFollow(ndk: NDK, pubkey: Hexpubkey) {
     const followEvent = new NDKEvent(ndk);

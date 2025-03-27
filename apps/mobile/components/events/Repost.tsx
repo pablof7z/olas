@@ -2,6 +2,7 @@ import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk-mobile';
 import { Heart, Repeat } from 'lucide-react-native';
 import { useCallback } from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 import { useReactionsStore } from '@/stores/reactions';
 

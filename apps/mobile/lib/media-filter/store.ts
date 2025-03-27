@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { FilterParameters, FilterState } from './types';
+
 import { FILTER_PRESETS } from './presets';
+import { FilterParameters, FilterState } from './types';
 
 interface MediaFilterStore {
     // Current source image URI being edited

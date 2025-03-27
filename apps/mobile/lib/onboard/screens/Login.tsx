@@ -1,14 +1,16 @@
+import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { CameraView } from 'expo-camera';
+import { useRouter } from 'expo-router';
+import { useAtom, useSetAtom } from 'jotai';
+import { ArrowRight, QrCode } from 'lucide-react-native';
 import React, { useCallback, useEffect } from 'react';
 import { View, TextInput, Alert, StyleSheet, Platform, Dimensions, KeyboardAvoidingView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { CameraView } from 'expo-camera';
-import { Text } from '@/components/nativewindui/Text';
-import { Button } from '@/components/nativewindui/Button';
-import { ArrowRight, QrCode } from 'lucide-react-native';
-import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useSetAtom } from 'jotai';
+
 import { LoginWithNip55Button } from '../components/LoginWithNip55Button';
 import { modeAtom, payloadAtom, scanQRAtom } from '../store';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 
 export function Login() {
     const [payload, setPayload] = useAtom(payloadAtom);
@@ -73,7 +75,7 @@ export function Login() {
             <TextInput
                 style={styles.input}
                 className="text-foreground placeholder:text-muted-foreground"
-                multiline={true}
+                multiline
                 autoCapitalize="none"
                 autoComplete={undefined}
                 placeholder="Enter your nsec or bunker:// connection"

@@ -1,9 +1,11 @@
 import { NDKEvent, NDKImage } from '@nostr-dev-kit/ndk-mobile';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { UserProfile } from '@/hooks/user-profile';
-import { EventStickerStyle } from './styles';
-import { useMemo } from 'react';
 import { Image } from 'expo-image';
+import { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+
+import { EventStickerStyle } from './styles';
+
+import { UserProfile } from '@/hooks/user-profile';
 
 export default function EventStickerKind20({
     event,

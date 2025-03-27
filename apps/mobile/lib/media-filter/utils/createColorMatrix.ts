@@ -1,4 +1,5 @@
 import { Skia } from '@shopify/react-native-skia';
+
 import { FilterParameters } from '../types';
 
 /**

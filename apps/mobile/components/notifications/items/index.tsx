@@ -1,6 +1,7 @@
 import { NDKEvent, NDKKind, NDKUser } from '@nostr-dev-kit/ndk-mobile';
-import { NotificationContainer } from './wrapper';
+
 import { ItemNutzap } from './nutzap';
+import { NotificationContainer } from './wrapper';
 
 export default function NotificationItem({ event, currentUser }: { event: NDKEvent; currentUser: NDKUser }) {
     let label: string;

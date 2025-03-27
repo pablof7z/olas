@@ -1,20 +1,20 @@
-import { activeEventAtom } from '@/stores/event';
+import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { NDKEvent, type NDKUserProfile, useSubscribe, useNDKCurrentUser, useNDK, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
 import { useVideoPlayer, VideoContentFit, VideoView } from 'expo-video';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { Text } from '@/components/nativewindui/Text';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, atom } from 'jotai';
+import { Fullscreen, MessageCircle, Send } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Dimensions, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, View } from 'react-native';
-import { NDKEvent, type NDKUserProfile, useSubscribe, useNDKCurrentUser, useNDK, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { FlashList } from '@shopify/flash-list';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
 import UserAvatar from '@/components/ui/user/avatar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { Fullscreen, MessageCircle, Send } from 'lucide-react-native';
-import { atom } from 'jotai';
+import { activeEventAtom } from '@/stores/event';
 
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 
@@ -81,8 +81,8 @@ export default function LiveScreen() {
                 <Pressable onPress={() => !showChat && onPress}>
                     <VideoView
                         player={video}
-                        allowsPictureInPicture={true}
-                        startsPictureInPictureAutomatically={true}
+                        allowsPictureInPicture
+                        startsPictureInPictureAutomatically
                         contentFit={contentFit}
                         nativeControls={false}
                         style={style}

@@ -1,6 +1,7 @@
-import React from 'react';
 import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import React from 'react';
 import { Text, TextProps, View } from 'react-native';
+
 import FlareLabel, { FlareElement } from './flare';
 
 interface NameProps extends TextProps {

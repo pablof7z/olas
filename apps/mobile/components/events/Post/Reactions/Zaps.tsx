@@ -1,15 +1,16 @@
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
-import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useAppSettingsStore } from '@/stores/app';
-import Lightning from '@/components/icons/lightning';
-import { useZapperModal } from '@/lib/zapper/hook';
-import { useZap } from '@/hooks/zap';
-import { usePaymentStore } from '@/stores/payments';
+import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from 'react-native-reanimated';
+
 import { ZapModal } from '@/components/ZapModal';
-import { X } from 'lucide-react-native';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import Lightning from '@/components/icons/lightning';
+import { useZap } from '@/hooks/zap';
+import { useZapperModal } from '@/lib/zapper/hook';
+import { useAppSettingsStore } from '@/stores/app';
+import { usePaymentStore } from '@/stores/payments';
 
 export default function Zaps({
     event,

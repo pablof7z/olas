@@ -1,5 +1,4 @@
-import { List, ListItem } from '@/components/nativewindui/List';
-import { Platform, StyleSheet } from 'react-native';
+import { toast } from '@backpackapp-io/react-native-toast';
 import {
     CashuPaymentInfo,
     Hexpubkey,
@@ -13,18 +12,19 @@ import {
     useNDKWallet,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import { TextInput, TouchableOpacity, View } from 'react-native';
-import * as User from '@/components/ui/user';
-import { Text } from '@/components/nativewindui/Text';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, ButtonProps, ButtonState } from '@/components/nativewindui/Button';
-import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
-import { toast } from '@backpackapp-io/react-native-toast';
+import { Search } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search } from 'lucide-react-native';
+
+import { Button, ButtonProps, ButtonState } from '@/components/nativewindui/Button';
+import { List, ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import * as User from '@/components/ui/user';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { usePaymentStore } from '@/stores/payments';
 export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {

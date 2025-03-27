@@ -1,9 +1,11 @@
-import { useEditorStore } from '@/lib/publish/store/editor';
-import { captionBottomSheetRefAtom } from './CaptionBottomSheet';
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
+
+import { captionBottomSheetRefAtom } from './CaptionBottomSheet';
+
 import { Text } from '@/components/nativewindui/Text';
+import { useEditorStore } from '@/lib/publish/store/editor';
 
 export default function Caption() {
     const caption = useEditorStore((state) => state.caption);

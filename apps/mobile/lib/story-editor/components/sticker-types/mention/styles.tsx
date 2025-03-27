@@ -1,5 +1,5 @@
-import { TextStyle, ViewStyle } from 'react-native';
 import { ImageStyle } from 'expo-image';
+import { TextStyle, ViewStyle } from 'react-native';
 
 // Extended ViewStyle with backgroundGradient property
 export interface ExtendedViewStyle extends ViewStyle {

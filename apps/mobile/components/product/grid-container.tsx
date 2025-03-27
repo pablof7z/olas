@@ -1,9 +1,12 @@
-import { View, Pressable } from 'react-native';
-import { Text } from '../nativewindui/Text';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { ShoppingCart, Tag } from 'lucide-react-native';
+import { View, Pressable } from 'react-native';
+
+import { Text } from '../nativewindui/Text';
+
 import { formatMoney } from '@/utils/bitcoin';
 import { useProductView } from '~/lib/product-view/hook';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+
 export default function ProductGridContainer({ event, children }: { event: NDKEvent; children: React.ReactNode }) {
     const price = event.getMatchingTags('price')[0];
     const openProductView = useProductView();

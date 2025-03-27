@@ -1,12 +1,12 @@
+import { NDKStory, NDKImetaTag, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { NDKStory, NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useActiveBlossomServer } from '@/hooks/blossom';
-import { uploadStory } from '../actions/upload';
+
 import { createStoryEvent } from '../actions/event';
-import { Sticker } from '../store';
-import { useStickerStore } from '../store';
+import { uploadStory } from '../actions/upload';
+import { Sticker, useStickerStore } from '../store';
+
+import { useActiveBlossomServer } from '@/hooks/blossom';
 
 interface UseStoryActionsProps {
     path: string;
@@ -47,7 +47,7 @@ export const useStoryActions = ({ path, type, stickers, dimensions, getDuration,
                 console.log('Creating story event without publishing');
                 // Create and sign the story event without publishing
                 const storyEvent = await createStoryEvent({
-                    ndk: ndk,
+                    ndk,
                     imeta: localImeta,
                     path,
                     type,
@@ -83,7 +83,7 @@ export const useStoryActions = ({ path, type, stickers, dimensions, getDuration,
             const result = await uploadStory({
                 path,
                 type,
-                ndk: ndk,
+                ndk,
                 blossomServer: activeBlossomServer,
                 onProgress: (type, progress) => {
                     console.log(`${type} progress: ${progress}%`);

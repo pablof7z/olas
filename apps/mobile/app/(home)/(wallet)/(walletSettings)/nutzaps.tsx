@@ -1,3 +1,4 @@
+import { Proof } from '@cashu/cashu-ts';
 import {
     DBCache,
     NDKEvent,
@@ -10,16 +11,16 @@ import {
     NDKCacheAdapterSqlite,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
+import { NDKCashuWallet, NDKNutzapState, NdkNutzapStatus } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { NDKCashuWallet, NDKNutzapState, NdkNutzapStatus } from '@nostr-dev-kit/ndk-wallet';
-import { Text } from '@/components/nativewindui/Text';
-import { formatMoney } from '@/utils/bitcoin';
+
 import { Button } from '@/components/nativewindui/Button';
-import { Proof } from '@cashu/cashu-ts';
 import { ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import * as User from '@/components/ui/user';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function NutzapsScreen() {
     const { activeWallet } = useNDKWallet();
@@ -78,7 +79,7 @@ export default function NutzapsScreen() {
 
 function NutzapRow({ state, eventId, index, target }: { state: NDKNutzapState; eventId: string; index: number; target: any }) {
     const { ndk } = useNDK();
-    let nutzap = state.nutzap;
+    const nutzap = state.nutzap;
     const status = state.status;
 
     const { nutzapMonitor } = useNDKNutzapMonitor();

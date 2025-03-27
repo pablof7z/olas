@@ -2,9 +2,10 @@ import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { Heart } from 'lucide-react-native';
 import { useCallback } from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
-import { useReactionsStore } from '@/stores/reactions';
 import { useReactionPicker } from '@/lib/reaction-picker/hook';
+import { useReactionsStore } from '@/stores/reactions';
 
 type ReactProps = {
     /**

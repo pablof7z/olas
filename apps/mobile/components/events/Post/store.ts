@@ -1,7 +1,7 @@
-import { atom } from 'jotai';
-import { RefObject } from 'react';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { atom } from 'jotai';
+import { RefObject } from 'react';
 
 export const optionsSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], void>(
     null,

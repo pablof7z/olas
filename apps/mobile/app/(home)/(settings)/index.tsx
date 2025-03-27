@@ -1,26 +1,33 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import {
+    NDKCacheAdapterSqlite,
+    useNDKUnpublishedEvents,
+    useWOT,
+    useNDK,
+    useNDKWallet,
+    useNDKCurrentUser,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
+import { Image } from 'expo-image';
+import { router, Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image } from 'expo-image';
 import { Platform, Pressable, Switch, TouchableOpacity, View } from 'react-native';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { IconView } from '@/components/icon-view';
+import { Button } from '@/components/nativewindui/Button';
+import * as User from '@/components/ui/user';
+import { useActiveBlossomServer } from '@/hooks/blossom';
+import { useAppSettingsStore } from '@/stores/app';
+import { WALLET_ENABLED } from '@/utils/const';
+import { humanWalletType } from '@/utils/wallet';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { router, Stack } from 'expo-router';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import * as User from '@/components/ui/user';
-import { NDKCacheAdapterSqlite, useNDKUnpublishedEvents, useWOT } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK, useNDKWallet, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useActiveBlossomServer } from '@/hooks/blossom';
-import { useAppSettingsStore } from '@/stores/app';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { Button } from '@/components/nativewindui/Button';
-import { humanWalletType } from '@/utils/wallet';
-import { IconView } from '@/components/icon-view';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { WALLET_ENABLED } from '@/utils/const';
 
 const relaysItem = {
     id: 'relays',
@@ -45,7 +52,7 @@ const walletItem = {
 
 const devItem = {
     id: 'dev',
-    title: `Development`,
+    title: 'Development',
     leftView: <IconView name="code-braces" className="bg-green-500" />,
     onPress: () => {
         router.push('/(home)/(settings)/dev');
@@ -109,11 +116,11 @@ export default function SettingsIosStyleScreen() {
     const handleNukeDatabase = useCallback(() => {
         const db = (ndk?.cacheAdapter as NDKCacheAdapterSqlite).db;
         // get all the tables and delete them
-        db.runSync(`DROP TABLE IF EXISTS events;`);
-        db.runSync(`DROP TABLE IF EXISTS profiles;`);
-        db.runSync(`DROP TABLE IF EXISTS relay_status;`);
-        db.runSync(`DROP TABLE IF EXISTS event_tags;`);
-        db.runSync(`PRAGMA user_version = 0;`);
+        db.runSync('DROP TABLE IF EXISTS events;');
+        db.runSync('DROP TABLE IF EXISTS profiles;');
+        db.runSync('DROP TABLE IF EXISTS relay_status;');
+        db.runSync('DROP TABLE IF EXISTS event_tags;');
+        db.runSync('PRAGMA user_version = 0;');
         toast.success('Local database reset successfully');
         process.exit(0);
     }, [ndk]);
@@ -138,7 +145,7 @@ export default function SettingsIosStyleScreen() {
                 },
                 title: (
                     <View className="flex-row items-center gap-4">
-                        <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} canSkipBorder={true} />
+                        <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} canSkipBorder />
                         <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} className="text-lg font-medium text-foreground" />
                     </View>
                 ),

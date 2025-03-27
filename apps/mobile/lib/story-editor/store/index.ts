@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { Dimensions } from 'react-native';
-import { NDKUser, NDKUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { NDKUser, NDKUserProfile, NDKEvent, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { atom } from 'jotai';
-import { getNextStyleName as getNextTextStyleName } from '../components/sticker-types/text/styles';
-import { getNextStyleName as getNextMentionStyleName } from '../components/sticker-types/mention/styles';
+import { Dimensions } from 'react-native';
+import { create } from 'zustand';
+
 import { getNextStyleName as getNextCountdownStyle } from '../components/sticker-types/countdown/styles';
 import { getNextStyleName as getNextEventStyleName } from '../components/sticker-types/event/styles';
+import { getNextStyleName as getNextMentionStyleName } from '../components/sticker-types/mention/styles';
+import { getNextStyleName as getNextTextStyleName } from '../components/sticker-types/text/styles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

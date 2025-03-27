@@ -1,11 +1,12 @@
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
+import { useAtom } from 'jotai';
 import { useCallback } from 'react';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { publishPostTypeAtom } from '@/lib/publish/store/editor';
-import { useAtom } from 'jotai';
 import Animated from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { publishPostTypeAtom } from '@/lib/publish/store/editor';
 
 export const POST_TYPE_SWITCHER_HEIGHT = 50;
 

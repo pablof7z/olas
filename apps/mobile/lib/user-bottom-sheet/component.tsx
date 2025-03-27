@@ -1,19 +1,20 @@
-import { useAtom } from 'jotai';
-import { userBottomSheetAtom } from './store';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { StyleProp, ViewStyle } from 'react-native';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Text } from '@/components/nativewindui/Text';
-import { useEffect, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-import { useColorScheme } from '../useColorScheme';
 import { NDKUser, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import usePrivateFollows from '@/stores/db/private-follows';
-import { useFollowType } from '@/hooks/follows';
+import { useAtom } from 'jotai';
+import { useEffect, useCallback } from 'react';
+import { StyleProp, ViewStyle, View, StyleSheet } from 'react-native';
+
+import { userBottomSheetAtom } from './store';
+import { useColorScheme } from '../useColorScheme';
+
+import { publishFollow } from '@/components/buttons/follow';
 import FollowIcon from '@/components/icons/follow';
 import PrivateFollowIcon from '@/components/icons/private-follow';
-import { publishFollow } from '@/components/buttons/follow';
+import { Button } from '@/components/nativewindui/Button';
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
+import { useFollowType } from '@/hooks/follows';
+import usePrivateFollows from '@/stores/db/private-follows';
 
 export default function BottomSheet() {
     const ref = useSheetRef();

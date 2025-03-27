@@ -1,23 +1,23 @@
-import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { NDKKind, NDKUserProfile, useSubscribe, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { router, Stack } from 'expo-router';
+import { useAtomValue } from 'jotai';
+import { useCallback, useMemo } from 'react';
+import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import BackButton from '@/components/buttons/back-button';
+import { Reactions } from '@/components/events/Post/Reactions';
+import EventMediaContainer from '@/components/media/event';
 import { Text } from '@/components/nativewindui/Text';
-import { NDKKind, NDKUserProfile, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
-import EventMediaContainer from '@/components/media/event';
-import { Reactions } from '@/components/events/Post/Reactions';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCallback, useMemo } from 'react';
-import { useAtomValue } from 'jotai';
-import { activeEventAtom } from '@/stores/event';
-import { router, Stack } from 'expo-router';
-import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
-import { useUserFlare } from '@/hooks/user-flare';
-import BackButton from '@/components/buttons/back-button';
-import { useReactionsStore } from '@/stores/reactions';
+import * as User from '@/components/ui/user';
 import AvatarAndName from '@/components/ui/user/avatar-name';
+import { useUserFlare } from '@/hooks/user-flare';
+import { activeEventAtom } from '@/stores/event';
+import { useReactionsStore } from '@/stores/reactions';
+import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -53,7 +53,7 @@ function Header({ event }: { event: NDKEvent }) {
                 onPress={viewProfile}
                 imageSize={24}
                 borderColor="black"
-                canSkipBorder={true}
+                canSkipBorder
                 pressableStyle={{ padding: 16 }}
             />
 
@@ -131,7 +131,7 @@ export default function ViewScreen() {
                         maxWidth={Dimensions.get('window').width}
                         maxHeight={Dimensions.get('window').height}
                         muted={false}
-                        autoplay={true}
+                        autoplay
                     />
                 </ScrollView>
 

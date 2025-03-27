@@ -1,9 +1,9 @@
+import { Icon } from '@roninoss/icons';
+import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { View, Pressable, Platform, Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, interpolate, withSpring, runOnJS, clamp } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { Icon } from '@roninoss/icons';
 
 const dimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 75;

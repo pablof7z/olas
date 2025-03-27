@@ -1,13 +1,15 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { Stack, useRouter } from 'expo-router';
+import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
 import { View, KeyboardAvoidingView, Platform, TouchableOpacity, StyleSheet } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/nativewindui/Text';
-import { useAtomValue } from 'jotai';
+
 import { modeAtom } from '../store';
-import { SignUp } from './Signup';
 import { Login } from './Login';
+import { SignUp } from './Signup';
+
+import { Text } from '@/components/nativewindui/Text';
 
 export default function LoginScreen() {
     const mode = useAtomValue(modeAtom);

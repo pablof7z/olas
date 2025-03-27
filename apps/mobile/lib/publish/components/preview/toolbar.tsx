@@ -1,8 +1,9 @@
-import { View, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useEditorStore } from '@/lib/publish/store/editor';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import { View, StyleSheet, Pressable } from 'react-native';
+
+import { useEditorStore } from '@/lib/publish/store/editor';
 
 export default function PreviewToolbar() {
     return (

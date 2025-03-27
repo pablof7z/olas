@@ -8,21 +8,21 @@ import {
     useSubscribe,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
+import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
+import { Image, Image as ExpoImage, ImageRef, useImage } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { AnimatePresence } from 'framer-motion';
-import { Image } from 'expo-image';
 import { MotiView } from 'moti';
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
-import { Image as ExpoImage, ImageRef, useImage } from 'expo-image';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedScrollHandler, interpolate, Extrapolation } from 'react-native-reanimated';
-import { useStoriesView } from '@/lib/stories/store';
-import StoriesModal from '@/lib/stories/SlidesModal';
-import BackButton from '@/components/buttons/back-button';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import BackButton from '@/components/buttons/back-button';
+import StoriesModal from '@/lib/stories/SlidesModal';
+import { useStoriesView } from '@/lib/stories/store';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -179,7 +179,7 @@ function AnimatedRenderItem({
                 />
             </Pressable>
             {showModal && (
-                <Modal transparent={true} animationType="slide">
+                <Modal transparent animationType="slide">
                     <StoriesModal onClose={() => setShowModal(false)} />
                 </Modal>
             )}
@@ -244,7 +244,7 @@ export default function Wallpapers() {
                         flex: 1,
                         backgroundColor: '#000',
                         justifyContent: 'flex-end',
-                        height: height,
+                        height,
                     }}>
                     <AnimatePresence>
                         {cardEntries.length === 0 && (
@@ -262,8 +262,8 @@ export default function Wallpapers() {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     position: 'absolute',
-                                    width: width,
-                                    height: height,
+                                    width,
+                                    height,
                                 }}>
                                 <Text>Loading ...</Text>
                             </MotiView>
@@ -380,7 +380,7 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKIma
             scrollEventThrottle={100}
             numColumns={3}
             renderItem={renderItem}
-            disableIntervalMomentum={true}
+            disableIntervalMomentum
         />
     );
 }

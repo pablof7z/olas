@@ -1,17 +1,17 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Text } from '@/components/nativewindui/Text';
-import { RefObject, useCallback, useEffect, useMemo } from 'react';
-import { atom, useAtom, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import { RefObject, useCallback, useEffect, useMemo } from 'react';
 import { Dimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ListItem, List } from '@/components/nativewindui/List';
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
 import { cn } from '@/lib/cn';
 import { useMyGroups } from '@/lib/groups/store';
 import { GroupEntry } from '@/lib/groups/types';
 import { COMMUNITIES_ENABLED } from '@/utils/const';
-import { ListItem } from '@/components/nativewindui/List';
-import { List } from '@/components/nativewindui/List';
 
 type CommunityBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 export const communityBottomSheetRefAtom = atom<CommunityBottomSheetRefAtomType, [CommunityBottomSheetRefAtomType], null>(
@@ -66,7 +66,8 @@ export function CommunityBottomSheet() {
                             className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
                             titleClassName="text-lg"
                             index={index}
-                            target={target}></ListItem>
+                            target={target}
+                        />
                     )}
                 />
             </BottomSheetView>

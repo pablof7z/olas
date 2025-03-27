@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import { PostMedia, PostMetadata, PostState } from '@/lib/publish/types';
-import { atom } from 'jotai';
 import NDK from '@nostr-dev-kit/ndk-mobile';
-import { prepareMedia } from '@/utils/media/prepare';
-import { uploadMedia } from '@/lib/publish/actions/upload';
+import { atom } from 'jotai';
+import { create } from 'zustand';
+
 import { generateEvent } from '@/lib/publish/actions/event';
+import { uploadMedia } from '@/lib/publish/actions/upload';
+import { PostMedia, PostMetadata, PostState, Location } from '@/lib/publish/types';
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
-import { Location } from '@/lib/publish/types';
+import { prepareMedia } from '@/utils/media/prepare';
 
 interface EditorState {
     /** Array of media items (images/videos) to be published */

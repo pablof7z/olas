@@ -1,7 +1,8 @@
-import { ProgressCb } from './prepare';
 import { Dimensions } from 'react-native';
 import { getVideoMetaData, Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
 import * as RNFS from 'react-native-fs';
+
+import { ProgressCb } from './prepare';
 import { determineMimeType } from '../url';
 
 const MAX_WIDTH = 2048;

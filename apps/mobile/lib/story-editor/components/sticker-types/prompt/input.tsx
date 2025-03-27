@@ -1,8 +1,10 @@
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 interface PromptStickerInputProps {
     onStickerAdded: () => void;

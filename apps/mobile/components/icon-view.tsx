@@ -1,6 +1,7 @@
 import { Icon, MaterialIconName } from '@roninoss/icons';
-import { cn } from '@/lib/cn';
 import { View } from 'react-native';
+
+import { cn } from '@/lib/cn';
 
 export function IconView({ className, name, children }: { className?: string; name?: MaterialIconName; children?: React.ReactNode }) {
     return (

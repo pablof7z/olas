@@ -1,16 +1,26 @@
+import { BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Hexpubkey, NDKEvent, NDKUser, NDKUserProfile, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom, useSetAtom } from 'jotai';
 import { Send } from 'lucide-react-native';
-import { NativeSyntheticEvent, Text, TextInputKeyPressEventData, TextInputSelectionChangeEventData } from 'react-native';
 import { useState, useCallback, useRef, RefObject, useMemo } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    NativeSyntheticEvent,
+    Text,
+    TextInputKeyPressEventData,
+    TextInputSelectionChangeEventData,
+    View,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { mentionQueryAtom, replyEventAtom } from '../store';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import * as User from '@/components/ui/user';
 import { useUserFlare } from '@/hooks/user-flare';
-import { BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import MentionSuggestions from '@/lib/mentions/mention-suggestions';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function NewComment({ event, currentUser, autoFocus }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
     const { userProfile } = useUserProfile(currentUser?.pubkey);
@@ -130,21 +140,22 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
                     imageSize={24}
                     flare={flare}
                     borderWidth={1}
-                    canSkipBorder={true}
+                    canSkipBorder
                 />
                 <BottomSheetTextInput
                     style={styles.input}
                     className="text-foreground"
                     value={comment}
                     autoFocus={autoFocus}
-                    enablesReturnKeyAutomatically={true}
+                    enablesReturnKeyAutomatically
                     onSelectionChange={handleSelectionChange}
                     // onKeyPress={handleKeyPress}
                     onChangeText={handleChangeText}
                     onSubmitEditing={handleSend}
                     placeholder="Type a message..."
                     multiline
-                    returnKeyType="send"></BottomSheetTextInput>
+                    returnKeyType="send"
+                />
                 <TouchableOpacity style={styles.sendButton} disabled={!comment.trim()} onPress={handleSend}>
                     <Send size={20} color={colors.foreground} />
                 </TouchableOpacity>

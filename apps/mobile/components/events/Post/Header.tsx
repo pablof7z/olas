@@ -1,18 +1,20 @@
-import FollowButton from '@/components/buttons/follow';
-import RelativeTime from '@/components/relative-time';
-import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import { useUserFlare } from '@/hooks/user-flare';
-import { getClientName } from '@/utils/event';
 import { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { Repeat, MoreHorizontal } from 'lucide-react-native';
 import { useCallback } from 'react';
 import { View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
-import * as User from '@/components/ui/user';
+
+import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
+import RelativeTime from '@/components/relative-time';
+import * as User from '@/components/ui/user';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { useUserFlare } from '@/hooks/user-flare';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { getClientName } from '@/utils/event';
 
 export function PostHeader({
     event,
@@ -43,7 +45,7 @@ export function PostHeader({
                 <View style={style.innerContainer}>
                     <View className="w-full flex-row items-center justify-between gap-2 pb-0">
                         <View style={{ flexDirection: 'row', gap: 4 }}>
-                            <Repeat size={16} color={'green'} />
+                            <Repeat size={16} color="green" />
 
                             <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
 

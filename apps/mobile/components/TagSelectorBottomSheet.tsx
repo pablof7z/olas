@@ -1,18 +1,20 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Text } from '@/components/nativewindui/Text';
-import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Dimensions, FlatList, TextInput, View } from 'react-native';
-import { getPostsByUser } from '@/utils/db';
 import NDK, { type Hexpubkey, NDKUser, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
-import { ListItem } from './nativewindui/List';
-import { cn } from '@/lib/cn';
-import { myFollows } from '@/utils/myfollows';
-import { Button } from './nativewindui/Button';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Hash } from 'lucide-react-native';
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, FlatList, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button } from './nativewindui/Button';
+import { ListItem } from './nativewindui/List';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
+import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { getPostsByUser } from '@/utils/db';
+import { myFollows } from '@/utils/myfollows';
 
 export const mountTagSelectorAtom = atom<boolean>(false);
 export const tagSelectorBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
@@ -249,7 +251,7 @@ export function TagSelector({
  * the user has interacted with, and what tags are popular in their
  * network.
  */
-function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: string): Array<TagEntry> {
+function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: string): TagEntry[] {
     const tagsFromUser = getTagsUsedBy(ndk, [user.pubkey], 8, search);
 
     const tagsFromNetwork = getTagsUsedBy(ndk, follows, 20, search);
@@ -281,7 +283,7 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
  * @param top The number of most popular tags to return
  * @returns
  */
-function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: string): Array<TagEntry> {
+function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: string): TagEntry[] {
     let postsByUser = getPostsByUser(ndk, pubkeys);
 
     if (search) {

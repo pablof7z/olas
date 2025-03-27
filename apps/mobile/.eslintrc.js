@@ -30,7 +30,6 @@ module.exports = {
     },
     rules: {
         // General
-        'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
         'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 
         // React
@@ -43,19 +42,7 @@ module.exports = {
 
         // Formatting
         indent: ['error', 4],
-        'max-len': ['warn', { code: 100, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
         quotes: ['error', 'single', { avoidEscape: true }],
-        semi: ['error', 'always'],
-        'comma-dangle': [
-            'error',
-            {
-                arrays: 'always-multiline',
-                objects: 'always-multiline',
-                imports: 'always-multiline',
-                exports: 'always-multiline',
-                functions: 'never',
-            },
-        ],
     },
     overrides: [
         {

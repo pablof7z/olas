@@ -1,16 +1,17 @@
-import { Text } from '@/components/nativewindui/Text';
-import { decode as decodeBolt11 } from 'light-bolt11-decoder';
-import * as Clipboard from 'expo-clipboard';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Button, ButtonState } from '@/components/nativewindui/Button';
-import { View, StyleSheet } from 'react-native';
-import { getBolt11ExpiresAt, NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { ClipboardPasteButton } from 'expo-clipboard';
-import { useState } from 'react';
-import { formatMoney } from '@/utils/bitcoin';
-import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { toast } from '@backpackapp-io/react-native-toast';
 import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { getBolt11ExpiresAt, NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Clipboard from 'expo-clipboard';
+import { ClipboardPasteButton } from 'expo-clipboard';
+import { decode as decodeBolt11 } from 'light-bolt11-decoder';
+import { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+
+import { Button, ButtonState } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function Scan() {
     const [permission, requestPermission] = useCameraPermissions();
@@ -53,8 +54,8 @@ export default function Scan() {
             }
 
             const decoded = decodeBolt11(payload);
-            let amount = Number(decoded.sections.find((section) => section.name === 'amount')?.value);
-            let description = decoded.sections.find((section) => section.name === 'description')?.value;
+            const amount = Number(decoded.sections.find((section) => section.name === 'amount')?.value);
+            const description = decoded.sections.find((section) => section.name === 'description')?.value;
             setAmount(amount);
             setDescription(description);
             return;

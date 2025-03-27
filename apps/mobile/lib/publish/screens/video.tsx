@@ -1,5 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, router } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
+import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
     CameraPosition,
@@ -10,14 +15,10 @@ import {
     useMicrophonePermission,
     CameraRuntimeError,
 } from 'react-native-vision-camera';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { Stack, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+
+import CameraToolbar from '@/lib/publish/components/CameraToolbar';
 import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
 import { useEditorStore } from '@/lib/publish/store/editor';
-import CameraToolbar from '@/lib/publish/components/CameraToolbar';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -201,10 +202,10 @@ export default function VideoScreen() {
                             ref={camera}
                             style={cameraStyle}
                             device={device}
-                            isActive={true}
-                            video={true}
-                            audio={true}
-                            enableZoomGesture={true}
+                            isActive
+                            video
+                            audio
+                            enableZoomGesture
                             onError={handleCameraError}
                             testID="camera-view"
                         />
@@ -218,7 +219,7 @@ export default function VideoScreen() {
                     }}
                     shutterProps={{
                         onPress: toggleRecording,
-                        isRecording: isRecording,
+                        isRecording,
                         disabled: isSwitchingCamera,
                         testID: 'record-button',
                     }}

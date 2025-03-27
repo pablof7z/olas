@@ -1,23 +1,24 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { Stack, router } from 'expo-router';
+import { useAtom, useAtomValue, atom } from 'jotai';
+import { X, Sliders } from 'lucide-react-native';
 import React, { useCallback, useState, useEffect } from 'react';
 import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { useEditorStore } from '@/lib/publish/store/editor';
-import { Stack, router } from 'expo-router';
-import { X, Sliders } from 'lucide-react-native';
-import { useAtom, useAtomValue, atom } from 'jotai';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button } from '@/components/nativewindui/Button';
+import AdjustmentsBottomSheet, { adjustmentsBottomSheetRefAtom } from '@/lib/media-filter/components/AdjustmentsBottomSheet';
+import FilterBottomSheet, { filterBottomSheetRefAtom } from '@/lib/media-filter/components/FilterBottomSheet';
+import { FilteredImage } from '@/lib/media-filter/components/FilteredImage';
+import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
 import { Preview } from '@/lib/publish/components/preview/Preview';
+import { useEditorStore } from '@/lib/publish/store/editor';
+
+// Import the new media filter components
+import { useColorScheme } from '@/lib/useColorScheme';
 
 // Create atom for selectedMediaIndex
 export const selectedMediaIndexAtom = atom(0);
-
-// Import the new media filter components
-import { FilteredImage } from '@/lib/media-filter/components/FilteredImage';
-import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
-import FilterBottomSheet, { filterBottomSheetRefAtom } from '@/lib/media-filter/components/FilterBottomSheet';
-import AdjustmentsBottomSheet, { adjustmentsBottomSheetRefAtom } from '@/lib/media-filter/components/AdjustmentsBottomSheet';
-import { Button } from '@/components/nativewindui/Button';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function HeaderLeft() {
     const handlePress = useCallback(() => {

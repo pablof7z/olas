@@ -1,14 +1,15 @@
 import { NDKEvent, NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
+import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import { FlashList } from '@shopify/flash-list';
+
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { atom, useAtom } from 'jotai';
+import { Text } from '@/components/nativewindui/Text';
+import NotificationItem from '@/components/notifications/items';
 import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
-import NotificationItem from '@/components/notifications/items';
 import { WALLET_ENABLED } from '@/utils/const';
 
 const settingsTabAtom = atom('all');

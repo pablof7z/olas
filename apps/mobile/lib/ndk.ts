@@ -1,4 +1,5 @@
 import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
+
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
 

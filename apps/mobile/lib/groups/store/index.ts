@@ -1,7 +1,8 @@
 import NDK, { Hexpubkey, NDKUser, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { create } from 'zustand';
-import { loadGroups, loadMyGroups } from './load';
 import { useEffect } from 'react';
+import { create } from 'zustand';
+
+import { loadGroups, loadMyGroups } from './load';
 import { GroupEntry } from '../types';
 
 export type GroupStoreState = {

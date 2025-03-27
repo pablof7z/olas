@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+
 import { migrations } from './migrations';
 
 export const db = SQLite.openDatabaseSync('snap.db');

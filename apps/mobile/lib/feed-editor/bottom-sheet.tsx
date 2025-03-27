@@ -1,15 +1,15 @@
-import { View, StyleSheet, Pressable } from 'react-native';
-import { useAtom, useSetAtom } from 'jotai';
-import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from './store';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { useEffect, useState } from 'react';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Dimensions } from 'react-native';
+import { useAtom, useSetAtom, atom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import New from './new';
+
 import Confirm from './confirm';
+import New from './new';
+import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from './store';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import Tabs from '@/components/tabs';
-import { atom } from 'jotai';
 
 const tabAtom = atom<string>('New');
 

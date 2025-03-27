@@ -1,16 +1,17 @@
 import { NDKCashuMintList, NDKKind, useNDK, useNDKSession, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+
+import { Button } from '@/components/nativewindui/Button';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { Button } from '@/components/nativewindui/Button';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();

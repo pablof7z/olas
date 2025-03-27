@@ -1,22 +1,23 @@
-import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
-import { View, Text, Button, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import { NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
+import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { View, Text, Button, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
+
 import { useObserver } from '@/hooks/observer';
-import { NDKImage } from '@nostr-dev-kit/ndk-mobile';
 
 function ContentCacheScreen() {
     const navigation = useNavigation();
     const [fileData, setFileData] = useState<
-        Array<{
+        {
             name: string;
             uri: string;
             size: number;
             extension: string;
-        }>
+        }[]
     >([]);
     const [fileTypesBreakdown, setFileTypesBreakdown] = useState<Record<string, { count: number; totalSize: number }>>({});
     const [previewMode, setPreviewMode] = useState(false);
@@ -69,7 +70,7 @@ function ContentCacheScreen() {
             );
             const filteredFiles = fileInfos.filter(Boolean) as typeof fileData;
             setFileData(filteredFiles);
-            let breakdown: Record<string, { count: number; totalSize: number }> = {};
+            const breakdown: Record<string, { count: number; totalSize: number }> = {};
             filteredFiles.forEach((file) => {
                 const ext = file.extension;
                 if (!breakdown[ext]) {

@@ -1,5 +1,6 @@
 import NDK, { NDKImage, NDKImetaTag, NDKKind, NDKRelaySet, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
+
 import { PostMedia, PostMetadata } from '../types';
 
 function generateImageEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKImage {

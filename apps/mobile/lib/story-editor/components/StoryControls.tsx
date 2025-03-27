@@ -1,8 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import CloseButton from './CloseButton';
 import { EdgeInsets } from 'react-native-safe-area-context';
+
+import CloseButton from './CloseButton';
 
 interface StoryControlsProps {
     insets: EdgeInsets;
@@ -49,7 +50,7 @@ export default function StoryControls({
             <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
                 {showPreviewButton && (
                     <TouchableOpacity style={styles.previewButton} testID="preview-button" onPress={onPreview} disabled={isUploading}>
-                        <Ionicons name="eye" size={40} color={'white'} />
+                        <Ionicons name="eye" size={40} color="white" />
                     </TouchableOpacity>
                 )}
                 <View style={{ flex: 1 }} />

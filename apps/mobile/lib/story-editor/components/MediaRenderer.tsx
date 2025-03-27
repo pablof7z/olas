@@ -1,6 +1,6 @@
-import React from 'react';
-import { VideoView } from 'expo-video';
 import { Image } from 'expo-image';
+import { VideoView } from 'expo-video';
+import React from 'react';
 import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 interface MediaRendererProps {

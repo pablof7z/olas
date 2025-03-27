@@ -1,15 +1,16 @@
+import { NDKKind, NDKStoryStickerType, useSubscribe, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React from 'react';
 import { View, ActivityIndicator, ViewStyle, LayoutChangeEvent } from 'react-native';
-import { Sticker } from '@/lib/story-editor/store/index';
-import { NDKKind, NDKStoryStickerType, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { EventStickerStyle, getStyleFromName } from './styles';
-import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import Generic from './generic';
-import Kind30402 from './kind30402';
-import Kind30023 from './kind30023';
 import Kind20 from './kind20';
+import Kind30023 from './kind30023';
+import Kind30402 from './kind30402';
 import KindVideo from './kind_video';
+import { EventStickerStyle, getStyleFromName } from './styles';
+
+import { Sticker } from '@/lib/story-editor/store/index';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 // Define NDKKind.Article if it doesn't exist
 const ARTICLE_KIND = 30023;

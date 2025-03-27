@@ -1,15 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { NDKList, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { FlatList, ScrollView, TextInput, View } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
-import * as User from '@/components/ui/user';
 import { RenderTarget } from '@shopify/flash-list';
-import { Button } from '@/components/nativewindui/Button';
-import { atom, useAtom, useSetAtom } from 'jotai';
 import { router, Stack } from 'expo-router';
+import { atom, useAtom, useSetAtom } from 'jotai';
 import { Delete } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, ScrollView, TextInput, View } from 'react-native';
+
+import { Button } from '@/components/nativewindui/Button';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
+import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import * as User from '@/components/ui/user';
 
 const hashtagsAtom = atom<string[]>([]);
 const pubkeysAtom = atom<string[]>([]);

@@ -1,11 +1,12 @@
+import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RefObject, useEffect, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useEditorStore } from '@/lib/publish/store/editor';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+
 import { Button } from '@/components/nativewindui/Button';
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
+import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 export const captionBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);

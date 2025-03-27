@@ -128,7 +128,7 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                     </InputWrapper>
                     {!materialHideActionIcons && (
                         <>
-                            {!!errorMessage ? (
+                            {errorMessage ? (
                                 <MaterialErrorIcon />
                             ) : (
                                 !!value && isFocused && <MaterialClearIcon clearText={clear} editable={editable} />

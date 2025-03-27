@@ -1,9 +1,9 @@
 import { MasonryFlashList } from '@shopify/flash-list';
-import { useEffect, useRef } from 'react';
-import { useState } from 'react';
-import { Dimensions, ImageStyle, Pressable, View, ViewStyle } from 'react-native';
-import * as MediaLibrary from 'expo-media-library';
 import { Image } from 'expo-image';
+import * as MediaLibrary from 'expo-media-library';
+import { useEffect, useRef, useState } from 'react';
+import { Dimensions, ImageStyle, Pressable, View, ViewStyle } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 
 export default function AlbumsGrid({
@@ -19,7 +19,7 @@ export default function AlbumsGrid({
     useEffect(() => {
         albums.forEach(async (album) => {
             if (albumAssetsFetched.current[album.id]) return;
-            const assets = await MediaLibrary.getAssetsAsync({ album: album, mediaType: ['photo', 'video'], first: 1 });
+            const assets = await MediaLibrary.getAssetsAsync({ album, mediaType: ['photo', 'video'], first: 1 });
             setAssetsPerAlbum((prev) => ({ ...prev, [album.id]: { assets: assets.assets, totalCount: assets.totalCount } }));
             albumAssetsFetched.current[album.id] = true;
         });

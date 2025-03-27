@@ -1,4 +1,3 @@
-import { blacklistPubkeys } from '@/utils/const';
 import NDK, {
     Hexpubkey,
     NDKEvent,
@@ -14,6 +13,8 @@ import NDK, {
 } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
 
+import { blacklistPubkeys } from '@/utils/const';
+
 /**
  * Returns a set of pubkeys that should be blacklisted
  */
@@ -21,7 +22,7 @@ export function usePubkeyBlacklist() {
     const { muteList } = useMuteList();
     const follows = useFollows();
 
-    let list = new Set(blacklistPubkeys);
+    const list = new Set(blacklistPubkeys);
 
     const effectiveBlackList = useMemo(() => {
         if (muteList) muteList.forEach((p) => list.add(p));

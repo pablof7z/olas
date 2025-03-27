@@ -1,7 +1,8 @@
 import { NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { TouchableOpacity, StyleSheet, StyleProp, TextStyle, ViewStyle } from 'react-native';
-import * as User from '@/components/ui/user';
 import { useCallback } from 'react';
+import { TouchableOpacity, StyleSheet, StyleProp, TextStyle, ViewStyle } from 'react-native';
+
+import * as User from '@/components/ui/user';
 import { useUserFlare } from '@/hooks/user-flare';
 
 interface AvatarAndNameProps {

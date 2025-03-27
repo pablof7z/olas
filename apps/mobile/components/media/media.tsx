@@ -1,9 +1,11 @@
-import { urlIsVideo } from '@/utils/media';
-import ImageComponent from './image';
-import VideoComponent from './video';
-import { Dimensions, StyleProp, ViewStyle } from 'react-native';
 import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
+import { Dimensions, StyleProp, ViewStyle } from 'react-native';
+
+import ImageComponent from './image';
+import VideoComponent from './video';
+
+import { urlIsVideo } from '@/utils/media';
 
 export default function MediaComponent({
     imeta,

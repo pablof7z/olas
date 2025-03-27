@@ -1,7 +1,9 @@
+import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { useState, useRef, useCallback, forwardRef } from 'react';
 import { View, TextInput, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
-import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+
 import MentionSuggestions from './mention-suggestions';
+
 import { useColorScheme } from '@/lib/useColorScheme';
 
 interface MentionProps extends TextInputProps {

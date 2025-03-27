@@ -1,13 +1,13 @@
 import { FlashList, type FlashListProps, type ListRenderItem as FlashListRenderItem, type ListRenderItemInfo } from '@shopify/flash-list';
-import Animated, { FadeInDown, FadeOut, FadeOutDown, LinearTransition, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { cva } from 'class-variance-authority';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
 import { Platform, PressableProps, StyleProp, StyleSheet, TextStyle, View, ViewProps, ViewStyle } from 'react-native';
+import Animated, { FadeInDown, FadeOut, FadeOutDown, LinearTransition, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Text, TextClassContext } from '~/components/nativewindui/Text';
 import { Button } from '~/components/nativewindui/Button';
+import { Text, TextClassContext } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 
 const _damping = 14;

@@ -1,4 +1,5 @@
 import { ScrollView, View } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 
 export default function EulaScreen() {

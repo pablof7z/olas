@@ -1,10 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useAtomValue } from 'jotai';
 import React from 'react';
 import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+
+import { locationBottomSheetRefAtom } from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { locationBottomSheetRefAtom } from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
-import { useAtomValue } from 'jotai';
 
 export default function Location() {
     const location = useEditorStore((state) => state.location);

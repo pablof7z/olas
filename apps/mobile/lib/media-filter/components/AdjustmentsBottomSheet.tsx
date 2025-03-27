@@ -1,10 +1,11 @@
-import { atom, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useEffect } from 'react';
+import { atom, useSetAtom } from 'jotai';
+import { useEffect, RefObject } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { FilterAdjustments } from './FilterAdjustments';
-import { RefObject } from 'react';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 type AdjustmentsBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 

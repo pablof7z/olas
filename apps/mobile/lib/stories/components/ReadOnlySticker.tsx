@@ -1,7 +1,9 @@
+import { NDKStoryStickerType, useNDK, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, Dimensions, LayoutChangeEvent, TouchableOpacity } from 'react-native';
+
 import { Sticker } from '../utils';
-import { NDKStoryStickerType, useNDK, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+
 import { TextStickerView, EventStickerView, CountdownStickerView, MentionStickerView } from '@/lib/story-editor/components/sticker-types';
 
 interface ReadOnlyStickerProps {
@@ -102,7 +104,7 @@ export default function ReadOnlySticker({ sticker, containerDimensions, original
 }
 
 function TextSticker({ sticker, onLayout }: { sticker: Sticker<NDKStoryStickerType.Text>; onLayout?: (event: LayoutChangeEvent) => void }) {
-    return <TextStickerView sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions={true} onLayout={onLayout} />;
+    return <TextStickerView sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions onLayout={onLayout} />;
 }
 
 function MentionSticker({ sticker, onLayout }: { sticker: Sticker; onLayout?: (event: LayoutChangeEvent) => void }) {

@@ -1,11 +1,13 @@
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { StyleSheet, View, Text, LayoutChangeEvent, Dimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
-import { Sticker as StickerType } from '@/lib/story-editor/store/index';
+
 import { EventStickerView, TextStickerView, CountdownStickerView, MentionStickerView, PromptStickerView } from './sticker-types';
 import { useStickerStore } from '../store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+import { Sticker as StickerType } from '@/lib/story-editor/store/index';
 
 interface StickerProps {
     sticker: StickerType;

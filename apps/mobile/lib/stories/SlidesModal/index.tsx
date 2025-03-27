@@ -1,5 +1,5 @@
-import { showStoriesModalAtom, storiesAtom, isLoadingAtom, durationAtom, activeSlideAtom } from '@/lib/stories/SlidesModal/store';
 import { NDKImage, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
@@ -13,8 +13,10 @@ import Animated, {
     runOnJS,
     SharedValue,
 } from 'react-native-reanimated';
-import { router } from 'expo-router';
+
 import { Slide } from './Slide';
+
+import { showStoriesModalAtom, storiesAtom, isLoadingAtom, durationAtom, activeSlideAtom } from '@/lib/stories/SlidesModal/store';
 
 const { width } = Dimensions.get('screen');
 

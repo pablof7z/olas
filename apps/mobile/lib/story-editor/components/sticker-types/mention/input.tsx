@@ -1,11 +1,11 @@
+import { Hexpubkey, NDKUser, NDKUserProfile, NDKStoryStickerType, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback } from 'react';
 import { View, Text } from 'react-native';
-import { Hexpubkey, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import Mention from '@/lib/mentions/search';
+
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { sharedStyles } from '../styles';
+
+import Mention from '@/lib/mentions/search';
 
 interface MentionStickerInputProps {
     onStickerAdded: () => void;

@@ -12,6 +12,7 @@ import NDK, {
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';
+
 import { GroupStore } from '.';
 
 export function loadMyGroups(ndk: NDK, currentUser: NDKUser, set: (state: GroupStore) => void) {

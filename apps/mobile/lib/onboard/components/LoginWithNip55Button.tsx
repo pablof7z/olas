@@ -1,9 +1,9 @@
+import { useNip55, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useNip55 } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { Text } from '@/components/nativewindui/Text';
+
 import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 
 export function LoginWithNip55Button() {
     const { apps } = useNip55();

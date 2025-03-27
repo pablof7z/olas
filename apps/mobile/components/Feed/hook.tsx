@@ -1,6 +1,3 @@
-import { usePubkeyBlacklist } from '@/hooks/blacklist';
-import { usePaymentStore } from '@/stores/payments';
-import { useReactionsStore } from '@/stores/reactions';
 import NDK, {
     Hexpubkey,
     NDKEvent,
@@ -16,6 +13,10 @@ import NDK, {
 } from '@nostr-dev-kit/ndk-mobile';
 import { matchFilters, VerifiedEvent } from 'nostr-tools';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { usePubkeyBlacklist } from '@/hooks/blacklist';
+import { usePaymentStore } from '@/stores/payments';
+import { useReactionsStore } from '@/stores/reactions';
 
 /**
  * This threshold determines how old a new entry can be to be considered
@@ -232,7 +233,7 @@ export function useFeedEvents(
             let entry: FeedEntry = allEntriesRef.current.get(id);
             if (!entry) entry = { id, reposts: [], timestamp: -1 };
             const ret = cb(entry);
-            if (!!ret) {
+            if (ret) {
                 // check this isn't muted or blacklisted
                 if (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event?.pubkey)) return;
 

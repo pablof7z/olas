@@ -1,6 +1,6 @@
-import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { View, StyleSheet } from 'react-native';
 
 interface PreviewProps {
     selectedMedia: {
@@ -20,7 +20,7 @@ export function Preview({ selectedMedia, ...props }: PreviewProps) {
                 source={{ uri: selectedMedia.uri }}
                 style={[styles.content, props.style]}
                 contentFit="contain"
-                accessible={true}
+                accessible
                 accessibilityLabel="Selected media preview"
                 {...props}
             />

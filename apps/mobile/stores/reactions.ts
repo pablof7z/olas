@@ -52,7 +52,7 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
 
                 const targetRootEventId = getTargetRootEventId(event);
                 if (!targetRootEventId) {
-                    console.log(`[REACTIONS STORE] no target root event id for`, event.id.substring(0, 8), event.kind, event.encode());
+                    console.log('[REACTIONS STORE] no target root event id for', event.id.substring(0, 8), event.kind, event.encode());
                     continue;
                 }
 
@@ -80,7 +80,7 @@ function updateStats(stats: ReactionStats, event: NDKEvent, currentPubkey?: stri
                 if (!stats.reactedByUser) {
                     stats.reactionCount++;
                     stats.reactedByUser = event;
-                } else if (event.created_at > stats.reactedByUser.created_at) {
+                } else if (event.created_at! > stats.reactedByUser.created_at!) {
                     stats.reactedByUser = event;
                 }
             } else {

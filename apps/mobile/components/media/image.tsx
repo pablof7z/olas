@@ -1,8 +1,10 @@
-import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Image, useImage } from 'expo-image';
-import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
 import React, { useMemo, useState } from 'react';
+import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
+
 import { type MediaDimensions } from './types';
+
+import { getProxiedImageUrl } from '@/utils/imgproxy';
 
 /**
  * This keeps a record of the known image heights for a given url.

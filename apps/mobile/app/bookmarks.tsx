@@ -1,16 +1,14 @@
-import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
-import { NDKList } from '@nostr-dev-kit/ndk-mobile';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useSubscribe, useNDKSessionEventKind, NDKList, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
-import Post from '@/components/events/Post';
-import { Text } from '@/components/nativewindui/Text';
-import { Album, Globe } from 'lucide-react-native';
-import { Button } from '@/components/nativewindui/Button';
 import { Stack } from 'expo-router';
 import { useSetAtom } from 'jotai';
+import { Album, Globe } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Dimensions, Pressable, View } from 'react-native';
+
+import Post from '@/components/events/Post';
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 import { activeEventAtom } from '@/stores/event';
 
 export default function Bookmarks() {

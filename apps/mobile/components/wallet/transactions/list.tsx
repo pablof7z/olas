@@ -1,4 +1,4 @@
-import { useActiveEventStore } from '@/components/wallet/store';
+import { toast } from '@backpackapp-io/react-native-toast';
 import {
     useNDKWallet,
     NDKKind,
@@ -11,13 +11,15 @@ import {
     NDKFilter,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuDeposit, NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import HistoryItem from './item';
 import { router } from 'expo-router';
 import React, { useMemo, useRef, useEffect } from 'react';
 import { FlatList, View } from 'react-native';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { usePendingPayments } from '@/stores/payments';
+
+import HistoryItem from './item';
+
 import { Text } from '@/components/nativewindui/Text';
+import { useActiveEventStore } from '@/components/wallet/store';
+import { usePendingPayments } from '@/stores/payments';
 export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet }) {
     const { activeWallet } = useNDKWallet();
     const currentUser = useNDKCurrentUser();

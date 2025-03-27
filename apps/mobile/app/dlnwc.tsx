@@ -1,11 +1,11 @@
-import { router, useGlobalSearchParams, usePathname, useUnstableGlobalHref } from 'expo-router';
-import { Text } from '@/components/nativewindui/Text';
-import { ActivityIndicator, View } from 'react-native';
-import { useEffect, useState } from 'react';
-import { NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { router, useGlobalSearchParams, usePathname, useUnstableGlobalHref } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, View, Image } from 'react-native';
+
 import { Button } from '@/components/nativewindui/Button';
-import { Image } from 'react-native';
+import { Text } from '@/components/nativewindui/Text';
 import { useAppSettingsStore } from '@/stores/app';
 export default function NWCDeepLinkScreen() {
     const result = useGlobalSearchParams();

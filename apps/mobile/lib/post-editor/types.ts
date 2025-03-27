@@ -1,4 +1,5 @@
 import { GroupEntry } from '../groups/types';
+
 import { Location } from '@/lib/publish/types';
 
 export type PostMediaType = 'image' | 'video';

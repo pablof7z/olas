@@ -1,5 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
+import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
     CameraPosition,
@@ -11,12 +15,9 @@ import {
     useMicrophonePermission,
     CameraRuntimeError,
 } from 'react-native-vision-camera';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
+
 import CameraToolbar from '@/lib/publish/components/CameraToolbar';
+import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -146,7 +147,7 @@ export default function StoryCameraScreen() {
                 pathname: '/story/preview',
                 params: {
                     path: media.path,
-                    type: type,
+                    type,
                 },
             });
         },
@@ -213,11 +214,11 @@ export default function StoryCameraScreen() {
                             ref={camera}
                             style={cameraStyle}
                             device={device}
-                            isActive={true}
-                            photo={true}
-                            video={true}
-                            audio={true}
-                            enableZoomGesture={true}
+                            isActive
+                            photo
+                            video
+                            audio
+                            enableZoomGesture
                             onError={handleCameraError}
                             testID="camera-view"
                         />
@@ -231,13 +232,13 @@ export default function StoryCameraScreen() {
                     }}
                     shutterProps={{
                         onPress: onShortPress,
-                        onLongPress: onLongPress,
+                        onLongPress,
                         onPressOut: () => {
                             if (isRecording) {
                                 onLongPress();
                             }
                         },
-                        isRecording: isRecording,
+                        isRecording,
                         disabled: isSwitchingCamera,
                         testID: 'capture-button',
                     }}

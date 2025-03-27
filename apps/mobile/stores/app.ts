@@ -1,9 +1,11 @@
-import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
-import { ZapOption } from '@/app/(home)/(settings)/zaps';
-import { db } from './db';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from '@nostr-dev-kit/ndk-wallet';
+import * as SecureStore from 'expo-secure-store';
 import { atom } from 'jotai';
+import { create } from 'zustand';
+
+import { db } from './db';
+
+import { ZapOption } from '@/app/(home)/(settings)/zaps';
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
@@ -150,7 +152,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         const advancedMode = SecureStore.getItem('advancedMode');
         if (advancedMode) state.advancedMode = advancedMode === 'true';
 
-        let defaultZapVal = SecureStore.getItem('defaultZap');
+        const defaultZapVal = SecureStore.getItem('defaultZap');
         if (defaultZapVal) {
             try {
                 state.defaultZap = JSON.parse(defaultZapVal);

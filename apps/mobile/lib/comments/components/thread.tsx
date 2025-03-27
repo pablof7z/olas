@@ -1,10 +1,10 @@
-import { useObserver } from '@/hooks/observer';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { StyleSheet } from 'react-native';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { View } from 'react-native';
-import { Comment } from './comment';
+import { NDKKind, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { Comment } from './comment';
+
+import { useObserver } from '@/hooks/observer';
 
 export function Thread({ event, indentLevel = 0, isRoot = false }: { event: NDKEvent; indentLevel: number; isRoot: boolean }) {
     const events = useObserver([{ kinds: [NDKKind.Text, NDKKind.GenericReply], ...event.filter() }], {}, [event.id]);

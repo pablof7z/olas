@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
-import { reactionPickerCallbackAtom, sheetAtom } from './bottom-sheet';
 import { useSetAtom, useAtomValue } from 'jotai';
+import { useCallback } from 'react';
+
+import { reactionPickerCallbackAtom, sheetAtom } from './bottom-sheet';
 
 export function useReactionPicker() {
     const reactionPickerSheet = useAtomValue(sheetAtom);

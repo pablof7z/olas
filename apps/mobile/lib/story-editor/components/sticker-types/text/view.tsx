@@ -1,11 +1,13 @@
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSetAtom } from 'jotai';
 import React, { useCallback, useState, useEffect, useMemo, useRef, cloneElement } from 'react';
 import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent, Button } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Sticker } from '@/lib/story-editor/store/index';
+
 import { getStyleFromName } from './styles';
-import { useSetAtom } from 'jotai';
+
 import { editStickerAtom } from '@/lib/story-editor/store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { Sticker } from '@/lib/story-editor/store/index';
 
 // Extend ViewStyle with backgroundGradient property
 interface ExtendedViewStyle extends ViewStyle {
@@ -60,7 +62,7 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
 
         const _style: TextStyle = {
             ...selectedStyle.text,
-            fontSize: fontSize,
+            fontSize,
         };
 
         return _style;
@@ -102,9 +104,9 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
                     from: fontSize,
                     to: newFontSize,
                     currentHeight: height,
-                    desiredHeight: desiredHeight,
+                    desiredHeight,
                     currentWidth: width,
-                    desiredWidth: desiredWidth,
+                    desiredWidth,
                 });
 
                 // Update font size state

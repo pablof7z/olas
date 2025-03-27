@@ -1,21 +1,22 @@
+import { Ionicons } from '@expo/vector-icons';
+import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import { useVideoPlayer } from 'expo-video';
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { useVideoPlayer } from 'expo-video';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
 import { useStickerStore } from '../store';
+import CloseButton from './CloseButton';
+import MediaRenderer from './MediaRenderer';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
+import StoryControls from './StoryControls';
 import SettingsBottomSheet from './settings';
 import { TextStickerInput } from './sticker-types';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
-import { useStoryActions } from '../hooks/useStoryActions';
 import { useMediaDimensions } from '../hooks/useMediaDimensions';
 import { useStickerManagement } from '../hooks/useStickerManagement';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import MediaRenderer from './MediaRenderer';
-import StoryControls from './StoryControls';
-import CloseButton from './CloseButton';
+import { useStoryActions } from '../hooks/useStoryActions';
 
 interface StoryPreviewScreenProps {
     path: string;

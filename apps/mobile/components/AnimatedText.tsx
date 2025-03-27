@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle } from 'react-native';
 import Animated, { useAnimatedProps, SharedValue } from 'react-native-reanimated';
+
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 
 // Whitelist the native "text" property so it can be animated.

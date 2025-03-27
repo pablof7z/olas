@@ -1,3 +1,4 @@
+import { toast } from '@backpackapp-io/react-native-toast';
 import NDK, {
     Hexpubkey,
     NDKCacheAdapterSqlite,
@@ -7,18 +8,18 @@ import NDK, {
     useNDKCurrentUser,
     useNDKSessionEventKind,
     useNDKWallet,
+    useNDKNutzapMonitor,
+    NDKCashuMintList,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, NDKNWCWallet, NDKWallet, migrateCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { db } from '@/stores/db';
-import { useDebounce } from '@/utils/debounce';
+import { create } from 'zustand';
+
 import { useAppSettingsStore } from '@/stores/app';
+import { db } from '@/stores/db';
 import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from '@/stores/db/cashu';
 import { usePaymentStore } from '@/stores/payments';
-import { useNDKNutzapMonitor, NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { migrateCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { create } from 'zustand';
+import { useDebounce } from '@/utils/debounce';
 
 interface Nip60WalletStoreState {
     wallet: NDKCashuWallet | undefined;
@@ -155,10 +156,10 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
                 const { proof, mint, tokenId, state } = proofEntry;
 
                 const a =
-                    `INSERT OR REPLACE into nip60_wallet_proofs ` +
-                    `(wallet_id, proof_c, mint, token_id, state, raw, created_at) ` +
-                    `VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT (wallet_id, proof_c, mint) ` +
-                    `DO UPDATE SET state = ?, updated_at = CURRENT_TIMESTAMP`;
+                    'INSERT OR REPLACE into nip60_wallet_proofs ' +
+                    '(wallet_id, proof_c, mint, token_id, state, raw, created_at) ' +
+                    'VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT (wallet_id, proof_c, mint) ' +
+                    'DO UPDATE SET state = ?, updated_at = CURRENT_TIMESTAMP';
                 // Ensure tokenId is a string (not undefined)
                 const safeTokenId = tokenId ?? '';
                 db.runSync(a, activeWallet.walletId, proof.C, mint, safeTokenId, state, JSON.stringify(proof), state);

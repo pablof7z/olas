@@ -1,11 +1,12 @@
-import { relayNoticesAtom } from '@/stores/relays';
+import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useLocalSearchParams } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import { FlatList, TouchableOpacity, View } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
+
 import { List, ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import { relayNoticesAtom } from '@/stores/relays';
 
 type Row = {
     id: string;
@@ -24,7 +25,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string; ndk: NDK }) {
 
     for (const [id, subscriptions] of subManager.subscriptions) {
         const row = {
-            id: id,
+            id,
             filters: subscriptions.flatMap((s) => s.executeFilters),
             rawFilters: subscriptions.flatMap((s) => s.executeFilters),
             count: subscriptions.length,

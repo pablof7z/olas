@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { editStickerAtom, Sticker, useStickerStore } from '../../../store';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom } from 'jotai';
+import React, { useState } from 'react';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { editStickerAtom, Sticker, useStickerStore } from '../../../store';
 
 export default function TextStickerInput() {
     const { addSticker, updateStickerValue } = useStickerStore();

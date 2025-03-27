@@ -1,9 +1,10 @@
+import { router } from 'expo-router';
 import { useState, useRef } from 'react';
 import { Button, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { SegmentedControl } from '~/components/nativewindui/SegmentedControl';
-import ReceiveLn from '~/components/cashu/receive/ln';
+
 import ReceiveEcash from '~/components/cashu/receive/ecash';
-import { router } from 'expo-router';
+import ReceiveLn from '~/components/cashu/receive/ln';
+import { SegmentedControl } from '~/components/nativewindui/SegmentedControl';
 
 function ReceiveView() {
     const [view, setView] = useState<'ecash' | 'ln'>('ln');

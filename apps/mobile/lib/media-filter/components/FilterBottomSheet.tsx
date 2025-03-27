@@ -1,11 +1,12 @@
-import { atom, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { useCallback, useEffect } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FilterList } from './FilterList';
-import { RefObject } from 'react';
+import { atom, useSetAtom } from 'jotai';
+import { useCallback, useEffect, RefObject } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { FilterList } from './FilterList';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 type FilterBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 

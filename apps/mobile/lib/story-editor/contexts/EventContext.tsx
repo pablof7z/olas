@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { format } from 'date-fns';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface EventContextType {
     eventStartTime: Date | null;

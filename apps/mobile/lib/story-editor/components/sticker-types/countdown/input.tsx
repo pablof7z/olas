@@ -1,10 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/lib/useColorScheme';
-import DateTimePicker from '@react-native-community/datetimepicker';
+
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+import { useColorScheme } from '@/lib/useColorScheme';
+
 interface CountdownStickerInputProps {
     onStickerAdded: () => void;
 }

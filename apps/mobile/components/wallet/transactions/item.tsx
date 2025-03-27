@@ -1,19 +1,29 @@
-import { cn } from '@/lib/cn';
-import { Button } from '@/components/nativewindui/Button';
-import { NDKEvent, useNDK, NDKNutzap, useUserProfile, NDKZapSplit, NDKPaymentConfirmation, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    useNDK,
+    NDKNutzap,
+    useUserProfile,
+    NDKZapSplit,
+    NDKPaymentConfirmation,
+    NDKKind,
+    NDKCashuWalletTx,
+} from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuDeposit, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
-import { NDKCashuWalletTx } from '@nostr-dev-kit/ndk-mobile';
+import { ArrowUp, ArrowDown, Timer } from 'lucide-react-native';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View } from 'react-native';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+
+import { Counterparty } from './counterparty';
+import { ItemRightColumn } from './item-right-column';
+
+import { Button } from '@/components/nativewindui/Button';
 import { ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
-import { ArrowUp, ArrowDown, Timer } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
 import * as User from '@/components/ui/user';
+import { cn } from '@/lib/cn';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { PendingZap } from '@/stores/payments';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
-import { ItemRightColumn } from './item-right-column';
-import { Counterparty } from './counterparty';
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out'; pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
@@ -105,7 +115,7 @@ function HistoryItemPendingZap({ item, index, target }: { item: PendingZap; inde
                 id: item.internalId,
             }}
             leftView={<LeftView direction="out" pubkey={targetPubkey} />}
-            rightView={<ItemRightColumn isPending={true} amount={amount} unit={item.zapper.unit} />}
+            rightView={<ItemRightColumn isPending amount={amount} unit={item.zapper.unit} />}
             index={index}
             onPress={onPress}>
             <Counterparty pubkey={item.zapper.target?.pubkey} />
@@ -149,7 +159,8 @@ function HistoryItemCashuQuote({
                 subTitle: 'Waiting for confirmation',
             }}
             index={index}
-            onPress={onPress}></ListItem>
+            onPress={onPress}
+        />
     );
 }
 

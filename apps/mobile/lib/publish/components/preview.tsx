@@ -1,7 +1,7 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface PreviewProps {
     selectedMedia: {
@@ -26,13 +26,7 @@ export function Preview({ selectedMedia, height, tapToUnmute = false }: PreviewP
 
 export function PreviewImage({ uri }: { uri: string }) {
     return (
-        <Image
-            source={{ uri }}
-            style={styles.previewContent}
-            contentFit="contain"
-            accessible={true}
-            accessibilityLabel="Selected media preview"
-        />
+        <Image source={{ uri }} style={styles.previewContent} contentFit="contain" accessible accessibilityLabel="Selected media preview" />
     );
 }
 

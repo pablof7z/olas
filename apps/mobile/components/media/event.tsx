@@ -1,8 +1,10 @@
 import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import MediaComponent from './media';
 import ProductGridContainer from '../product/grid-container';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export type EventMediaProps = {
     event: NDKEvent;
@@ -127,7 +129,7 @@ export default function EventMediaContainer({
                 width={width}
                 height={height}
                 contentFit={contentFit}
-                forceProxy={true}
+                forceProxy
                 maxWidth={maxWidth}
                 maxHeight={maxHeight}
                 priority={priority}

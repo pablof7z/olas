@@ -5,7 +5,7 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 export default function BackButton() {
     return (
         <TouchableOpacity onPress={() => router.back()} style={style.container}>
-            <ArrowLeft size={24} color={'white'} />
+            <ArrowLeft size={24} color="white" />
         </TouchableOpacity>
     );
 }

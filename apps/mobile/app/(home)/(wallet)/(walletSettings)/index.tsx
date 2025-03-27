@@ -1,3 +1,5 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import { useActionSheet } from '@expo/react-native-action-sheet';
 import {
     NDKCashuMintList,
     NDKEvent,
@@ -7,19 +9,17 @@ import {
     useNDKSessionEventKind,
     useNDKWallet,
 } from '@nostr-dev-kit/ndk-mobile';
-import { useActionSheet } from '@expo/react-native-action-sheet';
+import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
+import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { router } from 'expo-router';
-import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import { toast } from '@backpackapp-io/react-native-toast';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();

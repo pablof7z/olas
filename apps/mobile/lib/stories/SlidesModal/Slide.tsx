@@ -3,13 +3,14 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { activeSlideAtom, durationAtom, isLoadingAtom } from './store';
-import StoryProgress from './SlideProgress';
-import { StoryHeader } from '../components/header';
-import StoryText from '../components/StoryText';
+
 import { SlideImage } from './SlideImage';
-import { SlideVideo } from './SlideVideo';
+import StoryProgress from './SlideProgress';
 import { SlideStory } from './SlideStory';
+import { SlideVideo } from './SlideVideo';
+import { activeSlideAtom, durationAtom, isLoadingAtom } from './store';
+import StoryText from '../components/StoryText';
+import { StoryHeader } from '../components/header';
 
 const { width, height } = Dimensions.get('screen');
 

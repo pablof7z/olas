@@ -1,27 +1,23 @@
-import { Hexpubkey, NDKEventId, NDKSubscription } from '@nostr-dev-kit/ndk-mobile';
-import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-
-import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { Hexpubkey, NDKEventId, NDKSubscription, NDKFilter, NDKKind, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue } from 'jotai';
-import Feed from '@/components/Feed';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { videoKinds } from '@/utils/const';
+import Feed from '@/components/Feed';
 import { FeedEntry } from '@/components/Feed/hook';
 import { feedTypeAtom } from '@/components/FeedType/store';
 import HomeHeader from '@/components/Headers/Home';
-import { useIsSavedSearch } from '@/hooks/saved-search';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
-import { useAllFollows } from '@/hooks/follows';
-import { imageOrVideoUrlRegexp } from '@/utils/media';
-import { Stories } from '@/lib/stories/components/feed-item';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UploadIndicator from '@/components/UploadIndicator';
+import { useAllFollows } from '@/hooks/follows';
+import { useIsSavedSearch } from '@/hooks/saved-search';
+import { Stories } from '@/lib/stories/components/feed-item';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { videoKinds } from '@/utils/const';
+import { imageOrVideoUrlRegexp } from '@/utils/media';
 // const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {

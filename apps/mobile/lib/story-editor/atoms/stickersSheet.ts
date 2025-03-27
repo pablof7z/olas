@@ -1,5 +1,5 @@
-import { atom } from 'jotai';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { atom } from 'jotai';
 import { RefObject } from 'react';
 
 type StickersBottomSheetRef = RefObject<BottomSheetModal> | null;

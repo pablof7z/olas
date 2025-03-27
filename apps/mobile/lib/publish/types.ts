@@ -1,3 +1,6 @@
+// Importing GroupEntry type from groups module
+import { GroupEntry } from '../groups/types';
+
 export type Location = {
     latitude: number;
     longitude: number;
@@ -50,6 +53,3 @@ export type PostMetadata = {
 };
 
 export type PostState = 'editing' | 'uploading' | 'uploaded' | 'publishing' | 'error' | string;
-
-// Importing GroupEntry type from groups module
-import { GroupEntry } from '../groups/types';

@@ -1,10 +1,11 @@
 import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { MediaDimensions } from './types';
-import { calcDimensions } from './image';
 
-let knownVideoDimensions: Record<string, MediaDimensions> = {};
+import { calcDimensions } from './image';
+import { MediaDimensions } from './types';
+
+const knownVideoDimensions: Record<string, MediaDimensions> = {};
 
 export default function VideoComponent({
     url,
@@ -47,8 +48,8 @@ export default function VideoComponent({
     });
 
     const _style = useMemo(() => {
-        let width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
-        let height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
+        const width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
+        const height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
         return { width, height };
     }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url]);
 

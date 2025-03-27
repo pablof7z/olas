@@ -1,18 +1,18 @@
-import { useCallback } from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { Stack, router } from 'expo-router';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
-import { useEditorStore } from '@/lib/publish/store/editor';
+
+import { useActiveBlossomServer } from '@/hooks/blossom';
 import PostCaptionBottomSheet from '@/lib/publish/components/composer/metadata/CaptionBottomSheet';
 import LocationBottomSheet from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
-import { Stack, router } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useActiveBlossomServer } from '@/hooks/blossom';
-import React from 'react';
 import Caption from '@/lib/publish/components/composer/metadata/caption';
 import Expiration from '@/lib/publish/components/composer/metadata/expiration';
 import Location from '@/lib/publish/components/composer/metadata/location';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Preview } from '@/lib/publish/components/preview';
+import { useEditorStore } from '@/lib/publish/store/editor';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 const dimensions = Dimensions.get('window');
 
@@ -61,7 +61,7 @@ export default function PostMetadataScreen() {
                             justifyContent: 'center',
                             alignItems: 'center',
                         }}>
-                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} tapToUnmute={true} />
+                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} tapToUnmute />
                     </View>
                 ))}
             </ScrollView>

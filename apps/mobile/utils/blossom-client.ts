@@ -1,5 +1,3 @@
-import * as RNFS from 'react-native-fs';
-
 const now = () => Math.floor(new Date().valueOf() / 1000);
 const oneHour = () => now() + 60 * 60;
 
@@ -186,7 +184,7 @@ export class BlossomClient {
         });
     }
     static async listBlobs(server: ServerType, pubkey: string, opts?: { since?: number; until?: number }, auth?: SignedEvent) {
-        const url = new URL(`/list/` + pubkey, server);
+        const url = new URL('/list/' + pubkey, server);
         if (opts?.since) url.searchParams.append('since', String(opts.since));
         if (opts?.until) url.searchParams.append('until', String(opts.until));
         const res = await fetch(url, {
@@ -263,7 +261,7 @@ export class BlossomClient {
 
     // has blob
     static async hasBlob(server: ServerType, hash: string) {
-        const res = await fetch(new URL(`/` + hash, server), {
+        const res = await fetch(new URL('/' + hash, server), {
             method: 'HEAD',
         });
         await HTTPError.handleErrorResponse(res);

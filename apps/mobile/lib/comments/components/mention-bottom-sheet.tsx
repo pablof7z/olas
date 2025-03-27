@@ -1,9 +1,11 @@
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { useColorScheme } from '@/lib/useColorScheme';
+
 import MentionSelector from './mention-selector';
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export interface MentionBottomSheetRef {
     open: () => void;

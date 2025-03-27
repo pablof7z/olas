@@ -1,7 +1,8 @@
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Stack } from 'expo-router';
 import { Platform } from 'react-native';
+
 import { useColorScheme } from '~/lib/useColorScheme';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 export default function SettingsLayout() {
     const { colors } = useColorScheme();
     const bottomHeight = useBottomTabBarHeight();

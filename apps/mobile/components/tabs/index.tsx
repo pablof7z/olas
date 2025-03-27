@@ -1,7 +1,9 @@
-import { cn } from '@/lib/cn';
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { View, Pressable } from 'react-native';
+
 import { Text } from '../nativewindui/Text';
+
+import { cn } from '@/lib/cn';
 export default function Tabs({ options, atom }: { options: string[]; atom: PrimitiveAtom<string> }) {
     const [selectedTab, setSelectedTab] = useAtom(atom);
 

@@ -1,25 +1,26 @@
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Button } from '../nativewindui/Button';
-import { Text } from '../nativewindui/Text';
-import { List, ListItem, ListSectionHeader } from '../nativewindui/List';
-import Follows from '@/components/icons/follows';
-import ForYou from '@/components/icons/for-you';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { IconView } from '@/components/icon-view';
-import { cn } from '@/lib/cn';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import GroupsIcon from '@/components/icons/groups';
-import { FeedType } from './store';
-import { useMyGroups } from '@/lib/groups/store';
-import { useAppSettingsStore } from '@/stores/app';
+import { useAtomValue, atom } from 'jotai';
 import { X } from 'lucide-react-native';
-import { useAtomValue } from 'jotai';
-import { atom } from 'jotai';
-import { COMMUNITIES_ENABLED } from '@/utils/const';
+import { useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
+
+import { FeedType } from './store';
+import { Button } from '../nativewindui/Button';
+import { List, ListItem, ListSectionHeader } from '../nativewindui/List';
+import { Text } from '../nativewindui/Text';
+
+import { IconView } from '@/components/icon-view';
+import Follows from '@/components/icons/follows';
+import ForYou from '@/components/icons/for-you';
+import GroupsIcon from '@/components/icons/groups';
 import Tabs from '@/components/tabs';
+import { cn } from '@/lib/cn';
+import { useMyGroups } from '@/lib/groups/store';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { useAppSettingsStore } from '@/stores/app';
+import { COMMUNITIES_ENABLED } from '@/utils/const';
 
 const tabAtom = atom<string>('Feeds');
 
@@ -128,7 +129,7 @@ function Groups({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedT
                 variant="full-width"
                 data={data}
                 estimatedItemSize={50}
-                sectionHeaderAsGap={true}
+                sectionHeaderAsGap
                 renderItem={({ item, target, index }) =>
                     typeof item === 'string' ? (
                         <ListSectionHeader item={item} index={index} target={target} className="bg-card" />
@@ -217,7 +218,7 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
                 onPress: () => onSelect({ kind: 'discover', value: 'follows' }),
                 leftView: (
                     <IconView className="bg-purple-500" size={35}>
-                        <Follows stroke={'white'} size={24} />
+                        <Follows stroke="white" size={24} />
                     </IconView>
                 ),
                 value: 'follows',
@@ -229,7 +230,7 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
                 onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
                 leftView: (
                     <IconView className="bg-blue-500" size={35}>
-                        <ForYou stroke={'white'} size={24} />
+                        <ForYou stroke="white" size={24} />
                     </IconView>
                 ),
                 value: 'for-you',
@@ -252,7 +253,7 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
                 onPress: () => onSelect({ kind: 'discover', value: 'for-you' }),
                 leftView: (
                     <IconView className="bg-blue-500" size={35}>
-                        <ForYou stroke={'white'} size={24} />
+                        <ForYou stroke="white" size={24} />
                     </IconView>
                 ),
                 value: 'for-you',

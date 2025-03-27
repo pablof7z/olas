@@ -1,11 +1,12 @@
-import * as MediaLibrary from 'expo-media-library';
-
+import * as Exify from '@lodev09/react-native-exify';
 import * as FileSystem from 'expo-file-system';
 import { ImagePickerAsset } from 'expo-image-picker';
-import { PostMedia, PostMediaType, Location } from '@/lib/publish/types';
-import { convertHeicToJpeg, isHeicImage } from '../image-format';
+import * as MediaLibrary from 'expo-media-library';
 import { getRealPath } from 'react-native-compressor';
-import * as Exify from '@lodev09/react-native-exify';
+
+import { convertHeicToJpeg, isHeicImage } from '../image-format';
+
+import { PostMedia, PostMediaType, Location } from '@/lib/publish/types';
 
 export const imageOrVideoUrlRegexp = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
 

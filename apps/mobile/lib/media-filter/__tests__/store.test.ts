@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-hooks';
-import { useMediaFilterStore } from '../store';
+
 import { FILTER_PRESETS } from '../presets';
+import { useMediaFilterStore } from '../store';
 
 describe('MediaFilterStore', () => {
     beforeEach(() => {

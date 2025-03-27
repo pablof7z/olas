@@ -1,5 +1,4 @@
-import { Circle, Rect, SweepGradient, vec } from '@shopify/react-native-skia';
-import { Canvas } from '@shopify/react-native-skia';
+import { Circle, Rect, SweepGradient, vec, Canvas } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { Pressable, Text, StyleSheet, View } from 'react-native';

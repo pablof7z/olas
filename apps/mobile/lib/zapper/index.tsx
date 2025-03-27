@@ -1,14 +1,16 @@
-import { View, StyleSheet, TextInput } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import { useCallback, useState } from 'react';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { NDKEvent, NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtomValue } from 'jotai';
-import { Button } from '@/components/nativewindui/Button';
-import { formatMoney } from '@/utils/bitcoin';
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { useCallback, useState } from 'react';
+import { View, StyleSheet, TextInput } from 'react-native';
+
 import { useColorScheme } from '../useColorScheme';
-import { useZap } from '@/hooks/zap';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';
+import { useZap } from '@/hooks/zap';
+import { formatMoney } from '@/utils/bitcoin';
 
 type ZapperModalTarget = NDKEvent | NDKUser;
 export const zapperModalTargetAtom = atom<ZapperModalTarget | null, [ZapperModalTarget | null], void>(null, (get, set, value) => {

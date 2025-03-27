@@ -1,7 +1,8 @@
-import { useAtomValue, useSetAtom } from 'jotai';
-import { productEventAtom, productViewSheetRefAtom } from './store';
-import { useCallback } from 'react';
 import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useCallback } from 'react';
+
+import { productEventAtom, productViewSheetRefAtom } from './store';
 
 export function useProductView() {
     const setProductEvent = useSetAtom(productEventAtom);

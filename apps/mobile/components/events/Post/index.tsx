@@ -1,27 +1,28 @@
 import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { View } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
-import EventContent from '@/components/ui/event/content';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useMemo, useCallback, useState } from 'react';
-import { InlinedComments, Reactions } from './Reactions';
-import { Heart } from 'lucide-react-native';
-import EventMediaContainer from '@/components/media/event';
 import { useSetAtom } from 'jotai';
-import { useAppSettingsStore } from '@/stores/app';
-import { activeEventAtom } from '@/stores/event';
-import Lightning from '@/components/icons/lightning';
+import { Heart } from 'lucide-react-native';
+import { useMemo, useCallback, useState } from 'react';
+import { View, Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, Easing } from 'react-native-reanimated';
+
+import { InlinedComments, Reactions } from './Reactions';
 import { useReactEvent } from '../React';
-import { useReactionsStore } from '@/stores/reactions';
 import TopZaps from '../TopZaps';
+import { PostHeader } from './Header';
+
+import Lightning from '@/components/icons/lightning';
+import EventMediaContainer from '@/components/media/event';
+import EventContent from '@/components/ui/event/content';
 import { useZap } from '@/hooks/zap';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
-import { PostHeader } from './Header';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { isUserProfileDeleted } from '@/lib/utils/user';
+import { useAppSettingsStore } from '@/stores/app';
+import { activeEventAtom } from '@/stores/event';
+import { useReactionsStore } from '@/stores/reactions';
 
 export const MediaSection = function MediaSection({
     event,
@@ -124,14 +125,7 @@ export const MediaSection = function MediaSection({
     return (
         <GestureDetector gesture={combinedGesture}>
             <View style={{ flex: 1 }}>
-                <EventMediaContainer
-                    event={event}
-                    onPress={onPress}
-                    autoplay={true}
-                    muted={true}
-                    maxHeight={maxHeight}
-                    priority={priority}
-                />
+                <EventMediaContainer event={event} onPress={onPress} autoplay muted maxHeight={maxHeight} priority={priority} />
                 {showHeart && (
                     <View
                         style={{
@@ -146,7 +140,7 @@ export const MediaSection = function MediaSection({
                             backgroundColor: '#00000044',
                         }}>
                         <Animated.View style={animatedHeartStyle}>
-                            <Heart size={96} color={'white'} fill={'white'} />
+                            <Heart size={96} color="white" fill="white" />
                         </Animated.View>
                     </View>
                 )}
@@ -164,7 +158,7 @@ export const MediaSection = function MediaSection({
                             backgroundColor: '#00000044',
                         }}>
                         <Animated.View style={animatedZapStyle}>
-                            <Lightning size={96} color={'yellow'} fill={'orange'} />
+                            <Lightning size={96} color="yellow" fill="orange" />
                         </Animated.View>
                     </View>
                 )}

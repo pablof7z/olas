@@ -1,11 +1,12 @@
-import { useFeedEditorStore } from './store';
+import { useAtomValue } from 'jotai';
+import { List, Share } from 'lucide-react-native';
+import { useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
+
+import { useFeedEditorStore, feedEditorBottomSheetRefAtom } from './store';
+
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
-import { List, Share } from 'lucide-react-native';
-import { useAtomValue } from 'jotai';
-import { useCallback } from 'react';
-import { feedEditorBottomSheetRefAtom } from './store';
 
 export default function Confirm() {
     const { title, setMode } = useFeedEditorStore();

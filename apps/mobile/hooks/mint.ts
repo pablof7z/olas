@@ -1,8 +1,9 @@
 import { CashuMint, GetInfoResponse } from '@cashu/cashu-ts';
 import { useEffect, useState } from 'react';
+
 import { dbGetMintInfo, dbSetMintInfo } from '../stores/db/cashu';
 
-let activeMintFetches = new Map<string, Promise<GetInfoResponse>>();
+const activeMintFetches = new Map<string, Promise<GetInfoResponse>>();
 
 export function useMintInfo(url?: string) {
     const fromDb = url ? dbGetMintInfo(url) : null;

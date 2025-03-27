@@ -1,5 +1,3 @@
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
 import {
     NDKCacheAdapterSqlite,
     useNDK,
@@ -10,6 +8,9 @@ import {
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
+import { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+
 import AvatarAndName from '@/components/ui/user/avatar-name';
 import { useColorScheme } from '@/lib/useColorScheme';
 

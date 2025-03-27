@@ -1,8 +1,8 @@
+import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import React, { useMemo } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk-mobile';
+
 import { List, ListItem, ListItemProps } from '@/components/nativewindui/List';
-import { useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 const RelayListItem: React.FC<

@@ -1,10 +1,12 @@
+import { NDKStoryStickerType, NDKUser } from '@nostr-dev-kit/ndk-mobile';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TextStyle, StyleProp, LayoutChangeEvent } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
+import mentionStyles, { ExtendedViewStyle, getStyleFromName, MentionStickerStyle } from './styles';
+
 import * as User from '@/components/ui/user';
 import { Sticker } from '@/lib/story-editor/store/index';
-import { NDKStoryStickerType, NDKUser } from '@nostr-dev-kit/ndk-mobile';
-import mentionStyles, { ExtendedViewStyle, getStyleFromName, MentionStickerStyle } from './styles';
 
 interface MentionStickerViewProps {
     sticker: Sticker<NDKStoryStickerType.Pubkey>;
@@ -19,8 +21,8 @@ export default function MentionStickerView({ sticker, fixedDimensions = false, o
     // Get user data from sticker value or metadata
     // Since we're using the generic type, value is guaranteed to be NDKUser
     const ndkUser = sticker.value;
-    let pubkey = ndkUser.pubkey;
-    let userProfile = sticker.metadata?.profile;
+    const pubkey = ndkUser.pubkey;
+    const userProfile = sticker.metadata?.profile;
 
     // Get the selected style or default to the first one if not set
     const selectedStyle = getStyleFromName(sticker.style);
@@ -35,7 +37,7 @@ export default function MentionStickerView({ sticker, fixedDimensions = false, o
     // Calculate avatar size based on font size from name style
     const nameStyle = selectedStyle.nameStyle as TextStyle;
     const fontSize = nameStyle?.fontSize || 16;
-    let avatarSize = selectedStyle.avatarStyle ? selectedStyle.avatarStyle.width : 24;
+    const avatarSize = selectedStyle.avatarStyle ? selectedStyle.avatarStyle.width : 24;
 
     // Create view style with appropriate dimensions based on fixedDimensions
     const viewStyle = {
@@ -107,7 +109,7 @@ function Content({
                     pubkey={pubkey}
                     userProfile={userProfile}
                     imageSize={avatarSize}
-                    canSkipBorder={true}
+                    canSkipBorder
                     style={selectedStyle.avatarStyle as any}
                 />
             )}

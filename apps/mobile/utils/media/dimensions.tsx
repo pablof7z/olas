@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+
 import { convertMediaPath } from '.';
 
 export default async function dimensions(file: string): Promise<{ width: number; height: number }> {

@@ -10,12 +10,13 @@ import Animated, {
     interpolate,
     Extrapolate,
 } from 'react-native-reanimated';
+
 import { Text } from '@/components/nativewindui/Text';
 import UserAvatar from '@/components/ui/user/avatar';
-import { formatMoney } from '@/utils/bitcoin';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Payment, targetToId, usePaymentStore } from '@/stores/payments';
 import { colorWithOpacity } from '@/theme/colors';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
     const id = targetToId(event);
@@ -97,7 +98,7 @@ function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: bool
                         paddingRight: 4,
                     },
                 ]}>
-                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} canSkipBorder={true} />
+                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} canSkipBorder />
                 <Text className="text-xs font-bold">{formatMoney({ amount: zap.amount, unit: zap.unit, hideUnit: true })}</Text>
                 <Text className="text-xs">{zap.comment}</Text>
             </Animated.View>

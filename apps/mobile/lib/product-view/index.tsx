@@ -1,19 +1,20 @@
-import { Text } from '~/components/nativewindui/Text';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { Animated, Dimensions, FlatList, Linking, SafeAreaView, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
-import { formatMoney } from '@/utils/bitcoin';
-import { Button } from '~/components/nativewindui/Button';
 import { Link } from 'expo-router';
-import EventMediaContainer from '@/components/media/event';
 import { atom, useAtom } from 'jotai';
+import { Scroll } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Animated, Dimensions, FlatList, Linking, SafeAreaView, TextInput, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+
+import EventMediaContainer from '@/components/media/event';
+import MultiStepButton from '@/components/multistep-button';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import EventContent from '@/components/ui/event/content';
-import MultiStepButton from '@/components/multistep-button';
-import React, { useState } from 'react';
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Scroll } from 'lucide-react-native';
+import { formatMoney } from '@/utils/bitcoin';
+import { Button } from '~/components/nativewindui/Button';
+import { Text } from '~/components/nativewindui/Text';
 
 const sizeAtom = atom<string | undefined, [string], void>(undefined, (get, set, size) => {
     set(sizeAtom, size);

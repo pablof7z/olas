@@ -1,20 +1,21 @@
-import { router, Tabs, usePathname } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, UserCircle2 } from 'lucide-react-native';
-import { useScrollToTop } from '@react-navigation/native';
 import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
+import { useScrollToTop } from '@react-navigation/native';
+import { router, Tabs, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
+import { Home, UserCircle2 } from 'lucide-react-native';
+import { useMemo, useEffect } from 'react';
+import { ViewStyle } from 'react-native';
+import { useSharedValue, useAnimatedStyle, withSpring, interpolate } from 'react-native-reanimated';
+
+import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
+import { scrollDirAtom } from '@/components/Feed/store';
+import WalletButton from '@/components/buttons/wallet';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { useMemo, useEffect } from 'react';
-import WalletButton from '@/components/buttons/wallet';
 import { useUserFlare } from '@/hooks/user-flare';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { WALLET_ENABLED } from '@/utils/const';
-import { scrollDirAtom } from '@/components/Feed/store';
-import { ViewStyle } from 'react-native';
-import { useSharedValue, useAnimatedStyle, withSpring, interpolate } from 'react-native-reanimated';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -191,7 +192,7 @@ function UserButton({ size = 32 }: { size?: number }) {
                 userProfile={userProfile}
                 imageSize={size}
                 flare={userFlare}
-                canSkipBorder={true}
+                canSkipBorder
                 borderWidth={1}
             />
         );

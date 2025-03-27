@@ -1,8 +1,8 @@
+import { NDKStoryStickerType, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+
 import { useStickerStore } from '../../../store';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { sharedStyles } from '../styles';
 
 interface EventStickerInputProps {

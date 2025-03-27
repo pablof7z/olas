@@ -1,8 +1,9 @@
+import { useImage } from '@shopify/react-native-skia';
 import React, { useCallback } from 'react';
 import { StyleSheet, FlatList, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+
 import { FILTER_PRESETS } from '../presets';
 import { FilteredImage } from './FilteredImage';
-import { useImage } from '@shopify/react-native-skia';
 import { FilterPreset } from '../types';
 
 interface FilterListProps {

@@ -1,4 +1,5 @@
 import * as Exify from '@lodev09/react-native-exify';
+
 import { Location } from '@/lib/publish/types';
 
 export default async function removeExif(file: string, mediaType: 'image' | 'video'): Promise<Location | null> {

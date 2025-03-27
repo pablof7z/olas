@@ -11,12 +11,12 @@ export function getRelays(): RelayEntry[] {
 }
 
 export function setRelays(autoconnect: Set<string>, blacklist: Set<string>) {
-    db.execSync(`DELETE FROM relays`);
+    db.execSync('DELETE FROM relays');
     for (const url of autoconnect) {
-        db.runSync(`INSERT INTO relays (url, connect) VALUES (?, 1)`, [url, true]);
+        db.runSync('INSERT INTO relays (url, connect) VALUES (?, 1)', [url, true]);
     }
 
     for (const url of blacklist) {
-        db.runSync(`INSERT INTO relays (url, connect) VALUES (?, 0)`, [url, false]);
+        db.runSync('INSERT INTO relays (url, connect) VALUES (?, 0)', [url, false]);
     }
 }

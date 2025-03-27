@@ -1,9 +1,10 @@
 import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageStyle, useImage } from 'expo-image';
+import { useSetAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions } from 'react-native';
+
 import { isLoadingAtom, durationAtom } from './store';
-import { useSetAtom } from 'jotai';
 
 const screenWidth = Dimensions.get('screen').width;
 const screenHeight = Dimensions.get('screen').height;

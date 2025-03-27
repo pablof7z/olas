@@ -1,5 +1,3 @@
-import React, { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 import {
     Canvas,
     Image,
@@ -14,9 +12,13 @@ import {
     Rect,
     Paint,
 } from '@shopify/react-native-skia';
+import React, { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from 'react';
+import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
+import { getRealPath } from 'react-native-compressor';
+
 import { FilterParameters } from '../types';
 import { createColorMatrix, createVignettePaint } from '../utils/createColorMatrix';
-import { getRealPath } from 'react-native-compressor';
+
 import { Text } from '@/components/nativewindui/Text';
 
 export interface FilteredImageRef {

@@ -1,6 +1,7 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
 import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk-mobile';
+
 import { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;
@@ -55,17 +56,17 @@ function nextBlossomServerToTry(user: NDKUser, blossomList: NDKList, hash: strin
 
 export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
     return function (node: HTMLImageElement) {
-        let originalUrl = node.src;
+        const originalUrl = node.src;
         let url;
         try {
             url = new URL(originalUrl);
         } catch (e) {
             return;
         }
-        let originalServer = normalize([url.origin])[0];
+        const originalServer = normalize([url.origin])[0];
         let blossomList: NDKList | undefined | null;
         let hash: string | undefined;
-        let attemptedServers: string[] = [originalServer];
+        const attemptedServers: string[] = [originalServer];
 
         const status = document.createElement('span');
         let inserted = false;

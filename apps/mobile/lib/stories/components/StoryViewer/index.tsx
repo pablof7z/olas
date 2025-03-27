@@ -1,13 +1,15 @@
+import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import { Image, ImageStyle, useImage } from 'expo-image';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Dimensions, ActivityIndicator, Text } from 'react-native';
-import { Image, ImageStyle, useImage } from 'expo-image';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+
 import StoryStickersContainer from '../StoryStickersContainer';
-import { StoryHeader } from '../header';
 import StoryText from '../StoryText';
+import { StoryHeader } from '../header';
+
 import { useColorScheme } from '@/lib/useColorScheme';
 import { urlIsVideo } from '@/utils/media';
-import { useVideoPlayer, VideoView } from 'expo-video';
 
 interface SimpleStoryViewerProps {
     story: NDKStory;

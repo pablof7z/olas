@@ -1,4 +1,3 @@
-import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
 import {
     NDKCashuMintList,
     NDKKind,
@@ -9,16 +8,18 @@ import {
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { QrCode, Settings, SettingsIcon } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import * as User from '@/components/ui/user';
-import { useColorScheme } from '@/lib/useColorScheme';
-import TransactionHistory from '@/components/wallet/transactions/list';
 import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import NWCListTansactions from '@/components/wallet/nwc/list-transactions';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TransactionHistory from '@/components/wallet/transactions/list';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) =>
     set(nwcInfoAtom, value)
@@ -245,7 +246,7 @@ function WalletButtons() {
         () => ({
             ...buttonStyles.button,
             backgroundColor: colors.foreground,
-            width: width,
+            width,
         }),
         [colors.card]
     );

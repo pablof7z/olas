@@ -1,19 +1,21 @@
-import PreviewContainer from '@/lib/publish/components/preview/Container';
-import { mapAssetToPostMedia } from '@/utils/media';
 import { Ionicons } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { FlashList } from '@shopify/flash-list';
+import { Image } from 'expo-image';
+import * as MediaLibrary from 'expo-media-library';
 import { Stack, router } from 'expo-router';
 import { X } from 'lucide-react-native';
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Dimensions, View, Pressable, TouchableOpacity, Text, NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEditorStore } from '../store/editor';
-import { PostMedia } from '@/lib/post-editor/types';
-import { Image } from 'expo-image';
-import * as MediaLibrary from 'expo-media-library';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, SharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useEditorStore } from '../store/editor';
+
+import { PostMedia } from '@/lib/post-editor/types';
+import PreviewContainer from '@/lib/publish/components/preview/Container';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { mapAssetToPostMedia } from '@/utils/media';
 
 const COLUMNS = 4;
 
@@ -152,7 +154,7 @@ export default function PostScreen() {
                         numColumns={COLUMNS}
                         keyExtractor={(item) => item.id}
                         testID="media-grid"
-                        accessible={true}
+                        accessible
                         accessibilityLabel="Media selection grid"
                         onScroll={handleScroll}
                     />

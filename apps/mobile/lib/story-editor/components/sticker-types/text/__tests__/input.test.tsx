@@ -1,6 +1,9 @@
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { render, fireEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+
+// Import the component after all mocks are set up
+import TextStickerInput from '../input';
 
 // Mock the dependencies
 jest.mock('react-native-keyboard-controller', () => ({
@@ -24,9 +27,6 @@ jest.mock('../../../store', () => ({
 jest.mock('jotai', () => ({
     useAtom: () => [null, mockSetEditSticker],
 }));
-
-// Import the component after all mocks are set up
-import TextStickerInput from '../input';
 
 // Create a wrapper with SafeAreaProvider for all tests
 const renderWithSafeArea = (ui: React.ReactElement) => {

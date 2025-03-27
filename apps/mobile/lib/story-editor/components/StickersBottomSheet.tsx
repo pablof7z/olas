@@ -1,17 +1,18 @@
+import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Ionicons } from '@expo/vector-icons';
-import { stickersSheetRefAtom } from '../atoms/stickersSheet';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 
 import { TextStickerInput, EventStickerInput, CountdownStickerInput, PromptStickerInput, MentionStickerInput } from './sticker-types';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { editStickerAtom } from '../store';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 interface StickerOptionProps {
     name: string;

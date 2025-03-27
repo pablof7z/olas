@@ -1,21 +1,23 @@
+import { NDKNutzap, useNDKNutzapMonitor } from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { useAtomValue } from 'jotai';
+import { Search, Sun, X } from 'lucide-react-native';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import Animated, { SlideOutUp, useSharedValue, withTiming, useAnimatedStyle, FadeIn } from 'react-native-reanimated';
+import Animated, { SlideOutUp, useSharedValue, withTiming, useAnimatedStyle, FadeIn, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import Feed from './Feed';
 import NotificationsButton from './NotificationsButton';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKNutzap, useNDKNutzapMonitor } from '@nostr-dev-kit/ndk-mobile';
-import { formatMoney } from '@/utils/bitcoin';
-import { Text } from '@/components/nativewindui/Text';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import { useAtomValue } from 'jotai';
-import { FadeOut } from 'react-native-reanimated';
-import { scrollDirAtom } from '@/components/Feed/store';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { Search, Sun, X } from 'lucide-react-native';
 import { searchQueryAtom, useSearchQuery } from './store';
+
+import { scrollDirAtom } from '@/components/Feed/store';
 import { searchInputRefAtom } from '@/components/FeedType/store';
-import { router } from 'expo-router';
+import { Text } from '@/components/nativewindui/Text';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { formatMoney } from '@/utils/bitcoin';
+
 export default function HomeHeader() {
     const insets = useSafeAreaInsets();
     const [showZap, setShowZap] = useState(false);

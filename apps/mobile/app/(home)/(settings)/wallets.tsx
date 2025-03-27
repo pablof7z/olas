@@ -1,21 +1,20 @@
-import { useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { Image } from 'react-native';
+import { useNDK, useNDKWallet, NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
+import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Image, Linking, View } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+
+import { IconView } from '@/components/icon-view';
+import { useNip60Wallet } from '@/hooks/wallet';
+import { createNip60Wallet } from '@/utils/wallet';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import * as SecureStore from 'expo-secure-store';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
-import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
-import { createNip60Wallet } from '@/utils/wallet';
-import { IconView } from '@/components/icon-view';
-import { useNip60Wallet } from '@/hooks/wallet';
 
 export default function WalletsScreen() {
     const { ndk } = useNDK();
@@ -102,7 +101,7 @@ export default function WalletsScreen() {
                     id: 'primal',
                     title: 'Connect Primal Wallet',
                     leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
-                    subTitle: `Primal Wallet`,
+                    subTitle: 'Primal Wallet',
                     onPress: () => {
                         Linking.openURL(
                             'nostrnwc+primal://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc'
@@ -116,7 +115,7 @@ export default function WalletsScreen() {
                     id: 'alby',
                     title: 'Connect Alby Wallet',
                     leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
-                    subTitle: `Alby Wallet`,
+                    subTitle: 'Alby Wallet',
                     onPress: () => {
                         Linking.openURL(
                             'nostrnwc+alby://connect?appicon=https%3A%2F%2Folas.app%2Flogo.png&appname=Olas&callback=olas%3A%2F%2Fdlnwc'
@@ -142,7 +141,7 @@ export default function WalletsScreen() {
     return (
         <>
             <LargeTitleHeader
-                title={`Wallets`}
+                title="Wallets"
                 searchBar={{
                     iosHideWhenScrolling: true,
                     onChangeText: setSearchText,

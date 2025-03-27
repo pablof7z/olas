@@ -1,6 +1,6 @@
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { atom } from 'jotai';
 import { RefObject } from 'react';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { create } from 'zustand';
 
 type FeedEditorBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;

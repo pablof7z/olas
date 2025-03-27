@@ -1,5 +1,5 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 /**
  * Checks if a file is in HEIC format based on its URI

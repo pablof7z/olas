@@ -1,11 +1,13 @@
+import { BottomSheetView } from '@gorhom/bottom-sheet';
+import { BlurView } from 'expo-blur';
+import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { useSetAtom } from 'jotai';
-import { settingsSheetRefAtom } from '../../atoms/settingsSheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { settingsSheetRefAtom } from '../../atoms/settingsSheet';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 export default function SettingsBottomSheet() {
     const sheetRef = useSheetRef();

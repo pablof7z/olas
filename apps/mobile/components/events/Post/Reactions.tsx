@@ -1,15 +1,16 @@
 import { NDKEvent, NDKKind, NDKList, NostrEvent, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import React from '../React';
-import Comment from '../Comment';
 import { useEffect, useMemo, useRef } from 'react';
-import { View, TouchableOpacity, FlatList } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { Text } from '@/components/nativewindui/Text';
-import { StyleSheet } from 'react-native';
-import Zaps from './Reactions/Zaps';
-import EventContent from '@/components/ui/event/content';
-import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
+import { View, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+
+import Comment from '../Comment';
+import React from '../React';
 import Repost from '../Repost';
+import Zaps from './Reactions/Zaps';
+
+import { Text } from '@/components/nativewindui/Text';
+import EventContent from '@/components/ui/event/content';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
 import { WALLET_ENABLED } from '@/utils/const';
 
 export function Reactions({

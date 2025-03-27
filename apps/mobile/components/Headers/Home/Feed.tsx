@@ -1,19 +1,21 @@
-import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
-import { FeedType, feedTypeAtom, searchInputRefAtom } from '@/components/FeedType/store';
-import { useGroup } from '@/lib/groups/store';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { Image } from 'expo-image';
 import { useAtom, useAtomValue } from 'jotai';
 import { X, Search, ChevronDown } from 'lucide-react-native';
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { View, Pressable, StyleSheet, Animated } from 'react-native';
-import { Image } from 'expo-image';
-import { Text } from '@/components/nativewindui/Text';
+
 import SearchInput from './Search';
-import { Button } from '@/components/nativewindui/Button';
-import { useAppSettingsStore } from '@/stores/app';
-import { useIsSavedSearch } from '@/hooks/saved-search';
 import { searchQueryAtom, useSearchQuery } from './store';
+
+import { useFeedTypeBottomSheet } from '@/components/FeedType/hook';
+import { FeedType, feedTypeAtom, searchInputRefAtom } from '@/components/FeedType/store';
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import { useIsSavedSearch } from '@/hooks/saved-search';
+import { useGroup } from '@/lib/groups/store';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { useAppSettingsStore } from '@/stores/app';
 
 export default function Feed() {
     const [feedType, setFeedType] = useAtom(feedTypeAtom);

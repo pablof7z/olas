@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Canvas, Text, Shadow, Skia, vec, TileMode } from '@shopify/react-native-skia';
-import { Dimensions, View } from 'react-native';
-import { AnimatedSentence } from '@/components/AnimatedSentence';
-import EventContent from '@/components/ui/event/content';
-import { BlurView } from 'expo-blur';
-import { Reactions } from '@/components/events/Post/Reactions';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { Canvas, Text, Shadow, Skia, vec, TileMode } from '@shopify/react-native-skia';
+import { BlurView } from 'expo-blur';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, View } from 'react-native';
+
+import { AnimatedSentence } from '@/components/AnimatedSentence';
+import { Reactions } from '@/components/events/Post/Reactions';
 import TopZaps from '@/components/events/TopZaps';
+import EventContent from '@/components/ui/event/content';
 import { useReactionsStore } from '@/stores/reactions';
 
 const StoryText = ({ text, event }: { text: string; event: NDKEvent }) => {
@@ -17,7 +18,7 @@ const StoryText = ({ text, event }: { text: string; event: NDKEvent }) => {
             <EventContent content={text} style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }} />
             <TopZaps event={event} />
 
-            <Reactions event={event} reactions={reactions} inactiveColor={'white'} />
+            <Reactions event={event} reactions={reactions} inactiveColor="white" />
         </BlurView>
     );
 

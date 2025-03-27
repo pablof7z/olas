@@ -1,12 +1,11 @@
-import { NDKZapper, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import * as Haptics from 'expo-haptics';
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKUser } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKZapper, useNDKCurrentUser, useNDKWallet, NDKUser, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { addNWCZap } from '@/stores/db/zaps';
 import { useCallback, useMemo } from 'react';
+
+import { addNWCZap } from '@/stores/db/zaps';
 import { usePaymentStore } from '@/stores/payments';
 import { ZAPS_DISABLED } from '@/utils/const';
 

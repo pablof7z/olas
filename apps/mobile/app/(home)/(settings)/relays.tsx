@@ -1,22 +1,22 @@
-import { NDKKind, NDKList, useNDK, useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import { NDKKind, NDKList, useNDK, useNDKSessionEventKind, NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
+import { router, usePathname } from 'expo-router';
+import { atom, useAtom } from 'jotai';
+import { DotSquare, DotSquareIcon, MoreHorizontal, Settings } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
+
+import { Button } from '@/components/nativewindui/Button';
+import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
+import { getRelays, RelayEntry, setRelays } from '@/stores/db/relays';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router, usePathname } from 'expo-router';
-import { Button } from '@/components/nativewindui/Button';
-import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { getRelays, RelayEntry, setRelays } from '@/stores/db/relays';
-import { DotSquare, DotSquareIcon, MoreHorizontal, Settings } from 'lucide-react-native';
-import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
-import { useActionSheet } from '@expo/react-native-action-sheet';
-import { atom, useAtom } from 'jotai';
 
 const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(new Map(), (get, set, value) => {
     set(relaySettingAtom, value);

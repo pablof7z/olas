@@ -1,11 +1,13 @@
-import { View, StyleSheet, TextInput } from 'react-native';
-import { useFeedEditorStore } from './store';
-import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { Text } from '@/components/nativewindui/Text';
-import { Button } from '@/components/nativewindui/Button';
-import Tabs from '@/components/tabs';
 import { atom } from 'jotai';
+import { useCallback, useState } from 'react';
+import { View, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
+import { useFeedEditorStore } from './store';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import Tabs from '@/components/tabs';
 
 const tabAtom = atom<string>('New');
 

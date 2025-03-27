@@ -1,16 +1,17 @@
-import UserAvatar from '@/components/ui/user/avatar';
-import { useStories } from '@/hooks/stories';
-import { activeEventAtom } from '@/stores/event';
 import { NDKEvent, useUserProfile, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
-import { Pressable, StyleSheet, View, Text, ViewStyle, StyleProp } from 'react-native';
-import { FadeOut, SlideInRight } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
-import { storiesAtom, showStoriesModalAtom } from '../store';
-import { useUserFlare } from '@/hooks/user-flare';
 import { useCallback } from 'react';
+import { Pressable, StyleSheet, View, Text, ViewStyle, StyleProp } from 'react-native';
+import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
+
+import { storiesAtom, showStoriesModalAtom } from '../store';
+
+import UserAvatar from '@/components/ui/user/avatar';
+import { useStories } from '@/hooks/stories';
+import { useUserFlare } from '@/hooks/user-flare';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { activeEventAtom } from '@/stores/event';
 
 const AVATAR_SIZE = 80;
 

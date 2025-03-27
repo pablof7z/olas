@@ -1,5 +1,6 @@
 import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { View } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 

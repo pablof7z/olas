@@ -105,7 +105,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                 className={cn('px-1 shadow-none', props.shadowVisible && 'shadow-xl', isInlined ? 'pb-4' : 'pb-5')}>
                 <View className="flex-row justify-between px-0.5">
                     <View className="flex-1 flex-row items-center">
-                        {!!props.leftView ? (
+                        {props.leftView ? (
                             <View className="flex-row justify-center gap-4 pl-0.5">
                                 {props.leftView({
                                     canGoBack,
@@ -176,7 +176,7 @@ export function LargeTitleHeader(props: LargeTitleHeaderProps) {
                                 <Animated.View entering={FadeIn} exiting={FadeOut} className="h-14 flex-row items-center pl-3.5 pr-5">
                                     <Animated.View entering={FadeIn} exiting={FadeOut}>
                                         <Button variant="plain" size="icon" onPress={onSearchBackPress}>
-                                            <Icon color={colors.grey} name={'arrow-left'} size={24} />
+                                            <Icon color={colors.grey} name="arrow-left" size={24} />
                                         </Button>
                                     </Animated.View>
                                     <Animated.View entering={FadeInRight} exiting={FadeOutRight} className="flex-1">

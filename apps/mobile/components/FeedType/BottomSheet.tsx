@@ -1,12 +1,13 @@
-import { atom, useAtom, useSetAtom } from 'jotai';
-import * as SettingsStore from 'expo-secure-store';
-import { Sheet, useSheetRef } from '../nativewindui/Sheet';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import * as SettingsStore from 'expo-secure-store';
+import { atom, useAtom, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
+import { Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import FeedTypeList from '.';
 import { FeedType, feedTypeAtom } from './store';
-import { Dimensions } from 'react-native';
+import { Sheet, useSheetRef } from '../nativewindui/Sheet';
 
 export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(null, (get, set, value) => {
     set(sheetAtom, value);

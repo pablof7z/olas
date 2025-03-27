@@ -1,8 +1,9 @@
-import { formatMoney } from '@/utils/bitcoin';
 import { NDKNutzap } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
+import { formatMoney } from '@/utils/bitcoin';
 
 export function ItemNutzap({ event }: { event: NDKNutzap }) {
     const wrapped = useMemo(() => NDKNutzap.from(event), [event.id]);

@@ -1,13 +1,15 @@
+import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, TouchableOpacity, View } from 'react-native';
-import { Text } from './nativewindui/Text';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActivityIndicator } from './nativewindui/ActivityIndicator';
-import { usePaymentStore } from '@/stores/payments';
-import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useUserFlareStore } from '@/hooks/user-flare';
 import Animated, { useAnimatedStyle, withTiming, ZoomIn, runOnJS } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ActivityIndicator } from './nativewindui/ActivityIndicator';
+import { Text } from './nativewindui/Text';
+
+import { useUserFlareStore } from '@/hooks/user-flare';
 import { useAppSettingsStore } from '@/stores/app';
+import { usePaymentStore } from '@/stores/payments';
 
 export default function LoaderScreen({
     children,

@@ -1,16 +1,17 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import { NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { Icon, MaterialIconName } from '@roninoss/icons';
+import * as Clipboard from 'expo-clipboard';
+import * as SecureStore from 'expo-secure-store';
+import { nip19 } from 'nostr-tools';
 import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { nip19 } from 'nostr-tools';
-import { toast } from '@backpackapp-io/react-native-toast';
-import * as SecureStore from 'expo-secure-store';
 
 export default function SettingsIosStyleScreen() {
     const { ndk } = useNDK();

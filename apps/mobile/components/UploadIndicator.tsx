@@ -1,13 +1,15 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAtomValue } from 'jotai';
+import { X } from 'lucide-react-native';
+import { Pressable, View, StyleSheet, Image } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
+import { scrollDirAtom } from './Feed/store';
+import { Button } from './nativewindui/Button';
+import { Text } from './nativewindui/Text';
+
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { Pressable, View, StyleSheet, Image } from 'react-native';
-import { Text } from './nativewindui/Text';
-import { Button } from './nativewindui/Button';
-import { X } from 'lucide-react-native';
-import { useAtomValue } from 'jotai';
-import { scrollDirAtom } from './Feed/store';
 
 const styles = StyleSheet.create({
     container: {

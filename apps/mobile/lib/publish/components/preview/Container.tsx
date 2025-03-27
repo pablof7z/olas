@@ -1,7 +1,8 @@
 import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
+
 import { Preview } from './Preview';
 import Toolbar from './toolbar';
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 interface PreviewContainerProps {
     selectedMedia: {

@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';
-import StoryPreview from '../app/story/preview';
+import React, { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import StoryPreview from '../app/story/preview';
 
 // Mock console.log to avoid noise in test output
 const originalConsoleLog = console.log;

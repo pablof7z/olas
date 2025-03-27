@@ -3,7 +3,7 @@ export function nicelyFormattedMilliSatNumber(amount: number) {
 }
 
 export function nicelyFormattedSatNumber(amount: number) {
-    let format = (num: string): string => {
+    const format = (num: string): string => {
         const str = String(num);
         const parts = str.split('.');
 

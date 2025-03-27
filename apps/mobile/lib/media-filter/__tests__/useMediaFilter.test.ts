@@ -1,7 +1,8 @@
 import { act, renderHook } from '@testing-library/react-hooks';
+
 import { useMediaFilter } from '../hooks/useMediaFilter';
-import { useMediaFilterStore } from '../store';
 import { FILTER_PRESETS } from '../presets';
+import { useMediaFilterStore } from '../store';
 
 // Mock the entire module
 jest.mock('../utils/saveFilteredImage', () => ({

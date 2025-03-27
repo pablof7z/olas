@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, Text, Platform } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { FlashList } from '@shopify/flash-list';
+import React, { useEffect, useState } from 'react';
+import { View, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, Text, Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const aspectRatio = width / height;

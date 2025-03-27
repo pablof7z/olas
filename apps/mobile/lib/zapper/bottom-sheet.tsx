@@ -1,10 +1,12 @@
-import { atom, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { RefObject, useEffect } from 'react';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { atom, useSetAtom } from 'jotai';
+import { RefObject, useEffect } from 'react';
 import { Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import Zapper from '.';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 type ZapperBottomSheetRef = RefObject<BottomSheetModal> | null;
 export const zapperBottomSheetRefAtom = atom<ZapperBottomSheetRef, [ZapperBottomSheetRef], void>(null, (get, set, value) => {

@@ -1,10 +1,12 @@
-import { useAtomValue, useSetAtom } from 'jotai';
-import { productEventAtom, productViewSheetRefAtom } from './store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useRef, useEffect } from 'react';
-import ProductView from './index';
-import { Sheet } from '@/components/nativewindui/Sheet';
 import { Dimensions } from 'react-native';
+
+import ProductView from './index';
+import { productEventAtom, productViewSheetRefAtom } from './store';
+
+import { Sheet } from '@/components/nativewindui/Sheet';
 
 export function ProductViewBottomSheet() {
     const productEvent = useAtomValue(productEventAtom);

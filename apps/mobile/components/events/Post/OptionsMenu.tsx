@@ -1,3 +1,5 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import { BottomSheetView, BottomSheetModal } from '@gorhom/bottom-sheet';
 import {
     NDKEvent,
     NDKKind,
@@ -9,22 +11,21 @@ import {
     useNDKCurrentUser,
     useNDKSessionEventKind,
 } from '@nostr-dev-kit/ndk-mobile';
-import { BottomSheetView, BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
-import { useAtomValue, useSetAtom } from 'jotai';
 import * as Clipboard from 'expo-clipboard';
-import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Share } from 'react-native';
-import { Text } from '~/components/nativewindui/Text';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Bookmark, Code, Copy, Share as ShareIcon, Trash, UserX } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { toast } from '@backpackapp-io/react-native-toast';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Share, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
+
+import { Button } from '@/components/nativewindui/Button';
 import { useFollowType } from '@/hooks/follows';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { useAppSettingsStore } from '@/stores/app';
+import { Sheet, useSheetRef } from '~/components/nativewindui/Sheet';
+import { Text } from '~/components/nativewindui/Text';
 
 const deletePost = (event: NDKEvent) => {
     event.delete(undefined, false).then(async (e) => {
@@ -230,7 +231,7 @@ function MuteButton({
     const followType = useFollowType(user?.pubkey);
 
     if (currentUser?.pubkey === user.pubkey) return null;
-    if (!!followType) return null;
+    if (followType) return null;
 
     return (
         <Button
@@ -261,7 +262,7 @@ function ReportUserButton({
     const { ndk } = useNDK();
 
     if (currentUser?.pubkey === event.pubkey) return null;
-    if (!!followType) return null;
+    if (followType) return null;
 
     const report = useCallback(() => {
         const r = new NDKEvent(ndk, {

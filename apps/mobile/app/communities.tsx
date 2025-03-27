@@ -1,6 +1,3 @@
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
-import { List, ListItem } from '@/components/nativewindui/List';
-import { cn } from '@/lib/cn';
 import {
     Hexpubkey,
     NDKEvent,
@@ -17,13 +14,17 @@ import {
     useNDKSessionEventKind,
     wrapEvent,
 } from '@nostr-dev-kit/ndk-mobile';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImage, Image } from 'expo-image';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View } from 'react-native';
+
 import { Button } from '@/components/nativewindui/Button';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
+import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
+import { cn } from '@/lib/cn';
 import { GroupEntry, useAllGroups } from '@/lib/groups/store';
-import { View } from 'react-native';
 import { useDebounce, useThrottle } from '@/utils/debounce';
 
 const relays = ['wss://groups.0xchat.com'];
@@ -38,7 +39,7 @@ export default function CommunitiesScreen() {
 
     return (
         <>
-            <LargeTitleHeader title={'Communities'} />
+            <LargeTitleHeader title="Communities" />
             <List
                 data={sortedGroups}
                 keyExtractor={(item) => item.groupId}

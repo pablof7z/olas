@@ -1,4 +1,3 @@
-import { useRef, useEffect } from 'react';
 import {
     NDKEventWithFrom,
     NDKKind,
@@ -10,14 +9,17 @@ import {
     useNDKSessionInit,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
-import { mainKinds } from '@/utils/const';
-import { settingsStore } from '@/lib/settings-store';
-import { useReactionsStore } from '@/stores/reactions';
-import { usePaymentStore } from '@/stores/payments';
-import { useUserFlareStore } from './user-flare';
-import { useObserver } from './observer';
 import { useAtom } from 'jotai';
+import { useRef, useEffect } from 'react';
+
+import { useObserver } from './observer';
+import { useUserFlareStore } from './user-flare';
+
+import { settingsStore } from '@/lib/settings-store';
 import { appReadyAtom } from '@/stores/app';
+import { usePaymentStore } from '@/stores/payments';
+import { useReactionsStore } from '@/stores/reactions';
+import { mainKinds } from '@/utils/const';
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],

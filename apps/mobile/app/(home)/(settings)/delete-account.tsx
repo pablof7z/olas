@@ -1,15 +1,15 @@
-import { Text } from '@/components/nativewindui/Text';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, ButtonState } from '@/components/nativewindui/Button';
-import { View } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
-import { useAppSettingsStore } from '@/stores/app';
+import * as SecureStore from 'expo-secure-store';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { View } from 'react-native';
+import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button, ButtonState } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import { useAppSettingsStore } from '@/stores/app';
 
 export default function DeleteAccountScreen() {
     const { ndk } = useNDK();
@@ -56,7 +56,6 @@ export default function DeleteAccountScreen() {
                 setIt();
             } catch (error) {
                 console.error('error', error);
-                return;
             }
         } else {
             setIt();
@@ -106,7 +105,7 @@ export default function DeleteAccountScreen() {
                 There is no way to undo this.
             </Text>
 
-            <View className="flex-1"></View>
+            <View className="flex-1" />
 
             {showRealIn !== null ? (
                 <Animated.View key={1} entering={SlideInLeft} exiting={SlideOutRight}>

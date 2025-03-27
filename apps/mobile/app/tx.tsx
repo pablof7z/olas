@@ -1,11 +1,12 @@
-import { ScrollView, View } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
+import { Hexpubkey, NDKEvent, NDKTag, NDKUser, useNDK, useNDKCurrentUser, wrapEvent, NDKCashuWalletTx } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useState } from 'react';
-import { Hexpubkey, NDKEvent, NDKTag, NDKUser, useNDK, useNDKCurrentUser, wrapEvent } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWalletTx } from '@nostr-dev-kit/ndk-mobile';
+import { ScrollView, View } from 'react-native';
+
 import { UserAsHeader } from './send';
-import { useActiveEventStore } from '@/components/wallet/store';
+
 import Post from '@/components/events/Post';
+import { Text } from '@/components/nativewindui/Text';
+import { useActiveEventStore } from '@/components/wallet/store';
 
 export default function TxView() {
     const currentUser = useNDKCurrentUser();

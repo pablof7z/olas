@@ -1,18 +1,18 @@
-import { Picker } from '@react-native-picker/picker';
-import { Text } from '@/components/nativewindui/Text';
-import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import QRCode from 'react-native-qrcode-svg';
-import * as Clipboard from 'expo-clipboard';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet } from 'react-native';
-import { TouchableOpacity, View } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
-import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { toast } from '@backpackapp-io/react-native-toast';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { Button } from '@/components/nativewindui/Button';
+import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { Picker } from '@react-native-picker/picker';
+import * as Clipboard from 'expo-clipboard';
 import { atom, useAtom, useAtomValue } from 'jotai';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import QRCode from 'react-native-qrcode-svg';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
 
 const selectedMintAtom = atom<string | null, [string | null], void>(null, (get, set, mint) => {
     set(selectedMintAtom, mint);
@@ -68,7 +68,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
         }, 2000);
     }, [bolt11]);
 
-    let unit = activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
+    const unit = activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>

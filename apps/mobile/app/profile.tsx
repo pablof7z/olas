@@ -1,3 +1,26 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import {
+    NDKEvent,
+    NDKImage,
+    NDKSubscriptionCacheUsage,
+    NDKUser,
+    NDKUserProfile,
+    NostrEvent,
+    useNDKCurrentUser,
+    useUserProfile,
+    useUsersStore,
+    NDKFilter,
+    NDKKind,
+    useSubscribe,
+    useNDK,
+} from '@nostr-dev-kit/ndk-mobile';
+import { BlurView } from 'expo-blur';
+import * as Clipboard from 'expo-clipboard';
+import { Image } from 'expo-image';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ArrowLeft, Check, Copy, Grid, ImageIcon, ShoppingCart, Wind, X } from 'lucide-react-native';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,46 +34,25 @@ import {
     TextInput,
     Touchable,
 } from 'react-native';
-import * as User from '@/components/ui/user';
-import {
-    NDKEvent,
-    NDKImage,
-    NDKSubscriptionCacheUsage,
-    NDKUser,
-    NDKUserProfile,
-    NostrEvent,
-    useNDKCurrentUser,
-    useUserProfile,
-    useUsersStore,
-} from '@nostr-dev-kit/ndk-mobile';
-import ReelIcon from '@/components/icons/reel';
-import * as Clipboard from 'expo-clipboard';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
-import { NDKFilter } from '@nostr-dev-kit/ndk-mobile';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import FollowButton from '@/components/buttons/follow';
-import { Image } from 'expo-image';
-import EventContent from '@/components/ui/event/content';
-import { ArrowLeft, Check, Copy, Grid, ImageIcon, ShoppingCart, Wind, X } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import Feed from '@/components/Feed';
-import { useUserFlare } from '@/hooks/user-flare';
-import { BlurView } from 'expo-blur';
-import { useObserver } from '@/hooks/observer';
-import EventMediaContainer from '@/components/media/event';
-import { prettifyNip05 } from '@/utils/user';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { imageOrVideoUrlRegexp } from '@/utils/media';
-import { FeedEntry } from '@/components/Feed/hook';
-import { SHOP_ENABLED } from '@/utils/const';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { prepareMedia } from '@/utils/media/prepare';
-import { uploadMedia } from '@/lib/publish/actions/upload';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import Feed from '@/components/Feed';
+import { FeedEntry } from '@/components/Feed/hook';
 import BackButton from '@/components/buttons/back-button';
-import { toast } from '@backpackapp-io/react-native-toast';
+import FollowButton from '@/components/buttons/follow';
+import ReelIcon from '@/components/icons/reel';
+import EventMediaContainer from '@/components/media/event';
+import EventContent from '@/components/ui/event/content';
+import * as User from '@/components/ui/user';
+import { useObserver } from '@/hooks/observer';
+import { useUserFlare } from '@/hooks/user-flare';
+import { uploadMedia } from '@/lib/publish/actions/upload';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { SHOP_ENABLED } from '@/utils/const';
+import { imageOrVideoUrlRegexp } from '@/utils/media';
+import { prepareMedia } from '@/utils/media/prepare';
+import { prettifyNip05 } from '@/utils/user';
 
 export const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -156,7 +158,7 @@ function Header({
                             justifyContent: 'center',
                             marginHorizontal: 10,
                         }}>
-                        <X size={24} color={'white'} />
+                        <X size={24} color="white" />
                     </TouchableOpacity>
                 ) : (
                     <BackButton />
@@ -377,8 +379,8 @@ function Banner({ pubkey }: { pubkey: string }) {
 
     const handleChooseImage = useCallback(() => {
         ImageCropPicker.openPicker({
-            width: width,
-            height: height,
+            width,
+            height,
             cropping: true,
         }).then(async (image) => {
             setEditProfile({ ...editProfile, banner: image.path });
@@ -498,9 +500,9 @@ function Avatar({
                     userProfile={editProfile}
                     imageSize={90}
                     flare={flare}
-                    canSkipBorder={true}
+                    canSkipBorder
                     borderWidth={3}
-                    skipProxy={true}
+                    skipProxy
                 />
                 <TouchableOpacity
                     style={{
@@ -522,7 +524,7 @@ function Avatar({
         );
     }
 
-    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder={true} borderWidth={3} />;
+    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder borderWidth={3} />;
 }
 
 function About({ userProfile, colors }: { userProfile?: NDKUserProfile; colors: Record<string, string> }) {

@@ -1,8 +1,10 @@
-import { PostMedia } from '../types';
 import NDK from '@nostr-dev-kit/ndk-mobile';
-import { Uploader } from '@/utils/uploader';
+
+import { PostMedia } from '../types';
+
 import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
 import { BlobDescriptor } from '@/utils';
+import { Uploader } from '@/utils/uploader';
 import { determineMimeType } from '@/utils/url';
 
 export async function uploadMedia(media: PostMedia[], ndk: NDK, blossomServer: string = DEFAULT_BLOSSOM_SERVER): Promise<PostMedia[]> {

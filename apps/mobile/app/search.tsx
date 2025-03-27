@@ -1,14 +1,15 @@
+import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ArrowLeft, Search } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { ArrowLeft, Search } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+
 import Feed from '@/components/Feed';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 const inputAtom = atom('#photography');
 

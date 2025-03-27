@@ -1,9 +1,11 @@
 import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
 import { View, StyleSheet, TextStyle, Dimensions } from 'react-native';
-import EventContent from '@/components/ui/event/content';
-import { UserProfile } from '@/hooks/user-profile';
+
 import { EventStickerStyle } from './styles';
+
+import EventContent from '@/components/ui/event/content';
+import * as User from '@/components/ui/user';
+import { UserProfile } from '@/hooks/user-profile';
 
 export default function EventStickerGeneric({
     event,

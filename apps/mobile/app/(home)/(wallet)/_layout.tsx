@@ -1,8 +1,9 @@
-import Lightning from '@/components/icons/lightning';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { Redirect, Stack } from 'expo-router';
 import { Bolt, Calendar, PieChart, QrCode, SettingsIcon } from 'lucide-react-native';
+
+import Lightning from '@/components/icons/lightning';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const { colors } = useColorScheme();

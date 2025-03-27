@@ -1,7 +1,5 @@
 import NDK, { NDKCacheAdapterSqlite, NDKKind, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
-const module = 'UTILS/DB';
-
 /**
  * Get all events by users directly from the local database.
  * @returns

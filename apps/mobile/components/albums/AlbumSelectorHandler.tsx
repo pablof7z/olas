@@ -2,10 +2,12 @@ import { useAtomValue, useAtom } from 'jotai';
 import { ChevronDown, Images } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+
 import { albumsAtom, selectedAlbumAtom } from './store';
-import { useColorScheme } from '@/lib/useColorScheme';
 import { Button } from '../nativewindui/Button';
 import { Text } from '../nativewindui/Text';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function AlbumSelectorHandler() {
     const albums = useAtomValue(albumsAtom);

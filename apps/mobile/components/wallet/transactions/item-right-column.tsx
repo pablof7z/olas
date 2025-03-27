@@ -1,10 +1,12 @@
-import { useColorScheme } from '@/lib/useColorScheme';
-import { formatMoney } from '@/utils/bitcoin';
+import { Image } from 'expo-image';
 import { Timer } from 'lucide-react-native';
 import { View, StyleSheet } from 'react-native';
+
 import { Text } from '@/components/nativewindui/Text';
 import { useMintInfo } from '@/hooks/mint';
-import { Image } from 'expo-image';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { formatMoney } from '@/utils/bitcoin';
+
 export function ItemRightColumn({
     mint,
     amount,

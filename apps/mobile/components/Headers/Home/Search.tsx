@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
-import { searchQueryAtom, useSearchQuery } from './store';
-import { TextInput, View, StyleSheet, Pressable } from 'react-native';
-import { useAtom, useSetAtom, useAtomValue } from 'jotai';
-import { searchInputRefAtom } from '@/components/FeedType/store';
+import { toast } from '@backpackapp-io/react-native-toast';
 import { NDKEvent, NDKRelaySet, NDKSubscriptionCacheUsage, NDKUser, NostrEvent, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { Search } from 'lucide-react-native';
-import { toast } from '@backpackapp-io/react-native-toast';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { TextInput, View, StyleSheet, Pressable } from 'react-native';
+
+import { searchQueryAtom, useSearchQuery } from './store';
+
+import { searchInputRefAtom } from '@/components/FeedType/store';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function SearchInput() {
     const searchQuery = useAtomValue(searchQueryAtom);

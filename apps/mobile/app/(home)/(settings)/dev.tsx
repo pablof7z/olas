@@ -1,8 +1,9 @@
 import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { Text } from '@/components/nativewindui/Text';
-import { List, ListItem } from '@/components/nativewindui/List';
-import { cn } from '@/lib/cn';
 import { SQLiteDatabase } from 'expo-sqlite';
+
+import { List, ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import { cn } from '@/lib/cn';
 
 type Row = { id: string; title: string; value: string };
 

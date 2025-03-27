@@ -1,14 +1,14 @@
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader/LargeTitleHeader.ios';
-import { List, ListItem, ListRenderItemProps, ListSectionHeader } from '@/components/nativewindui/List';
-import { Text } from '@/components/nativewindui/Text';
-import ZapButton from '@/components/events/Post/Reactions/Zaps';
-import { useAppSettingsStore } from '@/stores/app';
 import { router } from 'expo-router';
-import { useAtom, useAtomValue } from 'jotai';
-import { atom } from 'jotai';
+import { useAtom, useAtomValue, atom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Switch, TextInput, TouchableOpacity, View } from 'react-native';
+
+import ZapButton from '@/components/events/Post/Reactions/Zaps';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader/LargeTitleHeader.ios';
+import { List, ListItem, ListRenderItemProps, ListSectionHeader } from '@/components/nativewindui/List';
 import { Slider } from '@/components/nativewindui/Slider';
+import { Text } from '@/components/nativewindui/Text';
+import { useAppSettingsStore } from '@/stores/app';
 
 export type ZapOption = {
     amount: number;
