@@ -38,7 +38,7 @@ export function PreviewImage({ uri }: { uri: string }) {
 
 export function PreviewVideo({ uri, tapToUnmute = false }: { uri: string; tapToUnmute?: boolean }) {
     const [isMuted, setIsMuted] = useState(true);
-    
+
     const player = useVideoPlayer({ uri }, (player) => {
         player.loop = true;
         player.muted = isMuted;
@@ -57,24 +57,12 @@ export function PreviewVideo({ uri, tapToUnmute = false }: { uri: string; tapToU
     if (tapToUnmute) {
         return (
             <TouchableOpacity activeOpacity={0.9} onPress={handleTap} style={styles.previewContent}>
-                <VideoView
-                    player={player}
-                    style={styles.previewContent}
-                    nativeControls={false}
-                    contentFit='contain'
-                />
+                <VideoView player={player} style={styles.previewContent} nativeControls={false} contentFit="contain" />
             </TouchableOpacity>
         );
     }
 
-    return (
-        <VideoView
-            player={player}
-            style={styles.previewContent}
-            nativeControls={false}
-            contentFit='contain'
-        />
-    );
+    return <VideoView player={player} style={styles.previewContent} nativeControls={false} contentFit="contain" />;
 }
 
 const styles = StyleSheet.create({

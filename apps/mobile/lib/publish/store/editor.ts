@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import { PostMedia, PostMetadata, PostState } from '@/lib/publish/types';
 import { atom } from 'jotai';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { RefObject } from 'react';
 import NDK from '@nostr-dev-kit/ndk-mobile';
 import { prepareMedia } from '@/utils/media/prepare';
 import { uploadMedia } from '@/lib/publish/actions/upload';
@@ -245,9 +243,3 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
 /** Atom that controls what type of content is being published (post, story, or video) */
 export const publishPostTypeAtom = atom<'post' | 'story' | 'video'>('post');
-
-/** Reference to the caption input bottom sheet */
-export const captionBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
-
-/** Reference to the expiration settings bottom sheet */
-export const expirationBottomSheetRefAtom = atom<RefObject<ExpirationBottomSheetRef> | null>(null);

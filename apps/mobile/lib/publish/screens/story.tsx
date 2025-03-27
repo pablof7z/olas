@@ -227,7 +227,7 @@ export default function StoryCameraScreen() {
                 <CameraToolbar
                     selectorProps={{
                         onPress: () => router.push('/story/selector'),
-                        testID: 'selector-button'
+                        testID: 'selector-button',
                     }}
                     shutterProps={{
                         onPress: onShortPress,
@@ -239,12 +239,12 @@ export default function StoryCameraScreen() {
                         },
                         isRecording: isRecording,
                         disabled: isSwitchingCamera,
-                        testID: 'capture-button'
+                        testID: 'capture-button',
                     }}
                     flipButtonProps={{
                         onPress: onFlipCamera,
                         disabled: isSwitchingCamera,
-                        testID: 'flip-button'
+                        testID: 'flip-button',
                     }}
                 />
             </View>

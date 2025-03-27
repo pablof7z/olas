@@ -18,4 +18,4 @@ export default function PublishScreen() {
             {postType === 'video' && <VideoScreen />}
         </>
     );
-    }
+}

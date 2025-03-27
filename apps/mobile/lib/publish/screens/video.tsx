@@ -121,16 +121,19 @@ export default function VideoScreen() {
         }
     }, [cameraPosition, devices, isRecording, isSwitchingCamera]);
 
-    const handleVideoRecorded = useCallback(async (video: VideoFile) => {
-        console.log('Video recorded:', video);
-        try {
-            await addMedia(video.path, 'video');
-            router.push('/publish/post/metadata');
-        } catch (error) {
-            console.error('Failed to save video:', error);
-            Alert.alert('Error', 'Failed to save the recorded video. Please try again.');
-        }
-    }, [addMedia]);
+    const handleVideoRecorded = useCallback(
+        async (video: VideoFile) => {
+            console.log('Video recorded:', video);
+            try {
+                await addMedia(video.path, 'video');
+                router.push('/publish/post/metadata');
+            } catch (error) {
+                console.error('Failed to save video:', error);
+                Alert.alert('Error', 'Failed to save the recorded video. Please try again.');
+            }
+        },
+        [addMedia]
+    );
 
     const toggleRecording = useCallback(async () => {
         try {
@@ -211,18 +214,18 @@ export default function VideoScreen() {
                 <CameraToolbar
                     selectorProps={{
                         onPress: handleSelectVideo,
-                        testID: 'video-selector-button'
+                        testID: 'video-selector-button',
                     }}
                     shutterProps={{
                         onPress: toggleRecording,
                         isRecording: isRecording,
                         disabled: isSwitchingCamera,
-                        testID: 'record-button'
+                        testID: 'record-button',
                     }}
                     flipButtonProps={{
                         onPress: onFlipCamera,
                         disabled: isSwitchingCamera,
-                        testID: 'flip-button'
+                        testID: 'flip-button',
                     }}
                 />
             </View>
@@ -252,4 +255,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 16,
     },
-}); 
+});

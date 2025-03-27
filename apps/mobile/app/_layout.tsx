@@ -60,14 +60,14 @@ export default function App() {
 
     useEffect(() => {
         setAppReady(true);
-    }, [])
+    }, []);
 
     console.log('<App> rendering', appRenderCount++);
     return (
         <LoaderScreen appReady={appReady} wotReady={true}>
-           {!!ndk && <RootLayout />} 
+            {!!ndk && <RootLayout />}
         </LoaderScreen>
-    )
+    );
 }
 
 let rootLayoutRenderCount = 0;
@@ -104,8 +104,6 @@ export function RootLayout() {
         setFeedType(feedType);
     }, []);
 
-    
-
     useEffect(() => {
         if (!ndk) return;
         ndk.pool.on('notice', (relay, notice) => {
@@ -133,64 +131,61 @@ export function RootLayout() {
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
-                        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                            <ActionSheetProvider>
-                                <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                    <PortalHost />
-                                    <Stack>
-                                        <Stack.Screen name="login" />
+                    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+                        <ActionSheetProvider>
+                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                <PortalHost />
+                                <Stack>
+                                    <Stack.Screen name="login" />
 
-                                        <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="publish" options={{ headerShown: false }} />
+                                    <Stack.Screen name="publish" options={{ headerShown: false }} />
 
-                                        <Stack.Screen name="(home)" options={{ headerShown: false, title: 'Home' }} />
+                                    <Stack.Screen name="(home)" options={{ headerShown: false, title: 'Home' }} />
 
-                                        <Stack.Screen name="search" options={{ headerShown: true, title: 'Search' }} />
+                                    <Stack.Screen name="search" options={{ headerShown: true, title: 'Search' }} />
 
-                                        <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="profile" />
-                                        <Stack.Screen name="notifications" options={{ headerShown: false }} />
-                                        <Stack.Screen name="communities" options={{ headerShown: false }} />
-                                        <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
-                                        <Stack.Screen name="365" />
+                                    <Stack.Screen name="profile" />
+                                    <Stack.Screen name="notifications" options={{ headerShown: false }} />
+                                    <Stack.Screen name="communities" options={{ headerShown: false }} />
+                                    <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen name="365" />
 
-                                        <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
+                                    <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
 
-                                        <Stack.Screen name="view" />
-                                        <Stack.Screen name="eula" options={modalPresentation()} />
+                                    <Stack.Screen name="view" />
+                                    <Stack.Screen name="eula" options={modalPresentation()} />
 
-                                        <Stack.Screen name="stories" options={{ headerShown: false }} />
-                                        <Stack.Screen name="story" options={{ headerShown: false }} />
-                                        <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }} />
+                                    <Stack.Screen name="stories" options={{ headerShown: false }} />
+                                    <Stack.Screen name="story" options={{ headerShown: false }} />
+                                    <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }} />
 
-                                        <Stack.Screen
-                                            name="receive"
-                                            options={{ headerShown: true, presentation: 'modal', title: 'Receive' }}
-                                        />
-                                        <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
-                                    </Stack>
+                                    <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
+                                    <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
+                                </Stack>
 
-                                    <PostOptionsMenu />
-                                    {/* <AlbumsBottomSheet /> */}
-                                    {/* <PostTypeSelectorBottomSheet /> */}
-                                    <FeedTypeBottomSheet />
-                                    {/* <HandleNotificationPrompt /> */}
-                                    <TagSelectorBottomSheet />
-                                    <FeedEditorBottomSheet />
-                                    <UserBottomSheet />
-                                    <ReactionPickerBottomSheet />
-                                    <CommentsBottomSheet />
-                                    <ZapperBottomSheet />
-                                    <ProductViewBottomSheet />
-                                </NavThemeProvider>
-                            </ActionSheetProvider>
-                            <Toasts />
-                            <DevelopmentStatus />
-                        </KeyboardProvider>
+                                <PostOptionsMenu />
+                                {/* <AlbumsBottomSheet /> */}
+                                {/* <PostTypeSelectorBottomSheet /> */}
+                                <FeedTypeBottomSheet />
+                                {/* <HandleNotificationPrompt /> */}
+                                <TagSelectorBottomSheet />
+                                <FeedEditorBottomSheet />
+                                <UserBottomSheet />
+                                <ReactionPickerBottomSheet />
+                                <CommentsBottomSheet />
+                                <ZapperBottomSheet />
+                                <ProductViewBottomSheet />
+                            </NavThemeProvider>
+                        </ActionSheetProvider>
+                        <Toasts />
+                        <DevelopmentStatus />
+                    </KeyboardProvider>
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
         </>

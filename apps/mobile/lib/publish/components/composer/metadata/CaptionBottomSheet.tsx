@@ -24,8 +24,8 @@ function Content() {
                 styles.captionInput,
                 {
                     color: colors.foreground,
-                    backgroundColor: 'transparent'
-                }
+                    backgroundColor: 'transparent',
+                },
             ]}
             value={localCaption}
             onChangeText={setLocalCaption}

@@ -1,6 +1,6 @@
-import { useNutzapMonitor, useNip60WalletStore } from "@/hooks/wallet";
-import { useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
-import { useEffect } from "react";
+import { useNutzapMonitor, useNip60WalletStore } from '@/hooks/wallet';
+import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect } from 'react';
 
 let renderCount = 0;
 

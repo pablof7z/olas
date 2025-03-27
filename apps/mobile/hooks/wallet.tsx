@@ -1,4 +1,13 @@
-import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKKind, NDKSubscriptionCacheUsage, useNDK, useNDKCurrentUser, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import NDK, {
+    Hexpubkey,
+    NDKCacheAdapterSqlite,
+    NDKKind,
+    NDKSubscriptionCacheUsage,
+    useNDK,
+    useNDKCurrentUser,
+    useNDKSessionEventKind,
+    useNDKWallet,
+} from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { db } from '@/stores/db';
@@ -21,25 +30,28 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, get) => (
 
     init: (ndk: NDK, pubkey: Hexpubkey) => {
         const loadingEventIds = new Set<string>();
-        
-        ndk.subscribe([
-            { kinds: [NDKKind.CashuWallet], authors: [pubkey] }
-        ], {
-            subId: 'nip60-wallet',
-            skipVerification: true,
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE
-        }, undefined, {
-            onEvent: (event) => {
-                if (loadingEventIds.has(event.id)) return;
 
-                loadingEventIds.add(event.id);
-                NDKCashuWallet.from(event)
-                    .then((newWallet) => set({ wallet: newWallet }))
-                    .catch((e) => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)));
+        ndk.subscribe(
+            [{ kinds: [NDKKind.CashuWallet], authors: [pubkey] }],
+            {
+                subId: 'nip60-wallet',
+                skipVerification: true,
+                cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
+            },
+            undefined,
+            {
+                onEvent: (event) => {
+                    if (loadingEventIds.has(event.id)) return;
+
+                    loadingEventIds.add(event.id);
+                    NDKCashuWallet.from(event)
+                        .then((newWallet) => set({ wallet: newWallet }))
+                        .catch((e) => console.error('error loading nip60 wallet', e, JSON.stringify(event.rawEvent(), null, 4)));
+                },
             }
-        })
-    }
-}))
+        );
+    },
+}));
 
 export function useNip60Wallet() {
     return useNip60WalletStore((state) => state.wallet);

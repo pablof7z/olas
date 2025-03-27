@@ -1,11 +1,10 @@
-import { RefObject, useEffect, useRef } from 'react';
-import { useEditorStore, expirationBottomSheetRefAtom } from '@/lib/publish/store/editor';
+import { useEffect, useRef } from 'react';
+import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { Timer } from 'lucide-react-native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAtom } from 'jotai';
-import ExpirationBottomSheet, { EXPIRATION_OPTIONS, ExpirationBottomSheetRef } from './ExpirationBottomSheet';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useSetAtom } from 'jotai';
+import ExpirationBottomSheet, { EXPIRATION_OPTIONS, ExpirationBottomSheetRef, expirationBottomSheetRefAtom } from './ExpirationBottomSheet';
 import React from 'react';
 
 export default function Expiration() {
@@ -14,7 +13,7 @@ export default function Expiration() {
     const setExpiration = useEditorStore((state) => state.setExpiration);
 
     const bottomSheetRef = useRef<ExpirationBottomSheetRef>(null);
-    const [expirationBottomSheetRef, setExpirationBottomSheetRef] = useAtom(expirationBottomSheetRefAtom);
+    const setExpirationBottomSheetRef = useSetAtom(expirationBottomSheetRefAtom);
 
     useEffect(() => {
         setExpirationBottomSheetRef(bottomSheetRef);

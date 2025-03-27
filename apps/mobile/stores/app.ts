@@ -314,5 +314,4 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
     },
 }));
 
-
 export const appReadyAtom = atom(false);

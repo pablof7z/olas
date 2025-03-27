@@ -106,7 +106,7 @@ interface FilteredImageInnerProps {
 function FilteredImageInner({ image, colorMatrix, filterParams, contentFit, width, height }: FilteredImageInnerProps) {
     const imageWidth = width || image.width();
     const imageHeight = height || image.height();
-    
+
     // Create vignette paint if needed
     const vignettePaint = useMemo(() => {
         if (filterParams.vignette && filterParams.vignette > 0) {
@@ -123,10 +123,8 @@ function FilteredImageInner({ image, colorMatrix, filterParams, contentFit, widt
             </Image>
 
             {/* Vignette effect */}
-            {vignettePaint && (
-                <Rect x={0} y={0} width={imageWidth} height={imageHeight} paint={vignettePaint} />
-            )}
-            
+            {vignettePaint && <Rect x={0} y={0} width={imageWidth} height={imageHeight} paint={vignettePaint} />}
+
             {/* Grain effect would be added here similarly */}
         </>
     );

@@ -30,17 +30,13 @@ type CameraToolbarProps = {
     flipButtonProps: FlipButtonProps;
 };
 
-export default function CameraToolbar({
-    selectorProps,
-    shutterProps,
-    flipButtonProps,
-}: CameraToolbarProps) {
+export default function CameraToolbar({ selectorProps, shutterProps, flipButtonProps }: CameraToolbarProps) {
     const insets = useSafeAreaInsets();
 
     return (
         <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
-            <TouchableOpacity 
-                onPress={selectorProps.onPress} 
+            <TouchableOpacity
+                onPress={selectorProps.onPress}
                 style={styles.selectorButton}
                 testID={selectorProps.testID || 'selector-button'}>
                 <Ionicons name="images-outline" size={30} color="white" />
@@ -113,4 +109,4 @@ const styles = StyleSheet.create({
     disabledButton: {
         opacity: 0.5,
     },
-}); 
+});

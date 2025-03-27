@@ -1,5 +1,14 @@
 import { useRef, useEffect } from 'react';
-import { NDKEventWithFrom, NDKKind, NDKList, NDKSubscriptionCacheUsage, NDKUser, useNDK, useNDKCurrentUser, useNDKSessionInit } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEventWithFrom,
+    NDKKind,
+    NDKList,
+    NDKSubscriptionCacheUsage,
+    NDKUser,
+    useNDK,
+    useNDKCurrentUser,
+    useNDKSessionInit,
+} from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
 import { mainKinds } from '@/utils/const';
 import { settingsStore } from '@/lib/settings-store';

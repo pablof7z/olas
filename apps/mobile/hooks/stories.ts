@@ -35,7 +35,7 @@ export function useStories() {
             changed = true;
 
             if (!isInRightTimeframe(event)) continue;
-            
+
             if (isStory(event) || isLiveEvent(event) || isNDKStory(event)) {
                 const pubkey = event.pubkey;
                 const current = map.get(pubkey) ?? { events: [], live: false };
