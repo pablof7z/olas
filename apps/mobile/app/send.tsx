@@ -1,18 +1,18 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
-    CashuPaymentInfo,
-    Hexpubkey,
-    NDKLnLudData,
+    type CashuPaymentInfo,
+    type Hexpubkey,
+    type NDKLnLudData,
     NDKUser,
-    NDKZapMethod,
-    NDKZapMethodInfo,
+    type NDKZapMethod,
+    type NDKZapMethodInfo,
     NDKZapper,
     useFollows,
     useNDK,
     useNDKWallet,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -20,7 +20,7 @@ import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-n
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, ButtonProps, ButtonState } from '@/components/nativewindui/Button';
+import { Button, ButtonProps, type ButtonState } from '@/components/nativewindui/Button';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';
@@ -68,7 +68,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     async function send() {
         setButtonState('loading');
         zap.amount = amount * 1000;
-        zap.once('complete', (results) => {
+        zap.once('complete', (_results) => {
             setButtonState('success');
         });
         zap.zap();
@@ -84,7 +84,8 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
         <KeyboardAwareScrollView>
             <View
                 className="w-full flex-1 flex-col items-center gap-2 pt-5"
-                style={{ marginTop: Platform.OS === 'android' ? inset.top : 0 }}>
+                style={{ marginTop: Platform.OS === 'android' ? inset.top : 0 }}
+            >
                 <View className="absolute w-full flex-1 flex-row items-center justify-between gap-2 p-2">
                     <Button variant="plain" className="w-fit" onPress={onCancel}>
                         <Text className="text-base text-muted-foreground">Cancel</Text>
@@ -107,7 +108,11 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
                         onChangeText={(text) => setAmount(Number(text))}
                     />
 
-                    <WalletBalance amount={amount} unit={(activeWallet as NDKCashuWallet).unit} onPress={() => inputRef.current?.focus()} />
+                    <WalletBalance
+                        amount={amount}
+                        unit={(activeWallet as NDKCashuWallet).unit}
+                        onPress={() => inputRef.current?.focus()}
+                    />
 
                     <TextInput
                         className="m-4 grow rounded-lg bg-card p-2 text-base text-foreground"
@@ -118,8 +123,15 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
                         onChangeText={setNote}
                     />
 
-                    <Button variant="secondary" className="grow items-center bg-foreground" onPress={send} state={buttonState}>
-                        <Text className="py-2 font-mono text-lg font-bold uppercase !text-background">Send</Text>
+                    <Button
+                        variant="secondary"
+                        className="grow items-center bg-foreground"
+                        onPress={send}
+                        state={buttonState}
+                    >
+                        <Text className="py-2 font-mono text-lg font-bold uppercase !text-background">
+                            Send
+                        </Text>
                     </Button>
                 </View>
 
@@ -132,7 +144,10 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
                                 <View className="flex flex-col gap-2">
                                     {(info as CashuPaymentInfo).mints.map((mint) => {
                                         return (
-                                            <Text key={mint} className="text-sm text-muted-foreground">
+                                            <Text
+                                                key={mint}
+                                                className="text-sm text-muted-foreground"
+                                            >
                                                 {mint}
                                             </Text>
                                         );
@@ -143,7 +158,8 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
                             {method === 'nip57' && (
                                 <View className="flex flex-col gap-2">
                                     <Text className="py-2 text-base font-medium">
-                                        {(info as NDKLnLudData).lud06 ?? (info as NDKLnLudData).lud16}
+                                        {(info as NDKLnLudData).lud06 ??
+                                            (info as NDKLnLudData).lud16}
                                     </Text>
                                 </View>
                             )}
@@ -155,7 +171,12 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     );
 }
 
-function FollowItem({ index, target, item, onPress }: { index: number; target: ListItemTarget; item: string; onPress: () => void }) {
+function FollowItem({
+    index,
+    target,
+    item,
+    onPress,
+}: { index: number; target: ListItemTarget; item: string; onPress: () => void }) {
     const { userProfile } = useUserProfile(item);
 
     return (
@@ -168,8 +189,17 @@ function FollowItem({ index, target, item, onPress }: { index: number; target: L
             }}
             leftView={
                 <View className="flex-row items-center py-2">
-                    <User.Avatar pubkey={item} imageSize={16} userProfile={userProfile} className="mr-2 h-10 w-10" />
-                    <User.Name userProfile={userProfile} pubkey={item} className="text-lg text-foreground" />
+                    <User.Avatar
+                        pubkey={item}
+                        imageSize={16}
+                        userProfile={userProfile}
+                        className="mr-2 h-10 w-10"
+                    />
+                    <User.Name
+                        userProfile={userProfile}
+                        pubkey={item}
+                        className="text-lg text-foreground"
+                    />
                 </View>
             }
             onPress={onPress}
@@ -185,11 +215,8 @@ export default function SendView() {
     const inset = useSafeAreaInsets();
     const { colors } = useColorScheme();
 
-    console.log({ selectedPubkey });
-
     const onPress = useCallback(
         (pubkey: Hexpubkey) => {
-            console.log('pubkey', pubkey);
             setSelectedPubkey(pubkey);
         },
         [setSelectedPubkey]
@@ -238,7 +265,10 @@ export default function SendView() {
 
     return (
         <>
-            <View className="flex-1" style={{ paddingTop: Platform.OS === 'android' ? inset.top : 0 }}>
+            <View
+                className="flex-1"
+                style={{ paddingTop: Platform.OS === 'android' ? inset.top : 0 }}
+            >
                 <View className="flex-row items-center gap-2 pr-4">
                     <TextInput
                         className="bg-muted/40 m-4 grow rounded-lg p-2 text-base text-foreground"
@@ -258,7 +288,12 @@ export default function SendView() {
                     estimatedItemSize={56}
                     variant="insets"
                     renderItem={({ index, target, item }) => (
-                        <FollowItem index={index} target={target} item={item} onPress={() => onPress(item)} />
+                        <FollowItem
+                            index={index}
+                            target={target}
+                            item={item}
+                            onPress={() => onPress(item)}
+                        />
                     )}
                 />
             </View>

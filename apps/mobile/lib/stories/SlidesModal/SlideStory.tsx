@@ -1,10 +1,10 @@
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
-import { durationAtom, isLoadingAtom } from './store';
 import SimpleStoryViewer from '../components/StoryViewer';
+import { durationAtom, isLoadingAtom } from './store';
 
 export function SlideStory({ story }: { story: NDKStory }) {
     const setIsLoading = useSetAtom(isLoadingAtom);

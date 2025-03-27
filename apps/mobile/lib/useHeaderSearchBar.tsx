@@ -1,6 +1,6 @@
 import { useNavigation } from 'expo-router';
 import * as React from 'react';
-import { SearchBarProps } from 'react-native-screens';
+import type { SearchBarProps } from 'react-native-screens';
 
 import { useColorScheme } from './useColorScheme';
 

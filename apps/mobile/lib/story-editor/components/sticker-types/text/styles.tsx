@@ -1,6 +1,6 @@
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
-import { TextStyle, View, ViewStyle } from 'react-native';
+import { type TextStyle, View, type ViewStyle } from 'react-native';
 
 interface GradientConfig {
     colors: string[];
@@ -41,7 +41,15 @@ const styles: TextStickerStyle[] = [
     {
         name: 'Glasss',
         container: () => (
-            <BlurView style={{ flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 16, padding: 16 }} />
+            <BlurView
+                style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.5)',
+                    borderRadius: 16,
+                    padding: 16,
+                }}
+            />
         ),
         text: {
             color: '#000',
@@ -54,7 +62,16 @@ const styles: TextStickerStyle[] = [
     {
         name: 'Dark Glasss',
         container: () => (
-            <BlurView tint="dark" style={{ flex: 1, borderWidth: 1, borderColor: '#00000099', borderRadius: 16, padding: 16 }} />
+            <BlurView
+                tint="dark"
+                style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: '#00000099',
+                    borderRadius: 16,
+                    padding: 16,
+                }}
+            />
         ),
         text: {
             color: '#fff',

@@ -1,10 +1,10 @@
-import { Skia, ImageFormat } from '@shopify/react-native-skia';
 import { Buffer } from 'buffer';
+import { ImageFormat, Skia } from '@shopify/react-native-skia';
 import * as FileSystem from 'expo-file-system';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { FilterParameters } from '../types';
 import { createColorMatrix } from './createColorMatrix';
-import { FilterParameters } from '../types';
 
 /**
  * Captures and saves a filtered image using Skia
@@ -13,10 +13,11 @@ import { FilterParameters } from '../types';
  * @param filterParams Filter parameters to apply
  * @returns Promise resolving to the new file URI or null if failed
  */
-export async function saveFilteredImage(sourceUri: string, filterParams: FilterParameters): Promise<string | null> {
+export async function saveFilteredImage(
+    sourceUri: string,
+    filterParams: FilterParameters
+): Promise<string | null> {
     try {
-        console.log('Saving filtered image:', { sourceUri, filterParams });
-
         // Load the source image as a binary file
         const imageData = await FileSystem.readAsStringAsync(sourceUri, {
             encoding: FileSystem.EncodingType.Base64,
@@ -82,8 +83,6 @@ export async function saveFilteredImage(sourceUri: string, filterParams: FilterP
         await FileSystem.writeAsStringAsync(newUri, base64, {
             encoding: FileSystem.EncodingType.Base64,
         });
-
-        console.log('Filtered image saved:', newUri);
         return newUri;
     } catch (error) {
         console.error('Error saving filtered image:', error);

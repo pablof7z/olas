@@ -1,7 +1,14 @@
-import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Image, ImageProps, useImage } from 'expo-image';
-import React, { ForwardedRef, forwardRef, useMemo } from 'react';
-import { View, StyleSheet, ImageSourcePropType, ViewStyle, ImageStyle, StyleProp } from 'react-native';
+import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Image, type ImageProps, useImage } from 'expo-image';
+import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
+import {
+    type ImageSourcePropType,
+    type ImageStyle,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
 
 import FlareLabel, { FlareElement } from './flare';
 
@@ -76,7 +83,9 @@ const UserAvatar = forwardRef(function UserAvatar(
         },
         {
             onError: () => {
-                if (proxiedImageUrl) console.log('error loading image', pubkey);
+                if (proxiedImageUrl) {
+                    // Handle error case
+                }
             },
         }
     );

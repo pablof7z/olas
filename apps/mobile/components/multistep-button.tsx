@@ -1,14 +1,14 @@
 import { CircleCheck } from 'lucide-react-native';
-import { Pressable, PressableProps, Text, View, ViewStyle } from 'react-native';
+import { Pressable, type PressableProps, Text, View, type ViewStyle } from 'react-native';
 import Animated, {
-    AnimatedProps,
+    type AnimatedProps,
     FadeInDown,
     FadeInLeft,
     FadeOutLeft,
     FadeOutUp,
     interpolateColor,
     LinearTransition,
-    SharedValue,
+    type SharedValue,
     useAnimatedStyle,
     useDerivedValue,
     withSpring,
@@ -53,17 +53,27 @@ type DotProps = {
     animation: SharedValue<number>;
 };
 
-export default function MultiStepButton({ data, labels, onChange, selectedIndex }: OnboardingIndicatorProps) {
+export default function MultiStepButton({
+    data,
+    labels,
+    onChange,
+    selectedIndex,
+}: OnboardingIndicatorProps) {
     return (
         <View style={{ gap: _spacing }}>
-            <Pagination selectedIndex={selectedIndex} count={data.length} style={{ alignSelf: 'center' }} />
+            <Pagination
+                selectedIndex={selectedIndex}
+                count={data.length}
+                style={{ alignSelf: 'center' }}
+            />
             <View style={{ flexDirection: 'row', gap: _spacing }}>
                 {selectedIndex > 0 && (
                     <Button
                         style={{ backgroundColor: '#ddd' }}
                         onPress={() => {
                             onChange(selectedIndex - 1);
-                        }}>
+                        }}
+                    >
                         <Text style={{ fontWeight: '600' }}>Back</Text>
                     </Button>
                 )}
@@ -74,7 +84,8 @@ export default function MultiStepButton({ data, labels, onChange, selectedIndex 
                             return;
                         }
                         onChange(selectedIndex + 1);
-                    }}>
+                    }}
+                >
                     {selectedIndex === data.length - 1 ? (
                         <Animated.View
                             entering={_fadeIn}
@@ -83,8 +94,11 @@ export default function MultiStepButton({ data, labels, onChange, selectedIndex 
                                 flexDirection: 'row',
                                 gap: _spacing / 2,
                                 alignItems: 'center',
-                            }}>
-                            <Animated.View entering={ZoomIn.delay(100).springify().damping(18).stiffness(200)}>
+                            }}
+                        >
+                            <Animated.View
+                                entering={ZoomIn.delay(100).springify().damping(18).stiffness(200)}
+                            >
                                 <CircleCheck color="white" size={18} />
                             </Animated.View>
                             <Text style={{ color: 'white', fontWeight: '600' }}>Finished</Text>
@@ -95,7 +109,8 @@ export default function MultiStepButton({ data, labels, onChange, selectedIndex 
                             entering={_fadeIn}
                             exiting={_fadeOut}
                             key={selectedIndex}
-                            layout={_layout}>
+                            layout={_layout}
+                        >
                             {labels[selectedIndex]}
                         </Animated.Text>
                     )}
@@ -124,7 +139,8 @@ function Button({ children, style, ...rest }: ButtonProps) {
             entering={FadeInLeft.springify().damping(18).stiffness(200)}
             exiting={FadeOutLeft.springify().damping(18).stiffness(200)}
             layout={_layout}
-            {...rest}>
+            {...rest}
+        >
             {children}
         </AnimatedPressable>
     );
@@ -194,7 +210,8 @@ function Dot({ index, animation }: DotProps) {
                 borderRadius: _dotContainer,
                 justifyContent: 'center',
                 alignItems: 'center',
-            }}>
+            }}
+        >
             <Animated.View
                 style={[
                     {

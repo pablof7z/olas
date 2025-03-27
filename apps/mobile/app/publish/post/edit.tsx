@@ -1,14 +1,27 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
-import { useAtom, useAtomValue, atom } from 'jotai';
-import { X, Sliders } from 'lucide-react-native';
+import { atom, useAtom, useAtomValue } from 'jotai';
+import { Sliders, X } from 'lucide-react-native';
 import React, { useCallback, useState, useEffect } from 'react';
-import { View, ScrollView, Dimensions, StyleSheet, Pressable, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import {
+    ActivityIndicator,
+    Dimensions,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/nativewindui/Button';
-import AdjustmentsBottomSheet, { adjustmentsBottomSheetRefAtom } from '@/lib/media-filter/components/AdjustmentsBottomSheet';
-import FilterBottomSheet, { filterBottomSheetRefAtom } from '@/lib/media-filter/components/FilterBottomSheet';
+import AdjustmentsBottomSheet, {
+    adjustmentsBottomSheetRefAtom,
+} from '@/lib/media-filter/components/AdjustmentsBottomSheet';
+import FilterBottomSheet, {
+    filterBottomSheetRefAtom,
+} from '@/lib/media-filter/components/FilterBottomSheet';
 import { FilteredImage } from '@/lib/media-filter/components/FilteredImage';
 import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
 import { Preview } from '@/lib/publish/components/preview/Preview';
@@ -67,7 +80,9 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
 
     if (currentFilterId !== 'normal' && sourceUri) {
         return (
-            <View style={{ flex: 1, width: '100%', minHeight: previewHeight, position: 'relative' }}>
+            <View
+                style={{ flex: 1, width: '100%', minHeight: previewHeight, position: 'relative' }}
+            >
                 <FilteredImage
                     filePath={sourceUri}
                     filterParams={currentFilterParams}
@@ -86,12 +101,17 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleScroll}
-            style={{ flex: 1, width: '100%', minHeight: previewHeight }}>
+            style={{ flex: 1, width: '100%', minHeight: previewHeight }}
+        >
             {media.map((item, index) => {
                 return (
                     <View
                         key={`media-item-${item.id}-${index}`}
-                        style={[styles.mediaContainer, { width: dimensions.width, height: previewHeight }]}>
+                        style={[
+                            styles.mediaContainer,
+                            { width: dimensions.width, height: previewHeight },
+                        ]}
+                    >
                         <Preview
                             selectedMedia={{
                                 type: item.mediaType,
@@ -199,8 +219,18 @@ export default function PostEditScreen() {
                         <Text style={styles.actionButtonText}>Adjust</Text>
                     </Pressable>
 
-                    <Pressable style={[styles.actionButton, { backgroundColor: 'white' }]} onPress={handleNext}>
-                        <Text style={[styles.actionButtonText, { color: 'black', paddingHorizontal: 8 }]}>Next</Text>
+                    <Pressable
+                        style={[styles.actionButton, { backgroundColor: 'white' }]}
+                        onPress={handleNext}
+                    >
+                        <Text
+                            style={[
+                                styles.actionButtonText,
+                                { color: 'black', paddingHorizontal: 8 },
+                            ]}
+                        >
+                            Next
+                        </Text>
                     </Pressable>
                 </View>
 
@@ -223,7 +253,7 @@ export default function PostEditScreen() {
     );
 }
 
-const headerStyles = StyleSheet.create({
+const _headerStyles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: 'bold',

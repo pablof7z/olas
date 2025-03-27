@@ -1,6 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { useMuteList } from '@nostr-dev-kit/ndk-mobile';
-import { RenderTarget } from '@shopify/flash-list';
+import type { RenderTarget } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useCallback, useMemo } from 'react';
@@ -11,7 +11,7 @@ import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { useAppSettingsStore, VideosInFeed } from '@/stores/app';
+import { type VideosInFeed, useAppSettingsStore } from '@/stores/app';
 
 const videosInFeedToText = (value: VideosInFeed) => {
     if (value === 'none') return 'Disabled';
@@ -22,13 +22,18 @@ const videosInFeedToText = (value: VideosInFeed) => {
 
 export default function ContentScreen() {
     const { muteListEvent } = useMuteList();
-    const { videosInFeed, setVideosInFeed, forceSquareAspectRatio, setForceSquareAspectRatio } = useAppSettingsStore();
+    const { videosInFeed, setVideosInFeed, forceSquareAspectRatio, setForceSquareAspectRatio } =
+        useAppSettingsStore();
     const { showActionSheetWithOptions } = useActionSheet();
 
     const videosInFeedActionSheet = useCallback(() => {
         showActionSheetWithOptions(
             {
-                options: [videosInFeedToText('none'), videosInFeedToText('from-follows'), videosInFeedToText('from-all')],
+                options: [
+                    videosInFeedToText('none'),
+                    videosInFeedToText('from-follows'),
+                    videosInFeedToText('from-all'),
+                ],
                 cancelButtonIndex: 0,
             },
             (buttonIndex) => {
@@ -66,12 +71,20 @@ export default function ContentScreen() {
             id: 'feed-aspect-ratio',
             title: 'Squared Posts',
             subTitle: 'Show posts within a square',
-            rightView: <Switch value={forceSquareAspectRatio} onValueChange={setForceSquareAspectRatio} />,
+            rightView: (
+                <Switch value={forceSquareAspectRatio} onValueChange={setForceSquareAspectRatio} />
+            ),
             onPress: () => setForceSquareAspectRatio(!forceSquareAspectRatio),
         });
 
         return v;
-    }, [muteListEvent, videosInFeed, videosInFeedActionSheet, forceSquareAspectRatio, setForceSquareAspectRatio]);
+    }, [
+        muteListEvent,
+        videosInFeed,
+        videosInFeedActionSheet,
+        forceSquareAspectRatio,
+        setForceSquareAspectRatio,
+    ]);
 
     return (
         <>
@@ -79,7 +92,9 @@ export default function ContentScreen() {
             <List
                 data={items}
                 variant="insets"
-                renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} />}
+                renderItem={({ item, index, target }) => (
+                    <Item item={item} index={index} target={target} />
+                )}
             />
         </>
     );
@@ -111,7 +126,10 @@ function Item({ item, index, target }: { item: any; index: number; target: Rende
                         )}
                         {item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {item.badge}
                                 </Text>
                             </View>

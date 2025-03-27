@@ -1,6 +1,13 @@
-import { NDKEvent, NDKKind, NDKList, NostrEvent, useNDKSessionEventKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    NDKList,
+    NostrEvent,
+    useNDKSessionEventKind,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useRef } from 'react';
-import { View, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import Comment from '../Comment';
 import React from '../React';
@@ -10,7 +17,7 @@ import Zaps from './Reactions/Zaps';
 import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { DEFAULT_STATS, ReactionStats } from '@/stores/reactions';
+import { DEFAULT_STATS, type ReactionStats } from '@/stores/reactions';
 import { WALLET_ENABLED } from '@/utils/const';
 
 export function Reactions({
@@ -25,10 +32,14 @@ export function Reactions({
     reactions?: ReactionStats;
 }) {
     const { colors } = useColorScheme();
-    const { reactionCount, reactedByUser, commentCount, commentedByUser, repostedBy, repostedByUser } = useMemo(
-        () => reactions ?? DEFAULT_STATS,
-        [reactions, event.id]
-    );
+    const {
+        reactionCount,
+        reactedByUser,
+        commentCount,
+        commentedByUser,
+        repostedBy,
+        repostedByUser,
+    } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions, event.id]);
 
     inactiveColor ??= colors.foreground;
     foregroundColor ??= colors.foreground;
@@ -36,7 +47,13 @@ export function Reactions({
     return (
         // <View style={styles.container}>
         <View style={styles.group}>
-            <React event={event} inactiveColor={inactiveColor} reactedByUser={reactedByUser} reactionCount={reactionCount} iconSize={28} />
+            <React
+                event={event}
+                inactiveColor={inactiveColor}
+                reactedByUser={reactedByUser}
+                reactionCount={reactionCount}
+                iconSize={28}
+            />
 
             <Comment
                 event={event}
@@ -68,7 +85,10 @@ export function Reactions({
     );
 }
 
-export function InlinedComments({ event, reactions }: { event: NDKEvent; reactions?: ReactionStats }) {
+export function InlinedComments({
+    event,
+    reactions,
+}: { event: NDKEvent; reactions?: ReactionStats }) {
     const comments = reactions?.comments ?? [];
 
     if (comments.length === 0) {
@@ -80,7 +100,9 @@ export function InlinedComments({ event, reactions }: { event: NDKEvent; reactio
             {comments.slice(0, 3).map((c) => (
                 <InlineComment key={c.id} comment={c} />
             ))}
-            {comments.length > 3 && <Text className="text-sm text-muted-foreground">+{comments.length - 3} more</Text>}
+            {comments.length > 3 && (
+                <Text className="text-sm text-muted-foreground">+{comments.length - 3} more</Text>
+            )}
         </View>
     );
 }
@@ -90,7 +112,11 @@ export function InlineComment({ comment }: { comment: NDKEvent }) {
     return (
         <Text>
             <Text className="text-sm font-medium text-foreground">@{userProfile?.name} </Text>
-            <EventContent event={comment} numberOfLines={2} className="text-sm text-muted-foreground">
+            <EventContent
+                event={comment}
+                numberOfLines={2}
+                className="text-sm text-muted-foreground"
+            >
                 {comment.content}
             </EventContent>
         </Text>

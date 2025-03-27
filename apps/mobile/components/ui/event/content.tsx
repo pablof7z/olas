@@ -1,9 +1,10 @@
-import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { nip19 } from 'nostr-tools';
-import React, { useCallback } from 'react';
-import { Pressable, Text, Linking } from 'react-native';
+import type React from 'react';
+import { useCallback } from 'react';
+import { Linking, Pressable, Text } from 'react-native';
 
 import * as User from '../user';
 
@@ -17,7 +18,11 @@ interface EventContentProps {
     onHashtagPress?: false | ((hashtag: string) => void);
 }
 
-function RenderEmoji({ shortcode, event, fontSize }: { shortcode: string; event?: NDKEvent; fontSize?: number }) {
+function RenderEmoji({
+    shortcode,
+    event,
+    fontSize,
+}: { shortcode: string; event?: NDKEvent; fontSize?: number }) {
     if (!event) return <Text style={{ fontSize }}>:{shortcode}:</Text>;
 
     const emojiTag = event.tags.find((tag) => tag[0] === 'emoji' && tag[1] === shortcode);
@@ -25,7 +30,12 @@ function RenderEmoji({ shortcode, event, fontSize }: { shortcode: string; event?
 
     const emojiSize = fontSize || 14;
 
-    return <Image source={{ uri: emojiTag[2] }} style={{ width: emojiSize, height: emojiSize, resizeMode: 'contain' }} />;
+    return (
+        <Image
+            source={{ uri: emojiTag[2] }}
+            style={{ width: emojiSize, height: emojiSize, resizeMode: 'contain' }}
+        />
+    );
 }
 
 function RenderHashtag({
@@ -39,13 +49,17 @@ function RenderHashtag({
 }) {
     if (onHashtagPress !== false) {
         onHashtagPress ??= () => {
-            router.replace(`/search?q=${encodeURIComponent('#' + hashtag)}`);
+            router.replace(`/search?q=${encodeURIComponent(`#${hashtag}`)}`);
         };
     }
 
     if (onHashtagPress) {
         return (
-            <Text onPress={() => onHashtagPress(`#${hashtag}`)} style={{ fontSize }} className="font-bold text-primary">
+            <Text
+                onPress={() => onHashtagPress(`#${hashtag}`)}
+                style={{ fontSize }}
+                className="font-bold text-primary"
+            >
                 #{hashtag}
             </Text>
         );
@@ -89,11 +103,15 @@ function RenderMention({
         const userProfile = profileData?.userProfile;
 
         return (
-            <Text style={{ fontSize }} className="font-bold text-primary" onPress={() => handlePress(pubkey)}>
+            <Text
+                style={{ fontSize }}
+                className="font-bold text-primary"
+                onPress={() => handlePress(pubkey)}
+            >
                 @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare />
             </Text>
         );
-    } catch (e) {
+    } catch (_e) {
         return <Text style={{ fontSize }}>{entity.substring(0, 6)}...</Text>;
     }
 }
@@ -115,7 +133,6 @@ function RenderPart({
     const setSearchQuery = useSearchQuery();
     const defaultHashtagPress = useCallback(
         (tag: string) => {
-            console.log('defaultHashtagPress', tag);
             setSearchQuery(tag);
         },
         [setSearchQuery]
@@ -145,7 +162,11 @@ function RenderPart({
         );
     } else if (part.startsWith('https://') || part.startsWith('http://')) {
         return (
-            <Text style={style} className="font-bold text-primary underline" onPress={() => Linking.openURL(part)}>
+            <Text
+                style={style}
+                className="font-bold text-primary underline"
+                onPress={() => Linking.openURL(part)}
+            >
                 {part}
             </Text>
         );
@@ -153,12 +174,24 @@ function RenderPart({
 
     const mentionMatch = part.match(/nostr:([a-zA-Z0-9]+)/)?.[1];
     if (mentionMatch) {
-        return <RenderMention entity={mentionMatch} onMentionPress={onMentionPress} fontSize={fontSize} />;
+        return (
+            <RenderMention
+                entity={mentionMatch}
+                onMentionPress={onMentionPress}
+                fontSize={fontSize}
+            />
+        );
     }
 
     const hashtagMatch = part.match(/^#([\p{L}\p{N}_\-]+)/u);
     if (hashtagMatch) {
-        return <RenderHashtag hashtag={hashtagMatch[1]} onHashtagPress={onHashtagPress || defaultHashtagPress} fontSize={fontSize} />;
+        return (
+            <RenderHashtag
+                hashtag={hashtagMatch[1]}
+                onHashtagPress={onHashtagPress || defaultHashtagPress}
+                fontSize={fontSize}
+            />
+        );
     }
 
     return (
@@ -177,7 +210,9 @@ const EventContent: React.FC<EventContentProps & React.ComponentProps<typeof Tex
 }: EventContentProps & React.ComponentProps<typeof Text>) => {
     content ??= event?.content ?? '';
 
-    const parts = content.split(/(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+|:[a-zA-Z0-9_+-]+:)/);
+    const parts = content.split(
+        /(nostr:[^\s]+|https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif)|#[\w]+|:[a-zA-Z0-9_+-]+:)/
+    );
 
     if (event?.kind === NDKKind.Reaction) {
         switch (event.content) {

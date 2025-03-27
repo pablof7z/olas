@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Svg, { SvgProps, Path, G } from 'react-native-svg';
+import Svg, { type SvgProps, Path, G } from 'react-native-svg';
 /* SVGR has dropped some elements not supported by react-native-svg: title */
 const SvgComponent = ({ size = 24, strokeWidth = 2, ...props }: SvgProps) => (
     <Svg
@@ -9,7 +9,8 @@ const SvgComponent = ({ size = 24, strokeWidth = 2, ...props }: SvgProps) => (
         viewBox="0 0 24 24"
         stroke="currentColor"
         className="x1lliihq x1n2onr6 x5n08af"
-        {...props}>
+        {...props}
+    >
         <G strokeLinecap="round" strokeLinejoin="round">
             <Path d="M10.127 9.666a3.222 3.222 0 0 0-6.254 0" />
             <Path d="M7 7.22c1.225 0 1.915-.69 1.915-1.916C8.915 4.08 8.225 3.39 7 3.39c-1.226 0-1.916.69-1.916 1.915 0 1.226.69 1.916 1.916 1.916Z" />

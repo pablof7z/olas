@@ -1,14 +1,18 @@
-import { CashuMint, GetInfoResponse, MintKeyset } from '@cashu/cashu-ts';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { CashuMint, type GetInfoResponse, MintKeyset } from '@cashu/cashu-ts';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useState } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, View, Text } from 'react-native';
+import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { ListItem } from '@/components/nativewindui/List';
 import { cn } from '@/lib/cn';
 import { Checkbox } from '~/components/nativewindui/Checkbox';
 
-const MintListItem = ({ item, selected, onSelect }: { item: NDKEvent; selected: boolean; onSelect: (selected: boolean) => void }) => {
+const MintListItem = ({
+    item,
+    selected,
+    onSelect,
+}: { item: NDKEvent; selected: boolean; onSelect: (selected: boolean) => void }) => {
     const [mintInfo, setMintInfo] = useState<GetInfoResponse | null>(null);
     const [isChecked, setChecked] = useState(selected);
     const [units, setUnits] = useState<string[]>([]);
@@ -32,37 +36,19 @@ const MintListItem = ({ item, selected, onSelect }: { item: NDKEvent; selected: 
     }
 
     return (
-        <ListItem
-            className={cn('ios:pl-0 pl-2')}
-            titleClassName="text-lg"
-            rightView={
-                <TouchableOpacity onPress={item.fn}>
-                    <Text className="mt-2 pr-4 text-primary">Add</Text>
-                </TouchableOpacity>
-            }
-            item={{
-                title: mintInfo?.name ?? url,
-                subTitle: mintInfo?.description ?? '',
-            }}
-        />
+        <View style={styles.container}>
+            <Checkbox checked={isChecked} onCheckedChange={setChecked} />
+            <TouchableWithoutFeedback onPress={toggleMint}>
+                <View style={styles.content}>
+                    <Text style={styles.name}>{mintInfo?.name ?? url}</Text>
+                    <Text style={styles.url}>{url}</Text>
+                    <Text style={styles.balance}>
+                        {units.join(', ')}
+                    </Text>
+                </View>
+            </TouchableWithoutFeedback>
+        </View>
     );
-    <View style={styles.container}>
-        <Checkbox checked={isChecked} onCheckedChange={setChecked} />
-        <TouchableWithoutFeedback onPress={toggleMint}>
-            <View style={styles.textContainer}>
-                <Text style={styles.name}>{mintInfo?.name ?? url}</Text>
-                {mintInfo && (
-                    <View style={styles.descriptionContainer}>
-                        <Text style={styles.description} numberOfLines={1}>
-                            {mintInfo?.description}
-                        </Text>
-
-                        <Text style={styles.units}>{units.join(', ')}</Text>
-                    </View>
-                )}
-            </View>
-        </TouchableWithoutFeedback>
-    </View>;
 };
 
 const styles = StyleSheet.create({
@@ -93,6 +79,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     units: {
+        fontSize: 14,
+    },
+    content: {
+        flex: 1,
+    },
+    url: {
+        fontSize: 14,
+    },
+    balance: {
         fontSize: 14,
     },
 });

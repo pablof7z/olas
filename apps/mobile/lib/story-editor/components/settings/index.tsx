@@ -2,7 +2,7 @@ import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { BlurView } from 'expo-blur';
 import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { settingsSheetRefAtom } from '../../atoms/settingsSheet';
@@ -15,11 +15,9 @@ export default function SettingsBottomSheet() {
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        console.log('SettingsBottomSheet mounted, setting ref', sheetRef);
         setSettingsSheetRef(sheetRef);
 
         return () => {
-            console.log('SettingsBottomSheet unmounted');
             setSettingsSheetRef(null);
         };
     }, [sheetRef, setSettingsSheetRef]);
@@ -28,9 +26,12 @@ export default function SettingsBottomSheet() {
         <Sheet
             ref={sheetRef}
             snapPoints={['50%']}
-            backgroundComponent={({ style }) => <BlurView intensity={90} tint="dark" style={[style, styles.sheetBlur]} />}
+            backgroundComponent={({ style }) => (
+                <BlurView intensity={90} tint="dark" style={[style, styles.sheetBlur]} />
+            )}
             handleIndicatorStyle={styles.handleIndicator}
-            style={styles.sheet}>
+            style={styles.sheet}
+        >
             <BottomSheetView style={[styles.container, { paddingBottom: insets.bottom }]}>
                 <Text style={styles.text}>Hello world</Text>
             </BottomSheetView>

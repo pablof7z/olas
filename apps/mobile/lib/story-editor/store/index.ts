@@ -1,4 +1,9 @@
-import { NDKUser, NDKUserProfile, NDKEvent, NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKStoryStickerType,
+    type NDKUser,
+    type NDKUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { atom } from 'jotai';
 import { Dimensions } from 'react-native';
 import { create } from 'zustand';
@@ -47,10 +52,15 @@ export interface Sticker<T extends NDKStoryStickerType = NDKStoryStickerType> {
 interface StickerState {
     stickers: Sticker[];
     duration: number; // Duration in seconds before story expires
-    addSticker: (sticker: Omit<Sticker, 'id' | 'transform'> & { transform?: Partial<Sticker['transform']> }) => string;
+    addSticker: (
+        sticker: Omit<Sticker, 'id' | 'transform'> & { transform?: Partial<Sticker['transform']> }
+    ) => string;
     updateSticker: (id: string, transform: Sticker['transform']) => void;
     updateStickerStyle: (id: string, style: string) => void;
-    updateStickerValue: <T extends NDKStoryStickerType>(id: string, value: StickerValueType<T>) => void;
+    updateStickerValue: <T extends NDKStoryStickerType>(
+        id: string,
+        value: StickerValueType<T>
+    ) => void;
     updateStickerDimensions: (id: string, dimensions: { width: number; height: number }) => void;
     removeSticker: (id: string) => void;
     getSticker: (id: string) => Sticker | undefined;
@@ -65,7 +75,6 @@ export const useStickerStore = create<StickerState>((set, get) => ({
     duration: 24 * 60 * 60, // Default: 24 hours in seconds
 
     addSticker: (stickerData) => {
-        console.log('In useStickerStore.addSticker with data:', stickerData);
         const id = Math.random().toString();
         const defaultTransform = {
             translateX: SCREEN_WIDTH / 4,
@@ -96,26 +105,33 @@ export const useStickerStore = create<StickerState>((set, get) => ({
 
     updateSticker: (id: string, transform: Sticker['transform']) => {
         set((state) => ({
-            stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, transform } : sticker)),
+            stickers: state.stickers.map((sticker) =>
+                sticker.id === id ? { ...sticker, transform } : sticker
+            ),
         }));
     },
 
     updateStickerStyle: (id: string, style: string) => {
         set((state) => ({
-            stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, style } : sticker)),
+            stickers: state.stickers.map((sticker) =>
+                sticker.id === id ? { ...sticker, style } : sticker
+            ),
         }));
     },
 
     updateStickerValue: <T extends NDKStoryStickerType>(id: string, value: StickerValueType<T>) => {
         set((state) => ({
-            stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, value } : sticker)),
+            stickers: state.stickers.map((sticker) =>
+                sticker.id === id ? { ...sticker, value } : sticker
+            ),
         }));
     },
 
     updateStickerDimensions: (id: string, dimensions: { width: number; height: number }) => {
-        console.log('In useStickerStore.updateStickerDimensions with id:', id, 'and dimensions:', dimensions);
         set((state) => ({
-            stickers: state.stickers.map((sticker) => (sticker.id === id ? { ...sticker, dimensions } : sticker)),
+            stickers: state.stickers.map((sticker) =>
+                sticker.id === id ? { ...sticker, dimensions } : sticker
+            ),
         }));
     },
 

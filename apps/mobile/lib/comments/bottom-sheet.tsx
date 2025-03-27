@@ -1,5 +1,5 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
 
@@ -7,9 +7,12 @@ import Comments from './index';
 import { replyEventAtom, rootEventAtom } from './store';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(null, (get, set, value) => {
-    set(sheetAtom, value);
-});
+export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(
+    null,
+    (_get, set, value) => {
+        set(sheetAtom, value);
+    }
+);
 
 export function useCommentBottomSheet() {
     const sheet = useAtomValue(sheetAtom);

@@ -1,9 +1,9 @@
 import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect } from 'react';
 
-import { useNutzapMonitor, useNip60WalletStore } from '@/hooks/wallet';
+import { useNip60WalletStore, useNutzapMonitor } from '@/hooks/wallet';
 
-let renderCount = 0;
+const _renderCount = 0;
 
 export default function SignerReady() {
     const { ndk } = useNDK();
@@ -13,8 +13,6 @@ export default function SignerReady() {
     useEffect(() => {
         initNip60Wallet(ndk, currentUser?.pubkey);
     }, [ndk, currentUser?.pubkey]);
-
-    console.log('<SignerReady> rendering', renderCount++);
 
     useNutzapMonitor(ndk, currentUser?.pubkey);
 

@@ -1,7 +1,7 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { Heart } from 'lucide-react-native';
 import { useCallback } from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
 import { useReactionPicker } from '@/lib/reaction-picker/hook';
@@ -43,7 +43,7 @@ export function useReactEvent() {
     const addRelatedEvents = useReactionsStore((s) => s.addEvents);
 
     const react = useCallback(
-        async (event: NDKEvent, reaction: string = '+') => {
+        async (event: NDKEvent, reaction = '+') => {
             const r = await event.react(reaction, false);
             r.tags.push(['k', event.kind.toString()]);
             await r.sign();
@@ -51,7 +51,7 @@ export function useReactEvent() {
             addRelatedEvents([r], true);
 
             r.publish()
-                .then((relays) => {})
+                .then((_relays) => {})
                 .catch((e) => {
                     console.error(e);
                 });
@@ -62,7 +62,14 @@ export function useReactEvent() {
     return { react };
 }
 
-export default function React({ event, inactiveColor, iconSize = 18, reactionCount, reactedByUser, showReactionCount = true }: ReactProps) {
+export default function React({
+    event,
+    inactiveColor,
+    iconSize = 18,
+    reactionCount,
+    reactedByUser,
+    showReactionCount = true,
+}: ReactProps) {
     const { react } = useReactEvent();
     const handlePress = useCallback(() => {
         if (reactedByUser) return;
@@ -80,14 +87,25 @@ export default function React({ event, inactiveColor, iconSize = 18, reactionCou
         <View style={styles.container}>
             <TouchableOpacity onPress={handlePress} onLongPress={handleLongPress}>
                 {!reactedByUser || reactedByUser.content === '+' ? (
-                    <Heart size={iconSize} fill={reactedByUser ? 'red' : 'transparent'} color={reactedByUser ? 'red' : inactiveColor} />
+                    <Heart
+                        size={iconSize}
+                        fill={reactedByUser ? 'red' : 'transparent'}
+                        color={reactedByUser ? 'red' : inactiveColor}
+                    />
                 ) : (
-                    <Text style={[styles.text, { fontSize: iconSize, lineHeight: iconSize, color: inactiveColor }]}>
+                    <Text
+                        style={[
+                            styles.text,
+                            { fontSize: iconSize, lineHeight: iconSize, color: inactiveColor },
+                        ]}
+                    >
                         {reactedByUser.content}
                     </Text>
                 )}
             </TouchableOpacity>
-            {showReactionCount && reactionCount > 0 && <Text style={[styles.text, { color: inactiveColor }]}>{reactionCount}</Text>}
+            {showReactionCount && reactionCount > 0 && (
+                <Text style={[styles.text, { color: inactiveColor }]}>{reactionCount}</Text>
+            )}
         </View>
     );
 }

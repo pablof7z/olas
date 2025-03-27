@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Ruler } from '../Ruler';
 
@@ -11,7 +11,7 @@ type ReactionPickerProps = {
     onClose: () => void;
 };
 
-const reactionList = ['❤️', '😂', '😮', '😢', '😡', '👍'];
+const _reactionList = ['❤️', '😂', '😮', '😢', '😡', '👍'];
 
 export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
     const sheetRef = useSheetRef();

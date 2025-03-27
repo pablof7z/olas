@@ -1,6 +1,6 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { Icon, MaterialIconName } from '@roninoss/icons';
+import { type NDKPrivateKeySigner, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { Icon, type MaterialIconName } from '@roninoss/icons';
 import * as Clipboard from 'expo-clipboard';
 import * as SecureStore from 'expo-secure-store';
 import { nip19 } from 'nostr-tools';
@@ -8,7 +8,14 @@ import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -73,7 +80,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -86,7 +96,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {info.item.badge}
                                 </Text>
                             </View>

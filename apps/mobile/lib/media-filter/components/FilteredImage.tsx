@@ -1,22 +1,22 @@
 import {
     Canvas,
-    Image,
-    useImage,
-    SkImage,
     ColorMatrix,
-    useCanvasRef,
-    Skia,
+    Image,
     ImageFormat,
-    useVideo,
     ImageShader,
-    Rect,
     Paint,
+    Rect,
+    type SkImage,
+    Skia,
+    useCanvasRef,
+    useImage,
+    useVideo,
 } from '@shopify/react-native-skia';
 import React, { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { getRealPath } from 'react-native-compressor';
 
-import { FilterParameters } from '../types';
+import type { FilterParameters } from '../types';
 import { createColorMatrix, createVignettePaint } from '../utils/createColorMatrix';
 
 import { Text } from '@/components/nativewindui/Text';
@@ -105,7 +105,14 @@ interface FilteredImageInnerProps {
     height?: number;
 }
 
-function FilteredImageInner({ image, colorMatrix, filterParams, contentFit, width, height }: FilteredImageInnerProps) {
+function FilteredImageInner({
+    image,
+    colorMatrix,
+    filterParams,
+    contentFit,
+    width,
+    height,
+}: FilteredImageInnerProps) {
     const imageWidth = width || image.width();
     const imageHeight = height || image.height();
 
@@ -120,12 +127,21 @@ function FilteredImageInner({ image, colorMatrix, filterParams, contentFit, widt
     return (
         <>
             {/* Base image with color matrix filter */}
-            <Image image={image} x={0} y={0} width={imageWidth} height={imageHeight} fit={contentFit}>
+            <Image
+                image={image}
+                x={0}
+                y={0}
+                width={imageWidth}
+                height={imageHeight}
+                fit={contentFit}
+            >
                 <ColorMatrix matrix={colorMatrix} />
             </Image>
 
             {/* Vignette effect */}
-            {vignettePaint && <Rect x={0} y={0} width={imageWidth} height={imageHeight} paint={vignettePaint} />}
+            {vignettePaint && (
+                <Rect x={0} y={0} width={imageWidth} height={imageHeight} paint={vignettePaint} />
+            )}
 
             {/* Grain effect would be added here similarly */}
         </>

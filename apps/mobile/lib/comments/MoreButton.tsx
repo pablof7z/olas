@@ -18,7 +18,8 @@ const Button = ({ icon = 'plus', onPress }) => {
                     borderRadius: 48,
                     alignItems: 'center',
                     justifyContent: 'center',
-                }}>
+                }}
+            >
                 <Feather name={icon} size={32} color="black" />
             </MotiView>
         </TouchableOpacity>
@@ -35,7 +36,8 @@ export default function MoreButton() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.background,
-            }}>
+            }}
+        >
             <View style={{ alignItems: 'center' }}>
                 <AnimatePresence>
                     {!!active && (
@@ -51,7 +53,8 @@ export default function MoreButton() {
                                 paddingBottom: 50,
                                 position: 'absolute',
                                 bottom: 0,
-                            }}>
+                            }}
+                        >
                             <Button icon="bell" onPress={() => setActive(false)} />
                             <Button icon="bluetooth" onPress={() => setActive(false)} />
                             <Button icon="cast" onPress={() => setActive(false)} />
@@ -72,7 +75,8 @@ export default function MoreButton() {
                             backgroundColor: colors.background,
                             alignItems: 'center',
                             justifyContent: 'center',
-                        }}>
+                        }}
+                    >
                         <Feather name="plus" size={24} color={colors.background} />
                     </MotiView>
                 </TouchableOpacity>

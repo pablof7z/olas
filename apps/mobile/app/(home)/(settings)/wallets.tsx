@@ -1,5 +1,5 @@
-import { useNDK, useNDKWallet, NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { type NDKRelay, NDKRelayStatus, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -11,7 +11,14 @@ import { IconView } from '@/components/icon-view';
 import { useNip60Wallet } from '@/hooks/wallet';
 import { createNip60Wallet } from '@/utils/wallet';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -20,7 +27,7 @@ export default function WalletsScreen() {
     const { ndk } = useNDK();
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
-    const [relays, setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
+    const [relays, _setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
 
     const activateWallet = async (wallet: NDKCashuWallet) => {
         router.back();
@@ -38,7 +45,7 @@ export default function WalletsScreen() {
             .then((supported) => {
                 setPrimalSupported(supported);
             })
-            .catch((e) => {
+            .catch((_e) => {
                 setPrimalSupported(false);
             });
 
@@ -46,7 +53,7 @@ export default function WalletsScreen() {
             .then((supported) => {
                 setAlbySupported(supported);
             })
-            .catch((e) => {
+            .catch((_e) => {
                 setAlbySupported(false);
             });
     }, []);
@@ -100,7 +107,12 @@ export default function WalletsScreen() {
                 options.push({
                     id: 'primal',
                     title: 'Connect Primal Wallet',
-                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
+                    leftView: (
+                        <Image
+                            source={require('../../../assets/primal.png')}
+                            className="mx-2.5 h-11 w-11 rounded-lg"
+                        />
+                    ),
                     subTitle: 'Primal Wallet',
                     onPress: () => {
                         Linking.openURL(
@@ -114,7 +126,12 @@ export default function WalletsScreen() {
                 options.push({
                     id: 'alby',
                     title: 'Connect Alby Wallet',
-                    leftView: <Image source={require('../../../assets/primal.png')} className="mx-2.5 h-11 w-11 rounded-lg" />,
+                    leftView: (
+                        <Image
+                            source={require('../../../assets/primal.png')}
+                            className="mx-2.5 h-11 w-11 rounded-lg"
+                        />
+                    ),
                     subTitle: 'Alby Wallet',
                     onPress: () => {
                         Linking.openURL(
@@ -169,7 +186,11 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -177,7 +198,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
                 }
-                {...info}>
+                {...info}
+            >
                 <TextInput
                     className="flex-1 text-lg text-foreground"
                     placeholder="Add relay"
@@ -192,7 +214,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName={cn('text-lg', info.item.titleClassName)}
             leftView={info.item.leftView}
             rightView={
@@ -205,7 +230,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {info.item.badge}
                                 </Text>
                             </View>

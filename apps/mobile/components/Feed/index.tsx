@@ -1,15 +1,22 @@
-import { NDKEvent, NDKFilter, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent, NDKFilter, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, RefreshControl, Text, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import {
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    Text,
+} from 'react-native';
 
-import { FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
-import { scrollDirAtom } from './store';
 import Post from '../events/Post';
 import { EventMediaGridContainer } from '../media/event';
+import { type FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
+import { scrollDirAtom } from './store';
 
 import { activeEventAtom } from '@/stores/event';
 
@@ -31,7 +38,15 @@ type PrependEntry = {
 
 const keyExtractor = (entry: FeedEntry | PrependEntry) => entry.id;
 
-export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls, numColumns = 1, filterOpts }: FeedProps) {
+export default function Feed({
+    filters,
+    filterKey,
+    prepend,
+    filterFn,
+    relayUrls,
+    numColumns = 1,
+    filterOpts,
+}: FeedProps) {
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
@@ -39,9 +54,11 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
     useScrollToTop(ref);
 
     const sliceIndex = numColumns * 7;
-    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls, ...filterOpts }, [
-        filterKey + refreshCount,
-    ]);
+    const { entries, newEntries, updateEntries } = useFeedEvents(
+        filters,
+        { subId: 'feed', filterFn, relayUrls, ...filterOpts },
+        [filterKey + refreshCount]
+    );
     const { setActiveIndex } = useFeedMonitor(
         entries.map((e) => e.event),
         sliceIndex
@@ -126,10 +143,19 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
 
     const renderItem = useCallback(
         ({ item, index }: { item: FeedEntry | PrependEntry; index: number }) => {
-            if (numColumns === 1 && index === 0 && item.id === 'prepend') return (item as PrependEntry).node;
+            if (numColumns === 1 && index === 0 && item.id === 'prepend')
+                return (item as PrependEntry).node;
             item = item as FeedEntry;
 
-            if (numColumns === 1) return <Post event={item.event} index={index} reposts={item.reposts} timestamp={item.timestamp} />;
+            if (numColumns === 1)
+                return (
+                    <Post
+                        event={item.event}
+                        index={index}
+                        reposts={item.reposts}
+                        timestamp={item.timestamp}
+                    />
+                );
             else
                 return (
                     <EventMediaGridContainer
@@ -194,7 +220,9 @@ export default function Feed({ filters, filterKey, prepend, filterFn, relayUrls,
                     onScroll={onScroll}
                     scrollEventThrottle={100}
                     numColumns={numColumns}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />
+                    }
                     getItemType={(item) => (item.id === 'prepend' ? 'prepend' : 'post')}
                     renderItem={renderItem}
                     disableIntervalMomentum

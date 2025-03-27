@@ -1,4 +1,10 @@
-import { useNDK, useNDKSessionEventKind, NDKKind, NDKList, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKKind,
+    NDKList,
+    NostrEvent,
+    useNDK,
+    useNDKSessionEventKind,
+} from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -7,7 +13,14 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { Button } from '@/components/nativewindui/Button';
 import { DEFAULT_BLOSSOM_SERVER } from '@/hooks/blossom';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 
@@ -15,7 +28,9 @@ export default function BlossomScreen() {
     const { ndk } = useNDK();
     const blossomList = useNDKSessionEventKind<NDKList>(NDKKind.BlossomList, { create: NDKList });
     const [searchText, setSearchText] = useState<string | null>(null);
-    const [blossoms, setBlossoms] = useState<string[]>(blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1]));
+    const [blossoms, setBlossoms] = useState<string[]>(
+        blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1])
+    );
     const [url, setUrl] = useState('');
 
     useEffect(() => {
@@ -24,10 +39,7 @@ export default function BlossomScreen() {
         }
     }, []);
 
-    console.log('blossoms', blossoms);
-
     const addFn = () => {
-        console.log({ url });
         try {
             const uri = new URL(url);
             if (!['https:'].includes(uri.protocol)) {
@@ -36,7 +48,7 @@ export default function BlossomScreen() {
             }
             if (url) setBlossoms([...blossoms, url]);
             setUrl('');
-        } catch (e) {
+        } catch (_e) {
             alert('Invalid URL');
         }
     };
@@ -56,31 +68,26 @@ export default function BlossomScreen() {
                     setBlossoms([...blossoms.filter((u) => u !== url)]);
                 },
             }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+            .filter(
+                (item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!)
+            );
     }, [searchText, blossoms]);
 
     function save() {
-        console.log('save', blossomList.kind);
         blossomList.ndk = ndk;
         blossomList.kind = NDKKind.BlossomList;
         blossomList.tags = blossomList.tags.filter((tag) => tag[0] !== 'server');
 
         for (const url of blossoms) {
             blossomList.addItem(['server', url]);
-            console.log('adding item', url);
         }
-
-        console.log('blossomList', blossomList.tags);
         blossomList
             .sign()
             .then(() => {
-                console.log('event', blossomList.rawEvent());
                 blossomList.publishReplaceable();
                 router.back();
             })
-            .catch((e) => {
-                console.log('error', e);
-            });
+            .catch((_e) => {});
     }
 
     return (
@@ -115,7 +122,11 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -123,7 +134,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
                 }
-                {...info}>
+                {...info}
+            >
                 <TextInput
                     className="flex-1 text-lg text-foreground"
                     placeholder="Add blossom server"
@@ -138,7 +150,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -155,7 +170,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={() => console.log('onPress')}
+            onPress={() => {}}
         />
     );
 }

@@ -38,9 +38,12 @@ export default function NewGroup() {
     const insets = useSafeAreaInsets();
 
     const { ndk } = useNDK();
-    const randomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const randomId =
+        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const relaySet = NDKRelaySet.fromRelayUrls([relayUrl], ndk, true);
-    const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { create: NDKList });
+    const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, {
+        create: NDKList,
+    });
 
     const createGroup = useCallback(() => {
         const create = new NDKEvent(ndk);
@@ -54,14 +57,15 @@ export default function NewGroup() {
             [visibility],
         ];
         create.publish(relaySet).then(() => {
-            // bookmark
-            console.log('groupBookmark', groupBookmark);
             groupBookmark.addItem(['group', randomId, relayUrl]);
         });
     }, [name, description, visibility, state, relayUrl]);
 
     return (
-        <KeyboardAwareScrollView className="flex-1 flex-col p-6" contentContainerStyle={{ paddingBottom: insets.bottom }}>
+        <KeyboardAwareScrollView
+            className="flex-1 flex-col p-6"
+            contentContainerStyle={{ paddingBottom: insets.bottom }}
+        >
             <View className="flex-1 flex-col items-stretch justify-between gap-6">
                 <Text variant="title1">New Group</Text>
 
@@ -89,7 +93,9 @@ export default function NewGroup() {
                     <SegmentedControl
                         values={['Members only', 'Public']}
                         selectedIndex={visibility === 'public' ? 1 : 0}
-                        onValueChange={(value) => setVisibility(value === 'Members only' ? 'private' : 'public')}
+                        onValueChange={(value) =>
+                            setVisibility(value === 'Members only' ? 'private' : 'public')
+                        }
                     />
 
                     <View className="flex-1 flex-col">
@@ -108,7 +114,9 @@ export default function NewGroup() {
                         <SegmentedControl
                             values={['Anyone can join', 'Invite only']}
                             selectedIndex={state === 'closed' ? 1 : 0}
-                            onValueChange={(value) => setState(value === 'Anyone can join' ? 'open' : 'closed')}
+                            onValueChange={(value) =>
+                                setState(value === 'Anyone can join' ? 'open' : 'closed')
+                            }
                         />
 
                         <View className="flex-1 flex-col">

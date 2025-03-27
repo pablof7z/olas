@@ -1,5 +1,11 @@
-import { NDKCacheAdapterSqlite, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import React, { useEffect, useRef, useState } from 'react';
+import {
+    NDKCacheAdapterSqlite,
+    useNDK,
+    useNDKCurrentUser,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dimensions, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming, ZoomIn, runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +30,7 @@ export default function LoaderScreen({
     const initPaymentStore = usePaymentStore((s) => s.init);
     const inset = useSafeAreaInsets();
     const haveInterval = useRef(false);
-    const [ignoreWot, setIgnoreWot] = useState(true);
+    const [_ignoreWot, setIgnoreWot] = useState(true);
     const { ndk, logout } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
@@ -48,14 +54,11 @@ export default function LoaderScreen({
 
     useEffect(() => {
         if (!ndk) {
-            console.log('ndk not ready');
             return;
         }
         if (!ndk?.cacheAdapter?.ready) {
-            console.log('cache adapter not ready');
             return;
         }
-        console.log('cache adapter ready');
 
         // Profile store is now initialized by ndk-mobile library
         initUserFlareStore();
@@ -95,8 +98,13 @@ export default function LoaderScreen({
             {shouldRender && (
                 <Animated.View
                     style={[animatedStyles]}
-                    className="absolute bottom-0 left-0 right-0 top-0 z-50 h-screen w-screen flex-1 items-center justify-center bg-card">
-                    <Animated.Image source={logo} entering={ZoomIn} style={[{ width: 300, height: 100, objectFit: 'contain' }]} />
+                    className="absolute bottom-0 left-0 right-0 top-0 z-50 h-screen w-screen flex-1 items-center justify-center bg-card"
+                >
+                    <Animated.Image
+                        source={logo}
+                        entering={ZoomIn}
+                        style={[{ width: 300, height: 100, objectFit: 'contain' }]}
+                    />
 
                     <Text variant="largeTitle" className="mt-4 text-5xl font-black">
                         Olas
@@ -107,7 +115,8 @@ export default function LoaderScreen({
 
                     <View
                         className="absolute bottom-0 left-0 right-0 flex-col items-center gap-2 p-4"
-                        style={{ paddingBottom: inset.bottom }}>
+                        style={{ paddingBottom: inset.bottom }}
+                    >
                         <ActivityIndicator size="small" color="#FF7F00" />
 
                         <Text variant="caption1" className="font-light">

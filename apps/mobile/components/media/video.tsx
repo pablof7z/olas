@@ -1,9 +1,9 @@
-import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
+import { type VideoPlayer, VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { calcDimensions } from './image';
-import { MediaDimensions } from './types';
+import type { MediaDimensions } from './types';
 
 const knownVideoDimensions: Record<string, MediaDimensions> = {};
 
@@ -51,10 +51,20 @@ export default function VideoComponent({
         const width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
         const height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
         return { width, height };
-    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url]);
+    }, [
+        renderDimensions?.width,
+        renderDimensions?.height,
+        maxDimensions?.width,
+        maxDimensions?.height,
+        url,
+    ]);
 
     return (
-        <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
+        <Pressable
+            style={styles.container}
+            onPress={() => onPress?.(player)}
+            onLongPress={onLongPress}
+        >
             <VideoView
                 style={{ width: _style.width, height: _style.height, flex: 1 }}
                 contentFit="cover"

@@ -1,9 +1,15 @@
-import { NDKKind, NDKUserProfile, useSubscribe, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    NDKUserProfile,
+    useSubscribe,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { router, Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { Dimensions, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BackButton from '@/components/buttons/back-button';
@@ -37,7 +43,7 @@ function getUrlFromEvent(event: NDKEvent) {
 function Header({ event }: { event: NDKEvent }) {
     const { userProfile } = useUserProfile(event.pubkey);
     const insets = useSafeAreaInsets();
-    const flare = useUserFlare(event.pubkey);
+    const _flare = useUserFlare(event.pubkey);
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${event.pubkey}`);
@@ -79,7 +85,11 @@ const headerStyles = StyleSheet.create({
 export default function ViewScreen() {
     const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
     const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
-    const { events } = useSubscribe(activeEvent ? [activeEvent.filter()] : false, { groupable: false }, [activeEvent?.id]);
+    const { events } = useSubscribe(
+        activeEvent ? [activeEvent.filter()] : false,
+        { groupable: false },
+        [activeEvent?.id]
+    );
 
     const height = useHeaderHeight();
     const insets = useSafeAreaInsets();
@@ -124,7 +134,12 @@ export default function ViewScreen() {
                 }}
             />
             <View style={[styles.scrollView, style]}>
-                <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
+                <ScrollView
+                    minimumZoomScale={1}
+                    maximumZoomScale={5}
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flex: 1 }}
+                >
                     <EventMediaContainer
                         event={activeEvent}
                         contentFit="contain"
@@ -147,8 +162,17 @@ export default function ViewScreen() {
                             {title}
                         </Text>
                     )}
-                    <EventContent event={activeEvent} content={content} style={styles.eventContent} />
-                    <Reactions event={activeEvent} foregroundColor="white" inactiveColor="white" reactions={reactions} />
+                    <EventContent
+                        event={activeEvent}
+                        content={content}
+                        style={styles.eventContent}
+                    />
+                    <Reactions
+                        event={activeEvent}
+                        foregroundColor="white"
+                        inactiveColor="white"
+                        reactions={reactions}
+                    />
                 </View>
             </View>
         </>

@@ -1,15 +1,21 @@
-import { NDKKind, NDKStoryStickerType, useSubscribe, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    type NDKStoryStickerType,
+    useSubscribe,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import React from 'react';
-import { View, ActivityIndicator, ViewStyle, LayoutChangeEvent } from 'react-native';
+import { ActivityIndicator, type LayoutChangeEvent, View, type ViewStyle } from 'react-native';
 
 import Generic from './generic';
 import Kind20 from './kind20';
 import Kind30023 from './kind30023';
 import Kind30402 from './kind30402';
 import KindVideo from './kind_video';
-import { EventStickerStyle, getStyleFromName } from './styles';
+import { type EventStickerStyle, getStyleFromName } from './styles';
 
-import { Sticker } from '@/lib/story-editor/store/index';
+import type { Sticker } from '@/lib/story-editor/store/index';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 // Define NDKKind.Article if it doesn't exist
@@ -32,7 +38,10 @@ export default function EventStickerView({ sticker, onLayout, maxWidth }: EventS
     return (
         <View style={{ maxWidth }} onLayout={onLayout}>
             {!event ? (
-                <View style={[selectedStyle.container as ViewStyle, { maxWidth }]} onLayout={onLayout}>
+                <View
+                    style={[selectedStyle.container as ViewStyle, { maxWidth }]}
+                    onLayout={onLayout}
+                >
                     <ActivityIndicator size="small" color={colors.foreground} />
                 </View>
             ) : (

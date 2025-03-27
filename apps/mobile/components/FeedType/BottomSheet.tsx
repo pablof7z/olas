@@ -1,4 +1,4 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as SettingsStore from 'expo-secure-store';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
@@ -6,12 +6,15 @@ import { Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FeedTypeList from '.';
-import { FeedType, feedTypeAtom } from './store';
 import { Sheet, useSheetRef } from '../nativewindui/Sheet';
+import { type FeedType, feedTypeAtom } from './store';
 
-export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(null, (get, set, value) => {
-    set(sheetAtom, value);
-});
+export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(
+    null,
+    (_get, set, value) => {
+        set(sheetAtom, value);
+    }
+);
 
 export default function FeedTypeBottomSheet() {
     const sheetRef = useSheetRef();

@@ -1,4 +1,4 @@
-import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
+import type { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 
 export type GroupEntry = {
     groupId: string;

@@ -34,7 +34,7 @@ export const useMediaDimensions = () => {
     const containerWidthValue = useMemo(() => {
         if (canvasSize && containerWidth) {
             // Convert percentage string to numeric value
-            const percentage = parseFloat(containerWidth);
+            const percentage = Number.parseFloat(containerWidth);
             return canvasSize.width * (percentage / 100);
         }
         return canvasSize.width || dimensions.width;

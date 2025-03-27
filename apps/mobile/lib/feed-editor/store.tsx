@@ -1,13 +1,14 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { atom } from 'jotai';
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
 import { create } from 'zustand';
 
 type FeedEditorBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
-export const feedEditorBottomSheetRefAtom = atom<FeedEditorBottomSheetRefAtomType, [FeedEditorBottomSheetRefAtomType], null>(
-    null,
-    (get, set, value) => set(feedEditorBottomSheetRefAtom, value)
-);
+export const feedEditorBottomSheetRefAtom = atom<
+    FeedEditorBottomSheetRefAtomType,
+    [FeedEditorBottomSheetRefAtomType],
+    null
+>(null, (_get, set, value) => set(feedEditorBottomSheetRefAtom, value));
 
 interface FeedEditorProps {
     title: string;
@@ -49,9 +50,7 @@ export const useFeedEditorStore = create<FeedEditorProps & FeedEditorActions>((s
     setEncrypted: (encrypted: boolean) => set({ encrypted }),
     setMode: (mode) => set({ mode }),
 
-    save: () => {
-        console.log('save');
-    },
+    save: () => {},
 
     setSaveHashtagMode: (hashtag: string) => {
         set({

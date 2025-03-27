@@ -1,4 +1,10 @@
-import { NDKStory, NDKStorySticker, NDKStoryStickerType, NDKEvent, NDKUser } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    type NDKStory,
+    NDKStorySticker,
+    NDKStoryStickerType,
+    type NDKUser,
+} from '@nostr-dev-kit/ndk-mobile';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define the app's sticker format structure based on the one in store/index.ts
@@ -55,8 +61,8 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
 
     return ndkStory.stickers.map((ndkSticker) => {
         // Parse dimensions from the dimension property
-        let width = 100,
-            height = 100;
+        let width = 100;
+        let height = 100;
 
         // Handle dimension parsing
         width = ndkSticker.dimension.width || 100;
@@ -72,7 +78,9 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
                 translateX: ndkSticker.position.x || 0,
                 translateY: ndkSticker.position.y || 0,
                 scale: 1, // Default scale
-                rotate: ndkSticker.properties?.rot ? parseFloat(ndkSticker.properties.rot) : 0,
+                rotate: ndkSticker.properties?.rot
+                    ? Number.parseFloat(ndkSticker.properties.rot)
+                    : 0,
             },
             dimensions: {
                 width,
@@ -95,7 +103,10 @@ export function mapNDKStickersToAppFormat(ndkStory: NDKStory): Sticker[] {
             case NDKStoryStickerType.Event:
                 // For event stickers, value should be an NDKEvent
                 if (ndkSticker.value && typeof ndkSticker.value === 'object') {
-                    const eventId = typeof ndkSticker.value === 'string' ? ndkSticker.value : (ndkSticker.value as any).id;
+                    const _eventId =
+                        typeof ndkSticker.value === 'string'
+                            ? ndkSticker.value
+                            : (ndkSticker.value as any).id;
                     // Note: The actual NDKEvent object needs to be fetched/created separately
                     sticker.metadata = {
                         event: ndkSticker.value as NDKEvent,
@@ -119,10 +130,10 @@ export function getCanvasDimensions(ndkStory: NDKStory): { width: number; height
     const canvasTag = ndkStory.tags.find((tag) => tag[0] === 'canvas');
     if (canvasTag && canvasTag.length >= 3) {
         try {
-            const width = parseInt(canvasTag[1], 10);
-            const height = parseInt(canvasTag[2], 10);
+            const width = Number.parseInt(canvasTag[1], 10);
+            const height = Number.parseInt(canvasTag[2], 10);
 
-            if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
+            if (!Number.isNaN(width) && !Number.isNaN(height) && width > 0 && height > 0) {
                 return { width, height };
             }
         } catch (e) {

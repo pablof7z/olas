@@ -1,10 +1,10 @@
-import NDK from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
 import { atom } from 'jotai';
 import { create } from 'zustand';
 
 import { generateEvent } from '@/lib/publish/actions/event';
 import { uploadMedia } from '@/lib/publish/actions/upload';
-import { PostMedia, PostMetadata, PostState, Location } from '@/lib/publish/types';
+import type { Location, PostMedia, PostMetadata, PostState } from '@/lib/publish/types';
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
@@ -139,7 +139,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     updateMedia: (mediaId, updatedMedia) =>
         set((state) => ({
-            media: state.media.map((item) => (item.id === mediaId ? { ...item, ...updatedMedia } : item)),
+            media: state.media.map((item) =>
+                item.id === mediaId ? { ...item, ...updatedMedia } : item
+            ),
         })),
 
     reorderMedia: (fromIndex, toIndex) =>
@@ -171,7 +173,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
         try {
             const media = await prepareMedia(get().media, (type, progress) => {
-                set({ state: type + ' ' + (progress * 100).toFixed(0) + '%' });
+                set({ state: `${type} ${(progress * 100).toFixed(0)}%` });
             });
 
             set({ state: 'uploading' });

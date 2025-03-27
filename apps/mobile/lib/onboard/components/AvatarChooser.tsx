@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { Camera, Plus } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { View, Image } from 'react-native';
+import { Image, View } from 'react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
 
 import { avatarAtom, usernameAtom } from '../store';
@@ -46,7 +46,11 @@ export function AvatarChooser() {
 
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
-                    source={{ uri: avatar || 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username }}
+                    source={{
+                        uri:
+                            avatar ||
+                            `https://api.dicebear.com/9.x/bottts-neutral/png?seed=${username}`,
+                    }}
                     className="h-full w-full rounded-full object-cover"
                 />
             </View>

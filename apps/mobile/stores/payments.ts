@@ -1,13 +1,13 @@
 import {
-    Hexpubkey,
+    type Hexpubkey,
     NDKEvent,
     NDKKind,
     NDKNutzap,
-    NDKPaymentConfirmation,
+    type NDKPaymentConfirmation,
     NDKUser,
-    NDKZapInvoice,
-    NDKZapper,
-    NDKZapSplit,
+    type NDKZapInvoice,
+    type NDKZapSplit,
+    type NDKZapper,
     zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
@@ -111,8 +111,16 @@ type PaymentActions = {
 
     setCurrentUser: (pubkey: Hexpubkey) => void;
 
-    addPendingPayment: (zapper: NDKZapper, sender: Hexpubkey, state?: 'delayed' | 'pending') => Payment[];
-    updatePaymentStatus: (target: NDKUser | NDKEvent, internalId: string, status: PaymentStatus) => void;
+    addPendingPayment: (
+        zapper: NDKZapper,
+        sender: Hexpubkey,
+        state?: 'delayed' | 'pending'
+    ) => Payment[];
+    updatePaymentStatus: (
+        target: NDKUser | NDKEvent,
+        internalId: string,
+        status: PaymentStatus
+    ) => void;
 
     addPayments: (events: NDKEvent[], recordInDb?: boolean) => void;
 
@@ -165,10 +173,13 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
             const payment = mapDbRecord(_payment);
             const targetId = payment.targetId;
             if (!targetId) {
-                console.log('payment has no target id', JSON.stringify(payment, null, 4));
                 continue;
             }
-            const entry = _entries.get(targetId) || { payments: [], amount: 0, zapCountByCurrentUser: 0 };
+            const entry = _entries.get(targetId) || {
+                payments: [],
+                amount: 0,
+                zapCountByCurrentUser: 0,
+            };
             entry.payments.push(payment);
             if (payment.sender === currentUser) entry.zapCountByCurrentUser++;
             entry.amount += payment.amount;
@@ -183,7 +194,11 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
 
     setCurrentUser: (pubkey: Hexpubkey) => set({ currentUser: pubkey }),
 
-    updatePaymentStatus: (target: NDKUser | NDKEvent, internalId: string, status: PaymentStatus) => {
+    updatePaymentStatus: (
+        target: NDKUser | NDKEvent,
+        internalId: string,
+        status: PaymentStatus
+    ) => {
         set((state) => {
             const targetId = targetToId(target);
             const _entries = new Map(state.entries);
@@ -192,8 +207,6 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
 
             const payment = entry.payments.find((p) => p.internalId === internalId);
             if (!payment) return;
-
-            console.log('updated payment status from ', payment.status, 'to', status);
             payment.status = status;
             return { entries: _entries };
         });
@@ -234,7 +247,10 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                 payments.push(pendingPayment);
 
                 // store zapped amount
-                amount += amountInSats({ amount: pendingPayment.amount, unit: pendingPayment.unit });
+                amount += amountInSats({
+                    amount: pendingPayment.amount,
+                    unit: pendingPayment.unit,
+                });
 
                 // set flag
                 zapCountByCurrentUser++;
@@ -245,35 +261,40 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
         });
 
         // hook to zapper events
-        zapper.on('complete', (results: Map<NDKZapSplit, NDKPaymentConfirmation | Error | undefined>) => {
-            const _entries = new Map(get().entries);
+        zapper.on(
+            'complete',
+            (results: Map<NDKZapSplit, NDKPaymentConfirmation | Error | undefined>) => {
+                const _entries = new Map(get().entries);
 
-            for (const [split, result] of results.entries()) {
-                const { id: targetId, type: targetType } = getZapperTarget(zapper);
-                let { payments, amount, zapCountByCurrentUser } = _entries.get(targetId) || {
-                    payments: [],
-                    amount: 0,
-                    zapCountByCurrentUser: 0,
-                };
-                const paymentIndex = payments.filter(isPendingPayment).findIndex((p) => p.recipient === split.pubkey);
-                if (paymentIndex === -1) return;
-                const payment = payments[paymentIndex];
+                for (const [split, result] of results.entries()) {
+                    const { id: targetId, type: targetType } = getZapperTarget(zapper);
+                    let { payments, amount, zapCountByCurrentUser } = _entries.get(targetId) || {
+                        payments: [],
+                        amount: 0,
+                        zapCountByCurrentUser: 0,
+                    };
+                    const paymentIndex = payments
+                        .filter(isPendingPayment)
+                        .findIndex((p) => p.recipient === split.pubkey);
+                    if (paymentIndex === -1) return;
+                    const payment = payments[paymentIndex];
 
-                if (result instanceof Error) {
-                    payment.status = 'failed';
-                    payment.error = result.message;
-                    zapCountByCurrentUser--;
-                    amount -= payment.amount;
-                } else {
-                    payment.status = 'complete';
+                    if (result instanceof Error) {
+                        payment.status = 'failed';
+                        payment.error = result.message;
+                        zapCountByCurrentUser--;
+                        amount -= payment.amount;
+                    } else {
+                        payment.status = 'complete';
+                    }
+
+                    payments[paymentIndex] = payment;
+                    _entries.set(targetId, { payments, amount, zapCountByCurrentUser });
                 }
 
-                payments[paymentIndex] = payment;
-                _entries.set(targetId, { payments, amount, zapCountByCurrentUser });
+                set({ entries: _entries });
             }
-
-            set({ entries: _entries });
-        });
+        );
 
         return pendingPayments;
     },
@@ -298,10 +319,6 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                 if (event.kind === NDKKind.Zap) {
                     decodedZapReceipt = zapInvoiceFromEvent(event);
                     if (!decodedZapReceipt) {
-                        console.log(
-                            '[NEW PAYMENT STORE] Unable to decode zap receipt for event',
-                            JSON.stringify(event.rawEvent(), null, 4)
-                        );
                         continue;
                     }
                     newAmount = decodedZapReceipt.amount / 1000;
@@ -318,11 +335,14 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
 
                 const target = getTarget(event);
                 if (!target) {
-                    console.log('[NEW PAYMENT STORE] Unable to find target id for event', JSON.stringify(event.rawEvent(), null, 4));
                     continue;
                 }
 
-                const findPendingPayment = (payments: Payment[], event: NDKEvent, decodedZapReceipt?: NDKZapInvoice) => {
+                const findPendingPayment = (
+                    payments: Payment[],
+                    event: NDKEvent,
+                    decodedZapReceipt?: NDKZapInvoice
+                ) => {
                     const recipient = event.tagValue('p');
                     if (!recipient) return null;
                     return payments
@@ -336,8 +356,16 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                     payments,
                     amount: totalAmount,
                     zapCountByCurrentUser,
-                } = _entries.get(target.id) || { payments: [], amount: 0, zapCountByCurrentUser: 0 };
-                const matchingPendingPayment = findPendingPayment(payments, event, decodedZapReceipt);
+                } = _entries.get(target.id) || {
+                    payments: [],
+                    amount: 0,
+                    zapCountByCurrentUser: 0,
+                };
+                const matchingPendingPayment = findPendingPayment(
+                    payments,
+                    event,
+                    decodedZapReceipt
+                );
 
                 // if its a matching pending payment, update the payment in the array and set the status to confirmed
                 if (matchingPendingPayment) {
@@ -367,7 +395,11 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
 
                     if (sender === get().currentUser) zapCountByCurrentUser++;
 
-                    _entries.set(target.id, { payments, amount: totalAmount, zapCountByCurrentUser });
+                    _entries.set(target.id, {
+                        payments,
+                        amount: totalAmount,
+                        zapCountByCurrentUser,
+                    });
                     if (recordInDb) recordNewPayment(paymentEntry);
                 }
             }
@@ -390,7 +422,8 @@ export const usePaymentStore = create<PaymentStore & PaymentActions>((set, get) 
                 _entries.set(targetId, {
                     payments: newPayments,
                     amount: newPayments.reduce((acc, p) => acc + p.amount, 0),
-                    zapCountByCurrentUser: newPayments.filter((p) => p.sender === state.currentUser).length,
+                    zapCountByCurrentUser: newPayments.filter((p) => p.sender === state.currentUser)
+                        .length,
                 });
             }
 

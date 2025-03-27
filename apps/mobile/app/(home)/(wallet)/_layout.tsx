@@ -25,7 +25,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 contentStyle: {
                     backgroundColor: colors.card,
                 },
-            }}>
+            }}
+        >
             <Stack.Screen
                 name="index"
                 options={{

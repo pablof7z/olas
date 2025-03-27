@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { View, Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,7 +29,11 @@ export default function PostTypeSwitcher() {
 
     return (
         <View style={[postTypeSwitcherStyles.positioner, { marginBottom: insets.bottom }]}>
-            <BlurView intensity={80} tint="dark" style={{ borderRadius: POST_TYPE_SWITCHER_HEIGHT, overflow: 'hidden' }}>
+            <BlurView
+                intensity={80}
+                tint="dark"
+                style={{ borderRadius: POST_TYPE_SWITCHER_HEIGHT, overflow: 'hidden' }}
+            >
                 <View style={postTypeSwitcherStyles.container}>
                     <Pressable style={postTypeSwitcherStyles.button} onPress={handlePostPress}>
                         <Animated.Text
@@ -40,7 +44,8 @@ export default function PostTypeSwitcher() {
                                     fontWeight: 'bold',
                                 },
                             ]}
-                            transition={{ type: 'timing', duration: 200 }}>
+                            transition={{ type: 'timing', duration: 200 }}
+                        >
                             POST
                         </Animated.Text>
                     </Pressable>
@@ -53,7 +58,8 @@ export default function PostTypeSwitcher() {
                                     fontWeight: 'bold',
                                 },
                             ]}
-                            transition={{ type: 'timing', duration: 200 }}>
+                            transition={{ type: 'timing', duration: 200 }}
+                        >
                             STORY
                         </Animated.Text>
                     </Pressable>
@@ -66,7 +72,8 @@ export default function PostTypeSwitcher() {
                                     fontWeight: 'bold',
                                 },
                             ]}
-                            transition={{ type: 'timing', duration: 200 }}>
+                            transition={{ type: 'timing', duration: 200 }}
+                        >
                             VIDEO
                         </Animated.Text>
                     </Pressable>

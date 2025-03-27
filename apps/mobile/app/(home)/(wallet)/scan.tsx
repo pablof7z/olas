@@ -1,14 +1,14 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { getBolt11ExpiresAt, NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, getBolt11ExpiresAt } from '@nostr-dev-kit/ndk-wallet';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
 import { ClipboardPasteButton } from 'expo-clipboard';
 import { decode as decodeBolt11 } from 'light-bolt11-decoder';
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Button, ButtonState } from '@/components/nativewindui/Button';
+import { Button, type ButtonState } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
 import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { formatMoney } from '@/utils/bitcoin';
@@ -54,8 +54,12 @@ export default function Scan() {
             }
 
             const decoded = decodeBolt11(payload);
-            const amount = Number(decoded.sections.find((section) => section.name === 'amount')?.value);
-            const description = decoded.sections.find((section) => section.name === 'description')?.value;
+            const amount = Number(
+                decoded.sections.find((section) => section.name === 'amount')?.value
+            );
+            const description = decoded.sections.find(
+                (section) => section.name === 'description'
+            )?.value;
             setAmount(amount);
             setDescription(description);
             return;
@@ -77,18 +81,16 @@ export default function Scan() {
     }
 
     const handleQRCodeScanned = (data: string) => {
-        console.log('QR code scanned', data);
         receive(data); // Call send function with scanned data
     };
 
     const pay = async () => {
-        console.log('pay', payload);
         if (!payload) return;
 
         setState('loading');
         activeWallet
             .lnPay({ pr: payload })
-            .then((result) => {
+            .then((_result) => {
                 setState('success');
             })
             .catch((error) => {
@@ -104,8 +106,16 @@ export default function Scan() {
                 <WalletBalance amount={amount / 1000} unit="sats" onPress={() => {}} />
                 <Text>{description ?? 'No description'}</Text>
 
-                <Button className="w-full !py-4" variant="primary" size="lg" onPress={pay} state={state}>
-                    <Text className="text-xl font-bold">Pay {formatMoney({ amount, unit: 'msats' })}</Text>
+                <Button
+                    className="w-full !py-4"
+                    variant="primary"
+                    size="lg"
+                    onPress={pay}
+                    state={state}
+                >
+                    <Text className="text-xl font-bold">
+                        Pay {formatMoney({ amount, unit: 'msats' })}
+                    </Text>
                 </Button>
 
                 <Button
@@ -115,7 +125,8 @@ export default function Scan() {
                     onPress={() => {
                         setAmount(null);
                         setDescription(null);
-                    }}>
+                    }}
+                >
                     <Text className="text-muted-foreground">Cancel</Text>
                 </Button>
             </View>

@@ -1,37 +1,43 @@
-import NDK, {
-    NDKEvent,
-    NDKFilter,
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    type NDKFilter,
     NDKKind,
     NDKList,
-    NDKRelay,
+    type NDKRelay,
     NDKRelaySet,
     NDKSimpleGroupMemberList,
     NDKSimpleGroupMetadata,
     NDKSubscriptionCacheUsage,
-    NDKUser,
+    type NDKUser,
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';
 
-import { GroupStore } from '.';
+import type { GroupStore } from '.';
 
 export function loadMyGroups(ndk: NDK, currentUser: NDKUser, set: (state: GroupStore) => void) {
-    ndk.subscribe([{ kinds: [NDKKind.SimpleGroupList], authors: [currentUser.pubkey] }], undefined, undefined, {
-        onEvent: (event) => {
-            const list = NDKList.from(event);
-            const relays = new Map<string, string[]>();
-            list.items.forEach((item) => {
-                const [_, hTag, relay] = item;
-                const existing = relays.get(relay) || [];
-                existing.push(hTag);
-                relays.set(relay, existing);
-            });
+    ndk.subscribe(
+        [{ kinds: [NDKKind.SimpleGroupList], authors: [currentUser.pubkey] }],
+        undefined,
+        undefined,
+        {
+            onEvent: (event) => {
+                const list = NDKList.from(event);
+                const relays = new Map<string, string[]>();
+                list.items.forEach((item) => {
+                    const [_, hTag, relay] = item;
+                    const existing = relays.get(relay) || [];
+                    existing.push(hTag);
+                    relays.set(relay, existing);
+                });
 
-            relays.forEach((hTags, relay) => {
-                loadGroups(ndk, currentUser, relay, hTags, set);
-            });
-        },
-    });
+                relays.forEach((hTags, relay) => {
+                    loadGroups(ndk, currentUser, relay, hTags, set);
+                });
+            },
+        }
+    );
 }
 
 export function loadGroups(
@@ -44,7 +50,11 @@ export function loadGroups(
     const handleEvent = (event: NDKEvent, relay?: NDKRelay) => {
         const groupId = event.dTag;
         set((state: GroupStore) => {
-            const current = state.groups.get(groupId) ?? { groupId, members: new Set(), relayUrls: event.onRelays.map((r) => r.url) };
+            const current = state.groups.get(groupId) ?? {
+                groupId,
+                members: new Set(),
+                relayUrls: event.onRelays.map((r) => r.url),
+            };
 
             if (relay && !current.relayUrls.includes(relay.url)) {
                 current.relayUrls.push(relay.url);

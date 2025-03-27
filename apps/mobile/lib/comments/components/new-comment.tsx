@@ -1,17 +1,24 @@
 import { BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Hexpubkey, NDKEvent, NDKUser, NDKUserProfile, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    type NDKEvent,
+    type NDKUser,
+    type NDKUserProfile,
+    useNDK,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useAtom, useSetAtom } from 'jotai';
 import { Send } from 'lucide-react-native';
-import { useState, useCallback, useRef, RefObject, useMemo } from 'react';
+import { RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import {
-    NativeSyntheticEvent,
-    Text,
-    TextInputKeyPressEventData,
-    TextInputSelectionChangeEventData,
-    View,
-    TextInput,
+    type NativeSyntheticEvent,
     StyleSheet,
+    Text,
+    TextInput,
+    TextInputKeyPressEventData,
+    type TextInputSelectionChangeEventData,
     TouchableOpacity,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,7 +29,11 @@ import { useUserFlare } from '@/hooks/user-flare';
 import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
 
-export default function NewComment({ event, currentUser, autoFocus }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
+export default function NewComment({
+    event,
+    currentUser,
+    autoFocus,
+}: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
     const { userProfile } = useUserProfile(currentUser?.pubkey);
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
@@ -66,7 +77,10 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
             try {
                 const pubkey = value.pubkey as string;
                 const user = ndk.getUser({ pubkey });
-                commentEvent.content = commentEvent.content.replace(`@${key}`, `nostr:${user.nprofile}`);
+                commentEvent.content = commentEvent.content.replace(
+                    `@${key}`,
+                    `nostr:${user.nprofile}`
+                );
             } catch (error) {
                 console.error(error);
             }
@@ -112,7 +126,7 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
     );
 
     const handleMentionPress = useCallback(
-        (pubkey: Hexpubkey, profile: NDKUserProfile) => {
+        (_pubkey: Hexpubkey, profile: NDKUserProfile) => {
             let text = commentRef.current;
             let mention = profile.name?.trim?.();
             mention ??= profile.nip05?.trim?.();
@@ -130,8 +144,13 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
     }, [insets.bottom, mentionQuery]);
 
     return (
-        <BottomSheetView style={[styles.container, containerStyle]} className="border-t border-border">
-            {mentionQuery && <MentionSuggestions query={mentionQuery} onPress={handleMentionPress} />}
+        <BottomSheetView
+            style={[styles.container, containerStyle]}
+            className="border-t border-border"
+        >
+            {mentionQuery && (
+                <MentionSuggestions query={mentionQuery} onPress={handleMentionPress} />
+            )}
 
             <View style={styles.inputContainer}>
                 <User.Avatar
@@ -156,7 +175,11 @@ export default function NewComment({ event, currentUser, autoFocus }: { event: N
                     multiline
                     returnKeyType="send"
                 />
-                <TouchableOpacity style={styles.sendButton} disabled={!comment.trim()} onPress={handleSend}>
+                <TouchableOpacity
+                    style={styles.sendButton}
+                    disabled={!comment.trim()}
+                    onPress={handleSend}
+                >
                     <Send size={20} color={colors.foreground} />
                 </TouchableOpacity>
             </View>

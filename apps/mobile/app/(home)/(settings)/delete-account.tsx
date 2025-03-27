@@ -1,4 +1,10 @@
-import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    NDKKind,
+    useNDK,
+    useNDKCurrentUser,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -7,7 +13,7 @@ import { View } from 'react-native';
 import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, ButtonState } from '@/components/nativewindui/Button';
+import { Button, type ButtonState } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
 import { useAppSettingsStore } from '@/stores/app';
 
@@ -94,12 +100,15 @@ export default function DeleteAccountScreen() {
     const bottomHeight = useBottomTabBarHeight();
 
     return (
-        <View className="flex-1 flex-col justify-between p-4" style={{ paddingBottom: insets.bottom + bottomHeight + 20 }}>
+        <View
+            className="flex-1 flex-col justify-between p-4"
+            style={{ paddingBottom: insets.bottom + bottomHeight + 20 }}
+        >
             <Text variant="title1">Delete Account</Text>
 
             <Text variant="body" className="text-muted-foreground">
-                Are you sure you want to delete your account? This will permanently delete all your content. No new content from this
-                account will be accepted.
+                Are you sure you want to delete your account? This will permanently delete all your
+                content. No new content from this account will be accepted.
             </Text>
             <Text variant="body" className="font-bold !text-foreground">
                 There is no way to undo this.
@@ -114,8 +123,12 @@ export default function DeleteAccountScreen() {
                         state={buttonStatus}
                         variant="destructive"
                         disabled={showRealIn > 0}
-                        style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 18, lineHeight: 18 }} className="pt-2 font-bold text-white">
+                        style={{ flexDirection: 'column', alignItems: 'center' }}
+                    >
+                        <Text
+                            style={{ fontSize: 18, lineHeight: 18 }}
+                            className="pt-2 font-bold text-white"
+                        >
                             Confirm Account Deletion {showRealIn > 0 ? `(${showRealIn})` : ''}
                         </Text>
                         <Text style={{ lineHeight: 12, fontSize: 10, color: 'white' }}>
@@ -129,8 +142,12 @@ export default function DeleteAccountScreen() {
                         onPress={confirmAccountDeletion}
                         state={buttonStatus}
                         variant="destructive"
-                        style={{ flexDirection: 'column', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 18, lineHeight: 18 }} className="pt-2 font-bold text-white">
+                        style={{ flexDirection: 'column', alignItems: 'center' }}
+                    >
+                        <Text
+                            style={{ fontSize: 18, lineHeight: 18 }}
+                            className="pt-2 font-bold text-white"
+                        >
                             Permanently Delete Account
                         </Text>
                         <Text style={{ lineHeight: 12, fontSize: 10, color: 'white' }}>

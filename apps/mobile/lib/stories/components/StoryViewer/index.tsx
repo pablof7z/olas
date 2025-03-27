@@ -1,8 +1,8 @@
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { Image, ImageStyle, useImage } from 'expo-image';
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Dimensions, ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
 
 import StoryStickersContainer from '../StoryStickersContainer';
 import StoryText from '../StoryText';
@@ -20,7 +20,12 @@ interface SimpleStoryViewerProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function SimpleStoryViewer({ story, active = true, onNext, onPrev }: SimpleStoryViewerProps) {
+export default function SimpleStoryViewer({
+    story,
+    active = true,
+    onNext,
+    onPrev,
+}: SimpleStoryViewerProps) {
     const imeta = story.imeta;
 
     if (!imeta?.url) return null;

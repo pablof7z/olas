@@ -2,21 +2,22 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, router } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
-    CameraPosition,
-    VideoFile,
+    type CameraDevice,
+    type CameraPosition,
+    type CameraRuntimeError,
+    type VideoFile,
     useCameraDevices,
-    CameraDevice,
     useCameraPermission,
     useMicrophonePermission,
-    CameraRuntimeError,
 } from 'react-native-vision-camera';
 
 import CameraToolbar from '@/lib/publish/components/CameraToolbar';
+import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
 import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
 import { useEditorStore } from '@/lib/publish/store/editor';
 
@@ -26,18 +27,6 @@ type Devices = {
     [key in CameraPosition]?: CameraDevice;
 };
 
-const PermissionRequest = ({ type, onRequestPermission }: { type: 'camera' | 'microphone'; onRequestPermission: () => void }) => (
-    <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Ionicons name={type === 'camera' ? 'camera-outline' : 'mic-outline'} size={64} color="white" style={{ marginBottom: 16 }} />
-        <Text style={styles.permissionText}>
-            {type === 'camera' ? 'Camera access is required to take photos and videos' : 'Microphone access is required to record videos'}
-        </Text>
-        <TouchableOpacity onPress={onRequestPermission} style={styles.permissionButton}>
-            <Text style={styles.permissionButtonText}>Grant Access</Text>
-        </TouchableOpacity>
-    </View>
-);
-
 export default function VideoScreen() {
     const camera = useRef<Camera>(null);
     const availableDevices = useCameraDevices();
@@ -45,9 +34,12 @@ export default function VideoScreen() {
     const [cameraPosition, setCameraPosition] = useState<CameraPosition>('back');
     const [isRecording, setIsRecording] = useState(false);
     const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const scale = useSharedValue(1);
-    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
-    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } = useMicrophonePermission();
+    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } =
+        useCameraPermission();
+    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } =
+        useMicrophonePermission();
     const { addMedia } = useEditorStore();
 
     // Map available devices to front/back
@@ -61,6 +53,7 @@ export default function VideoScreen() {
     }
 
     const device = devices[cameraPosition];
+    const hasCameraDevice = !!device;
 
     const cameraStyle = useAnimatedStyle(() => ({
         flex: 1,
@@ -75,19 +68,30 @@ export default function VideoScreen() {
         // Handle specific error cases
         switch (error.code) {
             case 'device/configuration-error':
-                Alert.alert('Camera Error', 'There was an error configuring the camera. Please try again.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Camera Error',
+                    'There was an error configuring the camera. Please try again.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/no-device':
-                Alert.alert('Camera Unavailable', 'The camera hardware is currently unavailable. Please try again later.', [
-                    { text: 'OK' },
-                ]);
+                Alert.alert(
+                    'Camera Unavailable',
+                    'The camera hardware is currently unavailable. Please try again later.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/microphone-unavailable':
-                Alert.alert('Microphone Error', 'The microphone is unavailable. Video recording may not have audio.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Microphone Error',
+                    'The microphone is unavailable. Video recording may not have audio.',
+                    [{ text: 'OK' }]
+                );
                 break;
-            case 'unknown/unknown':
             default:
-                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [{ text: 'OK' }]);
+                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [
+                    { text: 'OK' },
+                ]);
         }
     }, []);
 
@@ -113,7 +117,9 @@ export default function VideoScreen() {
             setCameraPosition(newPosition);
         } catch (error) {
             console.error('Failed to switch camera:', error);
-            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [{ text: 'OK' }]);
+            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [
+                { text: 'OK' },
+            ]);
         } finally {
             // Add a small delay before allowing another switch
             setTimeout(() => {
@@ -124,7 +130,6 @@ export default function VideoScreen() {
 
     const handleVideoRecorded = useCallback(
         async (video: VideoFile) => {
-            console.log('Video recorded:', video);
             try {
                 await addMedia(video.path, 'video');
                 router.push('/publish/post/metadata');
@@ -144,7 +149,6 @@ export default function VideoScreen() {
             } else {
                 await camera.current?.startRecording({
                     onRecordingFinished: (video) => {
-                        console.log('Video recorded:', video);
                         setIsRecording(false);
                         handleVideoRecorded(video);
                     },
@@ -164,6 +168,7 @@ export default function VideoScreen() {
     }, [isRecording, handleVideoRecorded]);
 
     const handleSelectVideo = useCallback(async () => {
+        setIsLoading(true);
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Videos,
@@ -180,55 +185,84 @@ export default function VideoScreen() {
         } catch (error) {
             console.error('Error selecting video:', error);
             Alert.alert('Error', 'Failed to select video. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     }, [addMedia]);
 
-    // Handle permissions
-    if (!hasCameraPermission) {
-        return <PermissionRequest type="camera" onRequestPermission={requestCameraPermission} />;
-    }
-
-    if (!hasMicPermission) {
-        return <PermissionRequest type="microphone" onRequestPermission={requestMicPermission} />;
-    }
+    const checkDevicesAgain = useCallback(() => {
+        // This function is just to give users a way to retry if no devices are found
+        // The devices are already checked automatically when the component re-renders
+    }, []);
 
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
-            <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + POST_TYPE_SWITCHER_HEIGHT }]}>
-                <View style={{ flex: 1 }}>
-                    {device ? (
-                        <ReanimatedCamera
-                            ref={camera}
-                            style={cameraStyle}
-                            device={device}
-                            isActive
-                            video
-                            audio
-                            enableZoomGesture
-                            onError={handleCameraError}
-                            testID="camera-view"
-                        />
-                    ) : null}
-                </View>
+            <View
+                style={[
+                    styles.container,
+                    {
+                        paddingTop: insets.top,
+                        paddingBottom: insets.bottom + POST_TYPE_SWITCHER_HEIGHT,
+                    },
+                ]}
+            >
+                {!hasCameraPermission ? (
+                    <NoPermissionsFallback
+                        onPickImage={handleSelectVideo}
+                        onRequestPermissions={requestCameraPermission}
+                        isLoading={isLoading}
+                        type="permission"
+                    />
+                ) : !hasMicPermission ? (
+                    <NoPermissionsFallback
+                        onPickImage={handleSelectVideo}
+                        onRequestPermissions={requestMicPermission}
+                        isLoading={isLoading}
+                        type="microphone-permission"
+                    />
+                ) : !hasCameraDevice ? (
+                    <NoPermissionsFallback
+                        onPickImage={handleSelectVideo}
+                        onRequestPermissions={checkDevicesAgain}
+                        isLoading={isLoading}
+                        type="no-device-available"
+                    />
+                ) : (
+                    <>
+                        <View style={{ flex: 1 }}>
+                            <ReanimatedCamera
+                                ref={camera}
+                                style={cameraStyle}
+                                device={device}
+                                isActive
+                                video
+                                audio
+                                enableZoomGesture
+                                onError={handleCameraError}
+                                testID="camera-view"
+                            />
+                        </View>
 
-                <CameraToolbar
-                    selectorProps={{
-                        onPress: handleSelectVideo,
-                        testID: 'video-selector-button',
-                    }}
-                    shutterProps={{
-                        onPress: toggleRecording,
-                        isRecording,
-                        disabled: isSwitchingCamera,
-                        testID: 'record-button',
-                    }}
-                    flipButtonProps={{
-                        onPress: onFlipCamera,
-                        disabled: isSwitchingCamera,
-                        testID: 'flip-button',
-                    }}
-                />
+                        <CameraToolbar
+                            selectorProps={{
+                                onPress: handleSelectVideo,
+                                testID: 'video-selector-button',
+                            }}
+                            shutterProps={{
+                                onPress: toggleRecording,
+                                isRecording,
+                                disabled: isSwitchingCamera,
+                                testID: 'record-button',
+                            }}
+                            flipButtonProps={{
+                                onPress: onFlipCamera,
+                                disabled: isSwitchingCamera,
+                                testID: 'flip-button',
+                            }}
+                        />
+                    </>
+                )}
             </View>
         </>
     );

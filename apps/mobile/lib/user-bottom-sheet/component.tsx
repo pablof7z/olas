@@ -1,11 +1,11 @@
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { NDKUser, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKUser, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom } from 'jotai';
-import { useEffect, useCallback } from 'react';
-import { StyleProp, ViewStyle, View, StyleSheet } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { userBottomSheetAtom } from './store';
 import { useColorScheme } from '../useColorScheme';
+import { userBottomSheetAtom } from './store';
 
 import { publishFollow } from '@/components/buttons/follow';
 import FollowIcon from '@/components/icons/follow';
@@ -95,8 +95,16 @@ function Btn({
     const { colors } = useColorScheme();
 
     return (
-        <Button variant={!active ? 'secondary' : 'tonal'} style={styles.buttonItem} onPress={onPress}>
-            {active ? <Icon size={38} /> : <Icon color1={colors.grey2} color2={colors.grey2} size={38} />}
+        <Button
+            variant={!active ? 'secondary' : 'tonal'}
+            style={styles.buttonItem}
+            onPress={onPress}
+        >
+            {active ? (
+                <Icon size={38} />
+            ) : (
+                <Icon color1={colors.grey2} color2={colors.grey2} size={38} />
+            )}
             {children}
         </Button>
     );
@@ -118,7 +126,11 @@ function FollowButton({ user, close }: { user: NDKUser; close: () => void }) {
         </Btn>
     );
 }
-function PrivateFollowButton({ user, style, close }: { user: NDKUser; style: StyleProp<ViewStyle>; close: () => void }) {
+function PrivateFollowButton({
+    user,
+    style,
+    close,
+}: { user: NDKUser; style: StyleProp<ViewStyle>; close: () => void }) {
     const addPrivateFollow = usePrivateFollows((state) => state.add);
     const removePrivateFollow = usePrivateFollows((state) => state.remove);
     const followType = useFollowType(user?.pubkey);
@@ -140,7 +152,9 @@ function PrivateFollowButton({ user, style, close }: { user: NDKUser; style: Sty
             <View className="flex-col items-start">
                 <Text>Private Follow</Text>
                 <Text className="text-xs text-muted-foreground">
-                    {active ? 'You are currently following this user privately' : 'Follow this user without anyone knowing'}
+                    {active
+                        ? 'You are currently following this user privately'
+                        : 'Follow this user without anyone knowing'}
                 </Text>
             </View>
         </Btn>

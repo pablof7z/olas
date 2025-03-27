@@ -1,15 +1,15 @@
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useAtomValue, atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { X } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { FeedType } from './store';
 import { Button } from '../nativewindui/Button';
 import { List, ListItem, ListSectionHeader } from '../nativewindui/List';
 import { Text } from '../nativewindui/Text';
+import type { FeedType } from './store';
 
 import { IconView } from '@/components/icon-view';
 import Follows from '@/components/icons/follows';
@@ -24,7 +24,10 @@ import { COMMUNITIES_ENABLED } from '@/utils/const';
 
 const tabAtom = atom<string>('Feeds');
 
-export default function FeedTypeList({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedType) => void }) {
+export default function FeedTypeList({
+    value,
+    onSelect,
+}: { value: FeedType; onSelect: (value?: FeedType) => void }) {
     const selectedTab = useAtomValue(tabAtom);
 
     const options = ['Feeds'];
@@ -59,10 +62,12 @@ function Groups({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedT
         const v = [];
 
         groups.forEach((group) => {
-            console.log('group', group);
             v.push({
                 leftView: (
-                    <Image source={{ uri: group.picture }} style={{ width: 32, height: 32, borderRadius: 100, marginHorizontal: 10 }} />
+                    <Image
+                        source={{ uri: group.picture }}
+                        style={{ width: 32, height: 32, borderRadius: 100, marginHorizontal: 10 }}
+                    />
                 ),
                 title: group.name,
                 subTitle: group.about,
@@ -118,7 +123,8 @@ function Groups({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedT
                     onPress={() => {
                         router.push('/communities');
                         onSelect();
-                    }}>
+                    }}
+                >
                     <Text>Explore groups</Text>
                 </Button>
             </View>
@@ -132,29 +138,51 @@ function Groups({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedT
                 sectionHeaderAsGap
                 renderItem={({ item, target, index }) =>
                     typeof item === 'string' ? (
-                        <ListSectionHeader item={item} index={index} target={target} className="bg-card" />
+                        <ListSectionHeader
+                            item={item}
+                            index={index}
+                            target={target}
+                            className="bg-card"
+                        />
                     ) : (
                         <ListItem
                             className={cn(
                                 'ios:pl-0 pl-2',
-                                index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
+                                index === 0 &&
+                                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
                                 item.className ?? ''
                             )}
-                            titleClassName={cn('text-lg', item.value === value && '!font-extrabold')}
+                            titleClassName={cn(
+                                'text-lg',
+                                item.value === value && '!font-extrabold'
+                            )}
                             item={item}
                             index={index}
                             target={target}
                             subTitleNumberOfLines={1}
                             leftView={
                                 item.icon ? (
-                                    <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
+                                    <Image
+                                        source={item.icon}
+                                        style={{
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 18,
+                                            marginRight: 10,
+                                        }}
+                                    />
                                 ) : item.leftView ? (
                                     item.leftView
                                 ) : null
                             }
                             onPress={() => {
                                 if (item.onPress) item.onPress();
-                                else onSelect({ kind: 'group', value: item.value, relayUrls: item.relayUrls });
+                                else
+                                    onSelect({
+                                        kind: 'group',
+                                        value: item.value,
+                                        relayUrls: item.relayUrls,
+                                    });
                             }}
                         />
                     )
@@ -268,7 +296,8 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
                     subTitle: s.subtitle,
                     value: s.title,
                     type: 'search',
-                    onPress: () => onSelect({ kind: 'search', value: s.title, hashtags: s.hashtags }),
+                    onPress: () =>
+                        onSelect({ kind: 'search', value: s.title, hashtags: s.hashtags }),
                 }))
         );
 
@@ -285,7 +314,11 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
             sectionHeaderAsGap={false}
             renderItem={({ item, target, index }) => (
                 <ListItem
-                    className={cn('ios:pl-0 pl-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                    className={cn(
+                        'ios:pl-0 pl-2',
+                        index === 0 &&
+                            'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    )}
                     titleClassName={cn('text-lg', item.value === value.value && '!font-extrabold')}
                     item={item}
                     index={index}
@@ -293,14 +326,21 @@ function Feeds({ value, onSelect }: { value: FeedType; onSelect: (value?: FeedTy
                     subTitleNumberOfLines={1}
                     leftView={
                         item.icon ? (
-                            <Image source={item.icon} style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }} />
+                            <Image
+                                source={item.icon}
+                                style={{ width: 48, height: 48, borderRadius: 18, marginRight: 10 }}
+                            />
                         ) : item.leftView ? (
                             item.leftView
                         ) : null
                     }
                     rightView={
                         item.type === 'search' ? (
-                            <Button variant="plain" size="sm" onPress={() => removeSavedSearch(item.title)}>
+                            <Button
+                                variant="plain"
+                                size="sm"
+                                onPress={() => removeSavedSearch(item.title)}
+                            >
                                 <X size={24} color={colors.muted} />
                             </Button>
                         ) : null

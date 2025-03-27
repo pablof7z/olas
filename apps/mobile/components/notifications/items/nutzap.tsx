@@ -11,7 +11,9 @@ export function ItemNutzap({ event }: { event: NDKNutzap }) {
     return (
         <View className="flex-row items-center justify-between gap-2">
             <Text>{wrapped.content}</Text>
-            <Text variant="title1">{formatMoney({ amount: wrapped.amount, unit: wrapped.unit })}</Text>
+            <Text variant="title1">
+                {formatMoney({ amount: wrapped.amount, unit: wrapped.unit })}
+            </Text>
         </View>
     );
 }

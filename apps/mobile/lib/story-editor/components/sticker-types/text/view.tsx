@@ -1,13 +1,22 @@
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSetAtom } from 'jotai';
 import React, { useCallback, useState, useEffect, useMemo, useRef, cloneElement } from 'react';
-import { Pressable, View, Text, ViewStyle, TextStyle, Dimensions, LayoutChangeEvent, Button } from 'react-native';
+import {
+    Button,
+    Dimensions,
+    type LayoutChangeEvent,
+    Pressable,
+    Text,
+    type TextStyle,
+    View,
+    type ViewStyle,
+} from 'react-native';
 
 import { getStyleFromName } from './styles';
 
 import { editStickerAtom } from '@/lib/story-editor/store';
-import { Sticker } from '@/lib/story-editor/store/index';
+import type { Sticker } from '@/lib/story-editor/store/index';
 
 // Extend ViewStyle with backgroundGradient property
 interface ExtendedViewStyle extends ViewStyle {
@@ -26,9 +35,14 @@ interface TextStickerViewProps {
     onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-export default function TextStickerView({ sticker, fixedDimensions, maxWidth, onLayout }: TextStickerViewProps) {
+export default function TextStickerView({
+    sticker,
+    fixedDimensions,
+    maxWidth,
+    onLayout,
+}: TextStickerViewProps) {
     const selectedStyle = useMemo(() => getStyleFromName(sticker.style), [sticker.style]);
-    const [needsAspectRatio, setNeedsAspectRatio] = useState(false);
+    const [_needsAspectRatio, setNeedsAspectRatio] = useState(false);
     const [hasAdjustedLayout, setHasAdjustedLayout] = useState(false);
     const [fontSize, setFontSize] = useState<number | undefined>(selectedStyle.text.fontSize ?? 12);
 
@@ -54,10 +68,10 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
             padding = Number((selectedStyle.container as ExtendedViewStyle)?.padding || 0);
         }
 
-        let width = undefined;
+        let _width = undefined;
 
         if (sticker.dimensions && typeof sticker.dimensions.width === 'number') {
-            width = sticker.dimensions.width - padding * 2;
+            _width = sticker.dimensions.width - padding * 2;
         }
 
         const _style: TextStyle = {
@@ -79,7 +93,8 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
             // Calculate current and desired aspect ratios
             const currentAspectRatio = width / height;
             const desiredAspectRatio = desiredWidth / desiredHeight;
-            const aspectRatioDifference = Math.abs(currentAspectRatio - desiredAspectRatio) / desiredAspectRatio;
+            const aspectRatioDifference =
+                Math.abs(currentAspectRatio - desiredAspectRatio) / desiredAspectRatio;
 
             // Check if we're within 5% of the desired aspect ratio
             if (aspectRatioDifference <= 0.05) {
@@ -89,25 +104,9 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
 
             // Check if we need to adjust the height
             if (height < desiredHeight * 0.98) {
-                // Allow for 2% tolerance under desired height
-                console.log('👀 current height is less than desired:', {
-                    current: height,
-                    desired: desiredHeight,
-                    currentFontSize: fontSize,
-                });
-
                 // Gradually increase font size to approach the desired height
                 // Use a smaller increment for finer control
                 const newFontSize = (fontSize || 12) * 1.05; // 5% increment
-
-                console.log('👀 increasing font size:', {
-                    from: fontSize,
-                    to: newFontSize,
-                    currentHeight: height,
-                    desiredHeight,
-                    currentWidth: width,
-                    desiredWidth,
-                });
 
                 // Update font size state
                 setFontSize(newFontSize);
@@ -115,39 +114,23 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
 
                 // Prevent too many adjustments
                 if (hasAdjustedLayout && height >= desiredHeight * 0.95) {
-                    console.log('👀 close enough to desired height, stopping adjustments');
                     onLayout?.(event);
                     return;
                 }
 
                 setHasAdjustedLayout(true);
             } else if (height > desiredHeight * 1.02) {
-                // More than 2% over desired height
-                console.log('👀 current height exceeds desired height:', {
-                    current: height,
-                    desired: desiredHeight,
-                    currentFontSize: fontSize,
-                });
-
                 // If we've overshot, reduce font size slightly
                 if (fontSize && fontSize > 8) {
                     // Don't go below minimum readable size
                     const newFontSize = fontSize * 0.98; // Small reduction
-                    console.log('👀 reducing font size:', {
-                        from: fontSize,
-                        to: newFontSize,
-                    });
                     setFontSize(newFontSize);
                     setNeedsAspectRatio(true);
                     setHasAdjustedLayout(true);
                 } else {
-                    // Font size reached minimum, consider adjustments complete
-                    console.log('👀 reached minimum font size, stopping adjustments');
                     onLayout?.(event);
                 }
             } else {
-                // Height is within tolerance, no adjustment needed
-                console.log('👀 height is within tolerance, adjustments complete');
                 onLayout?.(event);
             }
         },
@@ -213,13 +196,17 @@ export default function TextStickerView({ sticker, fixedDimensions, maxWidth, on
                     start={gradientProps.start}
                     end={gradientProps.end}
                     style={[containerStyleWithoutGradient as ViewStyle, containerStyle]}
-                    onLayout={handleTextLayout}>
+                    onLayout={handleTextLayout}
+                >
                     <Text style={[textStyle]} adjustsFontSizeToFit>
                         {sticker.value}
                     </Text>
                 </LinearGradient>
             ) : (
-                <View onLayout={handleTextLayout} style={[selectedStyle.container as ViewStyle, containerStyle]}>
+                <View
+                    onLayout={handleTextLayout}
+                    style={[selectedStyle.container as ViewStyle, containerStyle]}
+                >
                     <Text style={[textStyle]} adjustsFontSizeToFit>
                         {sticker.value}
                     </Text>

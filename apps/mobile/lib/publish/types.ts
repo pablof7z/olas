@@ -1,5 +1,5 @@
 // Importing GroupEntry type from groups module
-import { GroupEntry } from '../groups/types';
+import type { GroupEntry } from '../groups/types';
 
 export type Location = {
     latitude: number;

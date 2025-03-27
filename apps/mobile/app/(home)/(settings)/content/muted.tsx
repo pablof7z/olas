@@ -1,6 +1,6 @@
 import { NDKList, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { RenderTarget } from '@shopify/flash-list';
-import { router, Stack } from 'expo-router';
+import type { RenderTarget } from '@shopify/flash-list';
+import { Stack, router } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { Delete } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -40,8 +40,6 @@ export default function MutedScreen() {
         return v;
     }, [hashtags.length, pubkeys.length]);
 
-    console.log('rendering data', { hashtagCount: hashtags.length, pubkeyCount: pubkeys.length });
-
     const { ndk } = useNDK();
 
     const save = useCallback(async () => {
@@ -49,7 +47,6 @@ export default function MutedScreen() {
         event.kind = 10000;
         event.tags = [...hashtags.map((h) => ['t', h]), ...pubkeys.map((p) => ['p', p])];
         await event.sign();
-        console.log('event', JSON.stringify(event.rawEvent(), null, 2));
         await event.publishReplaceable();
         router.back();
     }, [hashtags, pubkeys]);
@@ -72,13 +69,19 @@ export default function MutedScreen() {
                 estimatedItemSize={50}
                 keyExtractor={(item) => item.id}
                 getItemType={(item) => item.type}
-                renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} />}
+                renderItem={({ item, index, target }) => (
+                    <Item item={item} index={index} target={target} />
+                )}
             />
         </>
     );
 }
 
-function HashtagAddItem({ item, index, target }: { item: any; index: number; target: RenderTarget }) {
+function HashtagAddItem({
+    item,
+    index,
+    target,
+}: { item: any; index: number; target: RenderTarget }) {
     const [hashtag, setHashtag] = useState('');
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const getFocus = useRef(false);
@@ -124,16 +127,31 @@ function Item({ item, index, target }: { item: any; index: number; target: Rende
     return <ListItem item={item} index={index} target={target} />;
 }
 
-function HashtagItem({ hashtag, index, target }: { hashtag: string; index: number; target: RenderTarget }) {
+function HashtagItem({
+    hashtag,
+    index,
+    target,
+}: { hashtag: string; index: number; target: RenderTarget }) {
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const remove = useCallback(() => {
         setHashtags(hashtags.filter((h) => h !== hashtag));
     }, [hashtag, setHashtags, hashtags]);
 
-    return <ListItem item={{ title: hashtag }} index={index} target={target} rightView={<RemoveButton onPress={remove} />} />;
+    return (
+        <ListItem
+            item={{ title: hashtag }}
+            index={index}
+            target={target}
+            rightView={<RemoveButton onPress={remove} />}
+        />
+    );
 }
 
-function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: RenderTarget; index: number }) {
+function MutedUserListItem({
+    pubkey,
+    target,
+    index,
+}: { pubkey: string; target: RenderTarget; index: number }) {
     const profileData = useUserProfile(pubkey);
     const userProfile = profileData?.userProfile;
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);

@@ -1,9 +1,16 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, withSpring, FadeIn, FadeOut, runOnJS, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    withSpring,
+    FadeIn,
+    FadeOut,
+    runOnJS,
+    useAnimatedStyle,
+} from 'react-native-reanimated';
 
 import { ZapModal } from '@/components/ZapModal';
 import Lightning from '@/components/icons/lightning';
@@ -23,7 +30,7 @@ export default function Zaps({
     iconSize?: number;
     growthFactor?: number;
 }) {
-    const cancelZapRef = useRef<() => void | null>(null);
+    const cancelZapRef = useRef<() => undefined | null>(null);
     const paymentEntry = usePaymentStore((s) => s.entries.get(event?.tagId() ?? ''));
     const defaultZap = useAppSettingsStore((s) => s.defaultZap);
     const sendZap = useZap();
@@ -119,9 +126,9 @@ export default function Zaps({
                 const isHorizontal = absX > absY / 2;
 
                 if (isHorizontal) {
-                    newVal -= Math.pow(absX, growthFactor);
+                    newVal -= absX ** growthFactor;
                 } else {
-                    newVal += Math.pow(distance, growthFactor);
+                    newVal += distance ** growthFactor;
                     newVal += absX;
                 }
 

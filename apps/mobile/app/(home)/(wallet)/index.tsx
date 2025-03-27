@@ -1,18 +1,32 @@
 import {
     NDKCashuMintList,
     NDKKind,
-    NDKUser,
+    type NDKUser,
     useNDKCurrentUser,
     useNDKSessionEventKind,
     useNDKWallet,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
-import { router, Stack } from 'expo-router';
+import {
+    NDKCashuWallet,
+    type NDKNWCGetInfoResult,
+    NDKNWCWallet,
+    type NDKWallet,
+} from '@nostr-dev-kit/ndk-wallet';
+import { Stack, router } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { QrCode, Settings, SettingsIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import {
+    Dimensions,
+    Pressable,
+    type StyleProp,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as User from '@/components/ui/user';
@@ -21,25 +35,26 @@ import NWCListTansactions from '@/components/wallet/nwc/list-transactions';
 import TransactionHistory from '@/components/wallet/transactions/list';
 import { useColorScheme } from '@/lib/useColorScheme';
 
-const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(null, (get, set, value) =>
-    set(nwcInfoAtom, value)
+const nwcInfoAtom = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], null>(
+    null,
+    (_get, set, value) => set(nwcInfoAtom, value)
 );
-const walletTitleAtom = atom<string | null, [string | null], void>(null, (get, set, value) => set(walletTitleAtom, value));
+const walletTitleAtom = atom<string | null, [string | null], void>(null, (_get, set, value) =>
+    set(walletTitleAtom, value)
+);
 
 function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
-    const [info, setInfo] = useAtom(nwcInfoAtom);
+    const [_info, setInfo] = useAtom(nwcInfoAtom);
     const setWalletTitle = useSetAtom(walletTitleAtom);
     const [showTimeoutError, setShowTimeoutError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
     const timeout = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        console.log('updating balance', wallet.walletId);
         wallet.updateBalance();
     }, [wallet?.walletId]);
 
     useEffect(() => {
-        console.log('updating info', wallet.walletId);
         timeout.current = setTimeout(() => {
             setShowTimeoutError(true);
         }, 10000);
@@ -47,7 +62,6 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
         wallet
             .getInfo()
             .then((info) => {
-                console.log('NWC info', info);
                 setInfo(info);
                 setWalletTitle(info.alias);
                 if (timeout.current) {
@@ -55,9 +69,7 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
                     timeout.current = null;
                 }
             })
-            .catch((e) => {
-                console.log('NWC info error', e);
-            });
+            .catch((_e) => {});
 
         return () => {
             if (timeout.current) {
@@ -80,7 +92,8 @@ function WalletNWC({ wallet }: { wallet: NDKNWCWallet }) {
                         setShowTimeoutError(false);
                         setRetryCount(retryCount + 1);
                         wallet.getInfo();
-                    }}>
+                    }}
+                >
                     <Text className="font-bold text-white">Retry</Text>
                 </Pressable>
             </View>
@@ -105,40 +118,25 @@ function WalletNip60({ wallet }: { wallet: NDKCashuWallet }) {
 export default function WalletScreen() {
     const currentUser = useNDKCurrentUser();
     const { activeWallet, balance } = useNDKWallet();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, { create: NDKCashuMintList });
+    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, {
+        create: NDKCashuMintList,
+    });
     const [isTestnutWallet, setIsTestnutWallet] = useState(false);
 
     useEffect(() => {
         if (!activeWallet) return;
 
-        if (activeWallet instanceof NDKCashuWallet && activeWallet.mints?.some((m) => m.match(/testnut\.cashu/))) {
+        if (
+            activeWallet instanceof NDKCashuWallet &&
+            activeWallet.mints?.some((m) => m.match(/testnut\.cashu/))
+        ) {
             setIsTestnutWallet(true);
         }
     }, [mintList?.id]);
 
     const onLongPress = useCallback(() => {
         if (!(activeWallet instanceof NDKCashuWallet)) return;
-        const dump = activeWallet.state.dump();
-        console.log('balances', JSON.stringify(dump.balances, null, 2));
-        console.log('proofs', JSON.stringify(dump.proofs, null, 2));
-        console.log(
-            'tokens',
-            JSON.stringify(
-                dump.tokens.map((te) => ({
-                    tokenId: te.token?.id,
-                    proofCount: te.token?.proofs.length,
-                    proofAmount: te.token?.proofs.reduce((acc, p) => acc + p.amount, 0),
-                    proofs: te.token?.proofs.map((p) => p.C),
-                    mint: te.token?.mint,
-                    status: te.state,
-                    date: new Date(te.token?.created_at * 1000).toLocaleString(),
-                })),
-                null,
-                2
-            )
-        );
-        console.log('Journal');
-        console.log(JSON.stringify(activeWallet.state.journal, null, 2));
+        const _dump = activeWallet.state.dump();
     }, [activeWallet?.walletId]);
 
     const { colors } = useColorScheme();
@@ -147,7 +145,7 @@ export default function WalletScreen() {
     const insets = useSafeAreaInsets();
 
     const profileData = useUserProfile(currentUser?.pubkey);
-    const userProfile = profileData?.userProfile;
+    const _userProfile = profileData?.userProfile;
 
     return (
         <>
@@ -157,7 +155,9 @@ export default function WalletScreen() {
                     headerTransparent: true,
                     title: walletTitle,
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => router.push('/(home)/(wallet)/(walletSettings)')}>
+                        <TouchableOpacity
+                            onPress={() => router.push('/(home)/(wallet)/(walletSettings)')}
+                        >
                             <SettingsIcon size={24} color={colors.foreground} />
                         </TouchableOpacity>
                     ),
@@ -171,8 +171,11 @@ export default function WalletScreen() {
                                 className="ios:rounded-t-md flex-row items-center justify-center bg-red-500/30 p-4"
                                 onPress={() => {
                                     router.push('/(home)/(wallet)/(walletSettings)/mints');
-                                }}>
-                                <Text className="text-red-800">You are using a test mint. Click here to remove it.</Text>
+                                }}
+                            >
+                                <Text className="text-red-800">
+                                    You are using a test mint. Click here to remove it.
+                                </Text>
                             </Pressable>
                         )}
 
@@ -199,7 +202,9 @@ export default function WalletScreen() {
                             </>
                         )}
 
-                        {activeWallet instanceof NDKNWCWallet && <WalletNWC wallet={activeWallet} />}
+                        {activeWallet instanceof NDKNWCWallet && (
+                            <WalletNWC wallet={activeWallet} />
+                        )}
                     </View>
                 </View>
             </View>

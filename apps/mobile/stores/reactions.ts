@@ -1,4 +1,4 @@
-import { getRootTag, NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, getRootTag } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
 
 export type ReactionStats = {
@@ -37,7 +37,7 @@ export const DEFAULT_STATS: ReactionStats = {
     bookmarkedByUser: false,
 } as const;
 
-export const useReactionsStore = create<ReactionsStore>((set, get) => ({
+export const useReactionsStore = create<ReactionsStore>((set, _get) => ({
     seenEventIds: new Set(),
     reactions: new Map(),
 
@@ -52,11 +52,12 @@ export const useReactionsStore = create<ReactionsStore>((set, get) => ({
 
                 const targetRootEventId = getTargetRootEventId(event);
                 if (!targetRootEventId) {
-                    console.log('[REACTIONS STORE] no target root event id for', event.id.substring(0, 8), event.kind, event.encode());
                     continue;
                 }
 
-                const stats = cloneReactionStats(newReactions.get(targetRootEventId) || DEFAULT_STATS);
+                const stats = cloneReactionStats(
+                    newReactions.get(targetRootEventId) || DEFAULT_STATS
+                );
                 updateStats(stats, event, currentPubkey);
                 newReactions.set(targetRootEventId, stats);
             }
@@ -73,7 +74,11 @@ function getTargetRootEventId(event: NDKEvent): string | undefined {
     return rootTag?.[1];
 }
 
-function updateStats(stats: ReactionStats, event: NDKEvent, currentPubkey?: string | boolean): void {
+function updateStats(
+    stats: ReactionStats,
+    event: NDKEvent,
+    currentPubkey?: string | boolean
+): void {
     switch (event.kind) {
         case NDKKind.Reaction:
             if (event.pubkey === currentPubkey || currentPubkey === true) {
@@ -114,7 +119,9 @@ function updateStats(stats: ReactionStats, event: NDKEvent, currentPubkey?: stri
 function cloneReactionStats(stats: ReactionStats): ReactionStats {
     return {
         reactionCount: stats.reactionCount,
-        reactedByUser: stats.reactedByUser ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser) : null,
+        reactedByUser: stats.reactedByUser
+            ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser)
+            : null,
         commentCount: stats.commentCount,
         commentedByUser: stats.commentedByUser,
         comments: [...stats.comments],

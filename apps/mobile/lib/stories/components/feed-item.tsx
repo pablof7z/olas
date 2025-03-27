@@ -1,11 +1,11 @@
-import { NDKEvent, useUserProfile, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { Pressable, StyleSheet, View, Text, ViewStyle, StyleProp } from 'react-native';
+import { Pressable, type StyleProp, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
 
-import { storiesAtom, showStoriesModalAtom } from '../store';
+import { showStoriesModalAtom, storiesAtom } from '../store';
 
 import UserAvatar from '@/components/ui/user/avatar';
 import { useStories } from '@/hooks/stories';
@@ -28,8 +28,16 @@ function StoryPrompt() {
 
     return (
         <Animated.View entering={SlideInRight} exiting={FadeOut}>
-            <Pressable onPress={handlePress} style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}>
-                <UserAvatar pubkey={currentUser!.pubkey} userProfile={userProfile} imageSize={AVATAR_SIZE} borderWidth={3} />
+            <Pressable
+                onPress={handlePress}
+                style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}
+            >
+                <UserAvatar
+                    pubkey={currentUser!.pubkey}
+                    userProfile={userProfile}
+                    imageSize={AVATAR_SIZE}
+                    borderWidth={3}
+                />
                 <Text style={[styles.name, { color: colors.foreground }]}>Your story</Text>
             </Pressable>
         </Animated.View>
@@ -64,7 +72,10 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
 
     const storyEntries = Array.from(stories.entries());
     if (!stories.has(currentUser?.pubkey)) {
-        const prompt: [string, { events: NDKEvent[]; live: boolean }] = ['prompt', { events: [], live: false }];
+        const prompt: [string, { events: NDKEvent[]; live: boolean }] = [
+            'prompt',
+            { events: [], live: false },
+        ];
         storyEntries.unshift(prompt);
     }
 
@@ -107,7 +118,6 @@ function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
             <Pressable
                 style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}
                 onPress={() => {
-                    console.log(JSON.stringify(events[0].rawEvent(), null, 4));
                     if (live) {
                         setActiveEvent(events[0]);
                         router.push('/live');
@@ -116,7 +126,8 @@ function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
                         setShowStoriesModal(true);
                         router.push('/stories');
                     }
-                }}>
+                }}
+            >
                 <UserAvatar
                     pubkey={pubkey}
                     userProfile={userProfile}
@@ -125,7 +136,11 @@ function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
                     includeFlareLabel={false}
                     borderWidth={3}
                 />
-                <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.name, { color: colors.foreground }]}>
+                <Text
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[styles.name, { color: colors.foreground }]}
+                >
                     {userProfile?.name}
                 </Text>
             </Pressable>

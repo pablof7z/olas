@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Button, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import ReceiveEcash from '~/components/cashu/receive/ecash';
@@ -23,7 +23,11 @@ function ReceiveView() {
                 }}
             />
 
-            {view === 'ln' ? <ReceiveLn onReceived={onReceived} /> : <ReceiveEcash onReceived={onReceived} />}
+            {view === 'ln' ? (
+                <ReceiveLn onReceived={onReceived} />
+            ) : (
+                <ReceiveEcash onReceived={onReceived} />
+            )}
         </View>
     );
 }

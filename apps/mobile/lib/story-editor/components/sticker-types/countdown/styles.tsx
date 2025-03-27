@@ -1,5 +1,5 @@
-import { LinearGradientProps } from 'expo-linear-gradient';
-import { TextStyle, ViewStyle } from 'react-native';
+import type { LinearGradientProps } from 'expo-linear-gradient';
+import type { TextStyle, ViewStyle } from 'react-native';
 
 // Define a custom container type that includes our layout props
 type ContainerStyle = ViewStyle &

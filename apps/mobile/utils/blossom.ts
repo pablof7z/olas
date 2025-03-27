@@ -1,8 +1,16 @@
 // a blossom URL should finish with a 64 characters hex string and an optional file extension
 
-import NDK, { NDKEvent, NDKKind, NDKList, NDKSigner, NDKUser, normalize } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    NDKKind,
+    NDKList,
+    type NDKSigner,
+    type NDKUser,
+    normalize,
+} from '@nostr-dev-kit/ndk-mobile';
 
-import { BlobDescriptor, EventTemplate } from './blossom-client';
+import type { BlobDescriptor, EventTemplate } from './blossom-client';
 
 const blossomUrlRegex = /\/[0-9a-f]{64}(\.\w+)?$/;
 
@@ -48,19 +56,24 @@ async function getBlossomListFor(ndk: NDK, user: NDKUser) {
     return NDKList.from(event);
 }
 
-function nextBlossomServerToTry(user: NDKUser, blossomList: NDKList, hash: string, attemptedServers: string[] = []): string | null {
+function nextBlossomServerToTry(
+    _user: NDKUser,
+    blossomList: NDKList,
+    _hash: string,
+    attemptedServers: string[] = []
+): string | null {
     const servers = blossomList.getMatchingTags('server').map((tag) => tag[1]);
     const server = servers.find((server) => !attemptedServers.includes(server));
     return server ?? null;
 }
 
 export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
-    return function (node: HTMLImageElement) {
+    return (node: HTMLImageElement) => {
         const originalUrl = node.src;
-        let url;
+        let url: URL;
         try {
             url = new URL(originalUrl);
-        } catch (e) {
+        } catch (_e) {
             return;
         }
         const originalServer = normalize([url.origin])[0];
@@ -95,7 +108,7 @@ export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
             hash = fileHashFromUrl(originalUrl);
         }
 
-        async function handleLoad(event: Event) {
+        async function handleLoad(_event: Event) {
             // add an emoji right below the image saying that it was loaded from a different server
             if (attemptedServers.length > 1) {
                 const newUrl = new URL(node.src);
@@ -103,7 +116,7 @@ export function createBlossom(ndk: NDK, { user }: { user: NDKUser }) {
             }
         }
 
-        async function handleError(event: Event) {
+        async function handleError(_event: Event) {
             if (!hash) return;
 
             // make sure we have the blossom list

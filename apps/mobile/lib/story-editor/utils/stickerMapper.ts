@@ -1,6 +1,6 @@
 import { NDKStorySticker } from '@nostr-dev-kit/ndk-mobile';
 
-import { Sticker } from '../store';
+import type { Sticker } from '../store';
 
 /**
  * Maps our app's internal sticker representation to what NDK's addSticker expects
@@ -10,7 +10,10 @@ import { Sticker } from '../store';
  * @param stickerDimensions The actual dimensions of the sticker
  * @returns An object that can be passed to NDKStory.addSticker()
  */
-export const mapStickerToNDKFormat = (sticker: Sticker, stickerDimensions: { width: number; height: number }): NDKStorySticker => {
+export const mapStickerToNDKFormat = (
+    sticker: Sticker,
+    stickerDimensions: { width: number; height: number }
+): NDKStorySticker => {
     // Create the base sticker
     const ndkSticker = new NDKStorySticker(sticker.type);
     ndkSticker.value = sticker.value;

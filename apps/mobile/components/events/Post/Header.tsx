@@ -1,9 +1,9 @@
-import { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { useSetAtom, useAtomValue } from 'jotai';
-import { Repeat, MoreHorizontal } from 'lucide-react-native';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { MoreHorizontal, Repeat } from 'lucide-react-native';
 import { useCallback } from 'react';
-import { View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { optionsMenuEventAtom, optionsSheetRefAtom } from './store';
 
@@ -47,7 +47,11 @@ export function PostHeader({
                         <View style={{ flexDirection: 'row', gap: 4 }}>
                             <Repeat size={16} color="green" />
 
-                            <AvatarGroup pubkeys={reposts.map((r) => r.pubkey)} avatarSize={14} threshold={5} />
+                            <AvatarGroup
+                                pubkeys={reposts.map((r) => r.pubkey)}
+                                avatarSize={14}
+                                threshold={5}
+                            />
 
                             <Text className="text-xs text-muted-foreground">
                                 {'Reposted '}
@@ -63,16 +67,34 @@ export function PostHeader({
                     <TouchableOpacity
                         onPress={() => {
                             router.push(`/profile?pubkey=${event.pubkey}`);
-                        }}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} borderWidth={2} flare={flare} />
+                        }}
+                    >
+                        <User.Avatar
+                            pubkey={event.pubkey}
+                            userProfile={userProfile}
+                            imageSize={48}
+                            borderWidth={2}
+                            flare={flare}
+                        />
                     </TouchableOpacity>
 
                     <View className="flex-col">
-                        <User.Name userProfile={userProfile} pubkey={event.pubkey} className="font-bold text-foreground" flare={flare} />
+                        <User.Name
+                            userProfile={userProfile}
+                            pubkey={event.pubkey}
+                            className="font-bold text-foreground"
+                            flare={flare}
+                        />
                         <Text>
-                            <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                            <RelativeTime
+                                timestamp={event.created_at}
+                                className="text-xs text-muted-foreground"
+                            />
                             {clientName && (
-                                <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
+                                <Text
+                                    className="truncate text-xs text-muted-foreground"
+                                    numberOfLines={1}
+                                >
                                     {` via ${clientName}`}
                                 </Text>
                             )}

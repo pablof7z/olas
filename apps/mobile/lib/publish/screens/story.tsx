@@ -1,22 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
-    CameraPosition,
-    PhotoFile,
-    VideoFile,
+    type CameraDevice,
+    type CameraPosition,
+    type CameraRuntimeError,
+    type PhotoFile,
+    type VideoFile,
     useCameraDevices,
-    CameraDevice,
     useCameraPermission,
     useMicrophonePermission,
-    CameraRuntimeError,
 } from 'react-native-vision-camera';
 
 import CameraToolbar from '@/lib/publish/components/CameraToolbar';
+import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
 import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -25,28 +27,14 @@ type Devices = {
     [key in CameraPosition]?: CameraDevice;
 };
 
-const PermissionRequest = ({ type, onRequestPermission }: { type: 'camera' | 'microphone'; onRequestPermission: () => void }) => (
-    <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Ionicons name={type === 'camera' ? 'camera-outline' : 'mic-outline'} size={64} color="white" style={{ marginBottom: 16 }} />
-        <Text style={styles.permissionText}>
-            {type === 'camera' ? 'Camera access is required to take photos and videos' : 'Microphone access is required to record videos'}
-        </Text>
-        <TouchableOpacity onPress={onRequestPermission} style={styles.permissionButton}>
-            <Text style={styles.permissionButtonText}>Grant Access</Text>
-        </TouchableOpacity>
-    </View>
-);
-
 // Helper function to select optimal format
-const selectOptimalFormat = (device: CameraDevice) => {
+const _selectOptimalFormat = (device: CameraDevice) => {
     // Sort formats by resolution (prefer lower resolution for better performance)
     const formats = device.formats.sort((a, b) => {
         const aRes = a.videoHeight * a.videoWidth;
         const bRes = b.videoHeight * b.videoWidth;
         return aRes - bRes; // Lower resolution first
     });
-
-    console.log('formats', JSON.stringify(formats, null, 2));
 
     // Find the smallest format that is at least 720p
     const optimalFormat = null; // formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
@@ -63,9 +51,12 @@ export default function StoryCameraScreen() {
     const [cameraPosition, setCameraPosition] = useState<CameraPosition>('back');
     const [isRecording, setIsRecording] = useState(false);
     const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const scale = useSharedValue(1);
-    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
-    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } = useMicrophonePermission();
+    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } =
+        useCameraPermission();
+    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } =
+        useMicrophonePermission();
     const router = useRouter();
 
     // Map available devices to front/back
@@ -79,6 +70,7 @@ export default function StoryCameraScreen() {
     }
 
     const device = devices[cameraPosition];
+    const hasCameraDevice = !!device;
 
     const cameraStyle = useAnimatedStyle(() => ({
         flex: 1,
@@ -93,19 +85,30 @@ export default function StoryCameraScreen() {
         // Handle specific error cases
         switch (error.code) {
             case 'device/configuration-error':
-                Alert.alert('Camera Error', 'There was an error configuring the camera. Please try again.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Camera Error',
+                    'There was an error configuring the camera. Please try again.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/no-device':
-                Alert.alert('Camera Unavailable', 'The camera hardware is currently unavailable. Please try again later.', [
-                    { text: 'OK' },
-                ]);
+                Alert.alert(
+                    'Camera Unavailable',
+                    'The camera hardware is currently unavailable. Please try again later.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/microphone-unavailable':
-                Alert.alert('Microphone Error', 'The microphone is unavailable. Video recording may not have audio.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Microphone Error',
+                    'The microphone is unavailable. Video recording may not have audio.',
+                    [{ text: 'OK' }]
+                );
                 break;
-            case 'unknown/unknown':
             default:
-                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [{ text: 'OK' }]);
+                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [
+                    { text: 'OK' },
+                ]);
         }
     }, []);
 
@@ -131,7 +134,9 @@ export default function StoryCameraScreen() {
             setCameraPosition(newPosition);
         } catch (error) {
             console.error('Failed to switch camera:', error);
-            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [{ text: 'OK' }]);
+            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [
+                { text: 'OK' },
+            ]);
         } finally {
             // Add a small delay before allowing another switch
             setTimeout(() => {
@@ -142,7 +147,6 @@ export default function StoryCameraScreen() {
 
     const onMediaCaptured = useCallback(
         (media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
-            console.log('Media captured:', { path: media.path, type });
             router.push({
                 pathname: '/story/preview',
                 params: {
@@ -154,14 +158,13 @@ export default function StoryCameraScreen() {
         [router]
     );
 
-    const handleBackToCamera = useCallback(() => {
+    const _handleBackToCamera = useCallback(() => {
         setIsRecording(false);
     }, []);
 
     const onShortPress = useCallback(async () => {
         try {
             const photo = await camera.current?.takePhoto();
-            console.log('Captured photo:', photo);
             if (photo) {
                 onMediaCaptured(photo, 'photo');
             }
@@ -181,7 +184,6 @@ export default function StoryCameraScreen() {
             } else {
                 await camera.current?.startRecording({
                     onRecordingFinished: (video) => {
-                        console.log('video', video?.width, video?.height);
                         onMediaCaptured(video, 'video');
                     },
                     onRecordingError: (error) => {
@@ -195,59 +197,114 @@ export default function StoryCameraScreen() {
         }
     }, [isRecording, onMediaCaptured]);
 
-    // Handle permissions
-    if (!hasCameraPermission) {
-        return <PermissionRequest type="camera" onRequestPermission={requestCameraPermission} />;
-    }
+    const handleSelectMedia = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                allowsMultipleSelection: false,
+                quality: 1,
+            });
 
-    if (!hasMicPermission) {
-        return <PermissionRequest type="microphone" onRequestPermission={requestMicPermission} />;
-    }
+            if (!result.canceled && result.assets.length > 0) {
+                const asset = result.assets[0];
+                const mediaType = asset.type === 'video' ? 'video' : 'photo';
+                router.push({
+                    pathname: '/story/preview',
+                    params: {
+                        path: asset.uri,
+                        type: mediaType,
+                    },
+                });
+            }
+        } catch (error) {
+            console.error('Error selecting media:', error);
+            Alert.alert('Error', 'Failed to select media. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router]);
+
+    const checkDevicesAgain = useCallback(() => {
+        // This function is just to give users a way to retry if no devices are found
+        // The devices are already checked automatically when the component re-renders
+    }, []);
 
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
-            <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + POST_TYPE_SWITCHER_HEIGHT }]}>
-                <View style={{ flex: 1 }}>
-                    {device ? (
-                        <ReanimatedCamera
-                            ref={camera}
-                            style={cameraStyle}
-                            device={device}
-                            isActive
-                            photo
-                            video
-                            audio
-                            enableZoomGesture
-                            onError={handleCameraError}
-                            testID="camera-view"
-                        />
-                    ) : null}
-                </View>
+            <View
+                style={[
+                    styles.container,
+                    {
+                        paddingTop: insets.top,
+                        paddingBottom: insets.bottom + POST_TYPE_SWITCHER_HEIGHT,
+                    },
+                ]}
+            >
+                {!hasCameraPermission ? (
+                    <NoPermissionsFallback 
+                        onPickImage={handleSelectMedia}
+                        onRequestPermissions={requestCameraPermission}
+                        isLoading={isLoading}
+                        type="permission"
+                    />
+                ) : !hasMicPermission ? (
+                    <NoPermissionsFallback 
+                        onPickImage={handleSelectMedia}
+                        onRequestPermissions={requestMicPermission}
+                        isLoading={isLoading}
+                        type="microphone-permission"
+                    />
+                ) : !hasCameraDevice ? (
+                    <NoPermissionsFallback 
+                        onPickImage={handleSelectMedia}
+                        onRequestPermissions={checkDevicesAgain}
+                        isLoading={isLoading}
+                        type="no-device-available"
+                    />
+                ) : (
+                    <>
+                        <View style={{ flex: 1 }}>
+                            <ReanimatedCamera
+                                ref={camera}
+                                style={cameraStyle}
+                                device={device}
+                                isActive
+                                photo
+                                video
+                                audio
+                                enableZoomGesture
+                                onError={handleCameraError}
+                                testID="camera-view"
+                            />
+                        </View>
 
-                <CameraToolbar
-                    selectorProps={{
-                        onPress: () => router.push('/story/selector'),
-                        testID: 'selector-button',
-                    }}
-                    shutterProps={{
-                        onPress: onShortPress,
-                        onLongPress,
-                        onPressOut: () => {
-                            if (isRecording) {
-                                onLongPress();
-                            }
-                        },
-                        isRecording,
-                        disabled: isSwitchingCamera,
-                        testID: 'capture-button',
-                    }}
-                    flipButtonProps={{
-                        onPress: onFlipCamera,
-                        disabled: isSwitchingCamera,
-                        testID: 'flip-button',
-                    }}
-                />
+                        <CameraToolbar
+                            selectorProps={{
+                                onPress: handleSelectMedia,
+                                testID: 'selector-button',
+                            }}
+                            shutterProps={{
+                                onPress: onShortPress,
+                                onLongPress,
+                                onPressOut: () => {
+                                    if (isRecording) {
+                                        onLongPress();
+                                    }
+                                },
+                                isRecording,
+                                disabled: isSwitchingCamera,
+                                testID: 'capture-button',
+                            }}
+                            flipButtonProps={{
+                                onPress: onFlipCamera,
+                                disabled: isSwitchingCamera,
+                                testID: 'flip-button',
+                            }}
+                        />
+                    </>
+                )}
             </View>
         </>
     );
@@ -257,23 +314,5 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'black',
-    },
-    permissionText: {
-        color: 'white',
-        fontSize: 16,
-        textAlign: 'center',
-        marginHorizontal: 32,
-        marginBottom: 24,
-    },
-    permissionButton: {
-        backgroundColor: 'white',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
-    },
-    permissionButtonText: {
-        color: 'black',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });

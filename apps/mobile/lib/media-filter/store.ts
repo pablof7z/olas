@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import { FILTER_PRESETS } from './presets';
-import { FilterParameters, FilterState } from './types';
+import type { FilterParameters, FilterState } from './types';
 
 interface MediaFilterStore {
     // Current source image URI being edited
@@ -46,11 +46,6 @@ export const useMediaFilterStore = create<MediaFilterStore>((set, get) => ({
         }),
 
     applyFilter: (filterId, parameters) => {
-        console.log('Media Filter Store - Applying filter:', {
-            filterId,
-            parameters,
-        });
-
         set({
             currentFilter: {
                 id: filterId,

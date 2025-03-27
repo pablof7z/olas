@@ -2,7 +2,15 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Stack, router } from 'expo-router';
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import {
+    ActivityIndicator,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 import { useActiveBlossomServer } from '@/hooks/blossom';
 import PostCaptionBottomSheet from '@/lib/publish/components/composer/metadata/CaptionBottomSheet';
@@ -50,7 +58,12 @@ export default function PostMetadataScreen() {
         }
 
         return (
-            <ScrollView horizontal pagingEnabled style={{ flex: 1, height: mediaSize }} showsHorizontalScrollIndicator={false}>
+            <ScrollView
+                horizontal
+                pagingEnabled
+                style={{ flex: 1, height: mediaSize }}
+                showsHorizontalScrollIndicator={false}
+            >
                 {media.map((item) => (
                     <View
                         key={item.id}
@@ -60,8 +73,13 @@ export default function PostMetadataScreen() {
                             flexDirection: 'row',
                             justifyContent: 'center',
                             alignItems: 'center',
-                        }}>
-                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} tapToUnmute />
+                        }}
+                    >
+                        <Preview
+                            selectedMedia={{ type: item.mediaType, uri: item.uris[0] }}
+                            height={mediaSize}
+                            tapToUnmute
+                        />
                     </View>
                 ))}
             </ScrollView>
@@ -80,7 +98,10 @@ export default function PostMetadataScreen() {
                     headerShown: true,
                     title: 'New Post',
                     headerRight: () => (
-                        <TouchableOpacity onPress={handlePublish} disabled={isPublishing || media.length === 0}>
+                        <TouchableOpacity
+                            onPress={handlePublish}
+                            disabled={isPublishing || media.length === 0}
+                        >
                             {isPublishing ? (
                                 <ActivityIndicator size="small" color={colors.primary} />
                             ) : (
@@ -90,7 +111,8 @@ export default function PostMetadataScreen() {
                                         fontWeight: '600',
                                         fontSize: 16,
                                         opacity: media.length === 0 ? 0.5 : 1,
-                                    }}>
+                                    }}
+                                >
                                     Publish
                                 </Text>
                             )}

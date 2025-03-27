@@ -1,4 +1,4 @@
-import { useSetAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 
 import { reactionPickerCallbackAtom, sheetAtom } from './bottom-sheet';

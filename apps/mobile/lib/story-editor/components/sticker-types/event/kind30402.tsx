@@ -1,9 +1,9 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { View, Text, Image, StyleSheet, TextStyle } from 'react-native';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { Image, StyleSheet, Text, TextStyle, View } from 'react-native';
 
-import { EventStickerStyle } from './styles';
+import type { EventStickerStyle } from './styles';
 
-import { UserProfile } from '@/hooks/user-profile';
+import type { UserProfile } from '@/hooks/user-profile';
 import { NDKClassifiedListing } from '@/lib/product-view';
 import { formatMoney } from '@/utils/bitcoin';
 
@@ -27,14 +27,21 @@ export default function EventStickerKind30402({
 
                 {classified.images?.[0] && (
                     <View style={_styles.imageContainer}>
-                        <Image source={{ uri: classified.images[0] }} style={_styles.image} resizeMode="cover" />
+                        <Image
+                            source={{ uri: classified.images[0] }}
+                            style={_styles.image}
+                            resizeMode="cover"
+                        />
                     </View>
                 )}
 
                 <View style={_styles.bottomSection}>
                     {classified.price && (
                         <Text style={_styles.price}>
-                            {formatMoney({ amount: classified.price.amount, unit: classified.price.currency })}
+                            {formatMoney({
+                                amount: classified.price.amount,
+                                unit: classified.price.currency,
+                            })}
                         </Text>
                     )}
 

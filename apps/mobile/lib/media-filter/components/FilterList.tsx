@@ -1,10 +1,10 @@
 import { useImage } from '@shopify/react-native-skia';
 import React, { useCallback } from 'react';
-import { StyleSheet, FlatList, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { FILTER_PRESETS } from '../presets';
+import type { FilterPreset } from '../types';
 import { FilteredImage } from './FilteredImage';
-import { FilterPreset } from '../types';
 
 interface FilterListProps {
     selectedFilterId: string;
@@ -24,7 +24,10 @@ export function FilterList({ selectedFilterId, onSelectFilter, previewImageUri }
             };
 
             return (
-                <TouchableOpacity style={[styles.filterItem, isSelected && styles.selectedFilterItem]} onPress={handlePress}>
+                <TouchableOpacity
+                    style={[styles.filterItem, isSelected && styles.selectedFilterItem]}
+                    onPress={handlePress}
+                >
                     <View style={styles.filterPreview}>
                         {image ? (
                             <FilteredImage
@@ -36,10 +39,17 @@ export function FilterList({ selectedFilterId, onSelectFilter, previewImageUri }
                                 height={FILTER_ITEM_WIDTH}
                             />
                         ) : (
-                            <View style={[styles.filterPreviewPlaceholder, { backgroundColor: item.thumbnailColor || '#333' }]} />
+                            <View
+                                style={[
+                                    styles.filterPreviewPlaceholder,
+                                    { backgroundColor: item.thumbnailColor || '#333' },
+                                ]}
+                            />
                         )}
                     </View>
-                    <Text style={[styles.filterName, isSelected && styles.selectedFilterName]}>{item.name}</Text>
+                    <Text style={[styles.filterName, isSelected && styles.selectedFilterName]}>
+                        {item.name}
+                    </Text>
                 </TouchableOpacity>
             );
         },

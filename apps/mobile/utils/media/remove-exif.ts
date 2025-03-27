@@ -1,8 +1,11 @@
 import * as Exify from '@lodev09/react-native-exify';
 
-import { Location } from '@/lib/publish/types';
+import type { Location } from '@/lib/publish/types';
 
-export default async function removeExif(file: string, mediaType: 'image' | 'video'): Promise<Location | null> {
+export default async function removeExif(
+    file: string,
+    mediaType: 'image' | 'video'
+): Promise<Location | null> {
     let location: Location | null = null;
 
     if (mediaType === 'image') {
@@ -13,9 +16,8 @@ export default async function removeExif(file: string, mediaType: 'image' | 'vid
             await Exify.writeAsync(file, zeroedGpsData);
         }
     } else if (mediaType === 'video') {
-        console.log('no exif to clean on video', file);
     } else {
-        throw new Error('Invalid media type: ' + mediaType);
+        throw new Error(`Invalid media type: ${mediaType}`);
     }
 
     return location;

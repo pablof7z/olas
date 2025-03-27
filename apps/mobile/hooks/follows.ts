@@ -1,4 +1,4 @@
-import { Hexpubkey, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { type Hexpubkey, useFollows } from '@nostr-dev-kit/ndk-mobile';
 
 import { usePrivateFollows } from '@/stores/db/private-follows';
 
@@ -12,7 +12,10 @@ export function useAllFollows() {
     const privateFollows = usePrivateFollows();
 
     // merge and return
-    const allFollows = new Set([...(publicFollows ?? []), ...Array.from(privateFollows?.pubkeys ?? [])]);
+    const allFollows = new Set([
+        ...(publicFollows ?? []),
+        ...Array.from(privateFollows?.pubkeys ?? []),
+    ]);
     return allFollows;
 }
 

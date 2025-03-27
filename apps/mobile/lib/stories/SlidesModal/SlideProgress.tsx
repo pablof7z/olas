@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    Easing,
+    runOnJS,
+} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('screen');
 
@@ -14,14 +20,20 @@ export interface StoryProgressProps {
     duration?: number;
 }
 
-export const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, active, duration = 8000 }: StoryProgressProps) => {
+export const StoryProgress = ({
+    isLongPressed,
+    done,
+    activeIndex,
+    index,
+    onEnd,
+    active,
+    duration = 8000,
+}: StoryProgressProps) => {
     const progress = useSharedValue(-width / 3);
     const [progressWidth, setProgressWidth] = useState<number | null>(null);
     const longPressElapsedDuration = useRef(0);
     const animationStarted = useRef(false);
     const currentAnimation = useRef<any>(null);
-
-    console.log('duration in story progress', duration);
 
     const animatedStyle = useAnimatedStyle(() => ({
         height: 4,
@@ -31,9 +43,8 @@ export const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, 
 
     const startAnimation = useCallback(
         (dur: number) => {
-            console.log('starting animation', dur);
             if (currentAnimation.current) {
-                progress.value = progress.value;
+                currentAnimation.current.cancel();
                 currentAnimation.current = null;
             }
 
@@ -59,7 +70,9 @@ export const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, 
         if (!progressWidth || !active) return;
 
         const updateElapsed = () => {
-            longPressElapsedDuration.current = Math.abs((progress.value * duration) / progressWidth);
+            longPressElapsedDuration.current = Math.abs(
+                (progress.value * duration) / progressWidth
+            );
         };
         updateElapsed();
     }, [progress.value, progressWidth, active, duration]);
@@ -90,8 +103,11 @@ export const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, 
                 startAnimation(duration);
             }
         } else if (isLongPressed) {
-            // Pause animation by keeping current progress
-            progress.value = progress.value;
+            // Pause animation by canceling current animation
+            if (currentAnimation.current) {
+                currentAnimation.current.cancel();
+                currentAnimation.current = null;
+            }
         }
     }, [active, done, duration, progressWidth, isLongPressed, startAnimation]);
 
@@ -104,8 +120,12 @@ export const StoryProgress = ({ isLongPressed, done, activeIndex, index, onEnd, 
                 overflow: 'hidden',
                 marginRight: 8,
                 backgroundColor: 'rgba(255,255,255,0.4)',
-            }}>
-            <Animated.View onLayout={(e) => setProgressWidth(e.nativeEvent.layout.width)} style={animatedStyle} />
+            }}
+        >
+            <Animated.View
+                onLayout={(e) => setProgressWidth(e.nativeEvent.layout.width)}
+                style={animatedStyle}
+            />
         </View>
     );
 };

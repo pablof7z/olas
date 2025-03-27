@@ -1,9 +1,9 @@
 import Slider from '@react-native-community/slider';
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMediaFilter } from '../hooks/useMediaFilter';
-import { FilterParameters } from '../types';
+import type { FilterParameters } from '../types';
 
 interface AdjustmentOption {
     id: keyof FilterParameters;
@@ -81,7 +81,9 @@ export function FilterAdjustments() {
         <View style={styles.container}>
             {ADJUSTMENT_OPTIONS.map((option) => {
                 const currentValue =
-                    currentFilterParams[option.id] !== undefined ? (currentFilterParams[option.id] as number) : option.defaultValue;
+                    currentFilterParams[option.id] !== undefined
+                        ? (currentFilterParams[option.id] as number)
+                        : option.defaultValue;
 
                 const isDefault = Math.abs(currentValue - option.defaultValue) < 0.001;
 

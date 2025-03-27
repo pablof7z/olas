@@ -1,6 +1,6 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { atom } from 'jotai';
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
 
 type SettingsBottomSheetRef = RefObject<BottomSheetModal> | null;
 

@@ -1,8 +1,8 @@
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import React, { useRef } from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import MentionBottomSheet, { MentionBottomSheetRef } from './mention-bottom-sheet';
+import MentionBottomSheet, { type MentionBottomSheetRef } from './mention-bottom-sheet';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -20,7 +20,10 @@ export default function MentionButton({ onSelectUser }: MentionButtonProps) {
 
     return (
         <>
-            <TouchableOpacity style={[styles.button, { backgroundColor: colors.grey5 }]} onPress={handlePress}>
+            <TouchableOpacity
+                style={[styles.button, { backgroundColor: colors.grey5 }]}
+                onPress={handlePress}
+            >
                 <Text style={[styles.buttonText, { color: colors.foreground }]}>@Mention</Text>
             </TouchableOpacity>
 

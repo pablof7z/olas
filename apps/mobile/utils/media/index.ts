@@ -1,14 +1,15 @@
 import * as Exify from '@lodev09/react-native-exify';
 import * as FileSystem from 'expo-file-system';
-import { ImagePickerAsset } from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import type * as MediaLibrary from 'expo-media-library';
 import { getRealPath } from 'react-native-compressor';
 
 import { convertHeicToJpeg, isHeicImage } from '../image-format';
 
-import { PostMedia, PostMediaType, Location } from '@/lib/publish/types';
+import type { Location, PostMedia, PostMediaType } from '@/lib/publish/types';
 
-export const imageOrVideoUrlRegexp = /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
+export const imageOrVideoUrlRegexp =
+    /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
 
 export const urlIsVideo = (url: string) => /\.(mp4|webm|ogg|m4v|mov|m3u8|ts|qt|)$/i.test(url);
 
@@ -25,8 +26,6 @@ export function isPortrait(width: number, height: number) {
 export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<PostMedia> {
     let mediaType: PostMediaType = 'image';
     if (asset.mediaType === 'video') mediaType = 'video';
-
-    console.log('asset', asset.mediaType, asset);
 
     if (!mediaType) {
         mediaType = 'image';
@@ -74,7 +73,6 @@ export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): P
 
     let duration = asset.duration ?? undefined;
     if (duration) {
-        console.log('changing what is hopefully as duration in ms to seconds', duration, duration / 1000);
         duration = duration / 1000;
     }
 
@@ -127,13 +125,10 @@ export async function extractLocationFromMedia(uri: string): Promise<Location | 
         // Handle file:// prefix for iOS
         const cleanUri = uri.startsWith('file://') ? uri.slice(7) : uri;
 
-        console.log('extract location from media', cleanUri);
-
         // Extract EXIF data using exify
         const exifData = await Exify.readAsync(cleanUri);
-        const hasLocation = exifData?.GPSLatitude !== undefined && exifData?.GPSLongitude !== undefined;
-
-        console.log('exifData', exifData);
+        const hasLocation =
+            exifData?.GPSLatitude !== undefined && exifData?.GPSLongitude !== undefined;
 
         // Check if GPS data exists
         if (hasLocation) {
@@ -144,8 +139,7 @@ export async function extractLocationFromMedia(uri: string): Promise<Location | 
         }
 
         return null;
-    } catch (error) {
-        console.log('Failed to extract location from media:', error);
+    } catch (_error) {
         return null;
     }
 }

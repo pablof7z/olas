@@ -15,7 +15,10 @@ export const getAllPubkeyFlares = (): Map<string, string> => {
 };
 
 export const setPubkeyFlare = (pubkey: string, flare: string) => {
-    db.runSync('INSERT OR REPLACE INTO pubkey_flares (pubkey, flare) VALUES (?, ?)', [pubkey, flare]);
+    db.runSync('INSERT OR REPLACE INTO pubkey_flares (pubkey, flare) VALUES (?, ?)', [
+        pubkey,
+        flare,
+    ]);
 };
 
 export const deletePubkeyFlare = (pubkey: string) => {
@@ -27,6 +30,8 @@ export const clearPubkeyFlares = () => {
 };
 
 export const getPubkeyFlare = (pubkey: string): string | null => {
-    const flare = db.getFirstSync('SELECT flare FROM pubkey_flares WHERE pubkey = ?', [pubkey]) as PubkeyFlareRecord;
+    const flare = db.getFirstSync('SELECT flare FROM pubkey_flares WHERE pubkey = ?', [
+        pubkey,
+    ]) as PubkeyFlareRecord;
     return flare?.flare ?? null;
 };

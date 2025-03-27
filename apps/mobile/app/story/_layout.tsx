@@ -8,7 +8,8 @@ export default function StoryLayout() {
                 headerShown: false,
                 contentStyle: { backgroundColor: 'black' },
                 animation: 'fade',
-            }}>
+            }}
+        >
             <Stack.Screen name="index" />
             <Stack.Screen name="selector" />
             <Stack.Screen name="preview" />
@@ -16,7 +17,7 @@ export default function StoryLayout() {
     );
 }
 
-const styles = StyleSheet.create({
+const _styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'black',

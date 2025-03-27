@@ -1,8 +1,22 @@
-import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import {
+    type NDKEvent,
+    NDKImage,
+    type NDKImetaTag,
+    NDKKind,
+    NDKVideo,
+    mapImetaTag,
+} from '@nostr-dev-kit/ndk-mobile';
+import {
+    Dimensions,
+    ScrollView,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
 
-import MediaComponent from './media';
 import ProductGridContainer from '../product/grid-container';
+import MediaComponent from './media';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -68,7 +82,9 @@ export function EventMediaGridContainer({
     }
 
     return (
-        <View style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}]}>
+        <View
+            style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}]}
+        >
             <EventMediaContainer
                 event={event}
                 onPress={onPress}
@@ -153,7 +169,8 @@ export default function EventMediaContainer({
                 minimumZoomScale={1}
                 maximumZoomScale={5}
                 contentContainerStyle={{ flexGrow: 1 }}
-                style={{ flex: 1, width: '100%' }}>
+                style={{ flex: 1, width: '100%' }}
+            >
                 {imetas.map((imeta, index) => (
                     <MediaComponent
                         key={index}
@@ -222,7 +239,9 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
 
     try {
         if (event.kind === NDKKind.Text) {
-            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi);
+            const urls = event.content.match(
+                /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi
+            );
             if (urls?.length) return urls.map((url) => ({ url }));
         }
 

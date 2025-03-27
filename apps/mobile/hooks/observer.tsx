@@ -1,4 +1,11 @@
-import { NDKEvent, NDKFilter, NDKSubscription, NDKSubscriptionCacheUsage, NDKSubscriptionOptions, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    type NDKFilter,
+    type NDKSubscription,
+    NDKSubscriptionCacheUsage,
+    type NDKSubscriptionOptions,
+    useNDK,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useObserver<T extends NDKEvent>(

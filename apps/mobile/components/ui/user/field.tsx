@@ -1,5 +1,5 @@
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import React from 'react';
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
 import { Text } from 'react-native';
 interface FieldProps {
     userProfile: NDKUserProfile | null;

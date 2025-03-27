@@ -1,5 +1,12 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import { NDKKind, NDKList, useNDK, useNDKSessionEventKind, NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKKind,
+    NDKList,
+    type NDKRelay,
+    NDKRelayStatus,
+    useNDK,
+    useNDKSessionEventKind,
+} from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { router, usePathname } from 'expo-router';
 import { atom, useAtom } from 'jotai';
@@ -11,16 +18,26 @@ import { colors } from 'react-native-keyboard-controller/lib/typescript/componen
 
 import { Button } from '@/components/nativewindui/Button';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { getRelays, RelayEntry, setRelays } from '@/stores/db/relays';
+import { RelayEntry, getRelays, setRelays } from '@/stores/db/relays';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 
-const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(new Map(), (get, set, value) => {
-    set(relaySettingAtom, value);
-});
+const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(
+    new Map(),
+    (_get, set, value) => {
+        set(relaySettingAtom, value);
+    }
+);
 
 const CONNECTIVITY_STATUS_COLORS: Record<NDKRelayStatus, string> = {
     [NDKRelayStatus.RECONNECTING]: '#f1c40f',
@@ -40,12 +57,9 @@ function RelayConnectivityIndicator({ relay }: { relay: NDKRelay }) {
     return (
         <Pressable
             onPress={() => {
-                console.log('connect to', relay.url);
                 relay
                     .connect()
-                    .then(() => {
-                        console.log('connected');
-                    })
+                    .then(() => {})
                     .catch((e) => {
                         console.error(e);
                     });
@@ -70,7 +84,6 @@ export default function RelaysScreen() {
     const pathname = usePathname();
 
     useEffect(() => {
-        console.log('setting relay setting', pathname, getRelays());
         const map = new Map<string, boolean>();
         for (const relayEntry of getRelays()) {
             if (relayEntry.connect) {
@@ -79,7 +92,6 @@ export default function RelaysScreen() {
                 map.set(relayEntry.url, false);
             }
         }
-        console.log('map', map);
         setRelaySetting(map);
     }, [pathname === '/(home)/(settings)/relays']);
 
@@ -113,7 +125,6 @@ export default function RelaysScreen() {
     }, []);
 
     const addFn = () => {
-        console.log({ url });
         try {
             const uri = new URL(url);
             if (!['wss:', 'ws:'].includes(uri.protocol)) {
@@ -127,7 +138,7 @@ export default function RelaysScreen() {
                 setRelaySetting(state);
             }
             setUrl('');
-        } catch (e) {
+        } catch (_e) {
             alert('Invalid URL');
         }
     };
@@ -157,7 +168,10 @@ export default function RelaysScreen() {
                         router.push(`/(home)/(settings)/relay?relayUrl=${relay.url}`);
                     },
                 }))
-                .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!))
+                .filter(
+                    (item) =>
+                        (searchText ?? '').trim().length === 0 || item.title.match(searchText!)
+                )
         );
 
         for (const url of blacklistedRelays) {
@@ -231,8 +245,6 @@ function RightView({ relay, relayUrl }: { relay?: NDKRelay; relayUrl: string }) 
         const options = [];
         let destructiveButtonIndex: number | undefined;
 
-        console.log(relaySetting.get(relayUrl), relayUrl, relaySetting);
-
         if (relaySetting.get(relayUrl) === true) {
             options.push(["Don't auto-connect", null]);
         } else if (relaySetting.get(relayUrl) === false) {
@@ -277,7 +289,11 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -285,7 +301,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
                 }
-                {...info}>
+                {...info}
+            >
                 <TextInput
                     className="flex-1 text-lg text-foreground"
                     placeholder="Add relay"
@@ -301,7 +318,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
 
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -314,7 +334,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {info.item.badge}
                                 </Text>
                             </View>
@@ -324,9 +347,14 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={info.item.onPress}>
-            {info.item.isAutoConnect && <Text className="text-xs text-muted-foreground">Auto-connect</Text>}
-            {info.item.isBlacklisted && <Text className="text-xs text-muted-foreground">Won't connect</Text>}
+            onPress={info.item.onPress}
+        >
+            {info.item.isAutoConnect && (
+                <Text className="text-xs text-muted-foreground">Auto-connect</Text>
+            )}
+            {info.item.isBlacklisted && (
+                <Text className="text-xs text-muted-foreground">Won't connect</Text>
+            )}
             {!info.item.isBlacklisted && !info.item.isAutoConnect && (
                 <Text className="text-xs text-muted-foreground">Used when needed</Text>
             )}

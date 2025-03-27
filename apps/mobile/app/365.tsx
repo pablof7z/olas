@@ -1,23 +1,38 @@
 import {
-    NDKEvent,
+    type NDKEvent,
     NDKFilter,
-    NDKImage,
-    NDKImetaTag,
+    type NDKImage,
+    type NDKImetaTag,
     NDKKind,
     NDKSubscriptionCacheUsage,
     useSubscribe,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
-import { Image, Image as ExpoImage, ImageRef, useImage } from 'expo-image';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Image as ExpoImage, Image, type ImageRef, useImage } from 'expo-image';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { AnimatePresence } from 'framer-motion';
 import { MotiView } from 'moti';
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    Dimensions,
+    Modal,
+    Pressable,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, useAnimatedScrollHandler, interpolate, Extrapolation } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    useAnimatedScrollHandler,
+    interpolate,
+    Extrapolation,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BackButton from '@/components/buttons/back-button';
@@ -56,14 +71,29 @@ function AnimatedBackground({
 }) {
     const imageAnimatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const opacity = interpolate(animated, [index - 0.8, index, index + 0.8], [0, 0.4, 0], Extrapolation.CLAMP);
+        const opacity = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [0, 0.4, 0],
+            Extrapolation.CLAMP
+        );
         return { opacity };
     });
 
     const textAnimatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const textOpacity = interpolate(animated, [index - 0.8, index, index + 0.8], [0, 1, 0], Extrapolation.CLAMP);
-        const textTranslate = interpolate(animated, [index - 0.8, index, index + 0.8], [200, 0, -200], Extrapolation.CLAMP);
+        const textOpacity = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [0, 1, 0],
+            Extrapolation.CLAMP
+        );
+        const textTranslate = interpolate(
+            animated,
+            [index - 0.8, index, index + 0.8],
+            [200, 0, -200],
+            Extrapolation.CLAMP
+        );
         return {
             opacity: textOpacity,
             transform: [{ translateX: textTranslate }],
@@ -83,8 +113,11 @@ function AnimatedBackground({
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: cardCount + 1,
-                }}>
-                <Animated.View style={[{ marginBottom: SPACING * 2, alignItems: 'center' }, textAnimatedStyle]}>
+                }}
+            >
+                <Animated.View
+                    style={[{ marginBottom: SPACING * 2, alignItems: 'center' }, textAnimatedStyle]}
+                >
                     <Text
                         style={{
                             color: '#fff',
@@ -92,7 +125,8 @@ function AnimatedBackground({
                             marginBottom: SPACING / 2,
                             fontWeight: '800',
                             textTransform: 'capitalize',
-                        }}>
+                        }}
+                    >
                         Day #{getDayOfYear(item.event.created_at)}
                     </Text>
                     <Text
@@ -104,7 +138,8 @@ function AnimatedBackground({
                             marginBottom: SPACING,
                         }}
                         numberOfLines={3}
-                        adjustsFontSizeToFit>
+                        adjustsFontSizeToFit
+                    >
                         {item.event.content}
                     </Text>
                     <Text
@@ -113,7 +148,8 @@ function AnimatedBackground({
                             fontSize: 13,
                             fontWeight: '500',
                             textAlign: 'center',
-                        }}>
+                        }}
+                    >
                         {new Date(item.event.created_at * 1000).toLocaleDateString()}
                     </Text>
                 </Animated.View>
@@ -137,8 +173,18 @@ function AnimatedRenderItem({
 }) {
     const animatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const translateY = interpolate(animated, [index - 1, index, index + 1], [100, 40, 100], Extrapolation.CLAMP);
-        const scale = interpolate(animated, [index - 1, index, index + 1], [1.5, 1, 1.5], Extrapolation.CLAMP);
+        const translateY = interpolate(
+            animated,
+            [index - 1, index, index + 1],
+            [100, 40, 100],
+            Extrapolation.CLAMP
+        );
+        const scale = interpolate(
+            animated,
+            [index - 1, index, index + 1],
+            [1.5, 1, 1.5],
+            Extrapolation.CLAMP
+        );
         return {
             transform: [{ translateY }, { scale }],
         };
@@ -162,7 +208,8 @@ function AnimatedRenderItem({
                 margin: SPACING,
                 overflow: 'hidden',
                 borderRadius: 30,
-            }}>
+            }}
+        >
             <Pressable onPress={handleCardPress}>
                 <AnimatedImage
                     blurhash={item.imeta.blurhash}
@@ -245,7 +292,8 @@ export default function Wallpapers() {
                         backgroundColor: '#000',
                         justifyContent: 'flex-end',
                         height,
-                    }}>
+                    }}
+                >
                     <AnimatePresence>
                         {cardEntries.length === 0 && (
                             <MotiView
@@ -264,7 +312,8 @@ export default function Wallpapers() {
                                     position: 'absolute',
                                     width,
                                     height,
-                                }}>
+                                }}
+                            >
                                 <Text>Loading ...</Text>
                             </MotiView>
                         )}
@@ -296,7 +345,12 @@ export default function Wallpapers() {
                             snapToInterval={IMAGE_WIDTH + SPACING * 2}
                             decelerationRate="fast"
                             renderItem={({ item, index }) => (
-                                <AnimatedRenderItem item={item} index={index} scrollX={scrollX} events={events} />
+                                <AnimatedRenderItem
+                                    item={item}
+                                    index={index}
+                                    scrollX={scrollX}
+                                    events={events}
+                                />
                             )}
                         />
                     </View>
@@ -340,37 +394,48 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKIma
         [openStory]
     );
 
-    const renderItem = useCallback(({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
-        return (
-            <View
-                style={{
-                    width: Dimensions.get('window').width / 3,
-                    height: Dimensions.get('window').width / 3,
-                    margin: 0.5,
-                    overflow: 'hidden',
-                }}>
-                {event ? (
-                    <TouchableOpacity style={{ flex: 1 }} onPress={() => handleCardPress(event)}>
-                        <AnimatedImage source={{ uri: event?.imetas?.[0]?.url }} style={{ flex: 1 }} />
-                    </TouchableOpacity>
-                ) : (
-                    <EmptyDay />
-                )}
-                <Text
+    const renderItem = useCallback(
+        ({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
+            return (
+                <View
                     style={{
-                        padding: 4,
-                        fontSize: 12,
-                        color: 'gray',
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                    }}>
-                    Day {day}
-                </Text>
-            </View>
-        );
-    }, []);
+                        width: Dimensions.get('window').width / 3,
+                        height: Dimensions.get('window').width / 3,
+                        margin: 0.5,
+                        overflow: 'hidden',
+                    }}
+                >
+                    {event ? (
+                        <TouchableOpacity
+                            style={{ flex: 1 }}
+                            onPress={() => handleCardPress(event)}
+                        >
+                            <AnimatedImage
+                                source={{ uri: event?.imetas?.[0]?.url }}
+                                style={{ flex: 1 }}
+                            />
+                        </TouchableOpacity>
+                    ) : (
+                        <EmptyDay />
+                    )}
+                    <Text
+                        style={{
+                            padding: 4,
+                            fontSize: 12,
+                            color: 'gray',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                        }}
+                    >
+                        Day {day}
+                    </Text>
+                </View>
+            );
+        },
+        []
+    );
 
     return (
         <FlashList

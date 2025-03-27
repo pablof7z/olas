@@ -12,7 +12,13 @@ interface LightningProps {
     [x: string]: any;
 }
 
-const Lightning = ({ fill = 'none', size = 24, strokeWidth = 1.5, animatedSize, ...props }: LightningProps) => {
+const Lightning = ({
+    fill = 'none',
+    size = 24,
+    strokeWidth = 1.5,
+    animatedSize,
+    ...props
+}: LightningProps) => {
     const animatedProps = useAnimatedProps(() => {
         const aSize = animatedSize?.value;
         return {
@@ -26,7 +32,8 @@ const Lightning = ({ fill = 'none', size = 24, strokeWidth = 1.5, animatedSize, 
             animatedProps={animatedProps}
             viewBox="0 0 24 24"
             preserveAspectRatio="xMidYMid meet"
-            {...props}>
+            {...props}
+        >
             <Path
                 fill={fill}
                 strokeLinecap="round"

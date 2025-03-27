@@ -1,13 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 interface CloseButtonProps {
     onPress: () => void;
 }
 
 export const CloseButton = ({ onPress }: CloseButtonProps) => (
-    <TouchableOpacity onPress={onPress} style={[styles.button, styles.closeButton]} testID="close-button">
+    <TouchableOpacity
+        onPress={onPress}
+        style={[styles.button, styles.closeButton]}
+        testID="close-button"
+    >
         <Ionicons name="close" size={20} color="white" />
     </TouchableOpacity>
 );

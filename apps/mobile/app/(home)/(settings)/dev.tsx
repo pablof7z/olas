@@ -1,5 +1,5 @@
 import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { SQLiteDatabase } from 'expo-sqlite';
+import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
@@ -22,7 +22,11 @@ function getSubscriptions(): Row[] {
 }
 
 function getProfileCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM profiles') as { id: string; pubkey: string; name: string }[];
+    const data = db.getAllSync('SELECT * FROM profiles') as {
+        id: string;
+        pubkey: string;
+        name: string;
+    }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -35,7 +39,11 @@ function getProfileCount(db: SQLiteDatabase): Row[] {
 }
 
 function getUnpublishedEvents(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM unpublished_events') as { id: string; kind: number; content: string }[];
+    const data = db.getAllSync('SELECT * FROM unpublished_events') as {
+        id: string;
+        kind: number;
+        content: string;
+    }[];
     return [
         {
             id: 'unpublished-events',
@@ -46,7 +54,11 @@ function getUnpublishedEvents(db: SQLiteDatabase): Row[] {
 }
 
 function getEventCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM events') as { id: string; kind: number; content: string }[];
+    const data = db.getAllSync('SELECT * FROM events') as {
+        id: string;
+        kind: number;
+        content: string;
+    }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -96,7 +108,11 @@ export default function DevScreen() {
             renderItem={({ item, target, index }) => (
                 <ListItem
                     item={item}
-                    className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                    className={cn(
+                        'ios:pl-0 pr-2',
+                        index === 0 &&
+                            'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    )}
                     titleClassName="text-lg"
                     index={index}
                     target={target}

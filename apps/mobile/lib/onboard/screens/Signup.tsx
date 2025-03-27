@@ -1,9 +1,15 @@
-import { NDKEvent, NDKPrivateKeySigner, NostrEvent, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    NDKPrivateKeySigner,
+    type NostrEvent,
+    useNDK,
+    useNDKWallet,
+} from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ArrowRight } from 'lucide-react-native';
 import React, { useCallback, useState, useEffect } from 'react';
-import { View, TextInput, Alert } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 
 import { AvatarChooser } from '../components/AvatarChooser';
 import { avatarAtom, modeAtom, usernameAtom } from '../store';
@@ -24,7 +30,7 @@ export function SignUp() {
 
     // Check if username starts with nsec1
     useEffect(() => {
-        if (username && username.trim().replace(/^@/, '').toLowerCase().startsWith('nsec1')) {
+        if (username?.trim().replace(/^@/, '').toLowerCase().startsWith('nsec1')) {
             setIsNsec(true);
         } else {
             setIsNsec(false);
@@ -40,13 +46,15 @@ export function SignUp() {
         const signer = NDKPrivateKeySigner.generate();
         await login(signer.nsec);
 
-        let imageUrl = 'https://api.dicebear.com/9.x/bottts-neutral/png?seed=' + username;
+        let imageUrl = `https://api.dicebear.com/9.x/bottts-neutral/png?seed=${username}`;
 
         if (avatar) {
             try {
-                const media = await prepareMedia([{ uris: [avatar], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
+                const media = await prepareMedia([
+                    { uris: [avatar], id: 'avatar', mediaType: 'image', contentMode: 'square' },
+                ]);
                 const uploaded = await uploadMedia(media, ndk);
-                if (uploaded && uploaded[0] && uploaded[0].uploadedUri) {
+                if (uploaded?.[0]?.uploadedUri) {
                     imageUrl = uploaded[0].uploadedUri;
                 }
             } catch (error) {
@@ -95,7 +103,7 @@ export function SignUp() {
                     autoCorrect={false}
                     value={username}
                     onChangeText={(t) => {
-                        if (!t.startsWith('@')) t = '@' + t;
+                        if (!t.startsWith('@')) t = `@${t}`;
                         setUsername(t.trim());
                     }}
                 />
@@ -110,8 +118,21 @@ export function SignUp() {
                 )}
             </View>
 
-            <Button variant="accent" size="lg" className="w-full" onPress={createAccount} disabled={isNsec}>
-                <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <Button
+                variant="accent"
+                size="lg"
+                className="w-full"
+                onPress={createAccount}
+                disabled={isNsec}
+            >
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
                     <Text className="py-2 text-lg font-bold text-white">Sign Up</Text>
                     <ArrowRight size={24} color="white" />
                 </View>

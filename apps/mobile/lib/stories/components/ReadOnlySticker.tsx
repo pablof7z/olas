@@ -1,10 +1,26 @@
-import { NDKStoryStickerType, useNDK, useUserProfile, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKStoryStickerType,
+    useNDK,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, LayoutChangeEvent, TouchableOpacity } from 'react-native';
+import {
+    Dimensions,
+    type LayoutChangeEvent,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
-import { Sticker } from '../utils';
+import type { Sticker } from '../utils';
 
-import { TextStickerView, EventStickerView, CountdownStickerView, MentionStickerView } from '@/lib/story-editor/components/sticker-types';
+import {
+    CountdownStickerView,
+    EventStickerView,
+    MentionStickerView,
+    TextStickerView,
+} from '@/lib/story-editor/components/sticker-types';
 
 interface ReadOnlyStickerProps {
     sticker: Sticker;
@@ -17,8 +33,12 @@ const maxWidth = Dimensions.get('window').width * 0.9;
 /**
  * A read-only component to render stickers in story view mode
  */
-export default function ReadOnlySticker({ sticker, containerDimensions, originalDimensions }: ReadOnlyStickerProps) {
-    const [scale, setScale] = useState(1);
+export default function ReadOnlySticker({
+    sticker,
+    containerDimensions,
+    originalDimensions,
+}: ReadOnlyStickerProps) {
+    const [scale, _setScale] = useState(1);
 
     // Calculate position and scale factors
     const scaleFactorX = containerDimensions.width / originalDimensions.width;
@@ -65,9 +85,7 @@ export default function ReadOnlySticker({ sticker, containerDimensions, original
         // setScale(newScale);
     };
 
-    const handleLongPress = useCallback(() => {
-        console.log('👋 parent handleLongPress', sticker);
-    }, [sticker]);
+    const handleLongPress = useCallback(() => {}, [sticker]);
 
     return (
         <TouchableOpacity
@@ -86,30 +104,62 @@ export default function ReadOnlySticker({ sticker, containerDimensions, original
                     justifyContent: 'center',
                     transform: [{ rotate: `${sticker.transform.rotate}deg` }],
                 },
-            ]}>
+            ]}
+        >
             <View style={{ transform: [{ scale }], width: '100%', height: '100%' }}>
                 <View style={{ width: '100%', height: '100%' }}>
-                    {isTextSticker && <TextSticker sticker={sticker as Sticker<NDKStoryStickerType.Text>} onLayout={handleLayout} />}
+                    {isTextSticker && (
+                        <TextSticker
+                            sticker={sticker as Sticker<NDKStoryStickerType.Text>}
+                            onLayout={handleLayout}
+                        />
+                    )}
                     {isMentionSticker && (
-                        <MentionSticker sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>} onLayout={handleLayout} />
+                        <MentionSticker
+                            sticker={sticker as Sticker<NDKStoryStickerType.Pubkey>}
+                            onLayout={handleLayout}
+                        />
                     )}
                     {isCountdownSticker && (
-                        <CountdownSticker sticker={sticker as Sticker<NDKStoryStickerType.Countdown>} onLayout={handleLayout} />
+                        <CountdownSticker
+                            sticker={sticker as Sticker<NDKStoryStickerType.Countdown>}
+                            onLayout={handleLayout}
+                        />
                     )}
-                    {isEventSticker && <EventSticker sticker={sticker as Sticker<NDKStoryStickerType.Event>} onLayout={handleLayout} />}
+                    {isEventSticker && (
+                        <EventSticker
+                            sticker={sticker as Sticker<NDKStoryStickerType.Event>}
+                            onLayout={handleLayout}
+                        />
+                    )}
                 </View>
             </View>
         </TouchableOpacity>
     );
 }
 
-function TextSticker({ sticker, onLayout }: { sticker: Sticker<NDKStoryStickerType.Text>; onLayout?: (event: LayoutChangeEvent) => void }) {
-    return <TextStickerView sticker={sticker as Sticker<NDKStoryStickerType.Text>} fixedDimensions onLayout={onLayout} />;
+function TextSticker({
+    sticker,
+    onLayout,
+}: { sticker: Sticker<NDKStoryStickerType.Text>; onLayout?: (event: LayoutChangeEvent) => void }) {
+    return (
+        <TextStickerView
+            sticker={sticker as Sticker<NDKStoryStickerType.Text>}
+            fixedDimensions
+            onLayout={onLayout}
+        />
+    );
 }
 
-function MentionSticker({ sticker, onLayout }: { sticker: Sticker; onLayout?: (event: LayoutChangeEvent) => void }) {
+function MentionSticker({
+    sticker,
+    onLayout,
+}: { sticker: Sticker; onLayout?: (event: LayoutChangeEvent) => void }) {
     const { ndk } = useNDK();
-    const user = useMemo(() => ndk.getUser({ pubkey: sticker.value as string }), [ndk, sticker.value]);
+    const user = useMemo(
+        () => ndk.getUser({ pubkey: sticker.value as string }),
+        [ndk, sticker.value]
+    );
     const profileData = useUserProfile(user.pubkey);
     const userProfile = profileData?.userProfile;
 

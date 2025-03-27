@@ -1,7 +1,7 @@
-import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -39,7 +39,11 @@ export default function MentionSelector({ onSelectUser }: MentionSelectorProps) 
             />
             <View style={styles.suggestionsContainer}>
                 {searchQuery.length > 1 && (
-                    <MentionSuggestions query={searchQuery} onPress={handleProfileSelected} FlashListComponent={FlashList} />
+                    <MentionSuggestions
+                        query={searchQuery}
+                        onPress={handleProfileSelected}
+                        FlashListComponent={FlashList}
+                    />
                 )}
             </View>
         </View>

@@ -16,7 +16,8 @@ export default function SettingsLayout() {
                 contentStyle: {
                     paddingBottom: bottomHeight,
                 },
-            }}>
+            }}
+        >
             <Stack.Screen name="index" />
             <Stack.Screen name="content/index" />
             <Stack.Screen name="content/muted" />

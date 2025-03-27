@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { formatMoney } from '~/utils/bitcoin';
@@ -24,7 +24,11 @@ export default function WalletBalance({
             <View style={styles.balanceContainer}>
                 {typeof amount === 'number' ? (
                     <>
-                        <Text style={[styles.balanceText, { color: colors.foreground }]} numberOfLines={1} testID="balance-text">
+                        <Text
+                            style={[styles.balanceText, { color: colors.foreground }]}
+                            numberOfLines={1}
+                            testID="balance-text"
+                        >
                             {numberWithThousandsSeparator(amount)}
                         </Text>
                         <Text style={[styles.satText, { color: colors.foreground }]}>

@@ -11,7 +11,13 @@ interface MediaRendererProps {
     onImageLoad: (event: any) => void;
 }
 
-export default function MediaRenderer({ type, path, player, containerWidthValue, onImageLoad }: MediaRendererProps) {
+export default function MediaRenderer({
+    type,
+    path,
+    player,
+    containerWidthValue,
+    onImageLoad,
+}: MediaRendererProps) {
     return type === 'photo' ? (
         <Animated.View style={[{ flex: 1, width: '100%', height: '100%' }]}>
             <Image

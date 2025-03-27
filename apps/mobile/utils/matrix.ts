@@ -43,7 +43,12 @@ export const translate = (matrix: SkMatrix, x: number, y: number): SkMatrix => {
 /**
  * Scales a matrix by factor from pivot point
  */
-export const scale = (matrix: SkMatrix, factor: number, pivotX: number, pivotY: number): SkMatrix => {
+export const scale = (
+    matrix: SkMatrix,
+    factor: number,
+    pivotX: number,
+    pivotY: number
+): SkMatrix => {
     const m = Skia.Matrix();
     m.translate(pivotX, pivotY);
     m.scale(factor, factor);
@@ -58,7 +63,12 @@ export const scale = (matrix: SkMatrix, factor: number, pivotX: number, pivotY: 
 /**
  * Rotates a matrix by angle (in radians) from pivot point
  */
-export const rotate = (matrix: SkMatrix, angle: number, pivotX: number, pivotY: number): SkMatrix => {
+export const rotate = (
+    matrix: SkMatrix,
+    angle: number,
+    pivotX: number,
+    pivotY: number
+): SkMatrix => {
     const m = Skia.Matrix();
     m.translate(pivotX, pivotY);
     m.rotate(angle);

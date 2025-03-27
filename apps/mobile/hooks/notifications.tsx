@@ -1,12 +1,12 @@
 import {
-    NDKPrivateKeySigner,
     NDKEvent,
+    NDKKind,
+    NDKPrivateKeySigner,
     NDKRelaySet,
-    NostrEvent,
+    type NostrEvent,
     useNDK,
     useNDKCurrentUser,
     useSubscribe,
-    NDKKind,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,7 +15,7 @@ import { useObserver } from './observer';
 
 import { registerForPushNotificationsAsync } from '@/lib/notifications';
 import { useAppSettingsStore } from '@/stores/app';
-import { mainKinds, WALLET_ENABLED } from '@/utils/const';
+import { WALLET_ENABLED, mainKinds } from '@/utils/const';
 
 const kindString = Array.from(mainKinds).map((k) => k.toString());
 
@@ -28,9 +28,15 @@ export function useNotifications(onlyNew = false) {
             ? [
                   { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
                   { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentUser.pubkey] },
-                  { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentUser.pubkey] },
+                  {
+                      kinds: [NDKKind.Reaction, NDKKind.GenericRepost],
+                      '#k': ['20'],
+                      '#p': [currentUser.pubkey],
+                  },
                   { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },
-                  ...[WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey] } : {}],
+                  ...[
+                      WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey] } : {},
+                  ],
               ]
             : false,
         {},
@@ -48,7 +54,9 @@ export function useNotifications(onlyNew = false) {
 }
 
 export function useNotificationPermission() {
-    const [permissionStatus, setPermissionStatus] = useState<Notifications.PermissionStatus | null>(null);
+    const [permissionStatus, setPermissionStatus] = useState<Notifications.PermissionStatus | null>(
+        null
+    );
 
     useEffect(() => {
         const checkPermissions = async () => {
@@ -69,11 +77,12 @@ export function useEnableNotifications() {
 
         const token = await registerForPushNotificationsAsync();
         if (!token) return false;
-        console.log('Push Notification Token:', token);
 
         const signer = NDKPrivateKeySigner.generate();
         const olasRelay = NDKRelaySet.fromRelayUrls(['wss://relay.olas.app'], ndk);
-        const olas = ndk.getUser({ npub: 'npub10lasj0tuxuweddwhmucwnm6l458flnu6mqwk38meaxs5matjg4ssac0ywa' });
+        const olas = ndk.getUser({
+            npub: 'npub10lasj0tuxuweddwhmucwnm6l458flnu6mqwk38meaxs5matjg4ssac0ywa',
+        });
         const event = new NDKEvent(ndk, {
             kind: 10901,
             content: JSON.stringify({
@@ -86,6 +95,5 @@ export function useEnableNotifications() {
         await event.sign(signer);
 
         event.publish(olasRelay);
-        console.log('Registered push notification token:', JSON.stringify(event.rawEvent(), null, 4));
     }, [ndk]);
 }

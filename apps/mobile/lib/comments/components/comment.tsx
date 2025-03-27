@@ -1,10 +1,15 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKKind, useNDKCurrentUser, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    useNDKCurrentUser,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { StyleProp, Pressable, View, ViewStyle, StyleSheet } from 'react-native';
+import { Pressable, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { replyEventAtom } from '../store';
 
@@ -47,19 +52,41 @@ export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<Vie
     }, [style, isReplying]);
 
     return (
-        <View style={containerStyle} className={cn('transition-all duration-300', isReplying && '!bg-accent/10')}>
-            <Pressable onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)} style={styles.avatar}>
-                <User.Avatar pubkey={item.pubkey} userProfile={userProfile} imageSize={32} flare={flare} borderWidth={1} />
+        <View
+            style={containerStyle}
+            className={cn('transition-all duration-300', isReplying && '!bg-accent/10')}
+        >
+            <Pressable
+                onPress={() => router.push(`/profile?pubkey=${item.pubkey}`)}
+                style={styles.avatar}
+            >
+                <User.Avatar
+                    pubkey={item.pubkey}
+                    userProfile={userProfile}
+                    imageSize={32}
+                    flare={flare}
+                    borderWidth={1}
+                />
             </Pressable>
 
             <View className="flex-1 flex-col">
                 <View className="flex-row items-center gap-1">
-                    <User.Name userProfile={userProfile} pubkey={item.pubkey} className="font-semibold text-foreground" />
-                    <RelativeTime timestamp={item.created_at!} className="text-xs text-muted-foreground" />
+                    <User.Name
+                        userProfile={userProfile}
+                        pubkey={item.pubkey}
+                        className="font-semibold text-foreground"
+                    />
+                    <RelativeTime
+                        timestamp={item.created_at!}
+                        className="text-xs text-muted-foreground"
+                    />
                 </View>
 
                 <Pressable onPress={onReplyPress} onLongPress={copyEventId}>
-                    <EventContent event={item} style={{ color: colors.foreground, paddingBottom: 8, fontSize: 13 }} />
+                    <EventContent
+                        event={item}
+                        style={{ color: colors.foreground, paddingBottom: 8, fontSize: 13 }}
+                    />
                     <Text className="text-xs text-muted-foreground">Reply</Text>
                 </Pressable>
             </View>

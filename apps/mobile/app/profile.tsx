@@ -1,44 +1,53 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
     NDKEvent,
+    type NDKFilter,
     NDKImage,
+    NDKKind,
     NDKSubscriptionCacheUsage,
-    NDKUser,
-    NDKUserProfile,
-    NostrEvent,
+    type NDKUser,
+    type NDKUserProfile,
+    type NostrEvent,
+    useNDK,
     useNDKCurrentUser,
+    useSubscribe,
     useUserProfile,
     useUsersStore,
-    NDKFilter,
-    NDKKind,
-    useSubscribe,
-    useNDK,
 } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { ArrowLeft, Check, Copy, Grid, ImageIcon, ShoppingCart, Wind, X } from 'lucide-react-native';
-import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    Dimensions,
+    ArrowLeft,
+    Check,
+    Copy,
+    Grid,
+    ImageIcon,
+    ShoppingCart,
+    Wind,
+    X,
+} from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
     Animated,
+    Dimensions,
     Pressable,
-    StyleProp,
-    ViewStyle,
+    type StyleProp,
+    StyleSheet,
+    Text,
     TextInput,
     Touchable,
+    TouchableOpacity,
+    View,
+    type ViewStyle,
 } from 'react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from '@/components/Feed';
-import { FeedEntry } from '@/components/Feed/hook';
+import type { FeedEntry } from '@/components/Feed/hook';
 import BackButton from '@/components/buttons/back-button';
 import FollowButton from '@/components/buttons/follow';
 import ReelIcon from '@/components/icons/reel';
@@ -72,7 +81,11 @@ function CopyToClipboard({ text, size = 16 }: { text: string; size?: number }) {
 
     return (
         <Pressable onPress={copy} style={{ marginLeft: 4 }}>
-            {copied ? <Check size={size} color={colors.muted} /> : <Copy size={size} color={colors.muted} />}
+            {copied ? (
+                <Check size={size} color={colors.muted} />
+            ) : (
+                <Copy size={size} color={colors.muted} />
+            )}
         </Pressable>
     );
 }
@@ -132,18 +145,22 @@ function Header({
     const saveProfileEdit = useCallback(async () => {
         setEditState('saving');
         const e = new NDKEvent(ndk, { kind: 0 } as NostrEvent);
-        const profileWithoutEmptyValues = Object.fromEntries(Object.entries(editProfile || {}).filter(([_, value]) => value !== null));
-        delete profileWithoutEmptyValues.created_at;
+        const profileWithoutEmptyValues = Object.fromEntries(
+            Object.entries(editProfile || {}).filter(([_, value]) => value !== null)
+        );
+        profileWithoutEmptyValues.created_at = undefined;
 
         e.content = JSON.stringify(profileWithoutEmptyValues);
         await e.publishReplaceable();
-        console.log('publishing profile', JSON.stringify(e.rawEvent(), null, 4));
         if (editProfile) updateUserProfile(pubkey, editProfile);
         setEditState(null);
     }, [editProfile, setEditState, pubkey, ndk, updateUserProfile]);
 
     return (
-        <AnimatedBlurView intensity={blurIntensity} style={[headerStyles.container, { paddingTop: insets.top }]}>
+        <AnimatedBlurView
+            intensity={blurIntensity}
+            style={[headerStyles.container, { paddingTop: insets.top }]}
+        >
             <View style={headerStyles.leftContainer}>
                 {editState === 'edit' ? (
                     <TouchableOpacity
@@ -157,14 +174,17 @@ function Header({
                             alignItems: 'center',
                             justifyContent: 'center',
                             marginHorizontal: 10,
-                        }}>
+                        }}
+                    >
                         <X size={24} color="white" />
                     </TouchableOpacity>
                 ) : (
                     <BackButton />
                 )}
 
-                <Animated.View style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}>
+                <Animated.View
+                    style={{ flexDirection: 'row', alignItems: 'center', opacity: usernameOpacity }}
+                >
                     <Pressable onPress={() => router.back()} style={{ flexDirection: 'column' }}>
                         <User.Name
                             userProfile={editProfile || userProfile}
@@ -172,7 +192,9 @@ function Header({
                             style={{ color: colors.foreground, fontSize: 20, fontWeight: 'bold' }}
                         />
                         {userProfile?.nip05 && (
-                            <Text style={{ color: colors.muted, fontSize: 12 }}>{prettifyNip05(userProfile?.nip05)}</Text>
+                            <Text style={{ color: colors.muted, fontSize: 12 }}>
+                                {prettifyNip05(userProfile?.nip05)}
+                            </Text>
                         )}
                     </Pressable>
                     <CopyToClipboard text={userProfile?.nip05 || user.npub} size={16} />
@@ -191,7 +213,8 @@ function Header({
                             alignItems: 'center',
                             justifyContent: 'center',
                             marginHorizontal: 10,
-                        }}>
+                        }}
+                    >
                         <Text style={{ color: 'white', fontSize: 14 }}>Save</Text>
                     </TouchableOpacity>
                 )}
@@ -206,11 +229,14 @@ function Header({
                             alignItems: 'center',
                             justifyContent: 'center',
                             marginHorizontal: 10,
-                        }}>
+                        }}
+                    >
                         <Text style={{ color: 'white', fontSize: 14 }}>Edit</Text>
                     </TouchableOpacity>
                 )}
-                {currentUser?.pubkey !== pubkey && <FollowButton variant="secondary" pubkey={pubkey} size="sm" className="mx-4" />}
+                {currentUser?.pubkey !== pubkey && (
+                    <FollowButton variant="secondary" pubkey={pubkey} size="sm" className="mx-4" />
+                )}
             </Animated.View>
         </AnimatedBlurView>
     );
@@ -282,7 +308,10 @@ export default function Profile() {
         }
     }, [view]);
 
-    const containerStyle = useMemo<StyleProp<ViewStyle>>(() => ({ flex: 1, backgroundColor: colors.card }), [colors.card]);
+    const containerStyle = useMemo<StyleProp<ViewStyle>>(
+        () => ({ flex: 1, backgroundColor: colors.card }),
+        [colors.card]
+    );
 
     const hasProducts = useMemo(() => {
         return content.some((e) => e.kind === 30402);
@@ -296,7 +325,14 @@ export default function Profile() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    header: () => <Header user={user} pubkey={pubkey} userProfile={userProfile} scrollY={scrollY} />,
+                    header: () => (
+                        <Header
+                            user={user}
+                            pubkey={pubkey}
+                            userProfile={userProfile}
+                            scrollY={scrollY}
+                        />
+                    ),
                 }}
             />
             <View style={containerStyle}>
@@ -304,17 +340,24 @@ export default function Profile() {
                     onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
                         useNativeDriver: false,
                     })}
-                    scrollEventThrottle={16}>
+                    scrollEventThrottle={16}
+                >
                     <View
                         style={{
                             width: '100%',
                             height: insets.top + headerStyles.leftContainer.height + 100,
                             backgroundColor: `#${user.pubkey.slice(0, 6)}`,
-                        }}>
+                        }}
+                    >
                         <Banner pubkey={pubkey} />
                     </View>
                     <View style={[styles.header, { marginTop: -48, marginBottom: 10 }]}>
-                        <Avatar pubkey={pubkey} userProfile={userProfile} flare={flare} colors={colors} />
+                        <Avatar
+                            pubkey={pubkey}
+                            userProfile={userProfile}
+                            flare={flare}
+                            colors={colors}
+                        />
                         <View style={styles.statsContainer}>
                             <View style={styles.statItem}>
                                 <Text style={styles.statNumber} className="text-foreground">
@@ -344,7 +387,12 @@ export default function Profile() {
                             ) : null}
                         </View>
 
-                        <FollowButton variant="secondary" pubkey={pubkey} size="sm" className="mx-4" />
+                        <FollowButton
+                            variant="secondary"
+                            pubkey={pubkey}
+                            size="sm"
+                            className="mx-4"
+                        />
                     </View>
 
                     <View style={styles.bioSection}>
@@ -353,7 +401,9 @@ export default function Profile() {
                             <CopyToClipboard text={userProfile?.nip05 || user.npub} size={16} />
                         </View>
                         {userProfile?.nip05 && (
-                            <Text style={{ color: colors.muted, fontSize: 12 }}>{prettifyNip05(userProfile?.nip05)}</Text>
+                            <Text style={{ color: colors.muted, fontSize: 12 }}>
+                                {prettifyNip05(userProfile?.nip05)}
+                            </Text>
                         )}
                         <About userProfile={userProfile} colors={colors} />
                     </View>
@@ -386,7 +436,9 @@ function Banner({ pubkey }: { pubkey: string }) {
             setEditProfile({ ...editProfile, banner: image.path });
 
             // upload the image
-            const media = await prepareMedia([{ uris: [image.path], id: 'banner', mediaType: 'image', contentMode: 'landscape' }]);
+            const media = await prepareMedia([
+                { uris: [image.path], id: 'banner', mediaType: 'image', contentMode: 'landscape' },
+            ]);
             const uploaded = await uploadMedia(media, ndk);
             if (!uploaded[0].uploadedUri) {
                 toast.error('Failed to upload profile banner');
@@ -408,7 +460,8 @@ function Banner({ pubkey }: { pubkey: string }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 1000,
-                }}>
+                }}
+            >
                 <Image
                     source={{ uri: editProfile?.banner }}
                     style={{
@@ -436,7 +489,8 @@ function Banner({ pubkey }: { pubkey: string }) {
                         width: 40,
                         height: 40,
                     }}
-                    onPress={handleChooseImage}>
+                    onPress={handleChooseImage}
+                >
                     <ImageIcon size={18} color="white" />
                 </View>
             </TouchableOpacity>
@@ -481,7 +535,9 @@ function Avatar({
             setEditProfile({ ...editProfile, picture: image.path });
 
             // upload the image
-            const media = await prepareMedia([{ uris: [image.path], id: 'avatar', mediaType: 'image', contentMode: 'square' }]);
+            const media = await prepareMedia([
+                { uris: [image.path], id: 'avatar', mediaType: 'image', contentMode: 'square' },
+            ]);
             const uploaded = await uploadMedia(media, ndk);
             if (!uploaded[0].uploadedUri) {
                 toast.error('Failed to upload profile picture');
@@ -517,17 +573,30 @@ function Avatar({
                         height: 40,
                         transform: [{ translateX: 5 }, { translateY: 5 }],
                     }}
-                    onPress={handleChooseImage}>
+                    onPress={handleChooseImage}
+                >
                     <ImageIcon size={18} color="white" />
                 </TouchableOpacity>
             </View>
         );
     }
 
-    return <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={90} flare={flare} canSkipBorder borderWidth={3} />;
+    return (
+        <User.Avatar
+            pubkey={pubkey}
+            userProfile={userProfile}
+            imageSize={90}
+            flare={flare}
+            canSkipBorder
+            borderWidth={3}
+        />
+    );
 }
 
-function About({ userProfile, colors }: { userProfile?: NDKUserProfile; colors: Record<string, string> }) {
+function About({
+    userProfile,
+    colors,
+}: { userProfile?: NDKUserProfile; colors: Record<string, string> }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     const editState = useAtomValue(editStateAtom);
 
@@ -572,7 +641,11 @@ function About({ userProfile, colors }: { userProfile?: NDKUserProfile; colors: 
     );
 }
 
-function Name({ userProfile, pubkey, colors }: { userProfile?: NDKUserProfile; pubkey: string; colors: Record<string, string> }) {
+function Name({
+    userProfile,
+    pubkey,
+    colors,
+}: { userProfile?: NDKUserProfile; pubkey: string; colors: Record<string, string> }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     const editState = useAtomValue(editStateAtom);
 
@@ -603,13 +676,21 @@ function Name({ userProfile, pubkey, colors }: { userProfile?: NDKUserProfile; p
         );
     }
 
-    return <User.Name userProfile={userProfile} pubkey={pubkey} style={{ color: colors.foreground, fontSize: 16, fontWeight: 'bold' }} />;
+    return (
+        <User.Name
+            userProfile={userProfile}
+            pubkey={pubkey}
+            style={{ color: colors.foreground, fontSize: 16, fontWeight: 'bold' }}
+        />
+    );
 }
 
 function StoriesContainer({ pubkey }: { pubkey: string }) {
-    const latestOlas365 = useObserver([{ '#t': ['olas365'], authors: [pubkey], limit: 1 }], { wrap: true, cacheUnconstrainFilter: [] }, [
-        pubkey,
-    ]);
+    const latestOlas365 = useObserver(
+        [{ '#t': ['olas365'], authors: [pubkey], limit: 1 }],
+        { wrap: true, cacheUnconstrainFilter: [] },
+        [pubkey]
+    );
 
     const handleOpenStories = useCallback(() => {
         router.push(`/365?pubkey=${pubkey}`);
@@ -618,11 +699,29 @@ function StoriesContainer({ pubkey }: { pubkey: string }) {
     if (!latestOlas365.length) return null;
 
     return (
-        <View style={{ flex: 1, marginHorizontal: 20, marginTop: 20, flexDirection: 'row', alignItems: 'center' }}>
+        <View
+            style={{
+                flex: 1,
+                marginHorizontal: 20,
+                marginTop: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+            }}
+        >
             <TouchableOpacity
                 style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                onPress={handleOpenStories}>
-                <View style={{ flexDirection: 'row', gap: 10, width: 40, height: 40, borderRadius: 40, overflow: 'hidden' }}>
+                onPress={handleOpenStories}
+            >
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        gap: 10,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 40,
+                        overflow: 'hidden',
+                    }}
+                >
                     <EventMediaContainer
                         event={latestOlas365[0]}
                         width={40}
@@ -700,7 +799,10 @@ function ProfileContent({ pubkey, hasProducts }: { pubkey: string; hasProducts: 
         () => ({ borderBottomWidth: 2, borderBottomColor: colors.primary }),
         [colors.primary]
     );
-    const inactiveButtonStyle = useMemo<StyleProp<ViewStyle>>(() => ({ borderBottomWidth: 2, borderBottomColor: 'transparent' }), []);
+    const inactiveButtonStyle = useMemo<StyleProp<ViewStyle>>(
+        () => ({ borderBottomWidth: 2, borderBottomColor: 'transparent' }),
+        []
+    );
 
     const COLUMN_COUNT = hasProducts ? 4 : 3;
     const screenWidth = Dimensions.get('window').width;
@@ -717,27 +819,48 @@ function ProfileContent({ pubkey, hasProducts }: { pubkey: string; hasProducts: 
         <>
             <View style={profileContentStyles.container}>
                 <TouchableOpacity
-                    style={[buttonStyle, view === 'photos' ? activeButtonStyle : inactiveButtonStyle]}
-                    onPress={() => setView('photos')}>
+                    style={[
+                        buttonStyle,
+                        view === 'photos' ? activeButtonStyle : inactiveButtonStyle,
+                    ]}
+                    onPress={() => setView('photos')}
+                >
                     <Grid size={24} color={colors.primary} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[buttonStyle, view === 'reels' ? activeButtonStyle : inactiveButtonStyle]}
-                    onPress={() => setView('reels')}>
-                    <ReelIcon width={24} strokeWidth={2} stroke={colors.primary} fill={colors.primary} />
+                    style={[
+                        buttonStyle,
+                        view === 'reels' ? activeButtonStyle : inactiveButtonStyle,
+                    ]}
+                    onPress={() => setView('reels')}
+                >
+                    <ReelIcon
+                        width={24}
+                        strokeWidth={2}
+                        stroke={colors.primary}
+                        fill={colors.primary}
+                    />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[buttonStyle, view === 'posts' ? activeButtonStyle : inactiveButtonStyle]}
-                    onPress={() => setView('posts')}>
+                    style={[
+                        buttonStyle,
+                        view === 'posts' ? activeButtonStyle : inactiveButtonStyle,
+                    ]}
+                    onPress={() => setView('posts')}
+                >
                     <Wind size={24} color={colors.primary} />
                 </TouchableOpacity>
 
                 {hasProducts && (
                     <TouchableOpacity
-                        style={[buttonStyle, view === 'products' ? activeButtonStyle : inactiveButtonStyle]}
-                        onPress={() => setView('products')}>
+                        style={[
+                            buttonStyle,
+                            view === 'products' ? activeButtonStyle : inactiveButtonStyle,
+                        ]}
+                        onPress={() => setView('products')}
+                    >
                         <ShoppingCart size={24} color={colors.primary} />
                     </TouchableOpacity>
                 )}

@@ -1,9 +1,9 @@
 import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ArrowLeft, Search } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 
 const inputAtom = atom('#photography');
 
-const relays = ['wss://relay.olas.app'] as const;
+const _relays = ['wss://relay.olas.app'] as const;
 
 export default function SearchScreen() {
     const [input, setInput] = useAtom(inputAtom);
@@ -31,7 +31,12 @@ export default function SearchScreen() {
     }, [hashtagFromQuery, setInput]);
 
     const filters = useMemo(() => {
-        return [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [input.trim().replace('#', '')] }];
+        return [
+            {
+                kinds: [NDKKind.Image, NDKKind.VerticalVideo],
+                '#t': [input.trim().replace('#', '')],
+            },
+        ];
     }, [input]);
 
     const insets = useSafeAreaInsets();

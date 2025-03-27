@@ -1,9 +1,9 @@
 import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { useAtom, useAtomValue } from 'jotai';
-import { X, Search, ChevronDown } from 'lucide-react-native';
+import { ChevronDown, Search, X } from 'lucide-react-native';
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
-import { View, Pressable, StyleSheet, Animated } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import SearchInput from './Search';
 import { searchQueryAtom, useSearchQuery } from './store';
@@ -18,7 +18,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { useAppSettingsStore } from '@/stores/app';
 
 export default function Feed() {
-    const [feedType, setFeedType] = useAtom(feedTypeAtom);
+    const [feedType, _setFeedType] = useAtom(feedTypeAtom);
     const { colors } = useColorScheme();
     const { show: showSheet } = useFeedTypeBottomSheet();
     const group = useGroup(
@@ -74,7 +74,8 @@ export default function Feed() {
                         }),
                         pointerEvents: showSearchInput ? 'auto' : 'none',
                     },
-                ]}>
+                ]}
+            >
                 <SearchInput />
                 <SaveSearchButton />
             </Animated.View>
@@ -101,16 +102,25 @@ export default function Feed() {
                         flex: 1,
                         paddingRight: 40,
                     },
-                ]}>
+                ]}
+            >
                 <Pressable style={styles.button} onPress={showSheet}>
                     {group ? (
                         <>
-                            <Image source={{ uri: group.picture }} style={{ width: 24, height: 24, borderRadius: 4 }} />
-                            <Text className="truncate text-xl font-semibold text-foreground">{group.name}</Text>
+                            <Image
+                                source={{ uri: group.picture }}
+                                style={{ width: 24, height: 24, borderRadius: 4 }}
+                            />
+                            <Text className="truncate text-xl font-semibold text-foreground">
+                                {group.name}
+                            </Text>
                         </>
                     ) : (
                         <>
-                            <Text numberOfLines={1} className="whitespace-nowrap text-2xl font-bold text-foreground">
+                            <Text
+                                numberOfLines={1}
+                                className="whitespace-nowrap text-2xl font-bold text-foreground"
+                            >
                                 {feedTypeTitle}
                             </Text>
                         </>

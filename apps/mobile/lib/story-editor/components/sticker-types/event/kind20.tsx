@@ -1,11 +1,11 @@
-import { NDKEvent, NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKImage } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { EventStickerStyle } from './styles';
+import type { EventStickerStyle } from './styles';
 
-import { UserProfile } from '@/hooks/user-profile';
+import type { UserProfile } from '@/hooks/user-profile';
 
 export default function EventStickerKind20({
     event,
@@ -33,16 +33,24 @@ export default function EventStickerKind20({
 
     // Get images from imetas
     const hasImages = ndkImage.imetas && ndkImage.imetas.length > 0;
-    console.log(ndkImage.imetas);
 
     return (
         <View style={[_styles.outerContainer, styles.container]}>
             <View style={_styles.container}>
                 {hasImages && (
-                    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={_styles.carousel}>
+                    <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        style={_styles.carousel}
+                    >
                         {ndkImage.imetas.map((imeta, index) => (
                             <View key={index} style={_styles.imageContainer}>
-                                <Image source={{ uri: imeta.url }} style={_styles.image} contentFit="cover" />
+                                <Image
+                                    source={{ uri: imeta.url }}
+                                    style={_styles.image}
+                                    contentFit="cover"
+                                />
                             </View>
                         ))}
                     </ScrollView>
@@ -56,8 +64,14 @@ export default function EventStickerKind20({
 
                 <View style={_styles.footer}>
                     <View style={_styles.userContainer}>
-                        {userProfile?.picture && <Image source={{ uri: userProfile.picture }} style={_styles.avatar} contentFit="cover" />}
-                        <Text style={[_styles.username, styles.author && styles.author.nameStyle]}>
+                        {userProfile?.picture && (
+                            <Image
+                                source={{ uri: userProfile.picture }}
+                                style={_styles.avatar}
+                                contentFit="cover"
+                            />
+                        )}
+                        <Text style={[_styles.username, styles.author?.nameStyle]}>
                             {userProfile?.displayName || userProfile?.name || 'Anonymous'}
                         </Text>
                     </View>

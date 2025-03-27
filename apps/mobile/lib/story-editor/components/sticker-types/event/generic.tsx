@@ -1,11 +1,11 @@
-import { NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { View, StyleSheet, TextStyle, Dimensions } from 'react-native';
+import { type NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Dimensions, StyleSheet, TextStyle, View } from 'react-native';
 
-import { EventStickerStyle } from './styles';
+import type { EventStickerStyle } from './styles';
 
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { UserProfile } from '@/hooks/user-profile';
+import type { UserProfile } from '@/hooks/user-profile';
 
 export default function EventStickerGeneric({
     event,
@@ -16,7 +16,6 @@ export default function EventStickerGeneric({
     userProfile?: UserProfile;
     styles: EventStickerStyle;
 }) {
-    console.log('event', event);
     let content = event.content;
     if (content.trim().length === 0 && event.alt) content = event.alt;
     if (content.trim().length === 0) content = event.kind.toString();
@@ -34,7 +33,11 @@ export default function EventStickerGeneric({
                         />
                     )}
                     {styles.author.nameStyle && (
-                        <User.Name userProfile={userProfile} pubkey={event.pubkey} style={styles.author.nameStyle} />
+                        <User.Name
+                            userProfile={userProfile}
+                            pubkey={event.pubkey}
+                            style={styles.author.nameStyle}
+                        />
                     )}
                 </View>
             )}

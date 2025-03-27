@@ -1,7 +1,14 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, forwardRef, useImperativeHandle, RefObject, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextStyle, Dimensions } from 'react-native';
+import React, {
+    useCallback,
+    useEffect,
+    forwardRef,
+    useImperativeHandle,
+    type RefObject,
+    useMemo,
+} from 'react';
+import { Dimensions, StyleSheet, type TextStyle, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';

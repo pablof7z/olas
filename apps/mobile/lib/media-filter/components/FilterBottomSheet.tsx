@@ -1,7 +1,12 @@
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import {
+    BottomSheetBackdrop,
+    type BottomSheetBackdropProps,
+    type BottomSheetModal,
+    BottomSheetView,
+} from '@gorhom/bottom-sheet';
 import { atom, useSetAtom } from 'jotai';
-import { useCallback, useEffect, RefObject } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { type RefObject, useCallback, useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterList } from './FilterList';
@@ -10,12 +15,13 @@ import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
 type FilterBottomSheetRefAtomType = RefObject<BottomSheetModal> | null;
 
-export const filterBottomSheetRefAtom = atom<FilterBottomSheetRefAtomType, [FilterBottomSheetRefAtomType], void>(
-    null,
-    (get, set, value) => {
-        set(filterBottomSheetRefAtom, value);
-    }
-);
+export const filterBottomSheetRefAtom = atom<
+    FilterBottomSheetRefAtomType,
+    [FilterBottomSheetRefAtomType],
+    void
+>(null, (_get, set, value) => {
+    set(filterBottomSheetRefAtom, value);
+});
 
 interface FilterBottomSheetProps {
     selectedFilterId: string | null;
@@ -74,7 +80,10 @@ export default function FilterBottomSheet({
         }
     };
 
-    const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} />, []);
+    const renderBackdrop = useCallback(
+        (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} />,
+        []
+    );
 
     return (
         <Sheet
@@ -87,24 +96,36 @@ export default function FilterBottomSheet({
                 borderTopStartRadius: 16,
                 borderTopEndRadius: 16,
             }}
-            onDismiss={onDismiss}>
+            onDismiss={onDismiss}
+        >
             <BottomSheetView
                 style={{
                     flexDirection: 'column',
                     width: '100%',
                     paddingBottom: insets.bottom,
-                }}>
+                }}
+            >
                 <View style={styles.actionButtonsContainer}>
                     <Pressable onPress={handleReset} style={styles.actionButton}>
                         <Text style={styles.actionButtonText}>Reset</Text>
                     </Pressable>
 
-                    <Pressable onPress={handleApplyFilter} style={styles.actionButton} disabled={isApplying}>
-                        <Text style={styles.actionButtonText}>{isApplying ? 'Applying...' : 'Apply'}</Text>
+                    <Pressable
+                        onPress={handleApplyFilter}
+                        style={styles.actionButton}
+                        disabled={isApplying}
+                    >
+                        <Text style={styles.actionButtonText}>
+                            {isApplying ? 'Applying...' : 'Apply'}
+                        </Text>
                     </Pressable>
                 </View>
 
-                <FilterList selectedFilterId={selectedFilterId || ''} onSelectFilter={onSelectFilter} previewImageUri={previewImageUri} />
+                <FilterList
+                    selectedFilterId={selectedFilterId || ''}
+                    onSelectFilter={onSelectFilter}
+                    previewImageUri={previewImageUri}
+                />
             </BottomSheetView>
         </Sheet>
     );

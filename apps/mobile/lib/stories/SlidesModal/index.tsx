@@ -1,9 +1,9 @@
-import { NDKImage, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKImage, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import * as React from 'react';
+import type * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Dimensions, FlatList, FlatListProps, StyleSheet } from 'react-native';
+import { Dimensions, FlatList, type FlatListProps, StyleSheet } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -11,19 +11,26 @@ import Animated, {
     interpolate,
     Extrapolation,
     runOnJS,
-    SharedValue,
+    type SharedValue,
 } from 'react-native-reanimated';
 
 import { Slide } from './Slide';
 
-import { showStoriesModalAtom, storiesAtom, isLoadingAtom, durationAtom, activeSlideAtom } from '@/lib/stories/SlidesModal/store';
+import {
+    activeSlideAtom,
+    durationAtom,
+    isLoadingAtom,
+    showStoriesModalAtom,
+    storiesAtom,
+} from '@/lib/stories/SlidesModal/store';
 
 const { width } = Dimensions.get('screen');
 
 const perspective = width;
 const angle = Math.atan(perspective / (width / 2));
 
-const AnimatedFlatList = Animated.createAnimatedComponent<FlatListProps<NDKImage | NDKVideo | NDKStory>>(FlatList);
+const AnimatedFlatList =
+    Animated.createAnimatedComponent<FlatListProps<NDKImage | NDKVideo | NDKStory>>(FlatList);
 
 interface StoryItemProps {
     item: NDKImage | NDKVideo | NDKStory;
@@ -36,7 +43,16 @@ interface StoryItemProps {
     flatListRef: React.RefObject<FlatList<NDKImage | NDKVideo | NDKStory>>;
 }
 
-const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, isScrolling, flatListRef }: StoryItemProps) => {
+const StoryItem = ({
+    item,
+    index,
+    scrollX,
+    activeIndex,
+    storiesLength,
+    onClose,
+    isScrolling,
+    flatListRef,
+}: StoryItemProps) => {
     const inputRange = [(index - 0.5) * width, index * width, (index + 0.5) * width];
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -44,13 +60,23 @@ const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, 
         transform: [
             { perspective: width * 4 },
             {
-                translateX: interpolate(scrollX.value, inputRange, [-width / 2, 0, width / 2], Extrapolation.CLAMP),
+                translateX: interpolate(
+                    scrollX.value,
+                    inputRange,
+                    [-width / 2, 0, width / 2],
+                    Extrapolation.CLAMP
+                ),
             },
             {
                 rotateY: `${interpolate(scrollX.value, inputRange, [angle / 2, 0, -angle / 2], Extrapolation.CLAMP)}rad`,
             },
             {
-                translateX: interpolate(scrollX.value, inputRange, [width / 2, 0, -width / 2], Extrapolation.CLAMP),
+                translateX: interpolate(
+                    scrollX.value,
+                    inputRange,
+                    [width / 2, 0, -width / 2],
+                    Extrapolation.CLAMP
+                ),
             },
         ],
     }));
@@ -85,7 +111,7 @@ const StoryItem = ({ item, index, scrollX, activeIndex, storiesLength, onClose, 
 };
 
 export default function StoriesModal({ onClose }: { onClose?: () => void }) {
-    const [showStoriesModal, setShowStoriesModal] = useAtom(showStoriesModalAtom);
+    const [_showStoriesModal, setShowStoriesModal] = useAtom(showStoriesModalAtom);
     const scrollX = useSharedValue(0);
     const [activeIndex, setActiveIndex] = useAtom(activeSlideAtom);
     const [isScrolling, setIsScrolling] = useState(false);
@@ -128,7 +154,10 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
                 showsHorizontalScrollIndicator={false}
                 onScroll={scrollHandler}
                 pagingEnabled
-                renderItem={({ item, index }: { item: NDKImage | NDKVideo | NDKStory; index: number }) => (
+                renderItem={({
+                    item,
+                    index,
+                }: { item: NDKImage | NDKVideo | NDKStory; index: number }) => (
                     <StoryItem
                         item={item}
                         index={index}

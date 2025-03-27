@@ -1,11 +1,11 @@
 import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
-import { router, Tabs, usePathname } from 'expo-router';
+import { Tabs, router, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { Home, UserCircle2 } from 'lucide-react-native';
-import { useMemo, useEffect } from 'react';
-import { ViewStyle } from 'react-native';
-import { useSharedValue, useAnimatedStyle, withSpring, interpolate } from 'react-native-reanimated';
+import { useEffect, useMemo } from 'react';
+import type { ViewStyle } from 'react-native';
+import { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import { scrollDirAtom } from '@/components/Feed/store';
@@ -23,15 +23,15 @@ export default function TabsLayout() {
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const tabBarAnim = useSharedValue(0);
 
-    // Create a ref that we can safely pass to useScrollToTop
-    const safeScrollRef = useMemo(() => {
-        return scrollRef?.current ? { current: scrollRef.current } : null;
-    }, [scrollRef]);
+    // Create a ref that's always defined but may point to null
+    const safeScrollRef = useMemo(
+        () => ({
+            current: scrollRef?.current || null,
+        }),
+        [scrollRef]
+    );
 
-    // Only use useScrollToTop if we have a valid ref
-    if (safeScrollRef) {
-        useScrollToTop(safeScrollRef);
-    }
+    useScrollToTop(safeScrollRef);
 
     const scrollDir = useAtomValue(scrollDirAtom);
 
@@ -43,7 +43,7 @@ export default function TabsLayout() {
             stiffness: 200,
             mass: 0.5, // Add a bit less mass for faster response
         });
-    }, [scrollDir]);
+    }, [scrollDir, tabBarAnim]);
 
     const isReels = usePathname() === '/reels';
 
@@ -87,7 +87,8 @@ export default function TabsLayout() {
                 headerShown: true,
                 tabBarShowLabel: false,
                 ...screenOptions,
-            }}>
+            }}
+        >
             <Tabs.Screen
                 name="index"
                 options={{
@@ -95,7 +96,9 @@ export default function TabsLayout() {
                     headerTransparent: false,
                     title: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />
+                    ),
                 }}
                 listeners={
                     {
@@ -113,21 +116,20 @@ export default function TabsLayout() {
                 options={{
                     title: 'Reels',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} color={color} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <ReelIcon
+                            width={24}
+                            height={24}
+                            strokeWidth={focused ? 2.5 : 2}
+                            color={color}
+                        />
+                    ),
                 }}
             />
 
             <Tabs.Screen
                 name="publish2"
                 listeners={{
-                    // tabPress: (e) => {
-                    //     e.preventDefault();
-                    //     if (!currentUser) {
-                    //         router.push('/login');
-                    //     } else {
-                    //         newPost({ types: ['images', 'videos'] });
-                    //     }
-                    // },
                     tabPress: (e) => {
                         e?.preventDefault?.();
                         if (!currentUser) {
@@ -136,13 +138,13 @@ export default function TabsLayout() {
                             router.push('/publish');
                         }
                     },
-                    tabLongPress: (e) => {
-                        router.push('/story');
-                    },
+                    tabLongPress: () => router.push('/story'),
                 }}
                 options={{
                     title: 'Publish',
-                    tabBarIcon: ({ color, focused }) => <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />,
+                    tabBarIcon: ({ color }) => (
+                        <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />
+                    ),
                 }}
             />
 
@@ -152,7 +154,9 @@ export default function TabsLayout() {
                     options={{
                         title: 'Wallets',
                         headerShown: false,
-                        tabBarIcon: ({ color, focused }) => <WalletButton size={24} focused={focused} color={color} />,
+                        tabBarIcon: ({ color, focused }) => (
+                            <WalletButton size={24} focused={focused} color={color} />
+                        ),
                     }}
                 />
             ) : null}

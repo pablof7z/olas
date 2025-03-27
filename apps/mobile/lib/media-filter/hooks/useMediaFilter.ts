@@ -6,7 +6,8 @@ import { FilterParameters } from '../types';
 import { saveFilteredImage } from '../utils/saveFilteredImage';
 
 export function useMediaFilter() {
-    const { sourceUri, currentFilter, applyFilter, clearFilter, updateFilterParams, setSource } = useMediaFilterStore();
+    const { sourceUri, currentFilter, applyFilter, clearFilter, updateFilterParams, setSource } =
+        useMediaFilterStore();
 
     const currentFilterId = currentFilter?.id || 'normal';
 
@@ -23,12 +24,6 @@ export function useMediaFilter() {
         (filterId: string) => {
             if (!sourceUri) return;
 
-            console.log('Selecting filter:', {
-                filterId,
-                sourceUri,
-                currentFilterId: currentFilter?.id,
-            });
-
             if (filterId === 'normal') {
                 clearFilter();
                 return;
@@ -36,10 +31,6 @@ export function useMediaFilter() {
 
             const filterPreset = FILTER_PRESETS.find((f) => f.id === filterId);
             if (filterPreset) {
-                console.log('Applying filter:', {
-                    filterId,
-                    parameters: filterPreset.parameters,
-                });
                 applyFilter(filterId, filterPreset.parameters);
             }
         },

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useStickerStore } from '../../../store';
 
@@ -20,7 +20,7 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
     const { colors } = useColorScheme();
     const { addSticker } = useStickerStore();
 
-    const onDateChange = (event: any, selectedDate?: Date) => {
+    const onDateChange = (_event: any, selectedDate?: Date) => {
         const currentDate = selectedDate || countdownDate;
         setShowDatePicker(false);
 
@@ -32,7 +32,7 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
         setCountdownDate(newDate);
     };
 
-    const onTimeChange = (event: any, selectedTime?: Date) => {
+    const onTimeChange = (_event: any, selectedTime?: Date) => {
         const currentTime = selectedTime || countdownDate;
         setShowTimePicker(false);
 
@@ -72,27 +72,64 @@ export default function CountdownStickerInput({ onStickerAdded }: CountdownStick
             <Text style={[styles.countdownLabel, { marginTop: 16 }]}>Select date & time:</Text>
 
             <View style={styles.datePickerRow}>
-                <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowDatePicker(true)}>
-                    <Ionicons name="calendar-outline" size={20} color="white" style={styles.datePickerIcon} />
+                <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowDatePicker(true)}
+                >
+                    <Ionicons
+                        name="calendar-outline"
+                        size={20}
+                        color="white"
+                        style={styles.datePickerIcon}
+                    />
                     <Text style={styles.datePickerText}>{countdownDate.toLocaleDateString()}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.timePickerButton} onPress={() => setShowTimePicker(true)}>
-                    <Ionicons name="time-outline" size={20} color="white" style={styles.datePickerIcon} />
+                <TouchableOpacity
+                    style={styles.timePickerButton}
+                    onPress={() => setShowTimePicker(true)}
+                >
+                    <Ionicons
+                        name="time-outline"
+                        size={20}
+                        color="white"
+                        style={styles.datePickerIcon}
+                    />
                     <Text style={styles.datePickerText}>
-                        {countdownDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {countdownDate.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            {showDatePicker && <DateTimePicker value={countdownDate} mode="date" display="default" onChange={onDateChange} />}
+            {showDatePicker && (
+                <DateTimePicker
+                    value={countdownDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                />
+            )}
 
-            {showTimePicker && <DateTimePicker value={countdownDate} mode="time" display="default" onChange={onTimeChange} />}
+            {showTimePicker && (
+                <DateTimePicker
+                    value={countdownDate}
+                    mode="time"
+                    display="default"
+                    onChange={onTimeChange}
+                />
+            )}
 
             <TouchableOpacity
-                style={[styles.addEventButton, { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 }]}
+                style={[
+                    styles.addEventButton,
+                    { opacity: countdownName.trim() ? 1 : 0.5, marginTop: 24 },
+                ]}
                 onPress={handleAddCountdownSticker}
-                disabled={!countdownName.trim()}>
+                disabled={!countdownName.trim()}
+            >
                 <Text style={styles.addEventButtonText}>Add Countdown</Text>
             </TouchableOpacity>
         </View>

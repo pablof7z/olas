@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 import { locationBottomSheetRefAtom } from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
@@ -27,7 +27,11 @@ export default function Location() {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.rowContainer} onPress={openLocationBottomSheet} activeOpacity={0.7}>
+            <TouchableOpacity
+                style={styles.rowContainer}
+                onPress={openLocationBottomSheet}
+                activeOpacity={0.7}
+            >
                 <Ionicons name="location-outline" size={22} color={colors.primary} />
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>Location</Text>

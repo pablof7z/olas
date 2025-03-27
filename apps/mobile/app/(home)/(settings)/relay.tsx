@@ -1,4 +1,5 @@
-import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { type NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useLocalSearchParams } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
@@ -55,16 +56,14 @@ export default function RelayScreen() {
     const { relayUrl } = useLocalSearchParams() as { relayUrl: string };
     const relayNotices = useAtomValue(relayNoticesAtom);
 
-    const notices = useMemo(() => {
+    const _notices = useMemo(() => {
         if (!relayUrl) return [];
         return relayNotices[relayUrl] || [];
     }, [relayUrl]);
 
     const subsData = subscriptions({ relayUrl, ndk });
 
-    const show = useCallback((filters: NDKFilter[]) => {
-        console.log(JSON.stringify(filters, null, 4));
-    }, []);
+    const show = useCallback((_filters: NDKFilter[]) => {}, []);
 
     return (
         <View className="flex-1">
@@ -83,7 +82,8 @@ export default function RelayScreen() {
                             id: item.id,
                             title: item.id,
                             badge: item.count,
-                        }}>
+                        }}
+                    >
                         <TouchableOpacity onPress={() => show(item.rawFilters)}>
                             <View className="flex-col">
                                 {item.filters.map((filter, index) => (

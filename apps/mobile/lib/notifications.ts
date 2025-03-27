@@ -2,8 +2,6 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 export async function registerForPushNotificationsAsync() {
-    let token;
-
     if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
             name: 'default',
@@ -25,7 +23,7 @@ export async function registerForPushNotificationsAsync() {
         return null;
     }
 
-    token = (await Notifications.getExpoPushTokenAsync({})).data;
+    const token = (await Notifications.getExpoPushTokenAsync({})).data;
 
     return token;
 }

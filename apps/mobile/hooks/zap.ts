@@ -1,5 +1,11 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKZapper, useNDKCurrentUser, useNDKWallet, NDKUser, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    type NDKUser,
+    NDKZapper,
+    useNDKCurrentUser,
+    useNDKWallet,
+} from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -27,7 +33,7 @@ export const useZap = () => {
          * @param delayMs - Amount of time to wait before actually zapping. When called with a delay, a cancel function is returned.
          * @returns
          */
-        (message = 'Zap from Olas', sats: number, target: NDKEvent | NDKUser, delayMs = 0) => {
+        (message, sats: number, target: NDKEvent | NDKUser, delayMs = 0) => {
             if (!activeWallet) {
                 alert("You don't have a wallet connected yet.");
                 router.push('/wallets');
@@ -49,20 +55,27 @@ export const useZap = () => {
                     nutzapAsFallback: withFallbackZap,
                 });
 
-                const pendingPayments = addPendingPayment(zapper, currentUser!.pubkey, delayMs > 0 ? 'delayed' : 'pending');
+                const pendingPayments = addPendingPayment(
+                    zapper,
+                    currentUser!.pubkey,
+                    delayMs > 0 ? 'delayed' : 'pending'
+                );
 
                 if (activeWallet instanceof NDKNWCWallet) {
                     zapper.on('ln_invoice', ({ recipientPubkey, type, pr }) => {
-                        let correctPayment = pendingPayments.find((p) => p.recipient === recipientPubkey);
+                        let correctPayment = pendingPayments.find(
+                            (p) => p.recipient === recipientPubkey
+                        );
                         if (!correctPayment) {
-                            console.log('[ZAP HOOK] Potential bug, looking for correct payment for recipientPubkey', {
-                                recipientPubkey,
-                                type,
-                                pendingPayments,
-                            });
                         }
                         correctPayment = correctPayment ?? pendingPayments[0];
-                        addNWCZap({ target, recipientPubkey, pr, zapType: type, pendingPaymentId: correctPayment.internalId });
+                        addNWCZap({
+                            target,
+                            recipientPubkey,
+                            pr,
+                            zapType: type,
+                            pendingPaymentId: correctPayment.internalId,
+                        });
                     });
                 }
 
@@ -75,7 +88,6 @@ export const useZap = () => {
                         zapper.zap();
                     }, delayMs);
                     return () => {
-                        console.log('cancelling zap');
                         for (const payment of pendingPayments) {
                             removePayment(target, payment.internalId);
                         }

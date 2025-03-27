@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { List, Share } from 'lucide-react-native';
 import { useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { useFeedEditorStore, feedEditorBottomSheetRefAtom } from './store';
+import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from './store';
 
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
@@ -20,7 +20,9 @@ export default function Confirm() {
         <View style={styles.container}>
             <View style={styles.innerContainer}>
                 <Text variant="title1">Private feed saved</Text>
-                <Text variant="body">{title} is now accessible from your list of private feeds.</Text>
+                <Text variant="body">
+                    {title} is now accessible from your list of private feeds.
+                </Text>
             </View>
             <View style={styles.buttonContainer}>
                 <Button variant="primary" onPress={() => setMode('edit')} size="lg">

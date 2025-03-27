@@ -1,15 +1,15 @@
 import {
-    NDKCacheAdapterSqlite,
-    useNDK,
-    searchProfiles,
-    NDKUserProfile,
+    type Hexpubkey,
+    type NDKCacheAdapterSqlite,
     NDKUser,
-    Hexpubkey,
+    type NDKUserProfile,
+    searchProfiles,
+    useNDK,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import AvatarAndName from '@/components/ui/user/avatar-name';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -21,7 +21,12 @@ interface MentionSuggestionsProps {
     style?: ViewStyle;
 }
 
-export default function MentionSuggestions({ query, onPress, FlashListComponent = FlashList, style }: MentionSuggestionsProps) {
+export default function MentionSuggestions({
+    query,
+    onPress,
+    FlashListComponent = FlashList,
+    style,
+}: MentionSuggestionsProps) {
     const { ndk } = useNDK();
     const { colors } = useColorScheme();
     const [profiles, setProfiles] = useState<[Hexpubkey, NDKUserProfile][]>([]);
@@ -45,8 +50,12 @@ export default function MentionSuggestions({ query, onPress, FlashListComponent 
             <FlashListComponent
                 data={profiles}
                 estimatedItemSize={50}
-                renderItem={({ item }) => <SuggestionItem item={item} onPress={handleProfileSelect} />}
-                ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.grey4 }]} />}
+                renderItem={({ item }) => (
+                    <SuggestionItem item={item} onPress={handleProfileSelect} />
+                )}
+                ItemSeparatorComponent={() => (
+                    <View style={[styles.separator, { backgroundColor: colors.grey4 }]} />
+                )}
                 contentContainerStyle={styles.listContent}
             />
         </View>

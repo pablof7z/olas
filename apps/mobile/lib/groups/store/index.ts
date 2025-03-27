@@ -1,9 +1,10 @@
-import NDK, { Hexpubkey, NDKUser, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { Hexpubkey, type NDKUser, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 
+import type { GroupEntry } from '../types';
 import { loadGroups, loadMyGroups } from './load';
-import { GroupEntry } from '../types';
 
 export type GroupStoreState = {
     groups: Map<string, GroupEntry>;
@@ -29,7 +30,8 @@ export const useGroups = create<GroupStore>()((set) => ({
     groupsLoaded: new Set(),
 
     addGroup: (group) => set((state) => ({ groups: state.groups.set(group.groupId, group) })),
-    loadGroups: (ndk, currentUser, relay, groupIds) => loadGroups(ndk, currentUser, relay, groupIds, set),
+    loadGroups: (ndk, currentUser, relay, groupIds) =>
+        loadGroups(ndk, currentUser, relay, groupIds, set),
 
     loadMyGroups: (ndk, currentUser) => loadMyGroups(ndk, currentUser, set),
 }));
@@ -45,9 +47,7 @@ export function useAllGroups(relayUrls: string[]) {
         if (!ndk || !currentUser) return;
 
         for (const relayUrl of relayUrls) {
-            console.log('loading from relayUrl', relayUrl);
             if (groupsLoaded.has(relayUrl)) continue;
-            console.log('loading groups from relayUrl', relayUrl);
             loadGroups(ndk, currentUser, relayUrl);
         }
     }, [ndk, currentUser, relayUrls]);

@@ -1,6 +1,6 @@
 import { NDKStoryStickerType, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useStickerStore } from '../../../store';
 import { sharedStyles } from '../styles';
@@ -57,7 +57,8 @@ export default function EventStickerInput({ onStickerAdded }: EventStickerInputP
             <TouchableOpacity
                 style={[sharedStyles.button, !eventIdInput.trim() && sharedStyles.buttonDisabled]}
                 onPress={handleAddEventSticker}
-                disabled={!eventIdInput.trim()}>
+                disabled={!eventIdInput.trim()}
+            >
                 <Text style={sharedStyles.buttonText}>Done</Text>
             </TouchableOpacity>
         </View>

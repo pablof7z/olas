@@ -1,8 +1,15 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import NDK, { type Hexpubkey, NDKUser, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    type NDKUser,
+    useFollows,
+    useNDK,
+    useNDKCurrentUser,
+} from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Hash } from 'lucide-react-native';
-import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -37,13 +44,17 @@ export type TagSelectorProps = {
     onTagsChanged?: (tags: string[]) => void;
 };
 
-export function TagSelectorBottomSheet({ initialTags = [], onTagsSelected, onTagsChanged }: TagSelectorProps) {
+export function TagSelectorBottomSheet({
+    initialTags = [],
+    onTagsSelected,
+    onTagsChanged,
+}: TagSelectorProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
     const [tags, setTags] = useState<string[]>(initialTags);
     const selectedTags = useRef<Set<string>>(new Set(initialTags));
-    const [selectedCount, setSelectedCount] = useState(initialTags.length);
+    const [_selectedCount, setSelectedCount] = useState(initialTags.length);
     const tagSelectorCb = useAtomValue(tagSelectorBottomSheetCbAtom);
 
     useEffect(() => {
@@ -79,7 +90,12 @@ export function TagSelectorBottomSheet({ initialTags = [], onTagsSelected, onTag
     return (
         <Sheet ref={ref}>
             <BottomSheetView
-                style={{ flexDirection: 'column', paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
+                style={{
+                    flexDirection: 'column',
+                    paddingBottom: inset.bottom,
+                    height: Dimensions.get('window').height * 0.8,
+                }}
+            >
                 <View className="w-full flex-col gap-2 px-4 py-2">
                     <View className="w-full flex-row items-center justify-between">
                         <Text variant="title1" className="text-foreground">
@@ -89,7 +105,9 @@ export function TagSelectorBottomSheet({ initialTags = [], onTagsSelected, onTag
                             <Text>Done</Text>
                         </Button>
                     </View>
-                    <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
+                    <Text className="text-muted-foreground">
+                        Add some tags to help others find your post
+                    </Text>
                 </View>
 
                 <TagSelector initialTags={tags} onTagsChanged={handleTagsChanged} />
@@ -144,7 +162,9 @@ export function TagSelector({
 
         // if we have selected tags that are not in the result and we don't have a search active, let's add them to the top
         if (selectedTags.current.size > 0 && !alphanumSearch) {
-            const selectedTagsToAdd = Array.from(selectedTags.current).filter((tag) => !result.some((t) => t.tag === tag));
+            const selectedTagsToAdd = Array.from(selectedTags.current).filter(
+                (tag) => !result.some((t) => t.tag === tag)
+            );
             result.unshift(...selectedTagsToAdd.map((tag) => ({ id: tag, tag, count: 0 })));
         }
 
@@ -201,7 +221,13 @@ export function TagSelector({
                 <ListItem
                     className={cn('ios:pl-0 pl-2')}
                     titleClassName={cn(isSelected && '!text-primary !font-bold')}
-                    leftView={<Hash size={24} color={isSelected ? colors.primary : colors.muted} style={{ marginHorizontal: 10 }} />}
+                    leftView={
+                        <Hash
+                            size={24}
+                            color={isSelected ? colors.primary : colors.muted}
+                            style={{ marginHorizontal: 10 }}
+                        />
+                    }
                     item={{
                         title: item.tag,
                     }}
@@ -235,12 +261,18 @@ export function TagSelector({
                     size="sm"
                     variant={tagsToShow.length === 0 ? 'primary' : 'secondary'}
                     disabled={search.length === 0}
-                    onPress={addTagManually}>
+                    onPress={addTagManually}
+                >
                     <Text>Add</Text>
                 </Button>
             </View>
 
-            <FlatList data={data} variant="insets" keyExtractor={keyExtractor} renderItem={renderItem} />
+            <FlatList
+                data={data}
+                variant="insets"
+                keyExtractor={keyExtractor}
+                renderItem={renderItem}
+            />
         </View>
     );
 }
@@ -288,9 +320,9 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
 
     if (search) {
         const lowerCaseSearch = search.toLowerCase();
-        console.log('search', postsByUser.length, search, lowerCaseSearch);
-        postsByUser = postsByUser.filter((post) => post.getMatchingTags('t').some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch)));
-        console.log('postsByUser', postsByUser.length);
+        postsByUser = postsByUser.filter((post) =>
+            post.getMatchingTags('t').some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch))
+        );
     }
 
     // This tracks the different variations of how a tag is used, so #olas and #Olas would go into the same entry

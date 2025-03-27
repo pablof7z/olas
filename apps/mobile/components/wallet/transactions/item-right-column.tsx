@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Timer } from 'lucide-react-native';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
 import { useMintInfo } from '@/hooks/mint';
@@ -34,7 +34,10 @@ export function ItemRightColumn({
                 <View style={styles.unitContainer}>
                     {mintInfo && (
                         <View className="flex-row items-center gap-1">
-                            <Image source={{ uri: mintInfo.icon_url }} style={{ width: 16, height: 16, borderRadius: 4 }} />
+                            <Image
+                                source={{ uri: mintInfo.icon_url }}
+                                style={{ width: 16, height: 16, borderRadius: 4 }}
+                            />
                         </View>
                     )}
                     <Text className="text-xs text-muted-foreground">{niceUnit}</Text>

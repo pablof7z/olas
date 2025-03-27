@@ -1,14 +1,14 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
-    useNDKWallet,
-    NDKKind,
-    useSubscribe,
-    NDKEvent,
-    NDKZapSplit,
-    NDKPaymentConfirmation,
-    NDKNutzap,
-    useNDKCurrentUser,
+    type NDKEvent,
     NDKFilter,
+    NDKKind,
+    NDKNutzap,
+    type NDKPaymentConfirmation,
+    type NDKZapSplit,
+    useNDKCurrentUser,
+    useNDKWallet,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuDeposit, NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
@@ -35,10 +35,11 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
         ];
     }, [currentUser?.pubkey, activeWallet?.walletId]);
 
-    const { events: history } = useSubscribe(filters, { subId: 'tx-list', groupable: false, skipVerification: true }, [
-        currentUser?.pubkey,
-        activeWallet?.walletId,
-    ]);
+    const { events: history } = useSubscribe(
+        filters,
+        { subId: 'tx-list', groupable: false, skipVerification: true },
+        [currentUser?.pubkey, activeWallet?.walletId]
+    );
     const { setActiveEvent } = useActiveEventStore();
     const pendingPayments = usePendingPayments();
 
@@ -60,11 +61,14 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
 
             // listen for completion of the pending zap
             // THIS DOESN'T WORK BECAUSE THE EVENT I'M RECEIVING IS THE NUTZAP, NOT THE WALLET CHANGE EVENT
-            pendingPayment.zapper.once('split:complete', (split: NDKZapSplit, result: NDKPaymentConfirmation) => {
-                if (result instanceof Error) {
-                    toast.error(result.message);
+            pendingPayment.zapper.once(
+                'split:complete',
+                (_split: NDKZapSplit, result: NDKPaymentConfirmation) => {
+                    if (result instanceof Error) {
+                        toast.error(result.message);
+                    }
                 }
-            });
+            );
 
             listening.current.delete(pendingPayment.internalId);
         }
@@ -76,7 +80,10 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
     };
 
     const historyWithPendingZaps = useMemo(() => {
-        return [...Array.from(pendingPayments.values()).flat(), ...history.sort((a, b) => b.created_at - a.created_at)];
+        return [
+            ...Array.from(pendingPayments.values()).flat(),
+            ...history.sort((a, b) => b.created_at - a.created_at),
+        ];
     }, [history.length, pendingPayments.length]);
 
     return (
@@ -86,7 +93,13 @@ export default function TransactionHistory({ wallet }: { wallet: NDKCashuWallet 
                 keyExtractor={(item: NDKEvent) => item.id}
                 contentInsetAdjustmentBehavior="automatic"
                 renderItem={({ item, index, target }) => (
-                    <HistoryItem wallet={wallet} item={item} index={index} target={target} onPress={() => onItemPress(item)} />
+                    <HistoryItem
+                        wallet={wallet}
+                        item={item}
+                        index={index}
+                        target={target}
+                        onPress={() => onItemPress(item)}
+                    />
                 )}
             />
         </View>

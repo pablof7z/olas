@@ -1,13 +1,21 @@
-import { Hexpubkey, NDKEventId, NDKSubscription, NDKFilter, NDKKind, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    type NDKEventId,
+    type NDKFilter,
+    NDKKind,
+    type NDKSubscription,
+    useNDK,
+    useNDKCurrentUser,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from '@/components/Feed';
-import { FeedEntry } from '@/components/Feed/hook';
+import type { FeedEntry } from '@/components/Feed/hook';
 import { feedTypeAtom } from '@/components/FeedType/store';
 import HomeHeader from '@/components/Headers/Home';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
@@ -18,10 +26,17 @@ import { Stories } from '@/lib/stories/components/feed-item';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { videoKinds } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
-// const explicitFeedAtom = atom<NDKFilter[], [NDKFilter[] | null], null>(null, (get, set, value) => set(explicitFeedAtom, value));
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
+
+    const style = useMemo<ViewStyle>(
+        () => ({
+            flex: 1,
+            backgroundColor: colors.card,
+        }),
+        [colors.card]
+    );
 
     return (
         <>
@@ -33,7 +48,7 @@ export default function HomeScreen() {
                 }}
             />
 
-            <View style={{ flex: 1, backgroundColor: colors.card }}>
+            <View style={style}>
                 <UploadIndicator />
                 <DataList />
             </View>
@@ -100,22 +115,25 @@ const FOR_YOU_ROLLING_POST_WINDOW_LENGTH = 10;
 const FOR_YOU_UNFOLLOWED_POST_THRESHOLD = 2;
 
 function forYouFilter(followSet: Set<string>) {
-    let run = 0;
+    let _run = 0;
     let unfollowedPubkeysRecentlyShown: Hexpubkey[] = [];
 
     return (feedEntry: FeedEntry, index: number) => {
         if (index === 0) {
             unfollowedPubkeysRecentlyShown = [];
-            run++;
+            _run++;
         }
 
         if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
-        if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
+        if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
+            return false;
 
         const isFollowed = followSet.has(feedEntry.event?.pubkey);
         if (!isFollowed) {
             // this is an unfollowed pubkey, check if they were recently shown
-            const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter((p) => p === feedEntry.event?.pubkey).length;
+            const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter(
+                (p) => p === feedEntry.event?.pubkey
+            ).length;
 
             if (recentTimesThisPubkeyWasShown >= FOR_YOU_UNFOLLOWED_POST_THRESHOLD) {
                 return false;
@@ -140,7 +158,7 @@ function hashtagSearch(hashtag: string) {
 
     return {
         filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [hashtagWithoutHash] }],
-        key: 'hashtag-' + hashtag,
+        key: `hashtag-${hashtag}`,
         filterFn: null,
         relayUrls: undefined,
         numColumns: 3,
@@ -150,7 +168,7 @@ function hashtagSearch(hashtag: string) {
 function textSearch(text: string) {
     return {
         filters: [{ kinds: [NDKKind.Image], search: text }],
-        key: 'search-' + text,
+        key: `search-${text}`,
         filterFn: null,
         relayUrls: nip50Relays,
         numColumns: 3,
@@ -164,7 +182,10 @@ function DataList() {
     const bookmarkIds = useBookmarkIds();
 
     const isSavedSearch = useIsSavedSearch();
-    const withTweets = useMemo(() => feedType.kind === 'search' && !isSavedSearch, [feedType.kind, isSavedSearch]);
+    const withTweets = useMemo(
+        () => feedType.kind === 'search' && !isSavedSearch,
+        [feedType.kind, isSavedSearch]
+    );
 
     const bookmarkIdsForFilter = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
@@ -187,8 +208,10 @@ function DataList() {
             else return textSearch(searchQuery);
         } else if (feedType.kind === 'group') {
             return {
-                filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': [feedType.value] }],
-                key: 'groups-' + feedType.value,
+                filters: [
+                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': [feedType.value] },
+                ],
+                key: `groups-${feedType.value}`,
                 filterFn: null,
                 relayUrls: feedType.relayUrls,
             };
@@ -196,7 +219,7 @@ function DataList() {
             if (bookmarkIdsForFilter.length === 0) return { filters: undefined, key: 'empty' };
             return {
                 filters: [{ ids: bookmarkIdsForFilter }],
-                key: 'bookmark-feed' + bookmarkIdsForFilter.length,
+                key: `bookmark-feed${bookmarkIdsForFilter.length}`,
                 numColumns: 1,
             };
         }
@@ -215,8 +238,17 @@ function DataList() {
         const filters: NDKFilter[] = [];
 
         // filters.push({ kinds: [1] });
-        filters.push({ kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21, 22], ...hashtagFilter, limit: 500 });
-        filters.push({ kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost], '#k': ['20'], ...hashtagFilter, limit: 50 });
+        filters.push({
+            kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21, 22],
+            ...hashtagFilter,
+            limit: 500,
+        });
+        filters.push({
+            kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost],
+            '#k': ['20'],
+            ...hashtagFilter,
+            limit: 50,
+        });
 
         if (withTweets) {
             filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
@@ -226,15 +258,18 @@ function DataList() {
 
         if (feedType.kind === 'discover' && feedType.value === 'follows') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
-                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
+                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false)
+                    return false;
                 return followSet.has(feedEntry.event?.pubkey);
             };
         } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
             filterFn = forYouFilter(followSet);
         } else if (feedType.kind !== 'search') {
             filterFn = (feedEntry: FeedEntry, index: number) => {
-                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false) return false;
-                if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false) return false;
+                if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false)
+                    return false;
+                if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
+                    return false;
 
                 const isFollowed = followSet.has(feedEntry.event?.pubkey);
                 if (isFollowed) return true;
@@ -247,7 +282,15 @@ function DataList() {
         }
 
         return { filters, key: keyParts.join(), filterFn, numColumns };
-    }, [followSet.size, withTweets, feedType.value, currentUser?.pubkey, bookmarkIdsForFilter.length, isSavedSearch, searchQuery]);
+    }, [
+        followSet.size,
+        withTweets,
+        feedType.value,
+        currentUser?.pubkey,
+        bookmarkIdsForFilter.length,
+        isSavedSearch,
+        searchQuery,
+    ]);
 
     const insets = useSafeAreaInsets();
     const headerHeight = useHeaderHeight();
@@ -277,7 +320,7 @@ const kind1MustHaveMedia = (feedEntry: FeedEntry) => {
     }
 };
 
-const videosMustBeFromFollows = (feedEntry: FeedEntry, index: number, followSet: Set<string>) => {
+const videosMustBeFromFollows = (feedEntry: FeedEntry, _index: number, followSet: Set<string>) => {
     if (videoKinds.has(feedEntry.event?.kind)) {
         return followSet.has(feedEntry.event?.pubkey);
     }

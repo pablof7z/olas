@@ -1,4 +1,5 @@
-import NDK, { NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export function humanWalletType(type: string) {

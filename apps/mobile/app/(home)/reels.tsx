@@ -1,11 +1,26 @@
-import { useSubscribe, useNDK, NDKSubscriptionCacheUsage, NDKVideo, NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    NDKSubscriptionCacheUsage,
+    type NDKVideo,
+    useNDK,
+    useSubscribe,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { router, usePathname } from 'expo-router';
-import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
+import { VideoPlayer, VideoView, useVideoPlayer } from 'expo-video';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
-import { ActivityIndicator, Dimensions, Pressable, StatusBar, View, ViewToken } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    Dimensions,
+    Pressable,
+    StatusBar,
+    View,
+    type ViewToken,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Reactions } from '@/components/events/Post/Reactions';
@@ -17,7 +32,7 @@ import * as User from '@/components/ui/user';
 import { useObserver } from '@/hooks/observer';
 import { getClientName } from '@/utils/event';
 
-const visibleItemAtom = atom<string | null, [string | null], void>(null, (get, set, update) => {
+const visibleItemAtom = atom<string | null, [string | null], void>(null, (_get, set, update) => {
     set(visibleItemAtom, update);
 });
 
@@ -38,7 +53,7 @@ const Reel = memo(
         const player = useVideoPlayer(videoSource, (player) => {
             player.loop = true;
             player.muted = false;
-            player.addListener('statusChange', (status) => {
+            player.addListener('statusChange', (_status) => {
                 if (player.status === 'readyToPlay') {
                     setIsLoading(false);
                 }
@@ -63,15 +78,20 @@ const Reel = memo(
                     height: Dimensions.get('window').height - safeAreaInsets.bottom,
                     backgroundColor: 'black',
                     borderWidth: 1,
-                }}>
+                }}
+            >
                 {isLoading && (
                     <View
                         style={{
                             flex: 1,
                             width: '100%',
                             height: Dimensions.get('window').height - safeAreaInsets.bottom,
-                        }}>
-                        <Image source={{ uri: thumb }} style={{ flex: 1, width: '100%', height: '100%' }} />
+                        }}
+                    >
+                        <Image
+                            source={{ uri: thumb }}
+                            style={{ flex: 1, width: '100%', height: '100%' }}
+                        />
                         <ActivityIndicator
                             size="large"
                             color="gray"
@@ -108,14 +128,27 @@ const Reel = memo(
                 <SafeAreaView className="absolute bottom-0 left-4 flex-col items-start gap-2 pb-10">
                     <Reactions event={event} foregroundColor="white" inactiveColor="white" />
 
-                    <Pressable className="flex-row items-center gap-2" onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}>
-                        <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={48} />
+                    <Pressable
+                        className="flex-row items-center gap-2"
+                        onPress={() => router.push(`/profile?pubkey=${event.pubkey}`)}
+                    >
+                        <User.Avatar
+                            pubkey={event.pubkey}
+                            userProfile={userProfile}
+                            imageSize={48}
+                        />
                         <Text className="flex-col text-base font-semibold text-white">
                             <User.Name userProfile={userProfile} pubkey={event.pubkey} />
                             <Text>
-                                <RelativeTime timestamp={event.created_at} className="text-xs text-muted-foreground" />
+                                <RelativeTime
+                                    timestamp={event.created_at}
+                                    className="text-xs text-muted-foreground"
+                                />
                                 {clientName && (
-                                    <Text className="truncate text-xs text-muted-foreground" numberOfLines={1}>
+                                    <Text
+                                        className="truncate text-xs text-muted-foreground"
+                                        numberOfLines={1}
+                                    >
                                         {` via ${clientName}`}
                                     </Text>
                                 )}
@@ -156,8 +189,7 @@ export default function ReelsScreen() {
                 })
                 .filter((event: NDKVideo) => {
                     const url = event.imetas?.[0]?.url || event.tagValue('url');
-                    if (!url) console.log('imetas', event.imetas, 'tags', event.tags);
-                    return !!url;
+                    if (!url) return !!url;
                 })
         );
     }, [events]);

@@ -1,8 +1,8 @@
 import { BottomSheetFlashList, BottomSheetView } from '@gorhom/bottom-sheet';
-import { useNDKCurrentUser, useSubscribe, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, useNDKCurrentUser, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Comment } from './components/comment';
 import NewComment from './components/new-comment';
@@ -54,7 +54,11 @@ export default function Comments() {
                     keyExtractor={(item) => item.id}
                 />
                 {currentUser && rootEvent && (
-                    <NewComment event={rootEvent} currentUser={currentUser} autoFocus={filteredComments.length < 2} />
+                    <NewComment
+                        event={rootEvent}
+                        currentUser={currentUser}
+                        autoFocus={filteredComments.length < 2}
+                    />
                 )}
             </BottomSheetView>
         </View>

@@ -1,4 +1,14 @@
-import { Hexpubkey, NDKEvent, NDKImage, NDKKind, NDKVideo, NDKStory, useSubscribe, useFollows, NDKFilter } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    type NDKEvent,
+    type NDKFilter,
+    type NDKImage,
+    NDKKind,
+    NDKStory,
+    NDKVideo,
+    useFollows,
+    useSubscribe,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useObserver } from './observer';
@@ -17,11 +27,19 @@ export function useStories() {
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [{ kinds: [NDKKind.Story], since: twentyFourHoursAgo }];
         if (follows?.length > 0) {
-            filters.push({ kinds: [NDKKind.VerticalVideo, NDKKind.ShortVideo], authors: follows, since: twentyFourHoursAgo });
+            filters.push({
+                kinds: [NDKKind.VerticalVideo, NDKKind.ShortVideo],
+                authors: follows,
+                since: twentyFourHoursAgo,
+            });
         }
         return filters;
     }, [follows?.length]);
-    const { events } = useSubscribe<NDKImage | NDKVideo | NDKStory>(filters, { wrap: true, cacheUnconstrainFilter: [] }, [filters]);
+    const { events } = useSubscribe<NDKImage | NDKVideo | NDKStory>(
+        filters,
+        { wrap: true, cacheUnconstrainFilter: [] },
+        [filters]
+    );
 
     const [stories, setStories] = useState<Map<Hexpubkey, StoryEntry>>(new Map());
     const knownIds = useRef<Set<string>>(new Set());
@@ -49,7 +67,6 @@ export function useStories() {
         }
 
         if (changed) {
-            console.log('stories changed', map.size);
             setStories(map);
         }
     }, [events.length]);

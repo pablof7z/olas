@@ -1,13 +1,27 @@
 import { BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { NDKEvent, type NDKUserProfile, useSubscribe, useNDKCurrentUser, useNDK, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    type NDKKind,
+    type NDKUserProfile,
+    useNDK,
+    useNDKCurrentUser,
+    useSubscribe,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
-import { useVideoPlayer, VideoContentFit, VideoView } from 'expo-video';
-import { useAtom, useAtomValue, atom } from 'jotai';
+import { type VideoContentFit, VideoView, useVideoPlayer } from 'expo-video';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { Fullscreen, MessageCircle, Send } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { Dimensions, NativeSyntheticEvent, Pressable, TextInputKeyPressEventData, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    Dimensions,
+    type NativeSyntheticEvent,
+    Pressable,
+    type TextInputKeyPressEventData,
+    View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
@@ -18,7 +32,7 @@ import { activeEventAtom } from '@/stores/event';
 
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 
-const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom], void>(null, (get, set, event) => {
+const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom], void>(null, (_get, set, event) => {
     set(replyToAtom, event);
 });
 
@@ -98,9 +112,17 @@ export default function LiveScreen() {
                     backgroundStyle={{ borderWidth: 0, backgroundColor: '#000000bb' }}
                     snapPoints={[150, '80%', maxSize]}
                     style={{ borderWidth: 0 }}
-                    maxDynamicContentSize={maxSize}>
+                    maxDynamicContentSize={maxSize}
+                >
                     <BottomSheetScrollView
-                        style={{ borderWidth: 0, flex: 1, paddingHorizontal: 10, paddingBottom: insets.bottom, minHeight: 500 }}>
+                        style={{
+                            borderWidth: 0,
+                            flex: 1,
+                            paddingHorizontal: 10,
+                            paddingBottom: insets.bottom,
+                            minHeight: 500,
+                        }}
+                    >
                         <Chat event={activeEvent} />
                     </BottomSheetScrollView>
                 </Sheet>
@@ -111,7 +133,8 @@ export default function LiveScreen() {
                         style={{
                             marginTop: insets.top + headerHeight,
                             marginBottom: insets.bottom,
-                        }}>
+                        }}
+                    >
                         <Pressable onPress={onPress}>
                             <MessageCircle size={24} color="white" />
                         </Pressable>
@@ -149,7 +172,6 @@ function ChatInput({ event }: { event: NDKEvent }) {
         chat.kind = 1311;
         chat.tags.push(event.tagReference());
         await chat.sign();
-        console.log(JSON.stringify(chat.rawEvent(), null, 2));
         chat.publish();
         setValue('');
     };
@@ -158,7 +180,9 @@ function ChatInput({ event }: { event: NDKEvent }) {
         <View className="w-full flex-row items-center gap-4 py-4">
             <UserAvatar userProfile={userProfile} pubkey={currentUser?.pubkey} imageSize={24} />
             <View className="flex-1 flex-col">
-                {replyTo && <Text className="text-xs text-orange-500">@{replyToProfile?.name}</Text>}
+                {replyTo && (
+                    <Text className="text-xs text-orange-500">@{replyToProfile?.name}</Text>
+                )}
                 <BottomSheetTextInput
                     value={value}
                     onChangeText={setValue}
@@ -181,11 +205,16 @@ function ChatInput({ event }: { event: NDKEvent }) {
 }
 
 function Chat({ event }: { event: NDKEvent }) {
-    const { events } = useSubscribe([{ kinds: [1311 as NDKKind], ...event.filter() }], { groupable: false, skipVerification: true }, [
-        event.tagId(),
-    ]);
+    const { events } = useSubscribe(
+        [{ kinds: [1311 as NDKKind], ...event.filter() }],
+        { groupable: false, skipVerification: true },
+        [event.tagId()]
+    );
 
-    const filteredEvents = useMemo(() => events.sort((a, b) => a.created_at! - b.created_at!), [events.length]);
+    const filteredEvents = useMemo(
+        () => events.sort((a, b) => a.created_at! - b.created_at!),
+        [events.length]
+    );
 
     const flashListRef = useRef<FlashList<NDKEvent>>(null);
 

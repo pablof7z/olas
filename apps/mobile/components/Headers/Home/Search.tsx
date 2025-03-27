@@ -1,10 +1,17 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { NDKEvent, NDKRelaySet, NDKSubscriptionCacheUsage, NDKUser, NostrEvent, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKEvent,
+    NDKRelaySet,
+    NDKSubscriptionCacheUsage,
+    NDKUser,
+    type NostrEvent,
+    useNDK,
+} from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Search } from 'lucide-react-native';
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
-import { TextInput, View, StyleSheet, Pressable } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { searchQueryAtom, useSearchQuery } from './store';
 
@@ -75,7 +82,7 @@ export default function SearchInput() {
                             console.error(e);
                         }
                     },
-                    onEose: (event) => {
+                    onEose: (_event) => {
                         req.publish(dvmRelaySet);
                     },
                 }

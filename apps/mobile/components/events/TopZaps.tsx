@@ -1,6 +1,6 @@
-import { NDKEvent, NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { type NDKEvent, type NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -14,7 +14,7 @@ import Animated, {
 import { Text } from '@/components/nativewindui/Text';
 import UserAvatar from '@/components/ui/user/avatar';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { Payment, targetToId, usePaymentStore } from '@/stores/payments';
+import { type Payment, targetToId, usePaymentStore } from '@/stores/payments';
 import { colorWithOpacity } from '@/theme/colors';
 import { formatMoney } from '@/utils/bitcoin';
 
@@ -69,7 +69,10 @@ function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: bool
     useEffect(() => {
         opacity.value = withTiming(1, { duration: 500 });
         scale.value = withSpring(1, { damping: 12, stiffness: 100 });
-        rotate.value = withSequence(withTiming(1, { duration: 200 }), withTiming(0, { duration: 300 }));
+        rotate.value = withSequence(
+            withTiming(1, { duration: 200 }),
+            withTiming(0, { duration: 300 })
+        );
     }, []);
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -79,7 +82,9 @@ function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: bool
                 ? [
                       { scale: scale.value },
                       { translateX: interpolate(scale.value, [5, 1], [200, 0], Extrapolate.CLAMP) },
-                      { rotate: `${interpolate(rotate.value, [0, 1], [0, 15], Extrapolate.CLAMP)}deg` },
+                      {
+                          rotate: `${interpolate(rotate.value, [0, 1], [0, 15], Extrapolate.CLAMP)}deg`,
+                      },
                   ]
                 : [{ translateX: interpolate(scale.value, [5, 1], [-200, 0], Extrapolate.CLAMP) }],
         };
@@ -97,9 +102,17 @@ function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: bool
                         paddingVertical: 2,
                         paddingRight: 4,
                     },
-                ]}>
-                <UserAvatar pubkey={zap.sender} userProfile={userProfile} imageSize={20} canSkipBorder />
-                <Text className="text-xs font-bold">{formatMoney({ amount: zap.amount, unit: zap.unit, hideUnit: true })}</Text>
+                ]}
+            >
+                <UserAvatar
+                    pubkey={zap.sender}
+                    userProfile={userProfile}
+                    imageSize={20}
+                    canSkipBorder
+                />
+                <Text className="text-xs font-bold">
+                    {formatMoney({ amount: zap.amount, unit: zap.unit, hideUnit: true })}
+                </Text>
                 <Text className="text-xs">{zap.comment}</Text>
             </Animated.View>
         );

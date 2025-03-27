@@ -1,6 +1,14 @@
-import { NDKEvent, NDKImage, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKImage, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { View, TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
+import {
+    Pressable,
+    type StyleProp,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as User from '@/components/ui/user';
@@ -25,9 +33,14 @@ export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) 
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 <Pressable
                     style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-                    onPress={() => router.push(`/profile?pubkey=${userPubkey}`)}>
+                    onPress={() => router.push(`/profile?pubkey=${userPubkey}`)}
+                >
                     <User.Avatar pubkey={userPubkey} userProfile={userProfile} imageSize={32} />
-                    <User.Name userProfile={userProfile} pubkey={userPubkey} style={{ color: 'white', marginLeft: 8, fontWeight: '600' }} />
+                    <User.Name
+                        userProfile={userProfile}
+                        pubkey={userPubkey}
+                        style={{ color: 'white', marginLeft: 8, fontWeight: '600' }}
+                    />
                 </Pressable>
 
                 {onClose && (

@@ -1,4 +1,5 @@
-import NDK, { NDKCacheAdapterSqlite, NDKKind, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, type NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 /**
  * Get all events by users directly from the local database.
@@ -12,8 +13,10 @@ export function getPostsByUser(ndk: NDK, pubkeys: string[]): NDKEvent[] {
 
     if (pubkeys.length > 100) {
         const pubkeySet = new Set(pubkeys);
-        postsByUser = cacheAdapter.getEvents(`SELECT * FROM events WHERE kind = ${NDKKind.Image}`, [], (event) =>
-            pubkeySet.has(event.pubkey)
+        postsByUser = cacheAdapter.getEvents(
+            `SELECT * FROM events WHERE kind = ${NDKKind.Image}`,
+            [],
+            (event) => pubkeySet.has(event.pubkey)
         );
     } else {
         const placeholders = pubkeys.map(() => '?').join(',');

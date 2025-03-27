@@ -1,6 +1,7 @@
-import { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import React, { useState, useRef, useCallback, forwardRef } from 'react';
-import { View, TextInput, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
+import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
+import { forwardRef, useCallback, useRef, useState } from 'react';
+import { StyleSheet, TextInput, type TextInputProps, View, type ViewStyle } from 'react-native';
 
 import MentionSuggestions from './mention-suggestions';
 
@@ -14,10 +15,20 @@ interface MentionProps extends TextInputProps {
 }
 
 const Mention = forwardRef<TextInput, MentionProps>(
-    ({ onMentionSelect, CustomInput, suggestionsContainerStyle, mentionSuggestionsStyle, style, ...restProps }, ref) => {
+    (
+        {
+            onMentionSelect,
+            CustomInput,
+            suggestionsContainerStyle,
+            mentionSuggestionsStyle,
+            style,
+            ...restProps
+        },
+        ref
+    ) => {
         const { colors } = useColorScheme();
         const [text, setText] = useState<string>('');
-        const localInputRef = useRef<TextInput>(null);
+        const _localInputRef = useRef<TextInput>(null);
 
         const handleTextChange = (value: string) => {
             setText(value);
@@ -60,7 +71,11 @@ const Mention = forwardRef<TextInput, MentionProps>(
 
         return (
             <View style={styles.container}>
-                {CustomInput ? <CustomInput {...inputProps} /> : <TextInput ref={ref} {...inputProps} />}
+                {CustomInput ? (
+                    <CustomInput {...inputProps} />
+                ) : (
+                    <TextInput ref={ref} {...inputProps} />
+                )}
 
                 <View
                     style={[
@@ -70,7 +85,8 @@ const Mention = forwardRef<TextInput, MentionProps>(
                             borderColor: colors.grey3,
                         },
                         suggestionsContainerStyle,
-                    ]}>
+                    ]}
+                >
                     <MentionSuggestions
                         query={text.substring(text.lastIndexOf('@'))}
                         onPress={handleProfileSelect}

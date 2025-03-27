@@ -1,6 +1,6 @@
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useStickerStore } from '../../../store';
 
@@ -50,7 +50,8 @@ export default function PromptStickerInput({ onStickerAdded }: PromptStickerInpu
             <TouchableOpacity
                 style={[styles.addPromptButton, { opacity: promptText.trim() ? 1 : 0.5 }]}
                 onPress={handleAddPromptSticker}
-                disabled={!promptText.trim()}>
+                disabled={!promptText.trim()}
+            >
                 <Text style={styles.addPromptButtonText}>Add Prompt</Text>
             </TouchableOpacity>
         </View>

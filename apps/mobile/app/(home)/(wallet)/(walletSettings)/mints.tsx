@@ -1,5 +1,5 @@
-import { GetInfoResponse } from '@cashu/cashu-ts';
-import { NDKCashuMintList, useNDKWallet, useSubscribe, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import type { GetInfoResponse } from '@cashu/cashu-ts';
+import { NDKCashuMintList, useNDK, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -8,7 +8,14 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 
@@ -22,10 +29,9 @@ export default function MintsScreen() {
     const filter = useMemo(() => [{ kinds: [38172], limit: 50 }], [1]);
     const opts = useMemo(() => ({ groupable: false, closeOnEose: true, subId: 'mints' }), []);
     const { events: mintList } = useSubscribe(filter, opts);
-    const [mintInfos, setMintInfos] = useState<Record<string, GetInfoResponse | null>>({});
+    const [mintInfos, _setMintInfos] = useState<Record<string, GetInfoResponse | null>>({});
 
     const addFn = useCallback(() => {
-        console.log('addFn', url);
         try {
             const uri = new URL(url);
             if (!['https:', 'http:'].includes(uri.protocol)) {
@@ -34,8 +40,7 @@ export default function MintsScreen() {
             }
             setMints([...mints, url]);
             setUrl('');
-        } catch (e) {
-            console.log('addFn', e);
+        } catch (_e) {
             alert('Invalid URL2');
         }
     }, [url, mints]);
@@ -129,7 +134,11 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -137,7 +146,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
                 }
-                {...info}>
+                {...info}
+            >
                 <TextInput
                     className="flex-1 text-lg text-foreground"
                     placeholder="Add mint"
@@ -153,7 +163,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
         <ListItem
             className={cn(
                 'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
+                info.index === 0 &&
+                    'ios:border-t-0 border-border/25 dark:border-border/80 border-t',
                 info.item.id.match(/testnut/i) && '!bg-red-500/20'
             )}
             titleClassName="text-lg"

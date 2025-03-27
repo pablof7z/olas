@@ -1,8 +1,8 @@
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, LayoutChangeEvent, Dimensions } from 'react-native';
+import { Dimensions, type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
-import { mapNDKStickersToAppFormat, getCanvasDimensions, Sticker } from '../utils';
+import { type Sticker, getCanvasDimensions, mapNDKStickersToAppFormat } from '../utils';
 import ReadOnlySticker from './ReadOnlySticker';
 
 interface StoryStickersContainerProps {
@@ -45,8 +45,6 @@ export default function StoryStickersContainer({ event, onLayout }: StorySticker
     if (containerDimensions.width === 0 || containerDimensions.height === 0) {
         return <View style={styles.container} onLayout={handleLayout} />;
     }
-
-    console.log('sticker', { containerDimensions, originalDimensions });
 
     return (
         <View style={styles.container} onLayout={handleLayout}>

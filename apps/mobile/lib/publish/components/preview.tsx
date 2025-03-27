@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface PreviewProps {
     selectedMedia: {
@@ -26,7 +26,13 @@ export function Preview({ selectedMedia, height, tapToUnmute = false }: PreviewP
 
 export function PreviewImage({ uri }: { uri: string }) {
     return (
-        <Image source={{ uri }} style={styles.previewContent} contentFit="contain" accessible accessibilityLabel="Selected media preview" />
+        <Image
+            source={{ uri }}
+            style={styles.previewContent}
+            contentFit="contain"
+            accessible
+            accessibilityLabel="Selected media preview"
+        />
     );
 }
 
@@ -51,12 +57,24 @@ export function PreviewVideo({ uri, tapToUnmute = false }: { uri: string; tapToU
     if (tapToUnmute) {
         return (
             <TouchableOpacity activeOpacity={0.9} onPress={handleTap} style={styles.previewContent}>
-                <VideoView player={player} style={styles.previewContent} nativeControls={false} contentFit="contain" />
+                <VideoView
+                    player={player}
+                    style={styles.previewContent}
+                    nativeControls={false}
+                    contentFit="contain"
+                />
             </TouchableOpacity>
         );
     }
 
-    return <VideoView player={player} style={styles.previewContent} nativeControls={false} contentFit="contain" />;
+    return (
+        <VideoView
+            player={player}
+            style={styles.previewContent}
+            nativeControls={false}
+            contentFit="contain"
+        />
+    );
 }
 
 const styles = StyleSheet.create({

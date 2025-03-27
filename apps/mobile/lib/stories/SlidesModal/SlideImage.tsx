@@ -1,10 +1,10 @@
-import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
-import { Image, ImageStyle, useImage } from 'expo-image';
+import type { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
+import { Image, type ImageStyle, useImage } from 'expo-image';
 import { useSetAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions } from 'react-native';
 
-import { isLoadingAtom, durationAtom } from './store';
+import { durationAtom, isLoadingAtom } from './store';
 
 const screenWidth = Dimensions.get('screen').width;
 const screenHeight = Dimensions.get('screen').height;
@@ -24,9 +24,7 @@ export function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
             blurhash: imeta.blurhash,
         },
         {
-            onError: (error) => {
-                console.log('error', error);
-            },
+            onError: (_error) => {},
         }
     );
 
@@ -35,7 +33,10 @@ export function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
 
         if (!isLandscape && isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
             setIsLandscape(true);
-        } else if (isLandscape && !isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
+        } else if (
+            isLandscape &&
+            !isOverLandscapeThreshold(imageSource?.width, imageSource?.height)
+        ) {
             setIsLandscape(false);
         }
     }, [isLandscape, imageSource?.width, imageSource?.height]);
@@ -60,7 +61,11 @@ export function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
             onDisplay={() => {
                 setIsLoading(false);
                 setDuration(8000);
-                if (imageSource?.width && imageSource?.height && isOverLandscapeThreshold(imageSource?.width, imageSource?.height)) {
+                if (
+                    imageSource?.width &&
+                    imageSource?.height &&
+                    isOverLandscapeThreshold(imageSource?.width, imageSource?.height)
+                ) {
                     setIsLandscape(true);
                 }
             }}

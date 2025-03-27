@@ -1,11 +1,16 @@
 import { router } from 'expo-router';
-import { useAtom, useAtomValue, atom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Switch, TextInput, TouchableOpacity, View } from 'react-native';
 
 import ZapButton from '@/components/events/Post/Reactions/Zaps';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader/LargeTitleHeader.ios';
-import { List, ListItem, ListRenderItemProps, ListSectionHeader } from '@/components/nativewindui/List';
+import {
+    List,
+    ListItem,
+    ListRenderItemProps,
+    ListSectionHeader,
+} from '@/components/nativewindui/List';
 import { Slider } from '@/components/nativewindui/Slider';
 import { Text } from '@/components/nativewindui/Text';
 import { useAppSettingsStore } from '@/stores/app';
@@ -15,7 +20,9 @@ export type ZapOption = {
     message: string;
 };
 
-const defaultZapAtom = atom<ZapOption, [ZapOption], null>(null, (get, set, zap) => set(defaultZapAtom, zap));
+const defaultZapAtom = atom<ZapOption, [ZapOption], null>(null, (_get, set, zap) =>
+    set(defaultZapAtom, zap)
+);
 const yoloZapsAtom = atom<boolean>();
 const yoloZapsGrowthFactorAtom = atom<number>();
 
@@ -64,7 +71,6 @@ function YoloZapsRow({ index, target }) {
         if (saveTimer.current) clearTimeout(saveTimer.current);
 
         saveTimer.current = setTimeout(() => {
-            console.log('saving yolo zaps growth factor', aggressiveness);
             setYoloZapsGrowthFactor(aggressiveness);
             saveTimer.current = null;
         }, 100);
@@ -94,11 +100,30 @@ function YoloZapsRow({ index, target }) {
                         subTitle: 'How fast yolo zaps increase',
                     }}
                     rightView={
-                        <View style={{ width: 24, height: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                            <ZapButton iconSize={24} inactiveColor="gray" growthFactor={aggressiveness} />
+                        <View
+                            style={{
+                                width: 24,
+                                height: 24,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <ZapButton
+                                iconSize={24}
+                                inactiveColor="gray"
+                                growthFactor={aggressiveness}
+                            />
                         </View>
-                    }>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    }
+                >
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
                         <Slider
                             minimumValue={0.0000001}
                             maximumValue={1.5}
@@ -139,7 +164,8 @@ export default function Zaps() {
 
     const [defaultZapLocal, setDefaultZapLocal] = useAtom(defaultZapAtom);
     const [yoloZapLocal, setYoloZapLocal] = useAtom(yoloZapsAtom);
-    const [yoloZapGrowthFactorLocal, setYoloZapGrowthFactorLocal] = useAtom(yoloZapsGrowthFactorAtom);
+    const [yoloZapGrowthFactorLocal, setYoloZapGrowthFactorLocal] =
+        useAtom(yoloZapsGrowthFactorAtom);
 
     const save = useCallback(() => {
         setDefaultZap(defaultZapLocal);

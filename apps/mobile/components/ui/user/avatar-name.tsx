@@ -1,6 +1,12 @@
-import { NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback } from 'react';
-import { TouchableOpacity, StyleSheet, StyleProp, TextStyle, ViewStyle } from 'react-native';
+import {
+    type StyleProp,
+    StyleSheet,
+    type TextStyle,
+    TouchableOpacity,
+    type ViewStyle,
+} from 'react-native';
 
 import * as User from '@/components/ui/user';
 import { useUserFlare } from '@/hooks/user-flare';
@@ -52,7 +58,11 @@ export default function AvatarAndName({
                 canSkipBorder={canSkipBorder}
                 flare={flare}
             />
-            <User.Name userProfile={__userProfile} pubkey={pubkey} style={[styles.userName, nameStyle]} />
+            <User.Name
+                userProfile={__userProfile}
+                pubkey={pubkey}
+                style={[styles.userName, nameStyle]}
+            />
         </TouchableOpacity>
     );
 }

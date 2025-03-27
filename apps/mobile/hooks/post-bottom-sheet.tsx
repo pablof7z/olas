@@ -1,4 +1,4 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 

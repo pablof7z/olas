@@ -1,16 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TextStickerInput, EventStickerInput, CountdownStickerInput, PromptStickerInput, MentionStickerInput } from './sticker-types';
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
 import { editStickerAtom } from '../store';
+import {
+    CountdownStickerInput,
+    EventStickerInput,
+    MentionStickerInput,
+    PromptStickerInput,
+    TextStickerInput,
+} from './sticker-types';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 
@@ -71,10 +78,16 @@ function StickerOption({ name, icon, type, description, gradientColors }: Sticke
         <Pressable
             style={({ pressed }) => [styles.optionContainer, pressed && styles.optionPressed]}
             onPress={onPress}
-            testID={`sticker-option-${name.toLowerCase()}`}>
+            testID={`sticker-option-${name.toLowerCase()}`}
+        >
             <BlurView intensity={20} tint="dark" style={styles.optionBlur}>
                 <View style={styles.optionInner}>
-                    <LinearGradient colors={gradientColors} style={styles.iconContainer} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <LinearGradient
+                        colors={gradientColors}
+                        style={styles.iconContainer}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
                         <Ionicons name={icon} size={22} color="white" />
                     </LinearGradient>
 
@@ -122,9 +135,12 @@ export default function StickersBottomSheet() {
         <Sheet
             ref={sheetRef}
             snapPoints={['60%', '80%']}
-            backgroundComponent={({ style }) => <BlurView intensity={90} tint="dark" style={[style, styles.sheetBlur]} />}
+            backgroundComponent={({ style }) => (
+                <BlurView intensity={90} tint="dark" style={[style, styles.sheetBlur]} />
+            )}
             handleIndicatorStyle={styles.handleIndicator}
-            style={styles.sheet}>
+            style={styles.sheet}
+        >
             <BottomSheetView style={[styles.container, { paddingBottom: insets.bottom }]}>
                 {!editStickerType && <StickerList />}
 
@@ -284,12 +300,13 @@ function StickerList() {
         <BottomSheetScrollView
             style={styles.optionsContainer}
             contentContainerStyle={styles.optionsContent}
-            showsVerticalScrollIndicator={false}>
+            showsVerticalScrollIndicator={false}
+        >
             <View style={styles.headerContainer}>
                 <Text style={styles.headerTitle}>Add Sticker</Text>
             </View>
 
-            {STICKER_OPTIONS.map((option, index) => (
+            {STICKER_OPTIONS.map((option, _index) => (
                 <StickerOption
                     key={option.name}
                     name={option.name}

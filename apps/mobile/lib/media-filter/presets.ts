@@ -1,4 +1,4 @@
-import { FilterPreset } from './types';
+import type { FilterPreset } from './types';
 
 export const FILTER_PRESETS: FilterPreset[] = [
     {

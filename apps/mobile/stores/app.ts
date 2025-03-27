@@ -1,11 +1,16 @@
-import { NDKCashuWallet, NDKNWCWallet, NDKWallet, NDKWalletTypes } from '@nostr-dev-kit/ndk-wallet';
+import {
+    NDKCashuWallet,
+    NDKNWCWallet,
+    type NDKWallet,
+    type NDKWalletTypes,
+} from '@nostr-dev-kit/ndk-wallet';
 import * as SecureStore from 'expo-secure-store';
 import { atom } from 'jotai';
 import { create } from 'zustand';
 
 import { db } from './db';
 
-import { ZapOption } from '@/app/(home)/(settings)/zaps';
+import type { ZapOption } from '@/app/(home)/(settings)/zaps';
 
 export type VideosInFeed = 'none' | 'from-follows' | 'from-all';
 
@@ -99,11 +104,15 @@ function getWalletConfig(): {
     walletType?: NDKWalletTypes | 'none';
     walletPayload?: string | undefined;
 } {
-    const walletType = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_type']) as { value: string };
+    const walletType = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', [
+        'wallet_type',
+    ]) as { value: string };
     if (!walletType) return { walletType: undefined };
     if (walletType.value === 'none') return { walletType: 'none' };
 
-    const walletPayload = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', ['wallet_payload']) as {
+    const walletPayload = db.getFirstSync('SELECT value FROM app_settings WHERE key = ? LIMIT 1;', [
+        'wallet_payload',
+    ]) as {
         value: string | undefined;
     };
 
@@ -115,205 +124,229 @@ function getWalletConfig(): {
     };
 }
 
-export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>((set, get) => ({
-    seenNotificationsAt: 0,
-    promptedForNotifications: false,
-    advancedMode: false,
-    defaultZap: defaultZapSetting,
-    yoloZaps: true,
-    yoloZapsGrowthFactor: 0.85,
-    videosInFeed: 'from-follows',
-    forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
-    editingPosts: [],
-    savedSearches: [],
-    ...getWalletConfig(),
+export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsStoreActions>(
+    (set, get) => ({
+        seenNotificationsAt: 0,
+        promptedForNotifications: false,
+        advancedMode: false,
+        defaultZap: defaultZapSetting,
+        yoloZaps: true,
+        yoloZapsGrowthFactor: 0.85,
+        videosInFeed: 'from-follows',
+        forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
+        editingPosts: [],
+        savedSearches: [],
+        ...getWalletConfig(),
 
-    init: async () => {
-        const state: Partial<AppSettingsStoreState> = {
-            seenNotificationsAt: 0,
-            promptedForNotifications: false,
-            advancedMode: false,
-            defaultZap: defaultZapSetting,
-            videosInFeed: 'from-follows',
-        };
+        init: async () => {
+            const state: Partial<AppSettingsStoreState> = {
+                seenNotificationsAt: 0,
+                promptedForNotifications: false,
+                advancedMode: false,
+                defaultZap: defaultZapSetting,
+                videosInFeed: 'from-follows',
+            };
 
-        const removeLocation = SecureStore.getItem('removeLocation');
-        if (removeLocation) state.removeLocation = removeLocation === 'true';
+            const removeLocation = SecureStore.getItem('removeLocation');
+            if (removeLocation) state.removeLocation = removeLocation === 'true';
 
-        const boost = SecureStore.getItem('boost');
-        if (boost) state.boost = boost === 'true';
+            const boost = SecureStore.getItem('boost');
+            if (boost) state.boost = boost === 'true';
 
-        const seenNotificationsAt = SecureStore.getItem('seenNotificationsAt');
-        if (seenNotificationsAt) state.seenNotificationsAt = parseInt(seenNotificationsAt);
+            const seenNotificationsAt = SecureStore.getItem('seenNotificationsAt');
+            if (seenNotificationsAt)
+                state.seenNotificationsAt = Number.parseInt(seenNotificationsAt);
 
-        const promptedForNotifications = SecureStore.getItem('promptedForNotifications');
-        if (promptedForNotifications) state.promptedForNotifications = promptedForNotifications === 'true';
+            const promptedForNotifications = SecureStore.getItem('promptedForNotifications');
+            if (promptedForNotifications)
+                state.promptedForNotifications = promptedForNotifications === 'true';
 
-        const advancedMode = SecureStore.getItem('advancedMode');
-        if (advancedMode) state.advancedMode = advancedMode === 'true';
+            const advancedMode = SecureStore.getItem('advancedMode');
+            if (advancedMode) state.advancedMode = advancedMode === 'true';
 
-        const defaultZapVal = SecureStore.getItem('defaultZap');
-        if (defaultZapVal) {
-            try {
-                state.defaultZap = JSON.parse(defaultZapVal);
-            } catch {}
-        }
-        state.defaultZap ??= defaultZapSetting;
-
-        const videosInFeed = SecureStore.getItem('videosInFeed');
-        if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
-
-        const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as {
-            title: string;
-            subtitle: string;
-            hashtags: string;
-            last_used_at: number;
-        }[];
-        state.savedSearches = savedSearches
-            .map((search) => ({
-                title: search.title,
-                subtitle: search.subtitle,
-                hashtags: search.hashtags.split(' '),
-                lastUsedAt: search.last_used_at,
-            }))
-            .sort((a, b) => b.lastUsedAt - a.lastUsedAt);
-
-        const appSettings = db.getAllSync('SELECT * FROM app_settings') as { key: string; value: string }[];
-        appSettings.forEach((setting) => {
-            switch (setting.key) {
-                case 'yoloZaps':
-                    state.yoloZaps = setting.value === 'true';
-                    break;
-                case 'yolo_zaps_growth_factor':
-                    state.yoloZapsGrowthFactor = parseFloat(setting.value);
-                    break;
+            const defaultZapVal = SecureStore.getItem('defaultZap');
+            if (defaultZapVal) {
+                try {
+                    state.defaultZap = JSON.parse(defaultZapVal);
+                } catch {}
             }
-        });
+            state.defaultZap ??= defaultZapSetting;
 
-        set({ ...state });
-    },
+            const videosInFeed = SecureStore.getItem('videosInFeed');
+            if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
 
-    setRemoveLocation: (removeLocation: boolean) => {
-        SecureStore.setItemAsync('removeLocation', removeLocation.toString());
-        set({ removeLocation });
-    },
+            const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as {
+                title: string;
+                subtitle: string;
+                hashtags: string;
+                last_used_at: number;
+            }[];
+            state.savedSearches = savedSearches
+                .map((search) => ({
+                    title: search.title,
+                    subtitle: search.subtitle,
+                    hashtags: search.hashtags.split(' '),
+                    lastUsedAt: search.last_used_at,
+                }))
+                .sort((a, b) => b.lastUsedAt - a.lastUsedAt);
 
-    setBoost: (boost: boolean) => {
-        SecureStore.setItemAsync('boost', boost.toString());
-        set({ boost });
-    },
+            const appSettings = db.getAllSync('SELECT * FROM app_settings') as {
+                key: string;
+                value: string;
+            }[];
+            appSettings.forEach((setting) => {
+                switch (setting.key) {
+                    case 'yoloZaps':
+                        state.yoloZaps = setting.value === 'true';
+                        break;
+                    case 'yolo_zaps_growth_factor':
+                        state.yoloZapsGrowthFactor = Number.parseFloat(setting.value);
+                        break;
+                }
+            });
 
-    notificationsSeen: (time = Date.now() / 1000) => {
-        SecureStore.setItemAsync('seenNotificationsAt', time.toString());
-        set({ seenNotificationsAt: time });
-    },
+            set({ ...state });
+        },
 
-    notificationsPrompted: () => {
-        SecureStore.setItemAsync('promptedForNotifications', 'true');
-        set({ promptedForNotifications: true });
-    },
+        setRemoveLocation: (removeLocation: boolean) => {
+            SecureStore.setItemAsync('removeLocation', removeLocation.toString());
+            set({ removeLocation });
+        },
 
-    toggleAdvancedMode: () => {
-        set((state) => {
-            const value = !state.advancedMode;
-            SecureStore.setItemAsync('advancedMode', (!!value).toString());
-            return { advancedMode: value };
-        });
-    },
+        setBoost: (boost: boolean) => {
+            SecureStore.setItemAsync('boost', boost.toString());
+            set({ boost });
+        },
 
-    setDefaultZap: (zap: ZapOption) => {
-        SecureStore.setItemAsync('defaultZap', JSON.stringify(zap));
-        set({ defaultZap: zap });
-    },
+        notificationsSeen: (time = Date.now() / 1000) => {
+            SecureStore.setItemAsync('seenNotificationsAt', time.toString());
+            set({ seenNotificationsAt: time });
+        },
 
-    setYoloZaps: (yoloZaps: boolean) => {
-        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['yoloZaps', yoloZaps.toString()]);
-        set({ yoloZaps });
-    },
+        notificationsPrompted: () => {
+            SecureStore.setItemAsync('promptedForNotifications', 'true');
+            set({ promptedForNotifications: true });
+        },
 
-    setYoloZapsGrowthFactor: (growthFactor: number) => {
-        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['yolo_zaps_growth_factor', growthFactor.toString()]);
-        set({ yoloZapsGrowthFactor: growthFactor });
-    },
+        toggleAdvancedMode: () => {
+            set((state) => {
+                const value = !state.advancedMode;
+                SecureStore.setItemAsync('advancedMode', (!!value).toString());
+                return { advancedMode: value };
+            });
+        },
 
-    setVideosInFeed: (videosInFeed: VideosInFeed) => {
-        SecureStore.setItemAsync('videosInFeed', videosInFeed);
-        set({ videosInFeed });
-    },
+        setDefaultZap: (zap: ZapOption) => {
+            SecureStore.setItemAsync('defaultZap', JSON.stringify(zap));
+            set({ defaultZap: zap });
+        },
 
-    setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => {
-        SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
-        console.log('setForceSquareAspectRatio', forceSquareAspectRatio);
-        set({ forceSquareAspectRatio });
-    },
+        setYoloZaps: (yoloZaps: boolean) => {
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                'yoloZaps',
+                yoloZaps.toString(),
+            ]);
+            set({ yoloZaps });
+        },
 
-    addSavedSearch: (search: SavedSearch) => {
-        db.runSync('INSERT INTO saved_searches (title, subtitle, hashtags, last_used_at) VALUES (?, ?, ?, ?);', [
-            search.title,
-            search.subtitle,
-            search.hashtags.join(' '),
-            search.lastUsedAt,
-        ]);
-        set({ savedSearches: [...get().savedSearches, search] });
-    },
+        setYoloZapsGrowthFactor: (growthFactor: number) => {
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                'yolo_zaps_growth_factor',
+                growthFactor.toString(),
+            ]);
+            set({ yoloZapsGrowthFactor: growthFactor });
+        },
 
-    removeSavedSearch: (title: string) => {
-        db.runSync('DELETE FROM saved_searches WHERE title = ?;', [title]);
-        set({ savedSearches: get().savedSearches.filter((s) => s.title !== title) });
-    },
+        setVideosInFeed: (videosInFeed: VideosInFeed) => {
+            SecureStore.setItemAsync('videosInFeed', videosInFeed);
+            set({ videosInFeed });
+        },
 
-    updateSavedSearch: (search: SavedSearch) => {
-        db.runSync('UPDATE saved_searches SET subtitle = ?, hashtags = ?, last_used_at = ? WHERE title = ?;', [
-            search.subtitle,
-            search.hashtags.join(' '),
-            search.lastUsedAt,
-            search.title,
-        ]);
-        set({ savedSearches: get().savedSearches.map((s) => (s.title === search.title ? search : s)) });
-    },
+        setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => {
+            SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
+            set({ forceSquareAspectRatio });
+        },
 
-    setWalletConfig: (wallet: NDKWallet) => {
-        let payload: string | undefined;
+        addSavedSearch: (search: SavedSearch) => {
+            db.runSync(
+                'INSERT INTO saved_searches (title, subtitle, hashtags, last_used_at) VALUES (?, ?, ?, ?);',
+                [search.title, search.subtitle, search.hashtags.join(' '), search.lastUsedAt]
+            );
+            set({ savedSearches: [...get().savedSearches, search] });
+        },
 
-        if (wallet instanceof NDKCashuWallet) {
-            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'nip60']);
+        removeSavedSearch: (title: string) => {
+            db.runSync('DELETE FROM saved_searches WHERE title = ?;', [title]);
+            set({ savedSearches: get().savedSearches.filter((s) => s.title !== title) });
+        },
+
+        updateSavedSearch: (search: SavedSearch) => {
+            db.runSync(
+                'UPDATE saved_searches SET subtitle = ?, hashtags = ?, last_used_at = ? WHERE title = ?;',
+                [search.subtitle, search.hashtags.join(' '), search.lastUsedAt, search.title]
+            );
+            set({
+                savedSearches: get().savedSearches.map((s) =>
+                    s.title === search.title ? search : s
+                ),
+            });
+        },
+
+        setWalletConfig: (wallet: NDKWallet) => {
+            let payload: string | undefined;
+
+            if (wallet instanceof NDKCashuWallet) {
+                db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                    'wallet_type',
+                    'nip60',
+                ]);
+                db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
+            } else if (wallet instanceof NDKNWCWallet) {
+                payload = wallet.pairingCode;
+                db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                    'wallet_type',
+                    'nwc',
+                ]);
+                db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                    'wallet_payload',
+                    payload,
+                ]);
+            }
+            set({ walletType: wallet.type, walletPayload: payload });
+        },
+
+        unlinkWallet: () => {
+            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [
+                'wallet_type',
+                'none',
+            ]);
             db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
-        } else if (wallet instanceof NDKNWCWallet) {
-            payload = wallet.pairingCode;
-            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'nwc']);
-            db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_payload', payload]);
-        }
-        set({ walletType: wallet.type, walletPayload: payload });
-    },
+            SecureStore.setItemAsync('wallet', 'none');
+            SecureStore.deleteItemAsync('wallet_last_updated_at');
+            set({ walletType: 'none' });
+        },
 
-    unlinkWallet: () => {
-        db.runSync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', ['wallet_type', 'none']);
-        db.runSync('DELETE FROM app_settings WHERE key = ?;', ['wallet_payload']);
-        SecureStore.setItemAsync('wallet', 'none');
-        SecureStore.deleteItemAsync('wallet_last_updated_at');
-        set({ walletType: 'none' });
-    },
+        reset: () => {
+            SecureStore.deleteItemAsync('removeLocation');
+            SecureStore.deleteItemAsync('boost');
+            SecureStore.deleteItemAsync('seenNotificationsAt');
+            SecureStore.deleteItemAsync('advancedMode');
+            SecureStore.deleteItemAsync('videosInFeed');
+            SecureStore.deleteItemAsync('defaultZap');
+            SecureStore.deleteItemAsync('forceSquareAspectRatio');
+            SecureStore.deleteItemAsync('wallet');
+            SecureStore.deleteItemAsync('wallet_last_updated_at');
 
-    reset: () => {
-        SecureStore.deleteItemAsync('removeLocation');
-        SecureStore.deleteItemAsync('boost');
-        SecureStore.deleteItemAsync('seenNotificationsAt');
-        SecureStore.deleteItemAsync('advancedMode');
-        SecureStore.deleteItemAsync('videosInFeed');
-        SecureStore.deleteItemAsync('defaultZap');
-        SecureStore.deleteItemAsync('forceSquareAspectRatio');
-        SecureStore.deleteItemAsync('wallet');
-        SecureStore.deleteItemAsync('wallet_last_updated_at');
+            db.runSync('DELETE FROM app_settings;');
 
-        db.runSync('DELETE FROM app_settings;');
-
-        set({
-            seenNotificationsAt: 0,
-            promptedForNotifications: false,
-            walletType: undefined,
-            walletPayload: undefined,
-        });
-    },
-}));
+            set({
+                seenNotificationsAt: 0,
+                promptedForNotifications: false,
+                walletType: undefined,
+                walletPayload: undefined,
+            });
+        },
+    })
+);
 
 export const appReadyAtom = atom(false);

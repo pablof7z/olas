@@ -7,14 +7,26 @@ import { Platform } from 'react-native';
 import { cn } from '~/lib/cn';
 import { COLORS } from '~/theme/colors';
 
-type CheckboxProps = Omit<React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>, 'checked' | 'onCheckedChange'> & {
+type CheckboxProps = Omit<
+    React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
+    'checked' | 'onCheckedChange'
+> & {
     defaultChecked?: boolean;
     checked?: boolean;
     onCheckedChange?: (checked: boolean) => void;
 };
 
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
-    ({ className, checked: checkedProps, onCheckedChange: onCheckedChangeProps, defaultChecked = false, ...props }, ref) => {
+    (
+        {
+            className,
+            checked: checkedProps,
+            onCheckedChange: onCheckedChangeProps,
+            defaultChecked = false,
+            ...props
+        },
+        ref
+    ) => {
         const [checked = false, onCheckedChange] = useControllableState({
             prop: checkedProps,
             defaultProp: defaultChecked,
@@ -31,9 +43,17 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
                 )}
                 checked={checked}
                 onCheckedChange={onCheckedChange}
-                {...props}>
-                <CheckboxPrimitive.Indicator className={cn('h-full w-full items-center justify-center')}>
-                    <Icon name="check" ios={{ weight: 'medium' }} size={Platform.select({ ios: 15, default: 16 })} color={COLORS.white} />
+                {...props}
+            >
+                <CheckboxPrimitive.Indicator
+                    className={cn('h-full w-full items-center justify-center')}
+                >
+                    <Icon
+                        name="check"
+                        ios={{ weight: 'medium' }}
+                        size={Platform.select({ ios: 15, default: 16 })}
+                        color={COLORS.white}
+                    />
                 </CheckboxPrimitive.Indicator>
             </CheckboxPrimitive.Root>
         );

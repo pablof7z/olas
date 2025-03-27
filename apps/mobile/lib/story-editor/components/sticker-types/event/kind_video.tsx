@@ -1,9 +1,9 @@
-import { NDKEvent, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { type NDKEvent, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 
-import { EventStickerStyle } from './styles';
+import type { EventStickerStyle } from './styles';
 
 import RelativeTime from '@/components/relative-time';
 import * as User from '@/components/ui/user';
@@ -40,9 +40,9 @@ export default function EventStickerKindVideo({
             if (imeta.dim) {
                 const dimensions = imeta.dim.split('x');
                 if (dimensions.length === 2) {
-                    const w = parseInt(dimensions[0], 10);
-                    const h = parseInt(dimensions[1], 10);
-                    if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
+                    const w = Number.parseInt(dimensions[0], 10);
+                    const h = Number.parseInt(dimensions[1], 10);
+                    if (!Number.isNaN(w) && !Number.isNaN(h) && w > 0 && h > 0) {
                         width = w;
                         height = h;
                     }
@@ -82,15 +82,21 @@ export default function EventStickerKindVideo({
 
                     <View style={_styles.footer}>
                         <View style={_styles.userContainer}>
-                            <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={24} />
+                            <User.Avatar
+                                pubkey={event.pubkey}
+                                userProfile={userProfile}
+                                imageSize={24}
+                            />
                             <User.Name
                                 pubkey={event.pubkey}
                                 userProfile={userProfile}
-                                style={[_styles.username, styles.author && styles.author.nameStyle]}
+                                style={[_styles.username, styles.author?.nameStyle]}
                             />
                         </View>
 
-                        {event.created_at && <RelativeTime timestamp={event.created_at} style={_styles.timestamp} />}
+                        {event.created_at && (
+                            <RelativeTime timestamp={event.created_at} style={_styles.timestamp} />
+                        )}
                     </View>
                 </View>
             </View>

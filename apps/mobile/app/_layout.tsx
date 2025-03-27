@@ -7,20 +7,20 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
-import { ScreenProps, Stack } from 'expo-router';
+import { type ScreenProps, Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SettingsStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { PromptForNotifications } from './notification-prompt';
 
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
-import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
+import { type FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import LoaderScreen from '@/components/LoaderScreen';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
@@ -45,14 +45,16 @@ import { NAV_THEME } from '~/theme';
 const currentUserInSettings = SecureStore.getItem('currentUser') ?? undefined;
 const ndk = initializeNDK(currentUserInSettings);
 
-const modalPresentation = (opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }): ScreenProps['options'] => {
+const modalPresentation = (
+    opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }
+): ScreenProps['options'] => {
     const presentation = Platform.OS === 'ios' ? 'modal' : undefined;
     const headerShown = Platform.OS !== 'ios';
 
     return { presentation, headerShown, ...opts };
 };
 
-let appRenderCount = 0;
+const _appRenderCount = 0;
 
 export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
@@ -61,8 +63,6 @@ export default function App() {
     useEffect(() => {
         setAppReady(true);
     }, []);
-
-    console.log('<App> rendering', appRenderCount++);
     return (
         <LoaderScreen appReady={appReady} wotReady>
             {!!ndk && <RootLayout />}
@@ -70,7 +70,7 @@ export default function App() {
     );
 }
 
-let rootLayoutRenderCount = 0;
+const _rootLayoutRenderCount = 0;
 
 export function RootLayout() {
     useInitialAndroidBarSync();
@@ -86,7 +86,7 @@ export function RootLayout() {
             try {
                 const payload = JSON.parse(storedFeed);
                 feedType = payload;
-            } catch (e) {
+            } catch (_e) {
                 if (storedFeed.startsWith('#')) {
                     feedType = { kind: 'search', value: storedFeed };
                 } else {
@@ -107,7 +107,6 @@ export function RootLayout() {
     useEffect(() => {
         if (!ndk) return;
         ndk.pool.on('notice', (relay, notice) => {
-            console.log('⚠️ NOTICE', notice, relay?.url);
             setRelayNotices((prev) => ({
                 ...prev,
                 [relay?.url]: [...(prev[relay?.url] || []), notice],
@@ -122,13 +121,14 @@ export function RootLayout() {
         initAppSettings();
     }, []);
 
-    console.log('<RootLayout> rendering', rootLayoutRenderCount++);
-
     return (
         <>
             {ndk && <AppReady />}
             {!!ndk?.signer && <SignerReady />}
-            <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
+            <StatusBar
+                key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
+                style={isDarkColorScheme ? 'light' : 'dark'}
+            />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
                     <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
@@ -138,35 +138,79 @@ export function RootLayout() {
                                 <Stack>
                                     <Stack.Screen name="login" />
 
-                                    <Stack.Screen name="notification-prompt" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="notification-prompt"
+                                        options={{ headerShown: false, presentation: 'modal' }}
+                                    />
 
-                                    <Stack.Screen name="dlnwc" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="dlnwc"
+                                        options={{ headerShown: false, presentation: 'modal' }}
+                                    />
 
                                     <Stack.Screen name="publish" options={{ headerShown: false }} />
 
-                                    <Stack.Screen name="(home)" options={{ headerShown: false, title: 'Home' }} />
+                                    <Stack.Screen
+                                        name="(home)"
+                                        options={{ headerShown: false, title: 'Home' }}
+                                    />
 
-                                    <Stack.Screen name="search" options={{ headerShown: true, title: 'Search' }} />
+                                    <Stack.Screen
+                                        name="search"
+                                        options={{ headerShown: true, title: 'Search' }}
+                                    />
 
-                                    <Stack.Screen name="groups/new" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="groups/new"
+                                        options={{ headerShown: false, presentation: 'modal' }}
+                                    />
 
                                     <Stack.Screen name="profile" />
-                                    <Stack.Screen name="notifications" options={{ headerShown: false }} />
-                                    <Stack.Screen name="communities" options={{ headerShown: false }} />
-                                    <Stack.Screen name="tx" options={{ headerShown: false, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="notifications"
+                                        options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                        name="communities"
+                                        options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                        name="tx"
+                                        options={{ headerShown: false, presentation: 'modal' }}
+                                    />
                                     <Stack.Screen name="365" />
 
-                                    <Stack.Screen name="enable-wallet" options={{ headerShown: true, presentation: 'modal' }} />
+                                    <Stack.Screen
+                                        name="enable-wallet"
+                                        options={{ headerShown: true, presentation: 'modal' }}
+                                    />
 
                                     <Stack.Screen name="view" />
                                     <Stack.Screen name="eula" options={modalPresentation()} />
 
                                     <Stack.Screen name="stories" options={{ headerShown: false }} />
                                     <Stack.Screen name="story" options={{ headerShown: false }} />
-                                    <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: 'black' } }} />
+                                    <Stack.Screen
+                                        name="live"
+                                        options={{ contentStyle: { backgroundColor: 'black' } }}
+                                    />
 
-                                    <Stack.Screen name="receive" options={{ headerShown: true, presentation: 'modal', title: 'Receive' }} />
-                                    <Stack.Screen name="send" options={{ headerShown: false, presentation: 'modal', title: 'Send' }} />
+                                    <Stack.Screen
+                                        name="receive"
+                                        options={{
+                                            headerShown: true,
+                                            presentation: 'modal',
+                                            title: 'Receive',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="send"
+                                        options={{
+                                            headerShown: false,
+                                            presentation: 'modal',
+                                            title: 'Send',
+                                        }}
+                                    />
                                 </Stack>
 
                                 <PostOptionsMenu />

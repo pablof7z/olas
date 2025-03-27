@@ -1,6 +1,6 @@
 import { Skia } from '@shopify/react-native-skia';
 
-import { FilterParameters } from '../types';
+import type { FilterParameters } from '../types';
 
 /**
  * Creates a Skia color matrix based on filter parameters
@@ -13,17 +13,24 @@ export const createColorMatrix = (params: FilterParameters): number[] => {
 
     // Apply grayscale first if needed
     if (params.grayscale) {
-        result = [0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0, 0, 0, 1, 0];
+        result = [
+            0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0, 0, 0, 1, 0,
+        ];
     }
 
     // Apply sepia
     if (params.sepia !== undefined && params.sepia > 0) {
-        const sepiaMatrix = [0.393, 0.769, 0.189, 0, 0, 0.349, 0.686, 0.168, 0, 0, 0.272, 0.534, 0.131, 0, 0, 0, 0, 0, 1, 0];
+        const sepiaMatrix = [
+            0.393, 0.769, 0.189, 0, 0, 0.349, 0.686, 0.168, 0, 0, 0.272, 0.534, 0.131, 0, 0, 0, 0,
+            0, 1, 0,
+        ];
         result = multiplyColorMatrices(result, sepiaMatrix);
 
         // Blend with identity matrix based on sepia strength
         const s = params.sepia;
-        result = result.map((value, i) => (i % 5 < 4 ? value * s + identityMatrix[i] * (1 - s) : value));
+        result = result.map((value, i) =>
+            i % 5 < 4 ? value * s + identityMatrix[i] * (1 - s) : value
+        );
     }
 
     // Apply saturation
@@ -104,7 +111,28 @@ export const createColorMatrix = (params: FilterParameters): number[] => {
     // Apply temperature
     if (params.temperature !== undefined && params.temperature !== 0) {
         const t = params.temperature;
-        const matrix = [1 + t * 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 - t * 0.3, 0, 0, 0, 0, 0, 1, 0];
+        const matrix = [
+            1 + t * 0.3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1 - t * 0.3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+        ];
         result = multiplyColorMatrices(result, matrix);
     }
 
@@ -136,9 +164,9 @@ export const multiplyColorMatrices = (m1: number[], m2: number[]): number[] => {
 /**
  * Creates vignette mask for Skia canvas
  */
-export const createVignettePaint = (strength: number = 0.5) => {
+export const createVignettePaint = (strength = 0.5) => {
     const paint = Skia.Paint();
-    const colorBlack = Skia.Color('#000000');
+    const _colorBlack = Skia.Color('#000000');
     const colorTransparent = Skia.Color('#00000000');
     const alpha = Math.round(Math.min(strength * 0.7, 0.7) * 255)
         .toString(16)
@@ -149,9 +177,14 @@ export const createVignettePaint = (strength: number = 0.5) => {
 
     try {
         // Try the newer API first
-        const shader = Skia.Shader.RadialGradient(center, 0.5, [colorTransparent, Skia.Color(`#000000${alpha}`)], [0, 1]);
+        const shader = Skia.Shader.RadialGradient(
+            center,
+            0.5,
+            [colorTransparent, Skia.Color(`#000000${alpha}`)],
+            [0, 1]
+        );
         paint.setShader(shader);
-    } catch (e) {
+    } catch (_e) {
         // Fallback to older API if needed
         try {
             const shader = Skia.Shader.MakeRadialGradient(
@@ -175,7 +208,7 @@ export const createVignettePaint = (strength: number = 0.5) => {
 /**
  * Creates noise/grain effect for Skia canvas
  */
-export const createGrainPaint = (strength: number = 0.2) => {
+export const createGrainPaint = (_strength = 0.2) => {
     const paint = Skia.Paint();
     // Implementation would use Perlin noise or similar
     // This is a simplified version

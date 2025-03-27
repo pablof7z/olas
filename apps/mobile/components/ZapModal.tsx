@@ -23,7 +23,13 @@ interface ZapModalProps {
     onDismiss: () => void;
 }
 
-export function ZapModal({ visible, explode, zapAmount, defaultZapAmount, onDismiss }: ZapModalProps) {
+export function ZapModal({
+    visible,
+    explode,
+    zapAmount,
+    defaultZapAmount,
+    onDismiss,
+}: ZapModalProps) {
     const baseIconSize = 100;
 
     // Normal transition progress when modal appears.
@@ -57,16 +63,22 @@ export function ZapModal({ visible, explode, zapAmount, defaultZapAmount, onDism
         shouldExplode.value = explode ? 1 : 0;
         if (explode) {
             const diff = zapAmount.value - defaultZapAmount;
-            const currentBgOpacity = transitionProgress.value * interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
+            const currentBgOpacity =
+                transitionProgress.value *
+                interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
             frozenBackgroundOpacity.value = currentBgOpacity;
             const growth = Math.max(0, (zapAmount.value - defaultZapAmount) / 1000);
             const currentSize = baseIconSize * (1 + transitionProgress.value * 0.2 + growth);
             frozenBaseSize.value = currentSize;
             const currentRotation = Math.min((diff / 1000) * 15, 15);
             frozenRotation.value = currentRotation;
-            explosionProgress.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) }, () => {
-                runOnJS(onDismiss)();
-            });
+            explosionProgress.value = withTiming(
+                1,
+                { duration: 600, easing: Easing.out(Easing.quad) },
+                () => {
+                    runOnJS(onDismiss)();
+                }
+            );
         }
     }, [explode]);
 
@@ -81,9 +93,13 @@ export function ZapModal({ visible, explode, zapAmount, defaultZapAmount, onDism
 
     const animatedBackgroundStyle = useAnimatedStyle(() => {
         const diff = zapAmount.value - defaultZapAmount;
-        const computedOpacity = transitionProgress.value * interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
+        const computedOpacity =
+            transitionProgress.value * interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
         return {
-            opacity: shouldExplode.value === 1 ? frozenBackgroundOpacity.value * (1 - explosionProgress.value) : computedOpacity,
+            opacity:
+                shouldExplode.value === 1
+                    ? frozenBackgroundOpacity.value * (1 - explosionProgress.value)
+                    : computedOpacity,
         };
     });
 
@@ -105,7 +121,12 @@ export function ZapModal({ visible, explode, zapAmount, defaultZapAmount, onDism
         <Modal transparent visible={visible} animationType="none">
             <Animated.View style={[styles.overlay, animatedBackgroundStyle]}>
                 <Animated.View style={animatedIconContainerStyle}>
-                    <Lightning animatedSize={animatedIconSize} stroke="orange" strokeWidth={2} fill="orange" />
+                    <Lightning
+                        animatedSize={animatedIconSize}
+                        stroke="orange"
+                        strokeWidth={2}
+                        fill="orange"
+                    />
                 </Animated.View>
                 <Animated.View style={styles.counterContainer}>
                     <AnimatedText style={styles.counter} text={zapAmount} />

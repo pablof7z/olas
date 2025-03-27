@@ -3,7 +3,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useState } from 'react';
 
 import { stickersSheetRefAtom } from '../atoms/stickersSheet';
-import { useStickerStore, editStickerAtom } from '../store';
+import { editStickerAtom, useStickerStore } from '../store';
 
 export const useStickerManagement = () => {
     const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);

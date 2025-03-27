@@ -1,6 +1,6 @@
-import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { RefObject, useEffect, useCallback } from 'react';
+import { type RefObject, useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';

@@ -1,4 +1,4 @@
-import { CashuMint, GetInfoResponse } from '@cashu/cashu-ts';
+import { CashuMint, type GetInfoResponse } from '@cashu/cashu-ts';
 import { useEffect, useState } from 'react';
 
 import { dbGetMintInfo, dbSetMintInfo } from '../stores/db/cashu';

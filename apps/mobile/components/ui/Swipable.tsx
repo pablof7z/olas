@@ -1,9 +1,16 @@
 import { Icon } from '@roninoss/icons';
 import * as Haptics from 'expo-haptics';
-import React from 'react';
-import { View, Pressable, Platform, Dimensions } from 'react-native';
+import type React from 'react';
+import { Dimensions, Platform, Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, interpolate, withSpring, runOnJS, clamp } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    interpolate,
+    withSpring,
+    runOnJS,
+    clamp,
+} from 'react-native-reanimated';
 
 const dimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 75;
@@ -59,7 +66,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                       [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, dimensions.width],
                       [0, BUTTON_WIDTH, BUTTON_WIDTH * 1.2, 0]
                   )
-                : interpolate(-translateX.value, [0, BUTTON_WIDTH * 2, dimensions.width], [0, BUTTON_WIDTH, 0]),
+                : interpolate(
+                      -translateX.value,
+                      [0, BUTTON_WIDTH * 2, dimensions.width],
+                      [0, BUTTON_WIDTH, 0]
+                  ),
     }));
 
     const statusIconStyle = useAnimatedStyle(() => ({
@@ -82,7 +93,13 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
             previousTranslateX.value > translateX.value
                 ? interpolate(
                       -translateX.value,
-                      [0, BUTTON_WIDTH * 2, BUTTON_WIDTH * 3, BUTTON_WIDTH * 3 + 40, dimensions.width],
+                      [
+                          0,
+                          BUTTON_WIDTH * 2,
+                          BUTTON_WIDTH * 3,
+                          BUTTON_WIDTH * 3 + 40,
+                          dimensions.width,
+                      ],
                       [-BUTTON_WIDTH, 0, 0, BUTTON_WIDTH + 40, dimensions.width - BUTTON_WIDTH]
                   )
                 : interpolate(
@@ -100,12 +117,10 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
     }
 
     function onDelete() {
-        console.log('onDelete');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
     function onToggleNotifications() {
-        console.log('onToggleNotifications');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -134,7 +149,11 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
             }
         })
         .onUpdate((event) => {
-            translateX.value = clamp(event.translationX + previousTranslateX.value, -dimensions.width, dimensions.width);
+            translateX.value = clamp(
+                event.translationX + previousTranslateX.value,
+                -dimensions.width,
+                dimensions.width
+            );
         })
         .onEnd((event) => {
             const right = event.translationX > 0 && translateX.value > 0;
@@ -146,7 +165,10 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                     runOnJS(onToggleMarkAsRead)();
                     return;
                 }
-                translateX.value = withSpring(event.translationX > 0 ? BUTTON_WIDTH : -BUTTON_WIDTH, SPRING_CONFIG);
+                translateX.value = withSpring(
+                    event.translationX > 0 ? BUTTON_WIDTH : -BUTTON_WIDTH,
+                    SPRING_CONFIG
+                );
                 return;
             }
 
@@ -156,7 +178,10 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                     runOnJS(onDelete)();
                     return;
                 }
-                translateX.value = withSpring(event.translationX > 0 ? BUTTON_WIDTH * 2 : -BUTTON_WIDTH * 2, SPRING_CONFIG);
+                translateX.value = withSpring(
+                    event.translationX > 0 ? BUTTON_WIDTH * 2 : -BUTTON_WIDTH * 2,
+                    SPRING_CONFIG
+                );
                 return;
             }
 
@@ -186,10 +211,13 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                         <Pressable
                             style={ACTION_BUTTON_STYLE}
                             onPress={onStatusActionPress}
-                            className="absolute bottom-0 right-0 top-0 items-center justify-center">
+                            className="absolute bottom-0 right-0 top-0 items-center justify-center"
+                        >
                             <Icon
                                 ios={{
-                                    name: isUnread ? 'checkmark.message.fill' : 'message.badge.fill',
+                                    name: isUnread
+                                        ? 'checkmark.message.fill'
+                                        : 'message.badge.fill',
                                 }}
                                 materialIcon={{
                                     type: 'MaterialCommunityIcons',
@@ -206,7 +234,8 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                         <Pressable
                             style={ACTION_BUTTON_STYLE}
                             onPress={onDeleteActionPress}
-                            className="absolute bottom-0 right-0 top-0 items-center justify-center">
+                            className="absolute bottom-0 right-0 top-0 items-center justify-center"
+                        >
                             <Icon name="trash-can" size={24} color="white" />
                         </Pressable>
                     </Animated.View>
@@ -215,7 +244,8 @@ function Swipeable({ children, isUnread }: { children: React.ReactNode; isUnread
                     <Pressable
                         style={ACTION_BUTTON_STYLE}
                         onPress={onNotificationActionPress}
-                        className="absolute bottom-0 left-0 top-0 items-center justify-center">
+                        className="absolute bottom-0 left-0 top-0 items-center justify-center"
+                    >
                         <Icon
                             ios={{ name: 'bell.slash.fill' }}
                             materialIcon={{

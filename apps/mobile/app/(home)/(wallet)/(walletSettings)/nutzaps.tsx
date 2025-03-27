@@ -1,17 +1,17 @@
 import { Proof } from '@cashu/cashu-ts';
 import {
     DBCache,
+    type NDKCacheAdapterSqlite,
     NDKEvent,
     NDKKind,
     NDKNutzap,
-    useNDKCurrentUser,
     useNDK,
-    useNDKWallet,
+    useNDKCurrentUser,
     useNDKNutzapMonitor,
-    NDKCacheAdapterSqlite,
+    useNDKWallet,
     useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKNutzapState, NdkNutzapStatus } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet, type NDKNutzapState, NdkNutzapStatus } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -45,7 +45,8 @@ export default function NutzapsScreen() {
 
     const sortedNutzaps = useMemo(() => {
         const states = Array.from(nutzapStates.entries()).map(
-            ([eventId, state]) => [eventId, addNutzapIfMissing(eventId, state)] as [string, NDKNutzapState]
+            ([eventId, state]) =>
+                [eventId, addNutzapIfMissing(eventId, state)] as [string, NDKNutzapState]
         );
 
         // Sort by created_at timestamp (descending - newest first)
@@ -70,14 +71,25 @@ export default function NutzapsScreen() {
                 data={sortedNutzaps}
                 estimatedItemSize={80}
                 renderItem={({ item, index, target }) => (
-                    <NutzapRow wallet={activeWallet} state={item[1]} eventId={item[0]} index={index} target={target} />
+                    <NutzapRow
+                        wallet={activeWallet}
+                        state={item[1]}
+                        eventId={item[0]}
+                        index={index}
+                        target={target}
+                    />
                 )}
             />
         </View>
     );
 }
 
-function NutzapRow({ state, eventId, index, target }: { state: NDKNutzapState; eventId: string; index: number; target: any }) {
+function NutzapRow({
+    state,
+    eventId,
+    index,
+    target,
+}: { state: NDKNutzapState; eventId: string; index: number; target: any }) {
     const { ndk } = useNDK();
     const nutzap = state.nutzap;
     const status = state.status;
@@ -86,28 +98,24 @@ function NutzapRow({ state, eventId, index, target }: { state: NDKNutzapState; e
 
     const claim = useCallback(async () => {
         if (!nutzap) return;
-
-        console.log('nutzap', nutzap);
-        console.log('p2pk of nutzap', nutzap.p2pk);
-        const res = await nutzapMonitor.redeemNutzap(nutzap);
-        console.log('res', res);
+        const _res = await nutzapMonitor.redeemNutzap(nutzap);
     }, [nutzap?.id]);
 
     const spent = [NdkNutzapStatus.REDEEMED, NdkNutzapStatus.SPENT].includes(status);
 
     const { userProfile } = useUserProfile(nutzap?.pubkey);
 
-    const handleLongPress = useCallback(() => {
-        console.log('long press', eventId, state.nutzap && JSON.stringify(state.nutzap.rawEvent(), null, 4));
-        console.log('p2pk of nutzap', nutzap?.p2pk);
-        console.log('is nutzap', nutzap instanceof NDKNutzap);
-    }, [eventId]);
+    const handleLongPress = useCallback(() => {}, [eventId]);
 
     return (
         <ListItem
             index={index}
             target={target}
-            leftView={nutzap && <User.Avatar pubkey={nutzap.pubkey} userProfile={userProfile} imageSize={24} />}
+            leftView={
+                nutzap && (
+                    <User.Avatar pubkey={nutzap.pubkey} userProfile={userProfile} imageSize={24} />
+                )
+            }
             rightView={
                 !spent && (
                     <Button size="sm" variant="secondary" onPress={claim}>

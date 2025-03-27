@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
-import { View, Text, LayoutChangeEvent } from 'react-native';
+import { type LayoutChangeEvent, Text, View } from 'react-native';
 
 import countdownStyles, { getStyleFromName } from './styles';
 
-import { Sticker } from '@/lib/story-editor/store/index';
+import type { Sticker } from '@/lib/story-editor/store/index';
 
 interface CountdownStickerViewProps {
     sticker: Sticker;
@@ -52,7 +52,9 @@ export default function CountdownStickerView({ sticker, onLayout }: CountdownSti
             if (days > 0) {
                 setTimeLeft(`${days}d ${padWithZero(hours)}h ${padWithZero(minutes)}m`);
             } else if (hours > 0) {
-                setTimeLeft(`${padWithZero(hours)}:${padWithZero(minutes)}:${padWithZero(seconds)}`);
+                setTimeLeft(
+                    `${padWithZero(hours)}:${padWithZero(minutes)}:${padWithZero(seconds)}`
+                );
             } else {
                 setTimeLeft(`${padWithZero(minutes)}:${padWithZero(seconds)}`);
             }

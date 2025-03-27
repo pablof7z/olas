@@ -1,11 +1,11 @@
-import { NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKImage } from '@nostr-dev-kit/ndk-mobile';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
-import { View, Text, Button, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useObserver } from '@/hooks/observer';
 
@@ -19,9 +19,11 @@ function ContentCacheScreen() {
             extension: string;
         }[]
     >([]);
-    const [fileTypesBreakdown, setFileTypesBreakdown] = useState<Record<string, { count: number; totalSize: number }>>({});
+    const [fileTypesBreakdown, setFileTypesBreakdown] = useState<
+        Record<string, { count: number; totalSize: number }>
+    >({});
     const [previewMode, setPreviewMode] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [_isLoading, setIsLoading] = useState(false);
 
     const [cacheDir, setCacheDir] = useState<string | null>(null);
     const events = useObserver<NDKImage>([{ kinds: [20], limit: 1 }]);
@@ -32,11 +34,9 @@ function ContentCacheScreen() {
         async function getCacheDir() {
             for (const event of events) {
                 if (!event.imetas?.[0]?.url) continue;
-                console.log('getting cache dir for', event.imetas?.[0]?.url);
                 const cachedImage = await Image.getCachePathAsync(event.imetas?.[0]?.url);
                 if (cachedImage) {
                     const dirName = cachedImage.split('/').slice(0, -1).join('/');
-                    console.log('found cache dir', cachedImage, dirName);
                     setCacheDir(dirName);
                     break;
                 }
@@ -50,7 +50,7 @@ function ContentCacheScreen() {
     const fetchFiles = useCallback(async () => {
         setIsLoading(true);
         try {
-            console.log('cacheDir', cacheDir);
+            if (!cacheDir) return;
             const files = await FileSystem.readDirectoryAsync(cacheDir);
             const fileInfos = await Promise.all(
                 files.map(async (filename) => {
@@ -58,7 +58,6 @@ function ContentCacheScreen() {
                     const info = await FileSystem.getInfoAsync(fileUri);
                     let [_, extension] = filename.split('.') || [filename, 'unknown'];
                     extension = extension?.toLowerCase() || 'unknown';
-                    console.log('fileInfo', fileUri, info, extension);
                     if (info.isDirectory) return null;
                     return {
                         name: filename,
@@ -126,7 +125,6 @@ function ContentCacheScreen() {
 
     // Determine if a file is previewable (only images and mp4 videos)
     const isPreviewable = (file: { extension: string }) => {
-        return true;
         const previewableExtensions = ['jpg', 'jpeg', 'png', 'mp4'];
         return previewableExtensions.includes(file.extension);
     };
@@ -156,7 +154,7 @@ function ContentCacheScreen() {
         const dm = 2;
         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
     };
 
     return (
@@ -167,7 +165,9 @@ function ContentCacheScreen() {
                     <Text style={styles.breakdownText}>
                         {ext.toUpperCase()}: {fileTypesBreakdown[ext].count} file(s)
                     </Text>
-                    <Text style={styles.breakdownText}>{formatBytes(fileTypesBreakdown[ext].totalSize)}</Text>
+                    <Text style={styles.breakdownText}>
+                        {formatBytes(fileTypesBreakdown[ext].totalSize)}
+                    </Text>
                 </View>
             ))}
             <View style={styles.toggleContainer}>

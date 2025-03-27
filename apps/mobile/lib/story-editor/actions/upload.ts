@@ -1,7 +1,8 @@
-import NDK, { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import type { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 
 import { uploadMedia } from '@/lib/publish/actions/upload';
-import { PostMedia, PostMediaType } from '@/lib/publish/types';
+import type { PostMedia, PostMediaType } from '@/lib/publish/types';
 import { prepareMediaItem } from '@/utils/media/prepare';
 
 interface StoryUploadParams {
@@ -21,7 +22,13 @@ interface StoryUploadResult {
 /**
  * Uploads a story media to Blossom server
  */
-export async function uploadStory({ path, type, ndk, blossomServer, onProgress }: StoryUploadParams): Promise<StoryUploadResult> {
+export async function uploadStory({
+    path,
+    type,
+    ndk,
+    blossomServer,
+    onProgress,
+}: StoryUploadParams): Promise<StoryUploadResult> {
     try {
         // Convert type to PostMediaType
         const mediaType: PostMediaType = type === 'photo' ? 'image' : 'video';
@@ -49,13 +56,19 @@ export async function uploadStory({ path, type, ndk, blossomServer, onProgress }
             url: uploadedMedia.uploadedUri,
             image: uploadedMedia.uploadedThumbnailUri,
             x: uploadedMedia.uploadedSha256,
-            dim: uploadedMedia.width && uploadedMedia.height ? `${uploadedMedia.width}x${uploadedMedia.height}` : undefined,
+            dim:
+                uploadedMedia.width && uploadedMedia.height
+                    ? `${uploadedMedia.width}x${uploadedMedia.height}`
+                    : undefined,
             m: uploadedMedia.mimeType,
             size: uploadedMedia.size?.toString(),
         };
 
         // Add original hash if different from uploaded hash
-        if (uploadedMedia.uploadedSha256 !== uploadedMedia.localSha256 && uploadedMedia.localSha256) {
+        if (
+            uploadedMedia.uploadedSha256 !== uploadedMedia.localSha256 &&
+            uploadedMedia.localSha256
+        ) {
             imeta.ox = uploadedMedia.localSha256;
         }
 

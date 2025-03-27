@@ -1,17 +1,17 @@
 import NDK, {
-    Hexpubkey,
+    type Hexpubkey,
     NDKEvent,
-    NDKEventId,
-    NDKFilter,
+    type NDKEventId,
+    type NDKFilter,
     NDKKind,
     NDKRelaySet,
-    NDKSubscription,
+    type NDKSubscription,
     NDKSubscriptionCacheUsage,
     useMuteFilter,
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';
-import { matchFilters, VerifiedEvent } from 'nostr-tools';
+import { type VerifiedEvent, matchFilters } from 'nostr-tools';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { usePubkeyBlacklist } from '@/hooks/blacklist';
@@ -136,7 +136,7 @@ export function useFeedEvents(
      * update in the feed of entries to render
      */
     const updateEntries = useCallback(
-        (reason: string) => {
+        (_reason: string) => {
             if (freezeState.current) return;
             // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
@@ -162,7 +162,9 @@ export function useFeedEvents(
                     renderedEntries = [...newSlice, ...renderedEntries];
                 } else {
                     // otherwise, merge with the currently rendered entries and sort everything
-                    renderedEntries = [...newSlice, ...renderedEntries].sort((a, b) => b.timestamp - a.timestamp);
+                    renderedEntries = [...newSlice, ...renderedEntries].sort(
+                        (a, b) => b.timestamp - a.timestamp
+                    );
                 }
 
                 // renderedEntries.forEach(entry => console.log('rendered entry', entry.id, entry.timestamp))
@@ -254,17 +256,15 @@ export function useFeedEvents(
 
                 const isEosed = eosed.current;
 
-                const isNotTooOld = !(isEosed && ret.timestamp < Date.now() / 1000 - NEW_ENTRY_THRESHOLD);
+                const isNotTooOld = !(
+                    isEosed && ret.timestamp < Date.now() / 1000 - NEW_ENTRY_THRESHOLD
+                );
 
                 if (isNotAlreadyRendered && isNotAlreadyMarkedAsNew && isNotTooOld) {
                     newEntriesRef.current.add(id);
 
                     // if we have already eosed, we update the new entries state
                     if (isEosed) {
-                        console.log(
-                            'we received a new entry after eose so we are updating the new entries state',
-                            newEntriesRef.current.size
-                        );
                         setNewEntries(entriesFromIds(newEntriesRef.current));
                     }
                 }
@@ -352,7 +352,10 @@ export function useFeedEvents(
                     }
                 } else {
                     // we don't have the event, let's just record the deletion
-                    updateEntry(deletedId[0], (entry) => ({ ...entry, deletedBy: [...(entry.deletedBy || []), event.pubkey] }));
+                    updateEntry(deletedId[0], (entry) => ({
+                        ...entry,
+                        deletedBy: [...(entry.deletedBy || []), event.pubkey],
+                    }));
                 }
             }
         },
@@ -413,7 +416,8 @@ export function useFeedEvents(
 
         // Go through the currently-rendered entries and see if we need to change them
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            const keep = entry.event && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent);
+            const keep =
+                entry.event && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent);
             if (!keep || !passesFilter(entry)) {
                 changed = true;
                 renderedIdsRef.current.delete(entry.id);
@@ -433,7 +437,9 @@ export function useFeedEvents(
                 if (!feedEntry.event || addedEventIds.current.has(id)) continue;
                 if (!passesFilter(feedEntry)) continue;
 
-                const keep = feedEntry.event && matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent);
+                const keep =
+                    feedEntry.event &&
+                    matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent);
                 if (!keep || !passesFilter(feedEntry)) {
                     newEntriesRef.current.delete(id);
                     // addedEventIds.current.add(id);
@@ -467,11 +473,16 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
-        const sub = ndk.subscribe(filters, { wrap: true, groupable: false, skipVerification: true, subId }, relaySet, {
-            onEvent: handleEvent,
-            onEose: handleEose,
-            onEvents: handleBulkEvents,
-        });
+        const sub = ndk.subscribe(
+            filters,
+            { wrap: true, groupable: false, skipVerification: true, subId },
+            relaySet,
+            {
+                onEvent: handleEvent,
+                onEose: handleEose,
+                onEvents: handleBulkEvents,
+            }
+        );
 
         // res will come back with an array of cached events, they need to be filtered (for blacklist and mutes) and then inserted in bulk into the state
         // that the caller will be able to render
@@ -523,7 +534,7 @@ type Slice = {
     removeTimeout?: NodeJS.Timeout;
 };
 
-const sliceToFilter = (slice: Slice): NDKFilter[] => {
+const _sliceToFilter = (slice: Slice): NDKFilter[] => {
     return [{ '#e': slice.eventIds }];
 };
 
@@ -616,7 +627,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
             slice.sub.stop();
-            activeSlices.current = activeSlices.current.filter((s) => s.eventIds[0] !== slice.eventIds[0]);
+            activeSlices.current = activeSlices.current.filter(
+                (s) => s.eventIds[0] !== slice.eventIds[0]
+            );
             for (const id of slice.eventIds) {
                 activeIds.current.delete(id);
             }
@@ -630,7 +643,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         // go through the slices we have and determine what we should remove
         for (const activeSlice of activeSlices.current) {
-            const keep = neededSlices.find((slice) => slice.eventIds[0] === activeSlice.eventIds[0]);
+            const keep = neededSlices.find(
+                (slice) => slice.eventIds[0] === activeSlice.eventIds[0]
+            );
 
             if (!keep) {
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
@@ -642,7 +657,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         // go through the slices we want and determine what we need to add
         for (const neededSlice of neededSlices) {
-            const exists = activeSlices.current.find((slice) => slice.eventIds[0] === neededSlice.eventIds[0]);
+            const exists = activeSlices.current.find(
+                (slice) => slice.eventIds[0] === neededSlice.eventIds[0]
+            );
 
             if (!exists) addSlice(neededSlice);
         }

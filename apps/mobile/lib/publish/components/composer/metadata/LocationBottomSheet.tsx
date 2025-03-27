@@ -1,8 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { atom, useSetAtom } from 'jotai';
-import React, { forwardRef, RefObject, useCallback, useImperativeHandle, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import React, {
+    forwardRef,
+    type RefObject,
+    useCallback,
+    useImperativeHandle,
+    useMemo,
+    useEffect,
+} from 'react';
+import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
@@ -52,7 +59,9 @@ const LocationBottomSheet = forwardRef<LocationBottomSheetRef, object>((_, ref) 
                 <View style={styles.header}>
                     <Text style={styles.title}>Location</Text>
                     <TouchableOpacity style={styles.toggleButton} onPress={handleToggleLocation}>
-                        <Text style={[styles.toggleText, { color: colors.primary }]}>{includeLocation ? 'Exclude' : 'Include'}</Text>
+                        <Text style={[styles.toggleText, { color: colors.primary }]}>
+                            {includeLocation ? 'Exclude' : 'Include'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 

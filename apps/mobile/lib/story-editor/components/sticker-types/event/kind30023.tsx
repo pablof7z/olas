@@ -1,11 +1,11 @@
-import { NDKArticle, NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { NDKArticle, type NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { Image, useImage } from 'expo-image';
 import { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { EventStickerStyle } from './styles';
+import type { EventStickerStyle } from './styles';
 
-import { UserProfile } from '@/hooks/user-profile';
+import type { UserProfile } from '@/hooks/user-profile';
 
 export default function EventStickerKind30023({
     event,
@@ -22,7 +22,9 @@ export default function EventStickerKind30023({
     const readingTime = useMemo(() => calculateReadingTime(article.content), [article.id]);
 
     // Get the first two lines of the summary
-    const summaryPreview = article.summary ? article.summary.split('\n').slice(0, 2).join('\n') : undefined;
+    const summaryPreview = article.summary
+        ? article.summary.split('\n').slice(0, 2).join('\n')
+        : undefined;
 
     const image = useImage({ uri: article.image });
 

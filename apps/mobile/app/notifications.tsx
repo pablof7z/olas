@@ -1,14 +1,18 @@
-import { NDKEvent, NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
 import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import { Text } from '@/components/nativewindui/Text';
 import NotificationItem from '@/components/notifications/items';
-import { useEnableNotifications, useNotificationPermission, useNotifications } from '@/hooks/notifications';
+import {
+    useEnableNotifications,
+    useNotificationPermission,
+    useNotifications,
+} from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import { WALLET_ENABLED } from '@/utils/const';
 
@@ -47,7 +51,8 @@ export default function Notifications() {
         } else if (settingsTab === 'replies') {
             return (event: NDKEvent) => replyFilter(event) && excludeOwn(event);
         } else if (settingsTab === 'zaps') {
-            return (event: NDKEvent) => [NDKKind.Nutzap, NDKKind.Zap].includes(event.kind) && excludeOwn(event);
+            return (event: NDKEvent) =>
+                [NDKKind.Nutzap, NDKKind.Zap].includes(event.kind) && excludeOwn(event);
         } else {
             return (event: NDKEvent) => reactionFilter(event) && excludeOwn(event);
         }
@@ -55,7 +60,9 @@ export default function Notifications() {
 
     const sortedEvents = useMemo(() => {
         // fond index that is null
-        return [...notifications].filter(notificationsFilter).sort((a, b) => b.created_at - a.created_at);
+        return [...notifications]
+            .filter(notificationsFilter)
+            .sort((a, b) => b.created_at - a.created_at);
     }, [notifications.length, notificationsFilter]);
 
     // when the user views the notifications screen, we should mark all notifications as read
@@ -100,9 +107,13 @@ export default function Notifications() {
                 />
                 <FlashList
                     data={sortedEvents}
-                    renderItem={({ item }) => <NotificationItem event={item} currentUser={currentUser} />}
+                    renderItem={({ item }) => (
+                        <NotificationItem event={item} currentUser={currentUser} />
+                    )}
                     keyExtractor={(item) => item.id}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
                 />
             </View>
         </>
@@ -124,7 +135,9 @@ function NotificationPrompt() {
 
     return (
         <TouchableOpacity className="bg-muted-200 p-4" onPress={enable}>
-            <Text className="text-muted-foreground">Want to know when people follow you in Olas or comments on your posts?</Text>
+            <Text className="text-muted-foreground">
+                Want to know when people follow you in Olas or comments on your posts?
+            </Text>
             <View className="flex-col items-center gap-2">
                 <Text className="text-primary">Enable</Text>
             </View>

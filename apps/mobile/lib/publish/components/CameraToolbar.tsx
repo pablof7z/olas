@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { POST_TYPE_SWITCHER_HEIGHT } from './composer/post-type-switcher';
@@ -31,7 +31,11 @@ type CameraToolbarProps = {
     flipButtonProps: FlipButtonProps;
 };
 
-export default function CameraToolbar({ selectorProps, shutterProps, flipButtonProps }: CameraToolbarProps) {
+export default function CameraToolbar({
+    selectorProps,
+    shutterProps,
+    flipButtonProps,
+}: CameraToolbarProps) {
     const insets = useSafeAreaInsets();
 
     return (
@@ -39,7 +43,8 @@ export default function CameraToolbar({ selectorProps, shutterProps, flipButtonP
             <TouchableOpacity
                 onPress={selectorProps.onPress}
                 style={styles.selectorButton}
-                testID={selectorProps.testID || 'selector-button'}>
+                testID={selectorProps.testID || 'selector-button'}
+            >
                 <Ionicons name="images-outline" size={30} color="white" />
             </TouchableOpacity>
 
@@ -65,7 +70,8 @@ export default function CameraToolbar({ selectorProps, shutterProps, flipButtonP
                 onPress={flipButtonProps.onPress}
                 style={[styles.flipButton, flipButtonProps.disabled && styles.disabledButton]}
                 disabled={flipButtonProps.disabled}
-                testID={flipButtonProps.testID || 'flip-button'}>
+                testID={flipButtonProps.testID || 'flip-button'}
+            >
                 <Ionicons name="camera-reverse" size={30} color="white" />
             </TouchableOpacity>
         </View>

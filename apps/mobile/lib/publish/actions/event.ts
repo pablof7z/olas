@@ -1,9 +1,16 @@
-import NDK, { NDKImage, NDKImetaTag, NDKKind, NDKRelaySet, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKImage,
+    type NDKImetaTag,
+    NDKKind,
+    NDKRelaySet,
+    NDKVideo,
+} from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 
-import { PostMedia, PostMetadata } from '../types';
+import type { PostMedia, PostMetadata } from '../types';
 
-function generateImageEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKImage {
+function generateImageEvent(ndk: NDK, _metadata: PostMetadata, media: PostMedia[]): NDKImage {
     const event = new NDKImage(ndk);
     const imetas: NDKImetaTag[] = [];
 
@@ -23,7 +30,8 @@ function mediaToImeta(media: PostMedia): NDKImetaTag {
     imeta.url = media.uploadedUri;
     imeta.image = media.uploadedThumbnailUri;
     imeta.x = media.uploadedSha256;
-    if (media.uploadedSha256 !== media.localSha256 && media.localSha256) imeta.ox = media.localSha256;
+    if (media.uploadedSha256 !== media.localSha256 && media.localSha256)
+        imeta.ox = media.localSha256;
     imeta.dim = `${media.width}x${media.height}`;
     imeta.m = media.mimeType;
     imeta.size = media.size?.toString?.();
@@ -31,7 +39,7 @@ function mediaToImeta(media: PostMedia): NDKImetaTag {
     return imeta;
 }
 
-function generateVideoEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKVideo {
+function generateVideoEvent(ndk: NDK, _metadata: PostMetadata, media: PostMedia[]): NDKVideo {
     const event = new NDKVideo(ndk);
     const imetas: NDKImetaTag[] = [];
 
@@ -81,11 +89,12 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
     }
 
     if (event.kind !== NDKKind.Text) {
-        event.alt = `This is a ${media[0].mediaType} published via Olas.\n` + media.map((m) => m.uploadedUri).join('\n');
+        event.alt = `This is a ${media[0].mediaType} published via Olas.\n${media.map((m) => m.uploadedUri).join('\n')}`;
     }
 
     const now = Math.floor(new Date().getTime() / 1000);
-    if (metadata.expiration) event.tags.push(['expiration', (metadata.expiration + now).toString()]);
+    if (metadata.expiration)
+        event.tags.push(['expiration', (metadata.expiration + now).toString()]);
 
     if (metadata.tags) {
         event.tags.push(...metadata.tags.map((tag) => ['t', tag]));

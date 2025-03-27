@@ -14,7 +14,7 @@ import {
     useNDKSessionEventKind,
     wrapEvent,
 } from '@nostr-dev-kit/ndk-mobile';
-import { useImage, Image } from 'expo-image';
+import { Image, useImage } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
@@ -24,7 +24,7 @@ import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { cn } from '@/lib/cn';
-import { GroupEntry, useAllGroups } from '@/lib/groups/store';
+import { type GroupEntry, useAllGroups } from '@/lib/groups/store';
 import { useDebounce, useThrottle } from '@/utils/debounce';
 
 const relays = ['wss://groups.0xchat.com'];
@@ -45,13 +45,19 @@ export default function CommunitiesScreen() {
                 keyExtractor={(item) => item.groupId}
                 estimatedItemSize={52}
                 variant="full-width"
-                renderItem={({ item, index, target }) => <GroupListItem groupEntry={item} index={index} target={target} />}
+                renderItem={({ item, index, target }) => (
+                    <GroupListItem groupEntry={item} index={index} target={target} />
+                )}
             />
         </>
     );
 }
 
-function GroupListItem({ groupEntry, index, target }: { groupEntry: GroupEntry; index: number; target: any }) {
+function GroupListItem({
+    groupEntry,
+    index,
+    target,
+}: { groupEntry: GroupEntry; index: number; target: any }) {
     const follows = useFollows();
     const membersToShow = useMemo(() => {
         // find the first 3 members that the user follows
@@ -75,13 +81,21 @@ function GroupListItem({ groupEntry, index, target }: { groupEntry: GroupEntry; 
                 </View>
             }
             rightView={<RightViewItem groupEntry={groupEntry} />}
-            className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pr-2',
+                index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             index={index}
-            target={target}>
+            target={target}
+        >
             <View className="mt-4 w-full flex-row items-center gap-2">
-                {membersToShow.length > 0 && <AvatarGroup pubkeys={membersToShow} avatarSize={20} threshold={3} />}
-                <Text className="text-sm text-muted-foreground">{groupEntry.members?.size} members</Text>
+                {membersToShow.length > 0 && (
+                    <AvatarGroup pubkeys={membersToShow} avatarSize={20} threshold={3} />
+                )}
+                <Text className="text-sm text-muted-foreground">
+                    {groupEntry.members?.size} members
+                </Text>
             </View>
         </ListItem>
     );

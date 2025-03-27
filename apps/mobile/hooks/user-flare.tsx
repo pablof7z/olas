@@ -1,4 +1,4 @@
-import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
+import type { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
 
 import { db } from '@/stores/db';
@@ -9,11 +9,14 @@ interface UserFlareStore {
     init: () => void;
 }
 
-export const useUserFlareStore = create<UserFlareStore>((set, get) => ({
+export const useUserFlareStore = create<UserFlareStore>((set, _get) => ({
     flares: new Map(),
 
     init: () => {
-        const flares = db.getAllSync('SELECT * FROM pubkey_flares') as { pubkey: string; flare_type: string }[];
+        const flares = db.getAllSync('SELECT * FROM pubkey_flares') as {
+            pubkey: string;
+            flare_type: string;
+        }[];
         const flaresMap = new Map<Hexpubkey, string>();
         for (const flare of flares) {
             flaresMap.set(flare.pubkey, flare.flare_type);
@@ -27,7 +30,10 @@ export const useUserFlareStore = create<UserFlareStore>((set, get) => ({
             _flares.set(pubkey, flare);
             return { flares: _flares };
         });
-        db.runSync('INSERT OR REPLACE INTO pubkey_flares (pubkey, flare_type) VALUES (?, ?)', [pubkey, flare]);
+        db.runSync('INSERT OR REPLACE INTO pubkey_flares (pubkey, flare_type) VALUES (?, ?)', [
+            pubkey,
+            flare,
+        ]);
     },
 }));
 

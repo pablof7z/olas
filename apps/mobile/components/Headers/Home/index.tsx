@@ -1,10 +1,17 @@
-import { NDKNutzap, useNDKNutzapMonitor } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKNutzap, useNDKNutzapMonitor } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { Search, Sun, X } from 'lucide-react-native';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import Animated, { SlideOutUp, useSharedValue, withTiming, useAnimatedStyle, FadeIn, FadeOut } from 'react-native-reanimated';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+    SlideOutUp,
+    useSharedValue,
+    withTiming,
+    useAnimatedStyle,
+    FadeIn,
+    FadeOut,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from './Feed';
@@ -87,7 +94,11 @@ export default function HomeHeader() {
     return (
         <Animated.View style={[styles.header, containerStyle, { backgroundColor: colors.card }]}>
             {!nutzaps.length ? (
-                <Animated.View entering={FadeIn} exiting={FadeOut} style={{ width: '100%', marginTop: insets.top }}>
+                <Animated.View
+                    entering={FadeIn}
+                    exiting={FadeOut}
+                    style={{ width: '100%', marginTop: insets.top }}
+                >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Feed />
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -112,7 +123,8 @@ export default function HomeHeader() {
                             width: '100%',
                             marginTop: insets.top,
                         },
-                    ]}>
+                    ]}
+                >
                     {nutzaps && <IncomingZap nutzaps={nutzaps} />}
                 </Animated.View>
             )}
@@ -140,12 +152,19 @@ function IncomingZap({ nutzaps }: { nutzaps: NDKNutzap[] }) {
     const totalAmount = nutzaps.reduce((acc, n) => acc + n.amount, 0);
 
     return (
-        <View style={[zapNotificationStyle.container, { paddingTop: insets.top + 10 }]} className="pb-2">
+        <View
+            style={[zapNotificationStyle.container, { paddingTop: insets.top + 10 }]}
+            className="pb-2"
+        >
             <AvatarGroup pubkeys={avatarsSortedByAmount} avatarSize={40} threshold={1} />
 
-            {nutzaps.length === 1 && <Text style={{ flex: 1 }}>{nutzaps.map((n) => n.content).join(' ')}</Text>}
+            {nutzaps.length === 1 && (
+                <Text style={{ flex: 1 }}>{nutzaps.map((n) => n.content).join(' ')}</Text>
+            )}
 
-            <Text style={[zapNotificationStyle.amount, { color: 'orange' }]}>{formatMoney({ amount: totalAmount })}</Text>
+            <Text style={[zapNotificationStyle.amount, { color: 'orange' }]}>
+                {formatMoney({ amount: totalAmount })}
+            </Text>
         </View>
     );
 }

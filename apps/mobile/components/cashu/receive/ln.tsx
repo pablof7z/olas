@@ -14,7 +14,7 @@ import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
 import WalletBalance from '@/components/ui/wallet/WalletBalance';
 
-const selectedMintAtom = atom<string | null, [string | null], void>(null, (get, set, mint) => {
+const selectedMintAtom = atom<string | null, [string | null], void>(null, (_get, set, mint) => {
     set(selectedMintAtom, mint);
 });
 
@@ -37,25 +37,20 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
         if (activeWallet instanceof NDKCashuWallet) {
             const deposit = (activeWallet as NDKCashuWallet).deposit(amount, selectedMint);
 
-            deposit.on('success', (token) => {
-                console.log('success', token);
+            deposit.on('success', (_token) => {
                 onReceived();
             });
 
             try {
                 const pr = await deposit.start();
-                console.log('pr', pr);
                 setBolt11(pr);
             } catch (e) {
                 toast.error(e.message);
             }
         } else if (activeWallet instanceof NDKNWCWallet) {
-            console.log('activeWallet', activeWallet);
             const res = await activeWallet.makeInvoice(amount * 1000, 'deposit');
-            console.log('res', res);
             setBolt11(res.invoice);
         } else {
-            console.log('no active wallet', activeWallet);
         }
     }, [activeWallet?.walletId, amount, selectedMint]);
 
@@ -68,7 +63,8 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
         }, 2000);
     }, [bolt11]);
 
-    const unit = activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
+    const unit =
+        activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
@@ -93,12 +89,18 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                 </View>
             ) : (
                 <>
-                    <WalletBalance amount={amount} unit={unit} onPress={() => inputRef.current?.focus()} />
+                    <WalletBalance
+                        amount={amount}
+                        unit={unit}
+                        onPress={() => inputRef.current?.focus()}
+                    />
                     <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                         <Text style={styles.continueButtonText}>Continue</Text>
                     </TouchableOpacity>
 
-                    {activeWallet instanceof NDKCashuWallet && <MintSelector wallet={activeWallet as NDKCashuWallet} />}
+                    {activeWallet instanceof NDKCashuWallet && (
+                        <MintSelector wallet={activeWallet as NDKCashuWallet} />
+                    )}
                 </>
             )}
         </KeyboardAvoidingView>
@@ -115,7 +117,11 @@ function MintSelector({ wallet }: { wallet: NDKCashuWallet }) {
     }, [wallet?.walletId]);
 
     return (
-        <Picker selectedValue={selectedMint} onValueChange={(itemValue) => setSelectedMint(itemValue)} style={styles.picker}>
+        <Picker
+            selectedValue={selectedMint}
+            onValueChange={(itemValue) => setSelectedMint(itemValue)}
+            style={styles.picker}
+        >
             {wallet.mints.map((mint, index) => (
                 <Picker.Item key={index} label={mint} value={mint} />
             ))}

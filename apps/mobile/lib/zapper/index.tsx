@@ -1,8 +1,8 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { NDKEvent, NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtomValue } from 'jotai';
 import { useCallback, useState } from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useColorScheme } from '../useColorScheme';
 
@@ -13,7 +13,11 @@ import { useZap } from '@/hooks/zap';
 import { formatMoney } from '@/utils/bitcoin';
 
 type ZapperModalTarget = NDKEvent | NDKUser;
-export const zapperModalTargetAtom = atom<ZapperModalTarget | null, [ZapperModalTarget | null], void>(null, (get, set, value) => {
+export const zapperModalTargetAtom = atom<
+    ZapperModalTarget | null,
+    [ZapperModalTarget | null],
+    void
+>(null, (_get, set, value) => {
     set(zapperModalTargetAtom, value);
 });
 
@@ -40,7 +44,11 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
         <View style={styles.container}>
             <View style={styles.titleContainer}>
                 <User.Avatar userProfile={userProfile} pubkey={target.pubkey} imageSize={64} />
-                <User.Name userProfile={userProfile} pubkey={target.pubkey} className="font-bold text-foreground" />
+                <User.Name
+                    userProfile={userProfile}
+                    pubkey={target.pubkey}
+                    className="font-bold text-foreground"
+                />
                 <View style={{ flex: 1 }} />
             </View>
 
@@ -50,7 +58,12 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
                 placeholder="Comment"
                 style={[
                     styles.commentInput,
-                    { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 },
+                    {
+                        borderColor: colors.grey4,
+                        color: colors.foreground,
+                        backgroundColor: colors.card,
+                        fontSize: 16,
+                    },
                 ]}
             />
 
@@ -61,7 +74,12 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
                 keyboardType="numeric"
                 style={[
                     styles.commentInput,
-                    { borderColor: colors.grey4, color: colors.foreground, backgroundColor: colors.card, fontSize: 16 },
+                    {
+                        borderColor: colors.grey4,
+                        color: colors.foreground,
+                        backgroundColor: colors.card,
+                        fontSize: 16,
+                    },
                 ]}
             />
 

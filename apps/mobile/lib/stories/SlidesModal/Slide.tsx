@@ -4,13 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import StoryText from '../components/StoryText';
+import { StoryHeader } from '../components/header';
 import { SlideImage } from './SlideImage';
 import StoryProgress from './SlideProgress';
 import { SlideStory } from './SlideStory';
 import { SlideVideo } from './SlideVideo';
 import { activeSlideAtom, durationAtom, isLoadingAtom } from './store';
-import StoryText from '../components/StoryText';
-import { StoryHeader } from '../components/header';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -24,7 +24,15 @@ interface SlideProps {
     onClose: () => void;
 }
 
-export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSlide, onClose }: SlideProps) {
+export function Slide({
+    isScrolling,
+    item,
+    index,
+    active,
+    onNextSlide,
+    onPrevSlide,
+    onClose,
+}: SlideProps) {
     const [activeSlide, setActiveSlide] = useAtom(activeSlideAtom);
     const duration = useAtomValue(durationAtom);
     const [loading, setLoading] = useAtom(isLoadingAtom);
@@ -49,7 +57,6 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
     const goNext = useCallback(
         (newSlide: number) => {
             if (!(item instanceof NDKStory) && newSlide > item.imetas.length - 1) {
-                console.log('onNextSlide', item.imetas.length);
                 return onNextSlide();
             }
             setLoading(true);
@@ -68,7 +75,11 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
             if (!imeta?.url) return null;
 
             // Determine if it's video based on the instance type
-            return item instanceof NDKVideo ? <SlideVideo imeta={imeta} /> : <SlideImage imeta={imeta} />;
+            return item instanceof NDKVideo ? (
+                <SlideVideo imeta={imeta} />
+            ) : (
+                <SlideImage imeta={imeta} />
+            );
         }
         return null;
     };
@@ -87,7 +98,8 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
                     onLongPress={() => {
                         setIsLongPressed(true);
                     }}
-                    onPress={() => goPrev(activeSlide - 1)}>
+                    onPress={() => goPrev(activeSlide - 1)}
+                >
                     <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
                 <TouchableWithoutFeedback
@@ -98,7 +110,8 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
                     onLongPress={() => {
                         setIsLongPressed(true);
                     }}
-                    onPress={() => goNext(activeSlide + 1)}>
+                    onPress={() => goNext(activeSlide + 1)}
+                >
                     <View style={{ backgroundColor: 'transparent', flex: 1 }} />
                 </TouchableWithoutFeedback>
             </View>
@@ -113,7 +126,8 @@ export function Slide({ isScrolling, item, index, active, onNextSlide, onPrevSli
                     justifyContent: 'space-evenly',
                     position: 'absolute',
                     top: insets.top,
-                }}>
+                }}
+            >
                 {[0].map((_, i) => {
                     return (
                         <StoryProgress

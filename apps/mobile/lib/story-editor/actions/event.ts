@@ -1,9 +1,10 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import NDK, { NDKImetaTag, NDKStory, NDKStoryDimension } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { type NDKImetaTag, NDKStory, type NDKStoryDimension } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions } from 'react-native';
 import { getVideoMetaData } from 'react-native-compressor';
 
-import { Sticker } from '../store';
+import type { Sticker } from '../store';
 import { mapStickerToNDKFormat } from '../utils/stickerMapper';
 
 interface CreateStoryEventParams {
@@ -30,15 +31,13 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
     if (type === 'video') {
         try {
             const metadata = await getVideoMetaData(path);
-            if (metadata && metadata.duration) {
+            if (metadata?.duration) {
                 event.duration = metadata.duration;
             }
         } catch (err) {
             console.error('Error getting video metadata:', err);
         }
     }
-
-    console.log('Setting story event properties');
     event.imeta = imeta;
     event.alt = 'This is a story event created with Olas';
 
@@ -47,18 +46,19 @@ export const createStoryEvent = async (params: CreateStoryEventParams): Promise<
     event.tags.push(['expiration', (now + duration).toString()]);
 
     event.dimensions = dimensions;
-
-    console.log('Adding stickers to event:', stickers.length);
     // Add stickers to the event
     for (const sticker of stickers) {
         try {
             // Use the utility function to map our sticker to NDK format
             const dimensions = sticker.dimensions;
-            const ndkSticker = mapStickerToNDKFormat(sticker, dimensions || { width: 0, height: 0 });
+            const ndkSticker = mapStickerToNDKFormat(
+                sticker,
+                dimensions || { width: 0, height: 0 }
+            );
             event.addSticker(ndkSticker);
         } catch (error: any) {
-            console.trace('Error adding sticker: ' + error?.message);
-            toast.error('Error adding sticker: ' + error?.message);
+            console.trace(`Error adding sticker: ${error?.message}`);
+            toast.error(`Error adding sticker: ${error?.message}`);
             // Continue with other stickers instead of returning null
         }
     }

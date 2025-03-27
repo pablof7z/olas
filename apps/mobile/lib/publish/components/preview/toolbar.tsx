@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useEditorStore } from '@/lib/publish/store/editor';
 
@@ -51,7 +51,11 @@ function SelectionModeToggle() {
 
     return (
         <Pressable style={styles.button} onPress={toggleSelectionMode}>
-            <Ionicons name={isMultipleSelectionMode ? 'grid' : 'square-outline'} size={24} color="white" />
+            <Ionicons
+                name={isMultipleSelectionMode ? 'grid' : 'square-outline'}
+                size={24}
+                color="white"
+            />
         </Pressable>
     );
 }

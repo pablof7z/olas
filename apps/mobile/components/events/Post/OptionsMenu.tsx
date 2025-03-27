@@ -1,11 +1,11 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import { BottomSheetView, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import {
     NDKEvent,
     NDKKind,
     NDKList,
-    NDKUser,
-    NostrEvent,
+    type NDKUser,
+    type NostrEvent,
     useMuteList,
     useNDK,
     useNDKCurrentUser,
@@ -46,12 +46,17 @@ const copyRaw = async (event: NDKEvent) => {
 
 const sharePost = async (event: NDKEvent) => {
     Share.share({
-        url: 'https://olas.app/e/' + event.encode(),
+        url: `https://olas.app/e/${event.encode()}`,
     });
 };
 
-function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.RefObject<BottomSheetModal> }) {
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, { create: NDKList });
+function OptionsContent({
+    event,
+    sheetRef,
+}: { event: NDKEvent; sheetRef: React.RefObject<BottomSheetModal> }) {
+    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, {
+        create: NDKList,
+    });
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
     const inset = useSafeAreaInsets();
@@ -78,23 +83,45 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
     const advancedMode = useAppSettingsStore((s) => s.advancedMode);
 
     return (
-        <BottomSheetView style={{ padding: 10, paddingBottom: inset.bottom + 20, flexDirection: 'column', gap: 20 }}>
+        <BottomSheetView
+            style={{
+                padding: 10,
+                paddingBottom: inset.bottom + 20,
+                flexDirection: 'column',
+                gap: 20,
+            }}
+        >
             {showReport ? (
                 <ReportBody event={event} />
             ) : (
                 <>
                     <View className="h-20 flex-row items-stretch justify-stretch gap-4">
-                        <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(bookmark)}>
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="grow flex-col items-center gap-2"
+                            onPress={() => close(bookmark)}
+                        >
                             <Bookmark size={30} color={colors.foreground} />
                             <Text className="text-xs text-muted-foreground">Bookmark</Text>
                         </Button>
 
-                        <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(copyId)}>
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="grow flex-col items-center gap-2"
+                            onPress={() => close(copyId)}
+                        >
                             <Copy size={30} color={colors.foreground} />
                             <Text className="text-xs text-muted-foreground">Copy ID</Text>
                         </Button>
 
-                        <Button size="lg" variant="secondary" className="grow flex-col items-center gap-2" onPress={() => close(sharePost)}>
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="grow flex-col items-center gap-2"
+                            onPress={() => close(sharePost)}
+                        >
                             <ShareIcon size={30} color={colors.foreground} />
                             <Text className="text-xs text-muted-foreground">Share</Text>
                         </Button>
@@ -102,7 +129,12 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
                     <View className="flex-col items-start justify-start gap-2">
                         {advancedMode && (
-                            <Button size="lg" variant="secondary" className="w-full flex-row gap-2 py-4" onPress={() => close(copyRaw)}>
+                            <Button
+                                size="lg"
+                                variant="secondary"
+                                className="w-full flex-row gap-2 py-4"
+                                onPress={() => close(copyRaw)}
+                            >
                                 <Code size={24} color={colors.muted} />
                                 <Text className="flex-1 text-muted-foreground">Copy Raw</Text>
                             </Button>
@@ -116,7 +148,8 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
                                 size="lg"
                                 variant="secondary"
                                 className="flex-1 flex-row gap-2 py-4"
-                                onPress={() => setShowReport(true)}>
+                                onPress={() => setShowReport(true)}
+                            >
                                 <UserX size={24} color="red" />
                                 <Text className="flex-1 text-red-500">Report</Text>
                             </Button>
@@ -130,7 +163,7 @@ function OptionsContent({ event, sheetRef }: { event: NDKEvent; sheetRef: React.
 
 function ReportBody({ event }: { event: NDKEvent }) {
     const { ndk } = useNDK();
-    const [sent, setSent] = useState(false);
+    const [_sent, setSent] = useState(false);
     const { mute } = useMuteList();
     const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
 
@@ -169,7 +202,11 @@ function ReportBody({ event }: { event: NDKEvent }) {
                 </View>
 
                 <View className="flex-row gap-2">
-                    <Button variant="secondary" className="flex-1" onPress={() => report('illegal')}>
+                    <Button
+                        variant="secondary"
+                        className="flex-1"
+                        onPress={() => report('illegal')}
+                    >
                         <Text>Illegal</Text>
                     </Button>
 
@@ -179,7 +216,11 @@ function ReportBody({ event }: { event: NDKEvent }) {
                 </View>
 
                 <View className="flex-row gap-2">
-                    <Button variant="secondary" className="flex-1" onPress={() => report('impersonation')}>
+                    <Button
+                        variant="secondary"
+                        className="flex-1"
+                        onPress={() => report('impersonation')}
+                    >
                         <Text>Impersonation</Text>
                     </Button>
 
@@ -211,7 +252,8 @@ function DeletePostButton({
             onPress={() => {
                 closeFn(() => deletePost(event));
                 toast.success('Post marked for deletion');
-            }}>
+            }}
+        >
             <Trash size={24} color="red" />
             <Text className="flex-1 text-red-500">Delete</Text>
         </Button>
@@ -240,7 +282,8 @@ function MuteButton({
             className="flex-1 flex-row gap-2 bg-red-900/10 py-4"
             onPress={() => {
                 closeFn(() => mute(user.pubkey, 'pubkey'));
-            }}>
+            }}
+        >
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Mute</Text>
         </Button>
@@ -279,7 +322,12 @@ function ReportUserButton({
     }, [user.pubkey, report, closeFn]);
 
     return (
-        <Button size="lg" variant="secondary" className="flex-1 flex-row gap-2 bg-red-900/10 py-4" onPress={handleBlock}>
+        <Button
+            size="lg"
+            variant="secondary"
+            className="flex-1 flex-row gap-2 bg-red-900/10 py-4"
+            onPress={handleBlock}
+        >
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Report</Text>
         </Button>

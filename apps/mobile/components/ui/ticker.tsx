@@ -1,6 +1,6 @@
 import { MotiView } from 'moti';
 import { useState } from 'react';
-import { Text, TextProps, TextStyle, View } from 'react-native';
+import { Text, type TextProps, type TextStyle, View } from 'react-native';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -36,7 +36,8 @@ function Tick({ children, fontSize, style, ...rest }: TextProps & { fontSize: nu
                     color: colors.foreground,
                     fontVariant: ['tabular-nums'],
                 },
-            ]}>
+            ]}
+        >
             {children}
         </Text>
     );
@@ -48,7 +49,8 @@ function TickerList({ number, fontSize, index, staggerDuration, style }: TickerL
             style={{
                 height: fontSize,
                 overflow: 'hidden',
-            }}>
+            }}
+        >
             <MotiView
                 animate={{
                     translateY: -fontSize * number,
@@ -57,7 +59,8 @@ function TickerList({ number, fontSize, index, staggerDuration, style }: TickerL
                     delay: index * staggerDuration,
                     damping: 80,
                     stiffness: 200,
-                }}>
+                }}
+            >
                 {numbersToNine.map((num, index) => {
                     return (
                         <Tick key={`number-${num}-${index}`} fontSize={fontSize} style={style}>
@@ -70,7 +73,12 @@ function TickerList({ number, fontSize, index, staggerDuration, style }: TickerL
     );
 }
 
-export default function Ticker({ value = 12325, fontSize = 50, staggerDuration = 50, style }: TickerProps) {
+export default function Ticker({
+    value = 12325,
+    fontSize = 50,
+    staggerDuration = 50,
+    style,
+}: TickerProps) {
     const splitValue = String(value).split('');
     const [newFontSize, setNewFontSize] = useState(fontSize);
     return (
@@ -88,19 +96,22 @@ export default function Ticker({ value = 12325, fontSize = 50, staggerDuration =
                     },
                 ]}
                 onTextLayout={(e) => {
-                    const newFontSize = Math.floor(e.nativeEvent.lines[0].ascender - e.nativeEvent.lines[0].descender);
+                    const newFontSize = Math.floor(
+                        e.nativeEvent.lines[0].ascender - e.nativeEvent.lines[0].descender
+                    );
                     if (newFontSize === fontSize) return;
                     setNewFontSize(newFontSize);
-                }}>
+                }}
+            >
                 {value}
             </Tick>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {splitValue.map((number, index) => {
-                    if (!isNaN(parseInt(number))) {
+                    if (!Number.isNaN(Number.parseInt(number))) {
                         return (
                             <TickerList
                                 fontSize={newFontSize}
-                                number={parseInt(number)}
+                                number={Number.parseInt(number)}
                                 index={index}
                                 staggerDuration={staggerDuration}
                                 style={style}

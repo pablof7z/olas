@@ -6,42 +6,39 @@ import generateThumbnail from './generate-thumbnail';
 import removeExifFromFile from './remove-exif';
 import calculateSha256 from './sha256';
 
-import { PostMedia } from '@/lib/post-editor/types';
+import type { PostMedia } from '@/lib/post-editor/types';
 
 export type ProgressCb = (type: string, progress: number) => void;
 
-export async function prepareMedia(media: PostMedia[], onProgress?: ProgressCb): Promise<PostMedia[]> {
+export async function prepareMedia(
+    media: PostMedia[],
+    onProgress?: ProgressCb
+): Promise<PostMedia[]> {
     const res: PostMedia[] = [];
 
     for (const m of media) {
         const output = await prepareMediaItem(m, onProgress);
-        console.log('prepared media', output.localUri);
         res.push(output);
     }
 
     return res;
 }
 
-export async function prepareMediaItem(media: PostMedia, onProgress?: ProgressCb): Promise<PostMedia> {
+export async function prepareMediaItem(
+    media: PostMedia,
+    onProgress?: ProgressCb
+): Promise<PostMedia> {
     const result: PostMedia = { ...media };
 
     result.mimeType ??= await determineMimeType(result.uris[0]);
 
     try {
-        console.log('will compress', media.uris[0]);
         await compress(result, onProgress);
-        console.log('after compressing', result.localUri);
         await removeExif(result);
-        console.log('after removing exif', result.localUri);
         await thumbnail(result);
-        console.log('after thumbnail', result.localThumbnailUri);
         await blurhash(result);
-        console.log('after blurhash', result.blurhash);
         await dimensions(result);
-        console.log('after dimensions', result.width, result.height);
         await sha256(result);
-        console.log('after sha256', result.localSha256);
-        console.log('generated all metadata', JSON.stringify(result, null, 4));
     } catch (error) {
         console.error('Error generating metadata', error);
     }
@@ -65,7 +62,7 @@ async function blurhash(media: PostMedia): Promise<void> {
         const b = await generateBlurhash(media.localThumbnailUri);
         if (b) media.blurhash = b;
     } else {
-        throw new Error('Invalid media type: ' + media.mediaType);
+        throw new Error(`Invalid media type: ${media.mediaType}`);
     }
 }
 

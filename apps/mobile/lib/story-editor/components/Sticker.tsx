@@ -1,13 +1,19 @@
 import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useMemo, useState, useRef, useLayoutEffect } from 'react';
-import { StyleSheet, View, Text, LayoutChangeEvent, Dimensions } from 'react-native';
+import { Dimensions, type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
 
-import { EventStickerView, TextStickerView, CountdownStickerView, MentionStickerView, PromptStickerView } from './sticker-types';
 import { useStickerStore } from '../store';
+import {
+    CountdownStickerView,
+    EventStickerView,
+    MentionStickerView,
+    PromptStickerView,
+    TextStickerView,
+} from './sticker-types';
 
-import { Sticker as StickerType } from '@/lib/story-editor/store/index';
+import type { Sticker as StickerType } from '@/lib/story-editor/store/index';
 
 interface StickerProps {
     sticker: StickerType;
@@ -85,7 +91,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     // Update store with new transform values
     const updateStickerTransform = useCallback(() => {
-        console.log('👉 In Sticker.updateStickerTransform with id:', sticker.id);
         const transform = {
             translateX: translateX.value,
             translateY: translateY.value,
@@ -103,7 +108,16 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 height: scaledHeight,
             });
         }
-    }, [sticker.id, translateX, translateY, scale, rotate, updateSticker, updateStickerDimensions, scaleFactor]);
+    }, [
+        sticker.id,
+        translateX,
+        translateY,
+        scale,
+        rotate,
+        updateSticker,
+        updateStickerDimensions,
+        scaleFactor,
+    ]);
 
     // Handle style change using the store's nextStyle function
     const changeStyle = () => {
@@ -166,7 +180,10 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
 
     // Compose gestures
     const gesture = Gesture.Exclusive(
-        Gesture.Simultaneous(tapGesture, Gesture.Simultaneous(panGesture, Gesture.Simultaneous(pinchGesture, rotationGesture)))
+        Gesture.Simultaneous(
+            tapGesture,
+            Gesture.Simultaneous(panGesture, Gesture.Simultaneous(pinchGesture, rotationGesture))
+        )
     );
 
     // Handle layout changes to get dimensions
@@ -211,11 +228,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
             const scaledWidth = newWidth * currentScale * scaleFactor;
             const scaledHeight = newHeight * currentScale * scaleFactor;
 
-            console.log('Content dimensions:', {
-                raw: { width: newWidth, height: newHeight },
-                scaled: { width: scaledWidth, height: scaledHeight },
-            });
-
             if (scaledWidth > 0 && scaledHeight > 0) {
                 setStickerDimensions({ width: scaledWidth, height: scaledHeight });
                 width.value = scaledWidth;
@@ -241,7 +253,11 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
         return {
             position: 'absolute',
             maxWidth,
-            transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { rotate: `${rotate.value}deg` }],
+            transform: [
+                { translateX: translateX.value },
+                { translateY: translateY.value },
+                { rotate: `${rotate.value}deg` },
+            ],
         };
     });
 
@@ -257,11 +273,25 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const renderContent = () => {
         switch (sticker.type) {
             case NDKStoryStickerType.Text:
-                return <TextStickerView sticker={sticker as StickerType<NDKStoryStickerType.Text>} maxWidth={derivedScaledMaxWidth} />;
+                return (
+                    <TextStickerView
+                        sticker={sticker as StickerType<NDKStoryStickerType.Text>}
+                        maxWidth={derivedScaledMaxWidth}
+                    />
+                );
             case NDKStoryStickerType.Pubkey:
-                return <MentionStickerView sticker={sticker as StickerType<NDKStoryStickerType.Pubkey>} />;
+                return (
+                    <MentionStickerView
+                        sticker={sticker as StickerType<NDKStoryStickerType.Pubkey>}
+                    />
+                );
             case NDKStoryStickerType.Event:
-                return <EventStickerView sticker={sticker as StickerType<NDKStoryStickerType.Event>} maxWidth={derivedScaledMaxWidth} />;
+                return (
+                    <EventStickerView
+                        sticker={sticker as StickerType<NDKStoryStickerType.Event>}
+                        maxWidth={derivedScaledMaxWidth}
+                    />
+                );
             case NDKStoryStickerType.Countdown:
                 return <CountdownStickerView sticker={sticker} />;
             case NDKStoryStickerType.Prompt:
@@ -282,7 +312,8 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                                 {sticker.style}
                                 {'\n'}
                                 X: {Math.round(translateX.value)}, Y: {Math.round(translateY.value)}
-                                {'\n'}W: {Math.round(stickerDimensions.width)}, H: {Math.round(stickerDimensions.height)}
+                                {'\n'}W: {Math.round(stickerDimensions.width)}, H:{' '}
+                                {Math.round(stickerDimensions.height)}
                                 {'\n'}Scale: {scale.value.toFixed(2)}
                             </Text>
                         </View>

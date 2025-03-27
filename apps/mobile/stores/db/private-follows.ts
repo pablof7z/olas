@@ -1,4 +1,4 @@
-import { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
+import type { Hexpubkey } from '@nostr-dev-kit/ndk-mobile';
 import { create } from 'zustand';
 
 import { db } from '.';
@@ -27,7 +27,10 @@ export const usePrivateFollows = create<PrivateFollowsStore>((set) => ({
             if (state.pubkeys.has(pubkey)) return state;
             const newPubkeys = new Set(state.pubkeys);
             newPubkeys.add(pubkey);
-            db.runSync('INSERT INTO private_follows (pubkey, created_at) VALUES (?, ?)', [pubkey, Math.floor(Date.now() / 1000)]);
+            db.runSync('INSERT INTO private_follows (pubkey, created_at) VALUES (?, ?)', [
+                pubkey,
+                Math.floor(Date.now() / 1000),
+            ]);
             return { pubkeys: newPubkeys };
         }),
 

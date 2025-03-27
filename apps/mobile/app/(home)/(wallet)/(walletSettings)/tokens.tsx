@@ -1,20 +1,33 @@
 import {
-    NDKCashuToken,
     NDKCashuMintList,
+    type NDKCashuToken,
     NDKKind,
     useNDKCurrentUser,
     useNDKSessionEventKind,
     useNDKWallet,
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
-import { consolidateMintTokens, NDKCashuWallet, ProofEntry, WalletProofChange } from '@nostr-dev-kit/ndk-wallet';
+import {
+    NDKCashuWallet,
+    type ProofEntry,
+    type WalletProofChange,
+    consolidateMintTokens,
+} from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { Check, Delete, Trash } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, SafeAreaView, ScrollView, View, StyleSheet } from 'react-native';
+import {
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    View,
+} from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { Button } from '@/components/nativewindui/Button';
@@ -48,7 +61,9 @@ export default function TokensScreen() {
                     title: 'Coins',
                     headerShown: true,
                     headerRight: () => (
-                        <Pressable onPress={forceSync}>{forceSyncing ? <ActivityIndicator /> : <Text>Force-Sync</Text>}</Pressable>
+                        <Pressable onPress={forceSync}>
+                            {forceSyncing ? <ActivityIndicator /> : <Text>Force-Sync</Text>}
+                        </Pressable>
                     ),
                 }}
             />
@@ -57,7 +72,12 @@ export default function TokensScreen() {
                 data={Array.from(tokens.values()).filter((t) => !!t.tokenId)}
                 keyExtractor={(item) => item.tokenId}
                 renderItem={({ item }) => (
-                    <TokenItem tokenId={item.tokenId} token={item.token} mint={item.mint} proofEntries={item.proofEntries} />
+                    <TokenItem
+                        tokenId={item.tokenId}
+                        token={item.token}
+                        mint={item.mint}
+                        proofEntries={item.proofEntries}
+                    />
                 )}
             />
         </>
@@ -87,7 +107,7 @@ function InspectButton({ token }: { token: NDKCashuToken }) {
             try {
                 const val = JSON.parse(content);
                 setPayload(JSON.stringify(val, null, 4));
-            } catch (e) {
+            } catch (_e) {
                 token.decrypt().then(() => {
                     setContent(token.content);
                 });
@@ -154,10 +174,9 @@ function TokenItem({
         const res = await token!.publish();
         setStatusUpdate(
             res
-                ? 'Published to ' +
-                      Array.from(res)
-                          .map((r) => r.url)
-                          .join(', ')
+                ? `Published to ${Array.from(res)
+                      .map((r) => r.url)
+                      .join(', ')}`
                 : 'Failed'
         );
     };
@@ -177,16 +196,25 @@ function TokenItem({
 
     const [showProofs, setShowProofs] = useState(false);
 
-    const [inspect, setInspect] = useState(false);
-    const handleInspect = async () => {
+    const [_inspect, setInspect] = useState(false);
+    const _handleInspect = async () => {
         setInspect(true);
     };
 
     return (
         <Swipeable renderRightActions={() => <RightActions event={token} />}>
-            <View style={[itemStyles.container, { backgroundColor: colors.card }]} className="flex-col gap-4 p-2">
-                <Pressable className="flex-1 flex-row items-center justify-between gap-2" onPress={() => setOpen(isOpen ? null : tokenId)}>
-                    <Image source={{ uri: mintInfo?.icon_url }} style={{ width: 32, height: 32, borderRadius: 4 }} />
+            <View
+                style={[itemStyles.container, { backgroundColor: colors.card }]}
+                className="flex-col gap-4 p-2"
+            >
+                <Pressable
+                    className="flex-1 flex-row items-center justify-between gap-2"
+                    onPress={() => setOpen(isOpen ? null : tokenId)}
+                >
+                    <Image
+                        source={{ uri: mintInfo?.icon_url }}
+                        style={{ width: 32, height: 32, borderRadius: 4 }}
+                    />
 
                     <View className="flex-1 flex-col">
                         <Text className="font-bold">{mintInfo?.name ?? mint}</Text>
@@ -206,16 +234,15 @@ function TokenItem({
                             </Text>
                         ))}
 
-                        {showProofs && (
-                            <>
-                                {proofEntries.map(({ proof }) => (
-                                    <View className="flex-row" key={proof.C}>
-                                        <Text className="flex-1 text-sm text-muted-foreground">Proof {proof.C.substring(0, 10)}</Text>
-                                        <Text>{proof.amount}</Text>
-                                    </View>
-                                ))}
-                            </>
-                        )}
+                        {showProofs &&
+                            proofEntries.map(({ proof }) => (
+                                <View className="flex-row" key={proof.C}>
+                                    <Text className="flex-1 text-sm text-muted-foreground">
+                                        Proof {proof.C.substring(0, 10)}
+                                    </Text>
+                                    <Text>{proof.amount}</Text>
+                                </View>
+                            ))}
 
                         {statusUpdate && <Text>{statusUpdate}</Text>}
 
@@ -237,7 +264,9 @@ function TokenItem({
                             </View>
                         )}
 
-                        <Text className="text-xs text-muted-foreground">{token?.encode() ?? tokenId}</Text>
+                        <Text className="text-xs text-muted-foreground">
+                            {token?.encode() ?? tokenId}
+                        </Text>
                     </View>
                 )}
             </View>
@@ -257,12 +286,18 @@ function RightActions({ event }: { event: NDKCashuToken }) {
     }, [event?.id]);
     return (
         <View style={rightActionStyles.container}>
-            <Pressable style={[rightActionStyles.button, rightActionStyles.delete]} onPress={handleDelete}>
+            <Pressable
+                style={[rightActionStyles.button, rightActionStyles.delete]}
+                onPress={handleDelete}
+            >
                 <Trash size={24} color="white" />
                 <Text className="text-xs text-white">Delete</Text>
             </Pressable>
 
-            <Pressable style={[rightActionStyles.button, rightActionStyles.validate]} onPress={handleValidate}>
+            <Pressable
+                style={[rightActionStyles.button, rightActionStyles.validate]}
+                onPress={handleValidate}
+            >
                 <Check size={24} color="white" />
                 <Text className="text-xs text-white">Validate</Text>
             </Pressable>
@@ -295,11 +330,14 @@ const rightActionStyles = StyleSheet.create({
 
 function ForceSync() {
     const currentUser = useNDKCurrentUser();
-    const { events: tokenEvents } = useSubscribe<NDKCashuToken>([{ kinds: [NDKKind.CashuToken], authors: [currentUser?.pubkey] }], {
-        wrap: true,
-        skipVerification: true,
-        closeOnEose: true,
-    });
+    const { events: tokenEvents } = useSubscribe<NDKCashuToken>(
+        [{ kinds: [NDKKind.CashuToken], authors: [currentUser?.pubkey] }],
+        {
+            wrap: true,
+            skipVerification: true,
+            closeOnEose: true,
+        }
+    );
     const proofs = useMemo(() => {
         const proofs = new Map<string, { amount: number; proof: any }[]>();
         const knownProofs = new Set<string>();
@@ -321,7 +359,13 @@ function ForceSync() {
     }, [tokenEvents.length]);
 
     const { events: deletedEvents } = useSubscribe(
-        [{ kinds: [NDKKind.EventDeletion], '#k': [NDKKind.CashuToken.toString()], authors: [currentUser?.pubkey] }],
+        [
+            {
+                kinds: [NDKKind.EventDeletion],
+                '#k': [NDKKind.CashuToken.toString()],
+                authors: [currentUser?.pubkey],
+            },
+        ],
         { skipVerification: true, closeOnEose: true }
     );
 
@@ -330,8 +374,11 @@ function ForceSync() {
         const tokenIds = new Set<string>(tokenEvents.map((t) => t.id));
 
         for (const event of deletedEvents) {
-            for (const id of event.tags.find(([k]) => k === 'e')?.slice(1)) {
-                if (tokenIds.has(id)) deletedIds.add(id);
+            const eTag = event.tags.find(([k]) => k === 'e');
+            if (eTag) {
+                for (const id of eTag.slice(1)) {
+                    if (tokenIds.has(id)) deletedIds.add(id);
+                }
             }
         }
 
@@ -360,7 +407,10 @@ function ForceSync() {
     );
 }
 
-function ForceSyncItem({ mint, proofs }: { mint: string; proofs: { amount: number; proof: any }[] }) {
+function ForceSyncItem({
+    mint,
+    proofs,
+}: { mint: string; proofs: { amount: number; proof: any }[] }) {
     const { activeWallet } = useNDKWallet();
     const [validating, setValidating] = useState(false);
     const [result, setResult] = useState<string | null>(null);

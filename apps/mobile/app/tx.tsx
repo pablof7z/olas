@@ -1,4 +1,13 @@
-import { Hexpubkey, NDKEvent, NDKTag, NDKUser, useNDK, useNDKCurrentUser, wrapEvent, NDKCashuWalletTx } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    NDKCashuWalletTx,
+    type NDKEvent,
+    type NDKTag,
+    type NDKUser,
+    useNDK,
+    useNDKCurrentUser,
+    wrapEvent,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -51,7 +60,11 @@ export default function TxView() {
     );
 }
 
-function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent; tag: NDKTag; index: number }) {
+function TaggedEvent({
+    originalEvent,
+    tag,
+    index,
+}: { originalEvent: NDKEvent; tag: NDKTag; index: number }) {
     const { ndk } = useNDK();
     const [taggedEvent, setTaggedEvent] = useState<NDKEvent | null>(null);
     const marker = tag[3];
@@ -63,7 +76,6 @@ function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent; t
 
         ndk.fetchEventFromTag(tag, originalEvent).then((e) => {
             if (e.tagId() !== fetch) {
-                console.log('we avoided rendering a wrong event', { fetch, tagId: e.tagId() });
                 return;
             }
 
@@ -78,7 +90,9 @@ function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent; t
             <View className="flex-col gap-2">
                 <Text className="font-mono font-bold">Redeemed: </Text>
                 <Text className="font-mono">{taggedEvent.id}</Text>
-                <Text className="rounded-xl bg-card p-4 font-sans text-lg font-bold">{taggedEvent.content}</Text>
+                <Text className="rounded-xl bg-card p-4 font-sans text-lg font-bold">
+                    {taggedEvent.content}
+                </Text>
             </View>
         );
     }

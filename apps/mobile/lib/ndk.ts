@@ -1,4 +1,8 @@
-import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKRelay } from '@nostr-dev-kit/ndk-mobile';
+import NDK, {
+    type Hexpubkey,
+    NDKCacheAdapterSqlite,
+    type NDKRelay,
+} from '@nostr-dev-kit/ndk-mobile';
 
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
@@ -18,7 +22,7 @@ export function initializeNDK(currentUser?: Hexpubkey) {
     const filteredRelays = relays.filter((r) => {
         try {
             return new URL(r.url).protocol.startsWith('ws');
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     });
@@ -44,7 +48,8 @@ export function initializeNDK(currentUser?: Hexpubkey) {
         initialValidationRatio: 0.0,
         lowestValidationRatio: 0.0,
         clientName: 'olas',
-        clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
+        clientNip89:
+            '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
         profileConfig: {
             profileRefreshSeconds: 24 * 60 * 60,
         },
@@ -57,11 +62,14 @@ export function initializeNDK(currentUser?: Hexpubkey) {
     return ndk;
 }
 
-const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-    const url = new URL(relay.url);
-    if (direction === 'send' && relay.url.match(/vertex/))
-        console.log(`[NET +${Date.now() - timeZero}ms] 👉`, url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && relay.url.match(/vertex/)) console.log('👈', url.hostname, msg.slice(0, 600));
+const netDebug = (_msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+    const _url = new URL(relay.url);
+    if (direction === 'send' && relay.url.match(/vertex/)) {
+        // Handle vertex send case
+    }
+    if (direction === 'recv' && relay.url.match(/vertex/)) {
+        // Handle vertex receive case
+    }
 };
 
-const timeZero = Date.now();
+const _timeZero = Date.now();

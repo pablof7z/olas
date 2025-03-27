@@ -1,11 +1,20 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import NDK, { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { atom, useAtom } from 'jotai';
 import { Scroll } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Animated, Dimensions, FlatList, Linking, SafeAreaView, TextInput, View } from 'react-native';
+import {
+    Animated,
+    Dimensions,
+    FlatList,
+    Linking,
+    SafeAreaView,
+    TextInput,
+    View,
+} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import EventMediaContainer from '@/components/media/event';
@@ -16,7 +25,7 @@ import { formatMoney } from '@/utils/bitcoin';
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 
-const sizeAtom = atom<string | undefined, [string], void>(undefined, (get, set, size) => {
+const sizeAtom = atom<string | undefined, [string], void>(undefined, (_get, set, size) => {
     set(sizeAtom, size);
 });
 
@@ -45,42 +54,54 @@ function ShippingInformationStep() {
 
             <BottomSheetTextInput
                 value={shippingInformation.name}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, name: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, name: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="Name"
             />
 
             <BottomSheetTextInput
                 value={shippingInformation.address}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, address: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, address: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="Address"
             />
 
             <BottomSheetTextInput
                 value={shippingInformation.city}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, city: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, city: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="City"
             />
 
             <BottomSheetTextInput
                 value={shippingInformation.state}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, state: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, state: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="State"
             />
 
             <BottomSheetTextInput
                 value={shippingInformation.zip}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, zip: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, zip: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="Zip"
             />
 
             <BottomSheetTextInput
                 value={shippingInformation.country}
-                onChangeText={(text) => setShippingInformation({ ...shippingInformation, country: text })}
+                onChangeText={(text) =>
+                    setShippingInformation({ ...shippingInformation, country: text })
+                }
                 style={{ borderWidth: 1, borderColor: 'gray', borderRadius: 10, padding: 10 }}
                 placeholder="Country"
             />
@@ -114,7 +135,11 @@ export default function ProductView({ event }: { event: NDKEvent }) {
                             renderItem={({ item }) => (
                                 <Image
                                     source={{ uri: item }}
-                                    style={{ width: Dimensions.get('window').width - 20, height: 400, borderRadius: 16 }}
+                                    style={{
+                                        width: Dimensions.get('window').width - 20,
+                                        height: 400,
+                                        borderRadius: 16,
+                                    }}
                                 />
                             )}
                         />
@@ -199,7 +224,7 @@ export class NDKClassifiedListing extends NDKEvent {
 
     get published_at(): number | undefined {
         const tag = this.tagValue('published_at');
-        return tag ? parseInt(tag) : undefined;
+        return tag ? Number.parseInt(tag) : undefined;
     }
 
     set published_at(timestamp: number | undefined) {
@@ -223,7 +248,7 @@ export class NDKClassifiedListing extends NDKEvent {
         if (!priceTag) return undefined;
 
         return {
-            amount: parseInt(priceTag[1]),
+            amount: Number.parseInt(priceTag[1]),
             currency: priceTag[2],
             frequency: priceTag[3],
         };

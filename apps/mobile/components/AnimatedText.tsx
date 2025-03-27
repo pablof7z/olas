@@ -1,6 +1,12 @@
 import React from 'react';
-import { StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle } from 'react-native';
-import Animated, { useAnimatedProps, SharedValue } from 'react-native-reanimated';
+import {
+    type StyleProp,
+    StyleSheet,
+    TextInput,
+    type TextInputProps,
+    type TextStyle,
+} from 'react-native';
+import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
 
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 
@@ -9,7 +15,10 @@ Animated.addWhitelistedNativeProps({ text: true });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-export function AnimatedText({ style, text }: { style?: StyleProp<TextStyle>; text: SharedValue<number> }) {
+export function AnimatedText({
+    style,
+    text,
+}: { style?: StyleProp<TextStyle>; text: SharedValue<number> }) {
     const animatedProps = useAnimatedProps(() => {
         return { text: `${text.value}` } as TextInputProps;
     });

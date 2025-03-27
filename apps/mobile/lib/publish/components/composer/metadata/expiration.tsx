@@ -1,9 +1,13 @@
 import { useSetAtom } from 'jotai';
 import { Timer } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import ExpirationBottomSheet, { EXPIRATION_OPTIONS, ExpirationBottomSheetRef, expirationBottomSheetRefAtom } from './ExpirationBottomSheet';
+import ExpirationBottomSheet, {
+    EXPIRATION_OPTIONS,
+    type ExpirationBottomSheetRef,
+    expirationBottomSheetRefAtom,
+} from './ExpirationBottomSheet';
 
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -40,10 +44,16 @@ export default function Expiration() {
                     <Timer size={20} color={colors.foreground} />
                     <Text style={[styles.label, { color: colors.foreground }]}>Expiration</Text>
                 </View>
-                <Text style={[styles.value, { color: colors.foreground }]}>{getExpirationLabel()}</Text>
+                <Text style={[styles.value, { color: colors.foreground }]}>
+                    {getExpirationLabel()}
+                </Text>
             </TouchableOpacity>
 
-            <ExpirationBottomSheet ref={bottomSheetRef} initialValue={expiration} onValueChange={setExpiration} />
+            <ExpirationBottomSheet
+                ref={bottomSheetRef}
+                initialValue={expiration}
+                onValueChange={setExpiration}
+            />
         </>
     );
 }

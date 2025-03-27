@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { View, StyleSheet } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { StyleSheet, View } from 'react-native';
 
 interface PreviewProps {
     selectedMedia: {
@@ -41,7 +41,15 @@ function PreviewVideo({ uri, ...props }: { uri: string }) {
         player.play();
     });
 
-    return <VideoView player={player} style={[styles.content, props.style]} contentFit="contain" nativeControls={false} {...props} />;
+    return (
+        <VideoView
+            player={player}
+            style={[styles.content, props.style]}
+            contentFit="contain"
+            nativeControls={false}
+            {...props}
+        />
+    );
 }
 
 const styles = StyleSheet.create({

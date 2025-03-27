@@ -1,8 +1,24 @@
 import * as React from 'react';
-import Svg, { G, Path, Circle, Ellipse, Defs, LinearGradient, Stop, ClipPath } from 'react-native-svg';
+import Svg, {
+    G,
+    Path,
+    Circle,
+    Ellipse,
+    Defs,
+    LinearGradient,
+    Stop,
+    ClipPath,
+} from 'react-native-svg';
 /* SVGR has dropped some elements not supported by react-native-svg: filter */
 const SvgComponent = ({ size, ...props }: { size: number }) => (
-    <Svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 300 300" fill="none" {...props}>
+    <Svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={24}
+        viewBox="0 0 300 300"
+        fill="none"
+        {...props}
+    >
         <G clipPath="url(#a)">
             <Path fill="#000" d="M0 0h300v300H0z" />
             <G filter="url(#b)">
@@ -30,15 +46,36 @@ const SvgComponent = ({ size, ...props }: { size: number }) => (
             </G>
         </G>
         <Defs>
-            <LinearGradient id="f" x1={110.193} x2={110.032} y1={131.819} y2={226.03} gradientUnits="userSpaceOnUse">
+            <LinearGradient
+                id="f"
+                x1={110.193}
+                x2={110.032}
+                y1={131.819}
+                y2={226.03}
+                gradientUnits="userSpaceOnUse"
+            >
                 <Stop offset={0.03} stopColor="#FA3C3C" />
                 <Stop offset={1} stopColor="#BC1870" />
             </LinearGradient>
-            <LinearGradient id="g" x1={95.768} x2={90.519} y1={87.083} y2={181.321} gradientUnits="userSpaceOnUse">
+            <LinearGradient
+                id="g"
+                x1={95.768}
+                x2={90.519}
+                y1={87.083}
+                y2={181.321}
+                gradientUnits="userSpaceOnUse"
+            >
                 <Stop stopColor="#FF9F2F" />
                 <Stop offset={1} stopColor="#FA3C3C" />
             </LinearGradient>
-            <LinearGradient id="h" x1={169.872} x2={170.163} y1={253.798} y2={144.483} gradientUnits="userSpaceOnUse">
+            <LinearGradient
+                id="h"
+                x1={169.872}
+                x2={170.163}
+                y1={253.798}
+                y2={144.483}
+                gradientUnits="userSpaceOnUse"
+            >
                 <Stop stopColor="#5B09AD" />
                 <Stop offset={1} stopColor="#BC1870" />
             </LinearGradient>

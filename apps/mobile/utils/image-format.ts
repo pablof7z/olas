@@ -17,10 +17,10 @@ export function isHeicImage(uri: string): boolean {
  */
 export async function convertHeicToJpeg(uri: string): Promise<string> {
     if (isHeicImage(uri)) {
-        console.log('Converting HEIC image to JPEG:', uri);
         try {
-            const result = await ImageManipulator.manipulateAsync(uri, [], { format: ImageManipulator.SaveFormat.JPEG });
-            console.log('Converted image URI:', result.uri);
+            const result = await ImageManipulator.manipulateAsync(uri, [], {
+                format: ImageManipulator.SaveFormat.JPEG,
+            });
             return result.uri;
         } catch (error) {
             console.error('Error converting HEIC to JPEG:', error);

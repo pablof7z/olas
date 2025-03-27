@@ -1,6 +1,6 @@
-import { NDKEvent, NDKKind, NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, type NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import { NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import { router, Stack, useGlobalSearchParams, usePathname } from 'expo-router';
+import { Stack, router, useGlobalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
@@ -39,7 +39,7 @@ export default function NwcScreen() {
     async function save() {
         setStatus('Connecting');
         const nwc = new NDKNWCWallet(ndk, { pairingCode: connectString });
-        nwc.pool.on('relay:connect', (r: NDKRelay) => console.log('connected to', r.url));
+        nwc.pool.on('relay:connect', (_r: NDKRelay) => {});
 
         nwc.once('ready', async () => {
             setStatus('Getting balance');
@@ -66,7 +66,9 @@ export default function NwcScreen() {
                 }}
             />
             <View className="flex-1 flex-col justify-center">
-                <Text className="text-center text-muted-foreground">Enter your nostr wallet connect url.</Text>
+                <Text className="text-center text-muted-foreground">
+                    Enter your nostr wallet connect url.
+                </Text>
                 <View className="px-4">
                     {status && <Text>{status}</Text>}
                     <TextField

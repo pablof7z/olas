@@ -1,6 +1,10 @@
 import Lightning from '../icons/lightning';
 
-export default function WalletButton({ size = 28, focused, color }: { size?: number; focused: boolean; color: string }) {
+export default function WalletButton({
+    size = 28,
+    focused,
+    color,
+}: { size?: number; focused: boolean; color: string }) {
     return (
         <Lightning
             width={size}

@@ -2,8 +2,22 @@ import { useAugmentedRef, useControllableState } from '@rn-primitives/hooks';
 import { Icon } from '@roninoss/icons';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
-import { Pressable, TextInput, View, ViewProps, ViewStyle, type NativeSyntheticEvent, type TextInputFocusEventData } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
+import {
+    type NativeSyntheticEvent,
+    Pressable,
+    TextInput,
+    type TextInputFocusEventData,
+    View,
+    type ViewProps,
+    type ViewStyle,
+} from 'react-native';
+import Animated, {
+    FadeIn,
+    FadeOut,
+    useAnimatedStyle,
+    useDerivedValue,
+    withTiming,
+} from 'react-native-reanimated';
 
 import type { TextFieldProps, TextFieldRef } from './types';
 
@@ -85,7 +99,8 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                 })}
                 style={materialRingColor ? { borderColor: materialRingColor } : undefined}
                 disabled={editable === false}
-                onPress={focus}>
+                onPress={focus}
+            >
                 <View
                     className={innerRootVariants({
                         variant: materialVariant,
@@ -95,7 +110,12 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             editable,
                         }),
                     })}
-                    style={materialRingColor && isFocused ? { borderColor: materialRingColor } : undefined}>
+                    style={
+                        materialRingColor && isFocused
+                            ? { borderColor: materialRingColor }
+                            : undefined
+                    }
+                >
                     {leftView}
                     <InputWrapper>
                         {!!label && (
@@ -126,15 +146,13 @@ const TextField = React.forwardRef<TextFieldRef, TextFieldProps>(
                             {...props}
                         />
                     </InputWrapper>
-                    {!materialHideActionIcons && (
-                        <>
-                            {errorMessage ? (
-                                <MaterialErrorIcon />
-                            ) : (
-                                !!value && isFocused && <MaterialClearIcon clearText={clear} editable={editable} />
-                            )}
-                        </>
-                    )}
+                    {!materialHideActionIcons &&
+                        (errorMessage ? (
+                            <MaterialErrorIcon />
+                        ) : (
+                            !!value &&
+                            isFocused && <MaterialClearIcon clearText={clear} editable={editable} />
+                        ))}
                     {rightView}
                 </View>
             </Pressable>
@@ -228,19 +246,28 @@ function MaterialLabel(props: MaterialLabelProps) {
             alignSelf: 'center',
         };
         if (variantDerived.value === 'outlined') {
-            style.paddingLeft = withTiming(hasLeftViewDerived.value && isLiftedDerived.value ? 0 : 12, {
-                duration: 200,
-            });
+            style.paddingLeft = withTiming(
+                hasLeftViewDerived.value && isLiftedDerived.value ? 0 : 12,
+                {
+                    duration: 200,
+                }
+            );
             style.transform = [
                 {
-                    translateY: withTiming(isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 2 : 0, {
-                        duration: 200,
-                    }),
+                    translateY: withTiming(
+                        isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 2 : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
                 {
-                    translateX: withTiming(hasLeftViewDerived.value && isLiftedDerived.value ? -12 : 0, {
-                        duration: 200,
-                    }),
+                    translateX: withTiming(
+                        hasLeftViewDerived.value && isLiftedDerived.value ? -12 : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
             ];
         }
@@ -248,9 +275,12 @@ function MaterialLabel(props: MaterialLabelProps) {
             style.paddingLeft = 8;
             style.transform = [
                 {
-                    translateY: withTiming(isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 4 : 0, {
-                        duration: 200,
-                    }),
+                    translateY: withTiming(
+                        isLiftedDerived.value ? -DEFAULT_TEXT_FIELD_HEIGHT / 4 : 0,
+                        {
+                            duration: 200,
+                        }
+                    ),
                 },
                 {
                     translateX: 0,
@@ -277,7 +307,8 @@ function MaterialLabel(props: MaterialLabelProps) {
                     props.hasError && 'text-destructive dark:text-destructive',
                     props.className
                 )}
-                style={animatedTextStyle}>
+                style={animatedTextStyle}
+            >
                 {props.materialLabel}
             </Animated.Text>
         </Animated.View>
@@ -296,7 +327,8 @@ function MaterialClearIcon(props: MaterialClearIconProps) {
             <Pressable
                 disabled={props.editable === false}
                 className="flex-1 justify-center px-2 active:opacity-65"
-                onPress={props.clearText}>
+                onPress={props.clearText}
+            >
                 <Icon color={colors.grey2} name="close-circle-outline" size={24} />
             </Pressable>
         </Animated.View>
@@ -306,7 +338,12 @@ function MaterialClearIcon(props: MaterialClearIconProps) {
 function MaterialErrorIcon() {
     const { colors } = useColorScheme();
     return (
-        <Animated.View pointerEvents="none" entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} className="justify-center pr-2">
+        <Animated.View
+            pointerEvents="none"
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            className="justify-center pr-2"
+        >
             <Icon
                 color={colors.destructive}
                 name="close-circle-outline"

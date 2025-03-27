@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { Preview } from './Preview';
@@ -23,9 +23,13 @@ export default function PreviewContainer({ selectedMedia, height }: PreviewConta
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
                     style={styles.scrollView}
-                    contentContainerStyle={styles.scrollContent}>
+                    contentContainerStyle={styles.scrollContent}
+                >
                     {selectedMedia.map((media, index) => (
-                        <View key={`${media.uri}-${index}`} style={[styles.mediaContainer, { width: dimensions.width * 0.8 }]}>
+                        <View
+                            key={`${media.uri}-${index}`}
+                            style={[styles.mediaContainer, { width: dimensions.width * 0.8 }]}
+                        >
                             <Preview selectedMedia={media} />
                         </View>
                     ))}

@@ -1,6 +1,6 @@
-import { GroupEntry } from '../groups/types';
+import type { GroupEntry } from '../groups/types';
 
-import { Location } from '@/lib/publish/types';
+import type { Location } from '@/lib/publish/types';
 
 export type PostMediaType = 'image' | 'video';
 

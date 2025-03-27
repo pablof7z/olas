@@ -1,8 +1,8 @@
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { MessageCircle } from 'lucide-react-native';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
@@ -32,9 +32,14 @@ export default function Comment({
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={comment}>
-                <MessageCircle size={iconSize} color={commentedByUser ? foregroundColor : inactiveColor} />
+                <MessageCircle
+                    size={iconSize}
+                    color={commentedByUser ? foregroundColor : inactiveColor}
+                />
             </TouchableOpacity>
-            {commentCount > 0 && <Text style={[styles.text, { color: inactiveColor }]}>{commentCount}</Text>}
+            {commentCount > 0 && (
+                <Text style={[styles.text, { color: inactiveColor }]}>{commentCount}</Text>
+            )}
         </View>
     );
 }

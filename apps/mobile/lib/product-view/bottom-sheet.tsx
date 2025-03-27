@@ -1,6 +1,6 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Dimensions } from 'react-native';
 
 import ProductView from './index';
@@ -26,7 +26,8 @@ export function ProductViewBottomSheet() {
                     alignItems: 'center',
                     padding: 10,
                     height: Dimensions.get('window').height * 0.9,
-                }}>
+                }}
+            >
                 {productEvent && <ProductView event={productEvent} />}
             </BottomSheetView>
         </Sheet>

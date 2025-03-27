@@ -3,7 +3,16 @@ import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { View, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, Text, Platform } from 'react-native';
+import {
+    Dimensions,
+    FlatList,
+    Image,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const aspectRatio = width / height;
@@ -78,7 +87,11 @@ export default function MediaSelector() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() => handleSelect(item)}
-                        style={[styles.imageContainer, { width: itemSize, height: itemSize / aspectRatio }]}>
+                        style={[
+                            styles.imageContainer,
+                            { width: itemSize, height: itemSize / aspectRatio },
+                        ]}
+                    >
                         <Image source={{ uri: item.uri }} style={styles.image} />
                     </TouchableOpacity>
                 )}

@@ -4,7 +4,15 @@ import { useRouter } from 'expo-router';
 import { useAtom, useSetAtom } from 'jotai';
 import { ArrowRight, QrCode } from 'lucide-react-native';
 import React, { useCallback, useEffect } from 'react';
-import { View, TextInput, Alert, StyleSheet, Platform, Dimensions, KeyboardAvoidingView } from 'react-native';
+import {
+    Alert,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    TextInput,
+    View,
+} from 'react-native';
 
 import { LoginWithNip55Button } from '../components/LoginWithNip55Button';
 import { modeAtom, payloadAtom, scanQRAtom } from '../store';
@@ -61,7 +69,8 @@ export function Login() {
                         borderRadius: 8,
                         height: Dimensions.get('window').width * 0.75,
                         width: Dimensions.get('window').width * 0.75,
-                    }}>
+                    }}
+                >
                     <CameraView
                         barcodeScannerSettings={{
                             barcodeTypes: ['qr'],
@@ -84,7 +93,11 @@ export function Login() {
                 onChangeText={setPayload}
             />
 
-            <Button variant="accent" size={Platform.select({ ios: 'lg', default: 'md' })} onPress={handleLogin}>
+            <Button
+                variant="accent"
+                size={Platform.select({ ios: 'lg', default: 'md' })}
+                onPress={handleLogin}
+            >
                 <Text className="py-2 text-lg font-bold text-white">Login</Text>
                 <ArrowRight size={24} color="white" />
             </Button>
@@ -104,7 +117,8 @@ export function Login() {
                             setScanQR(true);
                         }}
                         className="bg-muted/10 border border-border"
-                        style={{ flexDirection: 'column', gap: 8 }}>
+                        style={{ flexDirection: 'column', gap: 8 }}
+                    >
                         <QrCode size={64} />
                         <Text>Scan QR</Text>
                     </Button>

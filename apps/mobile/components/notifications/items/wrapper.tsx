@@ -1,9 +1,16 @@
-import { getRootEventId, NDKEvent, NDKKind, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    NDKKind,
+    getRootEventId,
+    useNDK,
+    useUserProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { MailOpen, Reply } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import type React from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { Text } from '@/components/nativewindui/Text';
@@ -13,7 +20,11 @@ import * as User from '@/components/ui/user';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 import { activeEventAtom } from '@/stores/event';
 
-export function NotificationContainer({ event, label, children }: { event: NDKEvent; label: string; children: React.ReactNode }) {
+export function NotificationContainer({
+    event,
+    label,
+    children,
+}: { event: NDKEvent; label: string; children: React.ReactNode }) {
     const { ndk } = useNDK();
     const { userProfile } = useUserProfile(event.pubkey);
 
@@ -23,13 +34,11 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
         const taggedEventId = event.getMatchingTags('E')[0] || event.getMatchingTags('e')[0];
         if (taggedEventId) {
             ndk.fetchEventFromTag(taggedEventId, event).then((event) => {
-                console.log('result', event);
                 if (!event) return;
                 setActiveEvent(event);
                 router.push('/view');
             });
         } else {
-            console.log(JSON.stringify(event.rawEvent(), null, 2));
         }
     }, [event]);
 
@@ -39,7 +48,10 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
 
     return (
         <Swipeable renderRightActions={() => <RightActions event={event} />}>
-            <View style={styles.notificationItem} className="flex flex-row gap-2 border-b border-border bg-card">
+            <View
+                style={styles.notificationItem}
+                className="flex flex-row gap-2 border-b border-border bg-card"
+            >
                 <TouchableOpacity onPress={onAvatarPress}>
                     <User.Avatar pubkey={event.pubkey} userProfile={userProfile} imageSize={44} />
                 </TouchableOpacity>
@@ -47,7 +59,12 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
                     <View style={styles.content}>
                         <View className="mb-2 flex-row items-center justify-between">
                             <Text variant="caption1" className="text-foreground">
-                                <User.Name userProfile={userProfile} pubkey={event.pubkey} style={styles.username} /> {label}
+                                <User.Name
+                                    userProfile={userProfile}
+                                    pubkey={event.pubkey}
+                                    style={styles.username}
+                                />{' '}
+                                {label}
                             </Text>
                             <Text style={styles.timestamp} className="text-muted-foreground">
                                 <RelativeTime timestamp={event.created_at} />
@@ -58,7 +75,9 @@ export function NotificationContainer({ event, label, children }: { event: NDKEv
                         ) : event.kind === NDKKind.GenericRepost ? (
                             <></>
                         ) : (
-                            event.content.length > 0 && <EventContent className="text-foreground" event={event} />
+                            event.content.length > 0 && (
+                                <EventContent className="text-foreground" event={event} />
+                            )
                         )}
                     </View>
                 </TouchableOpacity>

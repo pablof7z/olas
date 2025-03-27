@@ -1,4 +1,5 @@
 import {
+    type NDKEvent,
     NDKKind,
     NDKRelaySet,
     NDKSubscriptionCacheUsage,
@@ -6,11 +7,10 @@ import {
     useNDK,
     useNDKCurrentUser,
     useSubscribe,
-    NDKEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { MediaSection } from '@/components/events/Post';
 import { useEnableNotifications, useNotificationPermission } from '@/hooks/notifications';
@@ -18,9 +18,12 @@ import { useAppSettingsStore } from '@/stores/app';
 
 const opts = { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, closeOnEose: true };
 
-const eventForPromptAtom = atom<NDKEvent | null, [NDKEvent | null], void>(null, (get, set, event) => {
-    set(eventForPromptAtom, event);
-});
+const eventForPromptAtom = atom<NDKEvent | null, [NDKEvent | null], void>(
+    null,
+    (_get, set, event) => {
+        set(eventForPromptAtom, event);
+    }
+);
 
 export function PromptForNotifications() {
     const promptedForNotifications = useAppSettingsStore((state) => state.promptedForNotifications);
@@ -29,7 +32,10 @@ export function PromptForNotifications() {
     const [eventForPrompt, setEventForPrompt] = useAtom(eventForPromptAtom);
     const permissionStatus = useNotificationPermission();
 
-    const { events } = useSubscribe(currentUser ? [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey], limit: 1 }] : false, opts);
+    const { events } = useSubscribe(
+        currentUser ? [{ kinds: [NDKKind.Image], authors: [currentUser.pubkey], limit: 1 }] : false,
+        opts
+    );
 
     useEffect(() => {
         if (!currentUser || promptedForNotifications || permissionStatus === 'granted') return;
@@ -56,7 +62,11 @@ export function PromptForNotifications() {
     );
 }
 
-const EnableNotificationsModal = ({ visible, onClose, event }: { visible: boolean; onClose: () => void; event: NDKEvent }) => {
+const EnableNotificationsModal = ({
+    visible,
+    onClose,
+    event,
+}: { visible: boolean; onClose: () => void; event: NDKEvent }) => {
     const [isLoading, setIsLoading] = useState(false);
     const enableNotifications = useEnableNotifications();
 
@@ -78,17 +88,28 @@ const EnableNotificationsModal = ({ visible, onClose, event }: { visible: boolea
                         width: '100%',
                         height: '100%',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    }}>
+                    }}
+                >
                     <MediaSection event={event} setActiveEvent={() => {}} />
                 </View>
 
                 <View style={styles.modalBox}>
                     <Text style={styles.title}>Track your posts?</Text>
-                    <Text style={styles.description}>Want to receive notifications when your post receives comments?</Text>
-                    <TouchableOpacity style={[styles.button, styles.enableButton]} onPress={requestPermissions} disabled={isLoading}>
+                    <Text style={styles.description}>
+                        Want to receive notifications when your post receives comments?
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.button, styles.enableButton]}
+                        onPress={requestPermissions}
+                        disabled={isLoading}
+                    >
                         <Text style={styles.buttonText}>Enable Notifications</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.button, styles.skipButton]} onPress={onClose} disabled={isLoading}>
+                    <TouchableOpacity
+                        style={[styles.button, styles.skipButton]}
+                        onPress={onClose}
+                        disabled={isLoading}
+                    >
                         <Text style={styles.buttonText}>Skip for Now</Text>
                     </TouchableOpacity>
                 </View>

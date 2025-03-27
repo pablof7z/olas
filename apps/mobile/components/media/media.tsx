@@ -1,6 +1,6 @@
-import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
-import { Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { Dimensions, type StyleProp, type ViewStyle } from 'react-native';
 
 import ImageComponent from './image';
 import VideoComponent from './video';
@@ -43,7 +43,10 @@ export default function MediaComponent({
     const { url, blurhash, dim, dimensions } = useMemo(() => {
         const { url, blurhash, dim } = imeta;
         const dimensions = dim?.split('x').map(Number) ?? undefined;
-        const validDimensions = dimensions && dimensions[0] && dimensions[1] ? { width: dimensions[0], height: dimensions[1] } : undefined;
+        const validDimensions =
+            dimensions?.[0] && dimensions[1]
+                ? { width: dimensions[0], height: dimensions[1] }
+                : undefined;
 
         return {
             url,

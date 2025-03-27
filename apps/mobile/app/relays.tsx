@@ -1,8 +1,14 @@
-import { NDKEvent, NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import React, { useMemo } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import {
+    NDKEvent,
+    NDKKind,
+    NDKSubscriptionCacheUsage,
+    useSubscribe,
+} from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
+import { useMemo } from 'react';
+import { FlatList, Text, View } from 'react-native';
 
-import { List, ListItem, ListItemProps } from '@/components/nativewindui/List';
+import { List, ListItem, type ListItemProps } from '@/components/nativewindui/List';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 const RelayListItem: React.FC<
@@ -20,7 +26,10 @@ const RelayListItem: React.FC<
     );
     const { events: groupEvents } = useSubscribe(groupFilters, opts, [item.title]);
 
-    const adminPubkeys = useMemo(() => groupEvents.map((event) => event.getMatchingTags('p').map((tag) => tag[1])).flat(), [groupEvents]);
+    const adminPubkeys = useMemo(
+        () => groupEvents.flatMap((event) => event.getMatchingTags('p').map((tag) => tag[1])),
+        [groupEvents]
+    );
 
     return (
         <ListItem item={item} index={index} target={target}>
@@ -60,13 +69,20 @@ const RelayListScreen: React.FC = () => {
         [events]
     );
 
-    const renderRelayListItem = ({ item, index }: { item: { id: string; title: string }; index: number }) => (
+    const renderRelayListItem = ({
+        item,
+        index,
+    }: { item: { id: string; title: string }; index: number }) => (
         <RelayListItem item={item} index={index} target={undefined} />
     );
 
     return (
         <View style={{ flex: 1, padding: 16 }}>
-            <List data={listData} keyExtractor={(item) => item.id} renderItem={renderRelayListItem} />
+            <List
+                data={listData}
+                keyExtractor={(item) => item.id}
+                renderItem={renderRelayListItem}
+            />
         </View>
     );
 };

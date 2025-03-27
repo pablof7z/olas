@@ -1,9 +1,13 @@
 import { Dimensions } from 'react-native';
-import { getVideoMetaData, Image as CompressedImage, Video as CompressedVideo } from 'react-native-compressor';
+import {
+    Image as CompressedImage,
+    Video as CompressedVideo,
+    getVideoMetaData,
+} from 'react-native-compressor';
 import * as RNFS from 'react-native-fs';
 
-import { ProgressCb } from './prepare';
 import { determineMimeType } from '../url';
+import type { ProgressCb } from './prepare';
 
 const MAX_WIDTH = 2048;
 const MAX_HEIGHT = 1024;
@@ -18,11 +22,15 @@ type Result = {
 /**
  * Compresses images and videos
  */
-export default async function compress(file: string, mediaType: 'image' | 'video', onProgress?: ProgressCb): Promise<Result> {
+export default async function compress(
+    file: string,
+    mediaType: 'image' | 'video',
+    onProgress?: ProgressCb
+): Promise<Result> {
     let compressedUri: string;
     let duration: number | undefined;
-    let width: number | undefined;
-    let height: number | undefined;
+    let _width: number | undefined;
+    let _height: number | undefined;
     let size: number | undefined;
 
     if (mediaType === 'image') {
@@ -35,7 +43,6 @@ export default async function compress(file: string, mediaType: 'image' | 'video
         });
     } else if (mediaType === 'video') {
         const metadata = await getVideoMetaData(file);
-        console.log('metadata', metadata);
 
         duration = metadata.duration;
 
@@ -43,8 +50,6 @@ export default async function compress(file: string, mediaType: 'image' | 'video
         const maxWidth = Math.max(screenDimensions.width * 2, metadata.width);
         const maxHeight = Math.max(screenDimensions.height * 2, metadata.height);
         const maxSize = Math.max(maxWidth, maxHeight);
-
-        console.log('calculating max size', { maxWidth, maxHeight, maxSize }, JSON.stringify(metadata, null, 2));
 
         compressedUri = await CompressedVideo.compress(
             file,
@@ -58,7 +63,7 @@ export default async function compress(file: string, mediaType: 'image' | 'video
             }
         );
     } else {
-        throw new Error('Invalid media type: ' + mediaType);
+        throw new Error(`Invalid media type: ${mediaType}`);
     }
 
     const mimeType = await determineMimeType(compressedUri);

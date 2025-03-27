@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import SimpleStoryViewer from '@/lib/stories/components/StoryViewer';
@@ -49,7 +49,12 @@ export default function StoryPreviewScreen() {
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StoryPreview path={path} type={type as 'photo' | 'video'} onClose={handleClose} onPreview={handlePreviewStory} />
+            <StoryPreview
+                path={path}
+                type={type as 'photo' | 'video'}
+                onClose={handleClose}
+                onPreview={handlePreviewStory}
+            />
         </View>
     );
 }

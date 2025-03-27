@@ -1,16 +1,16 @@
 import {
-    NDKEventWithFrom,
+    type NDKEventWithFrom,
     NDKKind,
     NDKList,
     NDKSubscriptionCacheUsage,
-    NDKUser,
+    type NDKUser,
     useNDK,
     useNDKCurrentUser,
     useNDKSessionInit,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
 import { useAtom } from 'jotai';
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useObserver } from './observer';
 import { useUserFlareStore } from './user-flare';
@@ -57,7 +57,6 @@ export function useSessionSub() {
             {
                 onReady: () => {
                     if (!appReady) {
-                        console.log('setting app ready in onReady');
                         setAppReady(true);
                         if (timeoutRef.current) clearTimeout(timeoutRef.current);
                     }
@@ -91,7 +90,9 @@ export function useAppSub() {
     useEffect(() => {
         if (!pubkey) return;
         const timeSinceLastAppSync = SecureStore.getItem('timeSinceLastAppSync');
-        const sinceFilter = timeSinceLastAppSync ? { since: parseInt(timeSinceLastAppSync), limit: 1 } : {};
+        const sinceFilter = timeSinceLastAppSync
+            ? { since: Number.parseInt(timeSinceLastAppSync), limit: 1 }
+            : {};
 
         const kindString = Array.from(mainKinds).map((k) => k.toString());
 
@@ -106,7 +107,12 @@ export function useAppSub() {
 
         const appSub = ndk.subscribe(
             filters,
-            { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: false, skipVerification: true, subId: 'main-sub' },
+            {
+                cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+                groupable: false,
+                skipVerification: true,
+                subId: 'main-sub',
+            },
             undefined,
             false
         );

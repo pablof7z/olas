@@ -1,7 +1,14 @@
 import * as React from 'react';
-import Svg, { G, Path, SvgProps } from 'react-native-svg';
+import Svg, { G, Path, type SvgProps } from 'react-native-svg';
 const SvgComponent = ({ size = 48, ...props }: SvgProps) => (
-    <Svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 48 48" fill="none" {...props}>
+    <Svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 48 48"
+        fill="none"
+        {...props}
+    >
         <G strokeLinecap="round" strokeWidth={3}>
             <Path
                 strokeLinejoin="round"

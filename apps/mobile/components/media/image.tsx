@@ -1,8 +1,8 @@
 import { Image, useImage } from 'expo-image';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, Pressable, type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
 
-import { type MediaDimensions } from './types';
+import type { MediaDimensions } from './types';
 
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 
@@ -11,7 +11,10 @@ import { getProxiedImageUrl } from '@/utils/imgproxy';
  */
 const knownImageDimensions: Record<string, MediaDimensions> = {};
 
-export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Partial<MediaDimensions>) {
+export function calcDimensions(
+    dimensions: MediaDimensions,
+    maxDimensions: Partial<MediaDimensions>
+) {
     let { width, height } = dimensions;
     const { width: maxWidth, height: maxHeight } = maxDimensions;
 
@@ -59,7 +62,9 @@ export default function ImageComponent({
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
-    const [useImgProxy, setUseImgProxy] = useState(!dimensions || dimensions?.width > 4000 || dimensions?.height > 4000 || forceProxy);
+    const [useImgProxy, setUseImgProxy] = useState(
+        !dimensions || dimensions?.width > 4000 || dimensions?.height > 4000 || forceProxy
+    );
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
 
     const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
@@ -103,11 +108,22 @@ export default function ImageComponent({
     if (finalDimensions?.width && !finalDimensions?.height) {
         finalDimensions.height = finalDimensions.width;
 
-        console.trace('we had a width but no height', url, { finalDimensions, dimensions, renderDimensions, maxDimensions });
+        console.trace('we had a width but no height', url, {
+            finalDimensions,
+            dimensions,
+            renderDimensions,
+            maxDimensions,
+        });
     }
 
     return (
-        <Pressable style={[styles.pressable, style]} onPress={onPress} onLongPress={onLongPress} className={className} {...props}>
+        <Pressable
+            style={[styles.pressable, style]}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            className={className}
+            {...props}
+        >
             <Image
                 placeholder={blurhashObj}
                 placeholderContentFit={contentFit}
@@ -116,11 +132,8 @@ export default function ImageComponent({
                 source={imageSource}
                 contentFit={contentFit}
                 recyclingKey={url}
-                onLoadStart={() => {
-                    console.log('onLoadStart', cacheKey);
-                }}
-                onError={(e) => {
-                    console.log('Image loading error', { cacheKey, url }, e);
+                onLoadStart={() => {}}
+                onError={(_e) => {
                     if (useImgProxy) {
                         setUseImgProxy(false);
                     }
@@ -130,7 +143,10 @@ export default function ImageComponent({
                     try {
                         if (!imageSource) return;
                         const { width, height } = imageSource;
-                        knownImageDimensions[url] = calcDimensions({ width, height }, maxDimensions);
+                        knownImageDimensions[url] = calcDimensions(
+                            { width, height },
+                            maxDimensions
+                        );
                     } catch (e) {
                         console.error(e);
                     }

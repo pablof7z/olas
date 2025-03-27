@@ -2,7 +2,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, useRouter } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
-import { View, KeyboardAvoidingView, Platform, TouchableOpacity, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { modeAtom } from '../store';
@@ -31,8 +31,12 @@ export default function LoginScreen() {
             />
             <View
                 className="w-full flex-1 items-center justify-center bg-card px-8 py-4"
-                style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}>
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+                style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.container}
+                >
                     {mode === 'login' ? <Login /> : <SignUp />}
                 </KeyboardAvoidingView>
 
@@ -43,9 +47,11 @@ export default function LoginScreen() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         paddingBottom: 20,
-                    }}>
+                    }}
+                >
                     <Text className="text-sm text-muted-foreground">
-                        By continuing you agree to our <Text className="text-sm text-primary">Terms of Service</Text>
+                        By continuing you agree to our{' '}
+                        <Text className="text-sm text-primary">Terms of Service</Text>
                     </Text>
                 </TouchableOpacity>
             </View>

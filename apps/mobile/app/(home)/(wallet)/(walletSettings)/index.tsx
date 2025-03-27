@@ -9,14 +9,21 @@ import {
     useNDKSessionEventKind,
     useNDKWallet,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import { Icon, MaterialIconName } from '@roninoss/icons';
+import { NDKCashuWallet, type NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { Icon, type MaterialIconName } from '@roninoss/icons';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -28,13 +35,11 @@ export default function WalletSettings() {
     const [syncing, setSyncing] = useState(false);
     const { colors } = useColorScheme();
 
-    useEffect(() => {
-        console.log('use effect balance', balance);
-    }, [balance]);
+    useEffect(() => {}, [balance]);
 
     const forceSync = async () => {
         setSyncing(true);
-        const res = await (activeWallet as NDKCashuWallet).checkProofs();
+        const _res = await (activeWallet as NDKCashuWallet).checkProofs();
         setSyncing(false);
     };
 
@@ -67,7 +72,6 @@ export default function WalletSettings() {
         mintList.kind = NDKKind.CashuMintList;
         mintList.tags = [];
         await mintList.publishReplaceable();
-        console.log('new mint list', mintList.id.substring(0, 6));
     }, [activeWallet]);
 
     const { showActionSheetWithOptions } = useActionSheet();
@@ -146,7 +150,9 @@ export default function WalletSettings() {
                     id: '4',
                     title: 'Force-Sync',
                     onPress: forceSync,
-                    rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null,
+                    rightView: syncing ? (
+                        <ActivityIndicator size="small" color={colors.foreground} />
+                    ) : null,
                 },
             ]
         );
@@ -156,7 +162,9 @@ export default function WalletSettings() {
                 id: 'copy-debug',
                 title: 'Copy Debug Info',
                 onPress: copyDebugInfo,
-                rightView: syncing ? <ActivityIndicator size="small" color={colors.foreground} /> : null,
+                rightView: syncing ? (
+                    <ActivityIndicator size="small" color={colors.foreground} />
+                ) : null,
             });
 
             opts.push('  ');
@@ -185,16 +193,25 @@ export default function WalletSettings() {
             });
         }
 
-        if (activeWallet instanceof NDKCashuWallet && (activeWallet as NDKCashuWallet)?.warnings.length > 0) {
+        if (
+            activeWallet instanceof NDKCashuWallet &&
+            (activeWallet as NDKCashuWallet)?.warnings.length > 0
+        ) {
             opts.push('Warnings');
 
-            for (const warning of (activeWallet as NDKCashuWallet)?.warnings) {
-                opts.push({
-                    id: warning.event?.id ?? Math.random().toString(),
-                    leftView: <IconView name="alpha-x-box" className="bg-red-500" />,
-                    title: warning.msg,
-                    subTitle: warning.relays?.map((r) => r.url).join(', '),
-                });
+            const warnings = (activeWallet as NDKCashuWallet)?.warnings;
+            if (warnings) {
+                for (const warning of warnings) {
+                    opts.push({
+                        id: warning.event?.id ?? Math.random().toString(),
+                        title: warning.msg,
+                        onPress: () => {
+                            if (warning.event) {
+                                router.push(`/event/${warning.event.id}`);
+                            }
+                        },
+                    });
+                }
             }
 
             const pendingDeposits = activeWallet.depositMonitor.deposits.size;
@@ -217,7 +234,6 @@ export default function WalletSettings() {
     if (activeWallet instanceof NDKNWCWallet) {
         if (!nwcRequested.current) {
             activeWallet.getInfo().then((info) => {
-                console.log('nwc info', info);
                 setNWCWalletInfo(info);
             });
             nwcRequested.current = true;
@@ -225,7 +241,9 @@ export default function WalletSettings() {
 
         return (
             <View className="flex-1 p-8">
-                <Text variant="title1">{nwcWalletInfo?.alias ? nwcWalletInfo.alias : 'NWC Wallet'}</Text>
+                <Text variant="title1">
+                    {nwcWalletInfo?.alias ? nwcWalletInfo.alias : 'NWC Wallet'}
+                </Text>
             </View>
         );
     }
@@ -251,7 +269,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName={cn('text-lg', info.item.titleClassName)}
             leftView={info.item.leftView}
             rightView={
@@ -263,7 +284,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                     )}
                     {info.item.badge && (
                         <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                            <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                            <Text
+                                variant="footnote"
+                                className="font-bold leading-4 text-destructive-foreground"
+                            >
                                 {info.item.badge}
                             </Text>
                         </View>
@@ -295,7 +319,10 @@ export function IconView({
 }) {
     return (
         <View className="px-3">
-            <View style={{ width: size, height: size }} className={cn('items-center justify-center rounded-md', className)}>
+            <View
+                style={{ width: size, height: size }}
+                className={cn('items-center justify-center rounded-md', className)}
+            >
                 {name ? <Icon name={name} size={size * 0.8} color="white" /> : children}
             </View>
         </View>

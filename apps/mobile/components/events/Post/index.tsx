@@ -1,17 +1,30 @@
-import { NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { Heart } from 'lucide-react-native';
-import { useMemo, useCallback, useState } from 'react';
-import { View, Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import {
+    Dimensions,
+    Pressable,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, Easing } from 'react-native-reanimated';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSequence,
+    withTiming,
+    Easing,
+} from 'react-native-reanimated';
 
-import { InlinedComments, Reactions } from './Reactions';
 import { useReactEvent } from '../React';
 import TopZaps from '../TopZaps';
 import { PostHeader } from './Header';
+import { InlinedComments, Reactions } from './Reactions';
 
 import Lightning from '@/components/icons/lightning';
 import EventMediaContainer from '@/components/media/event';
@@ -125,7 +138,14 @@ export const MediaSection = function MediaSection({
     return (
         <GestureDetector gesture={combinedGesture}>
             <View style={{ flex: 1 }}>
-                <EventMediaContainer event={event} onPress={onPress} autoplay muted maxHeight={maxHeight} priority={priority} />
+                <EventMediaContainer
+                    event={event}
+                    onPress={onPress}
+                    autoplay
+                    muted
+                    maxHeight={maxHeight}
+                    priority={priority}
+                />
                 {showHeart && (
                     <View
                         style={{
@@ -138,7 +158,8 @@ export const MediaSection = function MediaSection({
                             justifyContent: 'center',
                             alignItems: 'center',
                             backgroundColor: '#00000044',
-                        }}>
+                        }}
+                    >
                         <Animated.View style={animatedHeartStyle}>
                             <Heart size={96} color="white" fill="white" />
                         </Animated.View>
@@ -156,7 +177,8 @@ export const MediaSection = function MediaSection({
                             justifyContent: 'center',
                             alignItems: 'center',
                             backgroundColor: '#00000044',
-                        }}>
+                        }}
+                    >
                         <Animated.View style={animatedZapStyle}>
                             <Lightning size={96} color="yellow" fill="orange" />
                         </Animated.View>
@@ -191,7 +213,9 @@ export default function Post({
 
     const headerHeight = useHeaderHeight();
     const screen = Dimensions.get('window');
-    const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight);
+    const maxHeight = Math.floor(
+        forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight
+    );
 
     const { colors } = useColorScheme();
 
@@ -209,7 +233,12 @@ export default function Post({
 
     return (
         <View style={containerStyle}>
-            <PostHeader event={event} reposts={reposts} timestamp={timestamp} userProfile={userProfile} />
+            <PostHeader
+                event={event}
+                reposts={reposts}
+                timestamp={timestamp}
+                userProfile={userProfile}
+            />
 
             <MediaSection event={event} priority={priority} maxHeight={maxHeight} />
 
@@ -228,7 +257,10 @@ function PostBottom({ event }: { event: NDKEvent }) {
 
         if (event.kind === NDKKind.Text) {
             // remove the urls from the content
-            content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g, '');
+            content = content.replace(
+                /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g,
+                ''
+            );
             // replace \n\n\n or more with \n
             content = content.replace(/\n\s*\n\s*\n+/g, '\n');
             // remove from content \n that are after the last word

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { SegmentControlProps } from './types';
+import type { SegmentControlProps } from './types';
 
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
@@ -41,9 +41,12 @@ function SegmentedControl({
                             className={cn(
                                 'rounded-none py-2.5',
                                 index === 0 && 'rounded-l-full',
-                                index === values?.length - 1 ? 'rounded-r-full' : 'border-foreground/50 border-r'
+                                index === values?.length - 1
+                                    ? 'rounded-r-full'
+                                    : 'border-foreground/50 border-r'
                             )}
-                            onPress={onPress(index, value)}>
+                            onPress={onPress(index, value)}
+                        >
                             <Text className={materialTextClassName}>{value}</Text>
                         </Button>
                     </View>

@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NDKStory } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { useVideoPlayer } from 'expo-video';
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useMediaDimensions } from '../hooks/useMediaDimensions';
+import { useStickerManagement } from '../hooks/useStickerManagement';
+import { useStoryActions } from '../hooks/useStoryActions';
 import { useStickerStore } from '../store';
 import CloseButton from './CloseButton';
 import MediaRenderer from './MediaRenderer';
@@ -14,9 +17,6 @@ import StickersBottomSheet from './StickersBottomSheet';
 import StoryControls from './StoryControls';
 import SettingsBottomSheet from './settings';
 import { TextStickerInput } from './sticker-types';
-import { useMediaDimensions } from '../hooks/useMediaDimensions';
-import { useStickerManagement } from '../hooks/useStickerManagement';
-import { useStoryActions } from '../hooks/useStoryActions';
 
 interface StoryPreviewScreenProps {
     path: string;
@@ -27,7 +27,12 @@ interface StoryPreviewScreenProps {
 
 const dimensions = Dimensions.get('window');
 
-export default function StoryPreviewContent({ path, type, onClose, onPreview }: StoryPreviewScreenProps) {
+export default function StoryPreviewContent({
+    path,
+    type,
+    onClose,
+    onPreview,
+}: StoryPreviewScreenProps) {
     const insets = useSafeAreaInsets();
     const { getDuration } = useStickerStore();
 
@@ -67,7 +72,6 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
                 const naturalHeight = (videoPlayer as any).naturalHeight;
 
                 if (naturalWidth > 0 && naturalHeight > 0) {
-                    console.log('Video dimensions:', naturalWidth, naturalHeight);
                     setMediaSize({ width: naturalWidth, height: naturalHeight });
                     clearInterval(checkDimensions);
                 }
@@ -83,14 +87,25 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
     };
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom, borderRadius: 20, overflow: 'hidden' }]}>
+        <View
+            style={[
+                styles.container,
+                {
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom,
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                },
+            ]}
+        >
             <View
                 style={[styles.previewContainer, { borderRadius: 20, overflow: 'hidden' }]}
                 testID="preview-container"
                 onLayout={(event) => {
                     const { width, height } = event.nativeEvent.layout;
                     setCanvasSize({ width, height });
-                }}>
+                }}
+            >
                 <MediaRenderer
                     type={type}
                     path={path}
@@ -101,7 +116,11 @@ export default function StoryPreviewContent({ path, type, onClose, onPreview }: 
 
                 {/* Stickers Layer */}
                 {stickers.map((sticker) => (
-                    <Sticker key={sticker.id} sticker={sticker as any} onSelect={() => handleStickerSelect(sticker.id)} />
+                    <Sticker
+                        key={sticker.id}
+                        sticker={sticker as any}
+                        onSelect={() => handleStickerSelect(sticker.id)}
+                    />
                 ))}
             </View>
 

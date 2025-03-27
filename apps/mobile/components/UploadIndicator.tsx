@@ -1,7 +1,7 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAtomValue } from 'jotai';
 import { X } from 'lucide-react-native';
-import { Pressable, View, StyleSheet, Image } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { scrollDirAtom } from './Feed/store';
@@ -45,9 +45,23 @@ export default function UploadingIndicator() {
     if (!isPublishing) return null;
 
     return (
-        <Animated.View style={[styles.container, { borderTopColor: colors.grey3, backgroundColor: colors.card }, animStyle]}>
+        <Animated.View
+            style={[
+                styles.container,
+                { borderTopColor: colors.grey3, backgroundColor: colors.card },
+                animStyle,
+            ]}
+        >
             <Pressable
-                style={{ paddingHorizontal: 10, paddingVertical: 5, height: 70, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    height: 70,
+                    flexDirection: 'row',
+                    gap: 10,
+                    alignItems: 'center',
+                }}
+            >
                 <View style={{ height: 60, width: 60, borderRadius: 10, overflow: 'hidden' }}>
                     <MediaPreview />
                 </View>
@@ -69,7 +83,12 @@ function MediaPreview() {
     const firstMedia = media[0];
     return (
         <View style={{ width: '100%', height: '100%' }}>
-            {firstMedia.mediaType === 'image' && <Image source={{ uri: firstMedia.uris[0] }} style={{ width: '100%', height: '100%' }} />}
+            {firstMedia.mediaType === 'image' && (
+                <Image
+                    source={{ uri: firstMedia.uris[0] }}
+                    style={{ width: '100%', height: '100%' }}
+                />
+            )}
         </View>
     );
 }

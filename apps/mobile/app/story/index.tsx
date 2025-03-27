@@ -1,20 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Pressable, Text, Alert } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Camera,
-    CameraPosition,
-    PhotoFile,
-    VideoFile,
+    type CameraDevice,
+    type CameraPosition,
+    type CameraRuntimeError,
+    type PhotoFile,
+    type VideoFile,
     useCameraDevices,
-    CameraDevice,
     useCameraPermission,
     useMicrophonePermission,
-    CameraRuntimeError,
 } from 'react-native-vision-camera';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -23,11 +23,21 @@ type Devices = {
     [key in CameraPosition]?: CameraDevice;
 };
 
-const PermissionRequest = ({ type, onRequestPermission }: { type: 'camera' | 'microphone'; onRequestPermission: () => void }) => (
+const PermissionRequest = ({
+    type,
+    onRequestPermission,
+}: { type: 'camera' | 'microphone'; onRequestPermission: () => void }) => (
     <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Ionicons name={type === 'camera' ? 'camera-outline' : 'mic-outline'} size={64} color="white" style={{ marginBottom: 16 }} />
+        <Ionicons
+            name={type === 'camera' ? 'camera-outline' : 'mic-outline'}
+            size={64}
+            color="white"
+            style={{ marginBottom: 16 }}
+        />
         <Text style={styles.permissionText}>
-            {type === 'camera' ? 'Camera access is required to take photos and videos' : 'Microphone access is required to record videos'}
+            {type === 'camera'
+                ? 'Camera access is required to take photos and videos'
+                : 'Microphone access is required to record videos'}
         </Text>
         <TouchableOpacity onPress={onRequestPermission} style={styles.permissionButton}>
             <Text style={styles.permissionButtonText}>Grant Access</Text>
@@ -36,15 +46,13 @@ const PermissionRequest = ({ type, onRequestPermission }: { type: 'camera' | 'mi
 );
 
 // Helper function to select optimal format
-const selectOptimalFormat = (device: CameraDevice) => {
+const _selectOptimalFormat = (device: CameraDevice) => {
     // Sort formats by resolution (prefer lower resolution for better performance)
     const formats = device.formats.sort((a, b) => {
         const aRes = a.videoHeight * a.videoWidth;
         const bRes = b.videoHeight * b.videoWidth;
         return aRes - bRes; // Lower resolution first
     });
-
-    console.log('formats', JSON.stringify(formats, null, 2));
 
     // Find the smallest format that is at least 720p
     const optimalFormat = null; // formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
@@ -62,8 +70,10 @@ export default function StoryCameraScreen() {
     const [isRecording, setIsRecording] = useState(false);
     const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
     const scale = useSharedValue(1);
-    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
-    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } = useMicrophonePermission();
+    const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } =
+        useCameraPermission();
+    const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } =
+        useMicrophonePermission();
     const router = useRouter();
 
     // Map available devices to front/back
@@ -91,19 +101,30 @@ export default function StoryCameraScreen() {
         // Handle specific error cases
         switch (error.code) {
             case 'device/configuration-error':
-                Alert.alert('Camera Error', 'There was an error configuring the camera. Please try again.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Camera Error',
+                    'There was an error configuring the camera. Please try again.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/no-device':
-                Alert.alert('Camera Unavailable', 'The camera hardware is currently unavailable. Please try again later.', [
-                    { text: 'OK' },
-                ]);
+                Alert.alert(
+                    'Camera Unavailable',
+                    'The camera hardware is currently unavailable. Please try again later.',
+                    [{ text: 'OK' }]
+                );
                 break;
             case 'device/microphone-unavailable':
-                Alert.alert('Microphone Error', 'The microphone is unavailable. Video recording may not have audio.', [{ text: 'OK' }]);
+                Alert.alert(
+                    'Microphone Error',
+                    'The microphone is unavailable. Video recording may not have audio.',
+                    [{ text: 'OK' }]
+                );
                 break;
-            case 'unknown/unknown':
             default:
-                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [{ text: 'OK' }]);
+                Alert.alert('Camera Error', 'An unexpected error occurred. Please try again.', [
+                    { text: 'OK' },
+                ]);
         }
     }, []);
 
@@ -129,7 +150,9 @@ export default function StoryCameraScreen() {
             setCameraPosition(newPosition);
         } catch (error) {
             console.error('Failed to switch camera:', error);
-            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [{ text: 'OK' }]);
+            Alert.alert('Camera Switch Failed', 'Unable to switch camera. Please try again.', [
+                { text: 'OK' },
+            ]);
         } finally {
             // Add a small delay before allowing another switch
             setTimeout(() => {
@@ -140,7 +163,6 @@ export default function StoryCameraScreen() {
 
     const onMediaCaptured = useCallback(
         (media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
-            console.log('Media captured:', { path: media.path, type });
             router.push({
                 pathname: '/story/preview',
                 params: {
@@ -152,14 +174,13 @@ export default function StoryCameraScreen() {
         [router]
     );
 
-    const handleBackToCamera = useCallback(() => {
+    const _handleBackToCamera = useCallback(() => {
         setIsRecording(false);
     }, []);
 
     const onShortPress = useCallback(async () => {
         try {
             const photo = await camera.current?.takePhoto();
-            console.log('Captured photo:', photo);
             if (photo) {
                 onMediaCaptured(photo, 'photo');
             }
@@ -179,7 +200,6 @@ export default function StoryCameraScreen() {
             } else {
                 await camera.current?.startRecording({
                     onRecordingFinished: (video) => {
-                        console.log('video', video?.width, video?.height);
                         onMediaCaptured(video, 'video');
                     },
                     onRecordingError: (error) => {
@@ -205,7 +225,9 @@ export default function StoryCameraScreen() {
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
-            <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            <View
+                style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+            >
                 <View style={{ flex: 1 }}>
                     {device ? (
                         <ReanimatedCamera
@@ -224,7 +246,11 @@ export default function StoryCameraScreen() {
                 </View>
 
                 <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
-                    <TouchableOpacity onPress={() => router.push('/story/selector')} style={styles.selectorButton} testID="selector-button">
+                    <TouchableOpacity
+                        onPress={() => router.push('/story/selector')}
+                        style={styles.selectorButton}
+                        testID="selector-button"
+                    >
                         <Ionicons name="images-outline" size={30} color="white" />
                     </TouchableOpacity>
 
@@ -245,7 +271,8 @@ export default function StoryCameraScreen() {
                         onPress={onFlipCamera}
                         style={[styles.flipButton, isSwitchingCamera && styles.disabledButton]}
                         disabled={isSwitchingCamera}
-                        testID="flip-button">
+                        testID="flip-button"
+                    >
                         <Ionicons name="camera-reverse" size={30} color="white" />
                     </TouchableOpacity>
                 </View>

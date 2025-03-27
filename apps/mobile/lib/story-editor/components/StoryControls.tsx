@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { EdgeInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import CloseButton from './CloseButton';
 
@@ -34,14 +34,26 @@ export default function StoryControls({
         <>
             <View style={[styles.header]}>
                 <CloseButton onPress={onClose} />
-                <TouchableOpacity style={[styles.button, styles.textButton]} testID="add-text-button" onPress={onAddText}>
+                <TouchableOpacity
+                    style={[styles.button, styles.textButton]}
+                    testID="add-text-button"
+                    onPress={onAddText}
+                >
                     <Ionicons name="text" size={20} color="white" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={onOpenStickers} style={[styles.button, styles.stickersButton]} testID="add-stickers-button">
+                <TouchableOpacity
+                    onPress={onOpenStickers}
+                    style={[styles.button, styles.stickersButton]}
+                    testID="add-stickers-button"
+                >
                     <Ionicons name="pricetag" size={20} color="white" />
                 </TouchableOpacity>
                 {selectedStickerId && (
-                    <TouchableOpacity onPress={onDeleteSelected} style={[styles.button, styles.deleteButton]} testID="delete-button">
+                    <TouchableOpacity
+                        onPress={onDeleteSelected}
+                        style={[styles.button, styles.deleteButton]}
+                        testID="delete-button"
+                    >
                         <Ionicons name="trash" size={20} color="white" />
                     </TouchableOpacity>
                 )}
@@ -49,7 +61,12 @@ export default function StoryControls({
 
             <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
                 {showPreviewButton && (
-                    <TouchableOpacity style={styles.previewButton} testID="preview-button" onPress={onPreview} disabled={isUploading}>
+                    <TouchableOpacity
+                        style={styles.previewButton}
+                        testID="preview-button"
+                        onPress={onPreview}
+                        disabled={isUploading}
+                    >
                         <Ionicons name="eye" size={40} color="white" />
                     </TouchableOpacity>
                 )}
@@ -57,7 +74,12 @@ export default function StoryControls({
                 {isUploading ? (
                     <ActivityIndicator size="large" color="white" />
                 ) : (
-                    <TouchableOpacity style={styles.shareButton} testID="share-button" onPress={onShare} disabled={isUploading}>
+                    <TouchableOpacity
+                        style={styles.shareButton}
+                        testID="share-button"
+                        onPress={onShare}
+                        disabled={isUploading}
+                    >
                         <Ionicons
                             name={isUploading ? 'hourglass' : 'arrow-forward-circle'}
                             size={60}

@@ -1,10 +1,13 @@
-import { PrimitiveAtom, useAtom } from 'jotai';
-import { View, Pressable } from 'react-native';
+import { type PrimitiveAtom, useAtom } from 'jotai';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '../nativewindui/Text';
 
 import { cn } from '@/lib/cn';
-export default function Tabs({ options, atom }: { options: string[]; atom: PrimitiveAtom<string> }) {
+export default function Tabs({
+    options,
+    atom,
+}: { options: string[]; atom: PrimitiveAtom<string> }) {
     const [selectedTab, setSelectedTab] = useAtom(atom);
 
     return (
@@ -13,7 +16,12 @@ export default function Tabs({ options, atom }: { options: string[]; atom: Primi
                 <Pressable key={index} onPress={() => setSelectedTab(option)}>
                     <Text
                         variant="title1"
-                        className={cn(selectedTab === option ? 'text-xl font-extrabold' : 'text-lg text-muted-foreground')}>
+                        className={cn(
+                            selectedTab === option
+                                ? 'text-xl font-extrabold'
+                                : 'text-lg text-muted-foreground'
+                        )}
+                    >
                         {option}
                     </Text>
                 </Pressable>

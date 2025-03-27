@@ -11,7 +11,8 @@ import { useAppSettingsStore } from '@/stores/app';
 export default function BlacklistScreen() {
     const [newWord, setNewWord] = useState('');
     const blacklistedWords = useAppSettingsStore((s) => s.blacklistedWords);
-    const setBlacklistedWords = (words: string[]) => useAppSettingsStore.setState({ blacklistedWords: words });
+    const setBlacklistedWords = (words: string[]) =>
+        useAppSettingsStore.setState({ blacklistedWords: words });
 
     const addWord = () => {
         if (newWord.trim() && !blacklistedWords.includes(newWord.trim())) {
@@ -48,7 +49,11 @@ export default function BlacklistScreen() {
                             title: item,
                         }}
                         rightView={
-                            <Button variant="destructive" size="sm" onPress={() => removeWord(item)}>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onPress={() => removeWord(item)}
+                            >
                                 Remove
                             </Button>
                         }

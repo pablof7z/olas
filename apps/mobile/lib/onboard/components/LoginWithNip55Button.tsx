@@ -1,6 +1,6 @@
-import { useNip55, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNip55 } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
@@ -11,7 +11,7 @@ export function LoginWithNip55Button() {
 
     const loginWith = useCallback(
         async (packageName: string) => {
-            login('nip55 ' + packageName);
+            login(`nip55 ${packageName}`);
         },
         [login]
     );

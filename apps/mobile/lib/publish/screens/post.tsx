@@ -2,17 +2,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { Stack, router } from 'expo-router';
 import { X } from 'lucide-react-native';
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { Dimensions, View, Pressable, TouchableOpacity, Text, NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, SharedValue } from 'react-native-reanimated';
+import {
+    Dimensions,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    type SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useEditorStore } from '../store/editor';
+import NoPermissionsFallback from '../components/NoPermissionsFallback';
 
-import { PostMedia } from '@/lib/post-editor/types';
+import type { PostMedia } from '@/lib/post-editor/types';
 import PreviewContainer from '@/lib/publish/components/preview/Container';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mapAssetToPostMedia } from '@/utils/media';
@@ -31,6 +47,7 @@ export default function PostScreen() {
     const { colors } = useColorScheme();
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [hasPermission, setHasPermission] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { media, addMedia } = useEditorStore();
     const heightValue = useSharedValue(0);
     const gridSize = Dimensions.get('window').width / COLUMNS;
@@ -62,8 +79,8 @@ export default function PostScreen() {
         [openPreview, closePreview]
     );
 
-    useEffect(() => {
-        (async () => {
+    const loadMediaLibrary = useCallback(async () => {
+        try {
             const { status } = await MediaLibrary.requestPermissionsAsync();
             setHasPermission(status === 'granted');
 
@@ -100,8 +117,40 @@ export default function PostScreen() {
                     await addMedia(postMedia.uris[0], postMedia.mediaType, postMedia.id);
                 }
             }
-        })();
-    }, []);
+        } catch (error) {
+            console.error('Error loading media library:', error);
+        }
+    }, [addMedia]);
+
+    const pickImageFromLibrary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                allowsEditing: false,
+                quality: 1,
+                allowsMultipleSelection: false,
+            });
+
+            if (!result.canceled && result.assets.length > 0) {
+                const asset = result.assets[0];
+                const mediaType = asset.type === 'video' ? 'video' : 'image';
+                const id = `picker-${Date.now()}`;
+                
+                await addMedia(asset.uri, mediaType, id);
+                openPreview();
+                router.push('/publish/post/edit');
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [addMedia, openPreview]);
+
+    useEffect(() => {
+        loadMediaLibrary();
+    }, [loadMediaLibrary]);
 
     const headerHeight = useHeaderHeight();
     const insets = useSafeAreaInsets();
@@ -136,35 +185,37 @@ export default function PostScreen() {
                 }}
             />
             <View style={[styles.outerContainer, { paddingTop: headerHeight }]}>
-                <PreviewView heightValue={heightValue} height={gridSize * 3} />
-                <Animated.View style={[styles.container, { paddingBottom: insets.bottom }]}>
-                    <FlashList
-                        data={mediaItems}
-                        extraData={mediaKey}
-                        renderItem={({ item }) => (
-                            <MediaGridItem
-                                item={item}
-                                gridSize={gridSize}
-                                selectMedia={selectMedia}
-                                selectedMedia={media}
-                                colors={colors}
-                            />
-                        )}
-                        estimatedItemSize={gridSize}
-                        numColumns={COLUMNS}
-                        keyExtractor={(item) => item.id}
-                        testID="media-grid"
-                        accessible
-                        accessibilityLabel="Media selection grid"
-                        onScroll={handleScroll}
+                {hasPermission ? (<>
+                    <PreviewView heightValue={heightValue} height={gridSize * 3} />
+                    <Animated.View style={[styles.container, { paddingBottom: insets.bottom }]}>
+                        <FlashList
+                            data={mediaItems}
+                            extraData={mediaKey}
+                            renderItem={({ item }) => (
+                                <MediaGridItem
+                                    item={item}
+                                    gridSize={gridSize}
+                                    selectMedia={selectMedia}
+                                    selectedMedia={media}
+                                    colors={colors}
+                                />
+                            )}
+                            estimatedItemSize={gridSize}
+                            numColumns={COLUMNS}
+                            keyExtractor={(item) => item.id}
+                            testID="media-grid"
+                            accessible
+                            accessibilityLabel="Media selection grid"
+                            onScroll={handleScroll}
+                        />
+                    </Animated.View>
+                </>) : (
+                    <NoPermissionsFallback 
+                        onPickImage={pickImageFromLibrary}
+                        onRequestPermissions={loadMediaLibrary}
+                        isLoading={isLoading}
                     />
-
-                    {!hasPermission && (
-                        <View style={styles.permissionOverlay}>
-                            <Text style={styles.permissionText}>Please grant media library access to select photos and videos</Text>
-                        </View>
-                    )}
-                </Animated.View>
+                )}
             </View>
         </>
     );
@@ -190,7 +241,9 @@ const MediaGridItem = memo(
             <View style={[styles.gridItem, { width: gridSize, height: gridSize }]}>
                 <Pressable style={styles.mediaPressable} onPress={() => selectMedia(item)}>
                     <Image
-                        source={{ uri: item.type === 'video' ? item.thumbnailUri || item.uri : item.uri }}
+                        source={{
+                            uri: item.type === 'video' ? item.thumbnailUri || item.uri : item.uri,
+                        }}
                         style={styles.mediaContent}
                         contentFit="cover"
                     />
@@ -203,7 +256,11 @@ const MediaGridItem = memo(
                         <>
                             <View style={styles.selectedOverlay} />
                             <View style={styles.checkmarkContainer}>
-                                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                                <Ionicons
+                                    name="checkmark-circle"
+                                    size={24}
+                                    color={colors.primary}
+                                />
                             </View>
                         </>
                     )}
@@ -213,12 +270,15 @@ const MediaGridItem = memo(
     }
 );
 
-function PreviewView({ heightValue, height }: { heightValue: SharedValue<number>; height: number }) {
+function PreviewView({
+    heightValue,
+    height,
+}: { heightValue: SharedValue<number>; height: number }) {
     const { media } = useEditorStore();
 
     // Transform the data to match what PreviewContainer expects
     const formattedMedia = media.map((item) => ({
-        type: item.mediaType === 'video' ? 'video' : 'image',
+        type: item.mediaType as 'image' | 'video',
         uri: item.uris[0], // Use the first URI from the array
     }));
 
@@ -266,18 +326,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-    },
-    permissionOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    permissionText: {
-        color: '#fff',
-        fontSize: 16,
-        textAlign: 'center',
-        paddingHorizontal: 16,
     },
     videoIndicator: {
         position: 'absolute',

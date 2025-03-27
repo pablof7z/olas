@@ -1,17 +1,17 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
-    NDKCacheAdapterSqlite,
-    useNDKUnpublishedEvents,
-    useWOT,
+    type NDKCacheAdapterSqlite,
     useNDK,
-    useNDKWallet,
     useNDKCurrentUser,
+    useNDKUnpublishedEvents,
+    useNDKWallet,
     useUserProfile,
+    useWOT,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { Image } from 'expo-image';
-import { router, Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, Switch, TouchableOpacity, View } from 'react-native';
@@ -24,7 +24,14 @@ import { useActiveBlossomServer } from '@/hooks/blossom';
 import { useAppSettingsStore } from '@/stores/app';
 import { WALLET_ENABLED } from '@/utils/const';
 import { humanWalletType } from '@/utils/wallet';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -145,8 +152,17 @@ export default function SettingsIosStyleScreen() {
                 },
                 title: (
                     <View className="flex-row items-center gap-4">
-                        <User.Avatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={24} canSkipBorder />
-                        <User.Name userProfile={userProfile} pubkey={currentUser.pubkey} className="text-lg font-medium text-foreground" />
+                        <User.Avatar
+                            pubkey={currentUser.pubkey}
+                            userProfile={userProfile}
+                            imageSize={24}
+                            canSkipBorder
+                        />
+                        <User.Name
+                            userProfile={userProfile}
+                            pubkey={currentUser.pubkey}
+                            className="text-lg font-medium text-foreground"
+                        />
                     </View>
                 ),
             });
@@ -167,8 +183,8 @@ export default function SettingsIosStyleScreen() {
             if (WALLET_ENABLED) {
                 opts.push('Wallet & zaps');
                 if (activeWallet) {
-                    let name = activeWallet.type.toString();
-                    if (activeWallet instanceof NDKCashuWallet) name = activeWallet.walletId;
+                    let _name = activeWallet.type.toString();
+                    if (activeWallet instanceof NDKCashuWallet) _name = activeWallet.walletId;
 
                     opts.push({
                         id: 'wallet-balance',
@@ -177,7 +193,11 @@ export default function SettingsIosStyleScreen() {
                         leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
                         rightView: (
                             <View className="m-2 flex-col items-center justify-center">
-                                <Button variant="secondary" className="flex-col" onPress={handleUnlinkWallet}>
+                                <Button
+                                    variant="secondary"
+                                    className="flex-col"
+                                    onPress={handleUnlinkWallet}
+                                >
                                     <Text className="text-sm font-medium text-red-500">Unlink</Text>
                                 </Button>
                             </View>
@@ -252,7 +272,11 @@ export default function SettingsIosStyleScreen() {
             title: 'Advanced',
             subTitle: 'Settings for advanced users',
             rightView: (
-                <Switch value={advancedMode} onValueChange={toggleAdvancedMode} style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }} />
+                <Switch
+                    value={advancedMode}
+                    onValueChange={toggleAdvancedMode}
+                    style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                />
             ),
         });
         if (advancedMode) {
@@ -281,7 +305,15 @@ export default function SettingsIosStyleScreen() {
         }
 
         return opts;
-    }, [currentUser?.pubkey, activeWallet?.walletId, wot, defaultBlossomServer, unpublishedEvents.length, advancedMode, userProfile?.name]);
+    }, [
+        currentUser?.pubkey,
+        activeWallet?.walletId,
+        wot,
+        defaultBlossomServer,
+        unpublishedEvents.length,
+        advancedMode,
+        userProfile?.name,
+    ]);
 
     return (
         <>
@@ -305,7 +337,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -320,7 +355,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {info.item.badge}
                                 </Text>
                             </View>

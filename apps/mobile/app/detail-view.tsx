@@ -4,9 +4,17 @@ import { BlurView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
-import { useWindowDimensions, StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeOut, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+    FadeIn,
+    FadeOut,
+    runOnJS,
+    useAnimatedStyle,
+    useDerivedValue,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
 
 import { AnimatedImage } from '../components/animated-image';
 
@@ -17,9 +25,6 @@ import { activeEventAtom } from '@/stores/event';
 export default function ExpandedImageScreen() {
     // Extract tag and imageUri from route params
     const { tag, imageUri } = useLocalSearchParams();
-
-    console.log('tag', tag);
-    console.log('imageUri', imageUri);
 
     // Retrieve window dimensions
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -42,7 +47,11 @@ export default function ExpandedImageScreen() {
     // Animated style for translation
     const translation = useAnimatedStyle(() => {
         return {
-            transform: [{ translateX: offset.value.x * 0.3 }, { translateY: offset.value.y * 0.3 }, { scale: scale.value }],
+            transform: [
+                { translateX: offset.value.x * 0.3 },
+                { translateY: offset.value.y * 0.3 },
+                { scale: scale.value },
+            ],
         };
     });
 

@@ -1,7 +1,7 @@
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { useAtom, useSetAtom, atom } from 'jotai';
+import { atom, useAtom, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Confirm from './confirm';
@@ -17,7 +17,7 @@ export default function FeedEditorBottomSheet() {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(feedEditorBottomSheetRefAtom);
     const insets = useSafeAreaInsets();
-    const [activeTab, setActiveTab] = useAtom(tabAtom);
+    const [activeTab, _setActiveTab] = useAtom(tabAtom);
 
     useEffect(() => {
         setBottomSheetRef(ref);
@@ -26,9 +26,20 @@ export default function FeedEditorBottomSheet() {
     const mode = useFeedEditorStore((s) => s.mode);
 
     return (
-        <Sheet ref={ref} snapPoints={['50%']} maxDynamicContentSize={Dimensions.get('window').height * 0.7}>
+        <Sheet
+            ref={ref}
+            snapPoints={['50%']}
+            maxDynamicContentSize={Dimensions.get('window').height * 0.7}
+        >
             <BottomSheetView
-                style={{ flexDirection: 'column', width: '100%', paddingHorizontal: 20, paddingBottom: insets.bottom, minHeight: 370 }}>
+                style={{
+                    flexDirection: 'column',
+                    width: '100%',
+                    paddingHorizontal: 20,
+                    paddingBottom: insets.bottom,
+                    minHeight: 370,
+                }}
+            >
                 {mode === 'confirm' ? (
                     <Confirm />
                 ) : (
@@ -48,7 +59,7 @@ export default function FeedEditorBottomSheet() {
     );
 }
 
-const styles = StyleSheet.create({
+const _styles = StyleSheet.create({
     optionsContainer: {
         flexDirection: 'row',
         alignItems: 'flex-end',

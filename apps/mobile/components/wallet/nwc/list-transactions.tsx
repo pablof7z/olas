@@ -1,8 +1,8 @@
 import { useNDK, useNDKWallet, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { type NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Counterparty } from '../transactions/counterparty';
@@ -14,7 +14,7 @@ import * as User from '@/components/ui/user';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getNWCZap, getNWCZapsByPendingPaymentId } from '@/stores/db/zaps';
-import { PendingZap, usePendingPayments } from '@/stores/payments';
+import { type PendingZap, usePendingPayments } from '@/stores/payments';
 
 export default function NWCListTansactions() {
     const { activeWallet } = useNDKWallet();
@@ -26,7 +26,6 @@ export default function NWCListTansactions() {
         if (fetchRef.current) clearTimeout(fetchRef.current);
         fetchRef.current = setTimeout(() => {
             activeWallet.listTransactions().then(({ transactions }) => {
-                console.log('list transactions returned ', transactions.length, 'txs');
                 setTxs(transactions);
             });
         }, 500);
@@ -48,9 +47,7 @@ export default function NWCListTansactions() {
         const timeout = setTimeout(() => setRefreshing(false), 6000);
         activeWallet
             ?.updateBalance()
-            .then(() => {
-                console.log('balance updated');
-            })
+            .then(() => {})
             .catch((err) => {
                 console.error('error updating balance', err);
             })
@@ -79,13 +76,20 @@ export default function NWCListTansactions() {
     return (
         <FlashList
             data={txsWithPendingPayments}
-            renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} onPress={() => {}} />}
+            renderItem={({ item, index, target }) => (
+                <Item item={item} index={index} target={target} onPress={() => {}} />
+            )}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
     );
 }
 
-function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTransaction; index: number; target: any; onPress: () => void }) {
+function Item({
+    item,
+    index,
+    target,
+    onPress,
+}: { item: PendingZap | NDKNWCTransaction; index: number; target: any; onPress: () => void }) {
     const { recipientPubkey, amount, type, createdAt } = useMemo(() => {
         let recipientPubkey = null;
         let amount = null;
@@ -115,13 +119,17 @@ function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTrans
 
     return (
         <ListItem
-            className={cn('!bg-transparent px-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                '!bg-transparent px-2',
+                index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             target={target}
             leftView={<LeftView direction={type} pubkey={recipientPubkey} />}
             rightView={<ItemRightColumn amount={amount} unit="msats" isPending={isPending} />}
             index={index}
             onPress={onPress}
-            item={{}}>
+            item={{}}
+        >
             {recipientPubkey ? (
                 <Counterparty pubkey={recipientPubkey} timestamp={createdAt} />
             ) : (
@@ -131,7 +139,10 @@ function Item({ item, index, target, onPress }: { item: PendingZap | NDKNWCTrans
     );
 }
 
-const LeftView = ({ direction, pubkey }: { direction: 'incoming' | 'outgoing'; pubkey?: string }) => {
+const LeftView = ({
+    direction,
+    pubkey,
+}: { direction: 'incoming' | 'outgoing'; pubkey?: string }) => {
     const { userProfile } = useUserProfile(pubkey);
     const { colors } = useColorScheme();
 
@@ -140,7 +151,9 @@ const LeftView = ({ direction, pubkey }: { direction: 'incoming' | 'outgoing'; p
     if (pubkey && userProfile) {
         return (
             <View className="relative flex-row items-center gap-2" style={{ marginRight: 10 }}>
-                {userProfile && <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={48} />}
+                {userProfile && (
+                    <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={48} />
+                )}
                 {direction === 'outgoing' && (
                     <View className="absolute -right-2 -top-2 rotate-45">
                         <ArrowUp size={18} color={color} />
@@ -157,7 +170,11 @@ const LeftView = ({ direction, pubkey }: { direction: 'incoming' | 'outgoing'; p
 
     return (
         <View className="mr-2 flex-row items-center gap-2">
-            {direction === 'outgoing' ? <ArrowUp size={24} color={color} /> : <ArrowDown size={24} color={color} />}
+            {direction === 'outgoing' ? (
+                <ArrowUp size={24} color={color} />
+            ) : (
+                <ArrowDown size={24} color={color} />
+            )}
         </View>
     );
 };

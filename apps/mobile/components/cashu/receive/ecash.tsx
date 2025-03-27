@@ -1,12 +1,12 @@
 import 'react-native-get-random-values';
 import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera'; // Update imports
+import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera'; // Update imports
 import * as Clipboard from 'expo-clipboard';
 import { ClipboardPasteButton } from 'expo-clipboard'; // Add this import
 import Drawer from 'expo-router/drawer';
 import React from 'react';
-import { View, StyleSheet, Button } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
 
@@ -43,7 +43,6 @@ export default function ReceiveEcash({ onReceived }: { onReceived: () => void })
     }
 
     const handleQRCodeScanned = (data: string) => {
-        console.log('QR code scanned', data);
         receive(data); // Call send function with scanned data
     };
 
