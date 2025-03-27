@@ -40,7 +40,7 @@ function SystemMediaSelectorButton() {
 
     return (
         <Pressable style={styles.button} onPress={handleSelectMedia}>
-            <Ionicons name="image" size={24} color="white" />
+            <Ionicons name="images-outline" size={24} color="white" />
         </Pressable>
     );
 }

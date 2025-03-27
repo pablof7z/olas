@@ -1,5 +1,5 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Pressable, Text, Alert } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Text, Alert } from 'react-native';
 import {
     Camera,
     CameraPosition,
@@ -12,11 +12,11 @@ import {
     CameraRuntimeError,
 } from 'react-native-vision-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Reanimated, { useAnimatedStyle, useSharedValue, runOnJS } from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
+import CameraToolbar from '@/lib/publish/components/CameraToolbar';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -224,32 +224,29 @@ export default function StoryCameraScreen() {
                     ) : null}
                 </View>
 
-                <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
-                    <TouchableOpacity onPress={() => router.push('/story/selector')} style={styles.selectorButton} testID="selector-button">
-                        <Ionicons name="images-outline" size={30} color="white" />
-                    </TouchableOpacity>
-
-                    <Pressable
-                        onPress={onShortPress}
-                        onLongPress={onLongPress}
-                        onPressOut={() => {
+                <CameraToolbar
+                    selectorProps={{
+                        onPress: () => router.push('/story/selector'),
+                        testID: 'selector-button'
+                    }}
+                    shutterProps={{
+                        onPress: onShortPress,
+                        onLongPress: onLongPress,
+                        onPressOut: () => {
                             if (isRecording) {
                                 onLongPress();
                             }
-                        }}
-                        style={[styles.captureButton, isRecording && styles.recording]}
-                        testID="capture-button"
-                        disabled={isSwitchingCamera}
-                    />
-
-                    <TouchableOpacity
-                        onPress={onFlipCamera}
-                        style={[styles.flipButton, isSwitchingCamera && styles.disabledButton]}
-                        disabled={isSwitchingCamera}
-                        testID="flip-button">
-                        <Ionicons name="camera-reverse" size={30} color="white" />
-                    </TouchableOpacity>
-                </View>
+                        },
+                        isRecording: isRecording,
+                        disabled: isSwitchingCamera,
+                        testID: 'capture-button'
+                    }}
+                    flipButtonProps={{
+                        onPress: onFlipCamera,
+                        disabled: isSwitchingCamera,
+                        testID: 'flip-button'
+                    }}
+                />
             </View>
         </>
     );
@@ -259,39 +256,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'black',
-    },
-    controls: {
-        position: 'absolute',
-        bottom: POST_TYPE_SWITCHER_HEIGHT,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        paddingHorizontal: 20,
-    },
-    selectorButton: {
-        width: 50,
-        height: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    captureButton: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'white',
-        borderWidth: 4,
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-    },
-    recording: {
-        backgroundColor: '#ff4444',
-    },
-    flipButton: {
-        width: 50,
-        height: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     permissionText: {
         color: 'white',
@@ -310,8 +274,5 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: 16,
         fontWeight: '600',
-    },
-    disabledButton: {
-        opacity: 0.5,
     },
 });

@@ -14,8 +14,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { POST_TYPE_SWITCHER_HEIGHT } from '@/lib/publish/components/composer/post-type-switcher';
 import { useEditorStore } from '@/lib/publish/store/editor';
+import CameraToolbar from '@/lib/publish/components/CameraToolbar';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
@@ -157,6 +159,26 @@ export default function VideoScreen() {
         }
     }, [isRecording, handleVideoRecorded]);
 
+    const handleSelectVideo = useCallback(async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsMultipleSelection: false,
+                quality: 1,
+                exif: true,
+            });
+
+            if (!result.canceled && result.assets.length > 0) {
+                const selectedAsset = result.assets[0];
+                await addMedia(selectedAsset.uri, 'video');
+                router.push('/publish/post/metadata');
+            }
+        } catch (error) {
+            console.error('Error selecting video:', error);
+            Alert.alert('Error', 'Failed to select video. Please try again.');
+        }
+    }, [addMedia]);
+
     // Handle permissions
     if (!hasCameraPermission) {
         return <PermissionRequest type="camera" onRequestPermission={requestCameraPermission} />;
@@ -186,24 +208,23 @@ export default function VideoScreen() {
                     ) : null}
                 </View>
 
-                <View style={styles.controls}>
-                    <View style={styles.spacer} />
-
-                    <TouchableOpacity
-                        onPress={toggleRecording}
-                        style={[styles.captureButton, isRecording && styles.recording]}
-                        testID="record-button"
-                        disabled={isSwitchingCamera}
-                    />
-
-                    <TouchableOpacity
-                        onPress={onFlipCamera}
-                        style={[styles.flipButton, isSwitchingCamera && styles.disabledButton]}
-                        disabled={isSwitchingCamera}
-                        testID="flip-button">
-                        <Ionicons name="camera-reverse" size={30} color="white" />
-                    </TouchableOpacity>
-                </View>
+                <CameraToolbar
+                    selectorProps={{
+                        onPress: handleSelectVideo,
+                        testID: 'video-selector-button'
+                    }}
+                    shutterProps={{
+                        onPress: toggleRecording,
+                        isRecording: isRecording,
+                        disabled: isSwitchingCamera,
+                        testID: 'record-button'
+                    }}
+                    flipButtonProps={{
+                        onPress: onFlipCamera,
+                        disabled: isSwitchingCamera,
+                        testID: 'flip-button'
+                    }}
+                />
             </View>
         </>
     );
@@ -230,41 +251,5 @@ const styles = StyleSheet.create({
     permissionButtonText: {
         fontWeight: '600',
         fontSize: 16,
-    },
-    controls: {
-        position: 'absolute',
-        bottom: POST_TYPE_SWITCHER_HEIGHT,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    captureButton: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'white',
-        borderWidth: 4,
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-    },
-    recording: {
-        backgroundColor: 'red',
-        borderColor: 'rgba(255, 0, 0, 0.5)',
-    },
-    spacer: {
-        width: 40,
-    },
-    flipButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    disabledButton: {
-        opacity: 0.5,
     },
 }); 
