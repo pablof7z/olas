@@ -42,9 +42,7 @@ const MintListItem = ({
                 <View style={styles.content}>
                     <Text style={styles.name}>{mintInfo?.name ?? url}</Text>
                     <Text style={styles.url}>{url}</Text>
-                    <Text style={styles.balance}>
-                        {units.join(', ')}
-                    </Text>
+                    <Text style={styles.balance}>{units.join(', ')}</Text>
                 </View>
             </TouchableWithoutFeedback>
         </View>

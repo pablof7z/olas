@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export type FallbackType = 'permission' | 'no-device-available' | 'microphone-permission';
 
@@ -14,7 +14,7 @@ export default function NoPermissionsFallback({
     onPickImage,
     onRequestPermissions,
     isLoading,
-    type = 'permission'
+    type = 'permission',
 }: NoPermissionsFallbackProps) {
     const getMessage = () => {
         switch (type) {
@@ -38,10 +38,8 @@ export default function NoPermissionsFallback({
 
     return (
         <View style={styles.permissionOverlay}>
-            <Text style={styles.permissionText}>
-                {getMessage()}
-            </Text>
-            <TouchableOpacity 
+            <Text style={styles.permissionText}>{getMessage()}</Text>
+            <TouchableOpacity
                 style={styles.pickImageButton}
                 onPress={onPickImage}
                 disabled={isLoading}
@@ -49,18 +47,14 @@ export default function NoPermissionsFallback({
                 {isLoading ? (
                     <ActivityIndicator color="white" />
                 ) : (
-                    <Text style={styles.pickImageButtonText}>
-                        Select from Photo Library
-                    </Text>
+                    <Text style={styles.pickImageButtonText}>Select from Photo Library</Text>
                 )}
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={[styles.pickImageButton, styles.secondaryButton]}
                 onPress={onRequestPermissions}
             >
-                <Text style={styles.pickImageButtonText}>
-                    {getRetryButtonText()}
-                </Text>
+                <Text style={styles.pickImageButtonText}>{getRetryButtonText()}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -98,4 +92,4 @@ const styles = StyleSheet.create({
     secondaryButton: {
         backgroundColor: '#333',
     },
-}); 
+});

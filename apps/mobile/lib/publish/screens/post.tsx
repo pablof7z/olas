@@ -25,8 +25,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useEditorStore } from '../store/editor';
 import NoPermissionsFallback from '../components/NoPermissionsFallback';
+import { useEditorStore } from '../store/editor';
 
 import type { PostMedia } from '@/lib/post-editor/types';
 import PreviewContainer from '@/lib/publish/components/preview/Container';
@@ -136,7 +136,7 @@ export default function PostScreen() {
                 const asset = result.assets[0];
                 const mediaType = asset.type === 'video' ? 'video' : 'image';
                 const id = `picker-${Date.now()}`;
-                
+
                 await addMedia(asset.uri, mediaType, id);
                 openPreview();
                 router.push('/publish/post/edit');
@@ -185,32 +185,34 @@ export default function PostScreen() {
                 }}
             />
             <View style={[styles.outerContainer, { paddingTop: headerHeight }]}>
-                {hasPermission ? (<>
-                    <PreviewView heightValue={heightValue} height={gridSize * 3} />
-                    <Animated.View style={[styles.container, { paddingBottom: insets.bottom }]}>
-                        <FlashList
-                            data={mediaItems}
-                            extraData={mediaKey}
-                            renderItem={({ item }) => (
-                                <MediaGridItem
-                                    item={item}
-                                    gridSize={gridSize}
-                                    selectMedia={selectMedia}
-                                    selectedMedia={media}
-                                    colors={colors}
-                                />
-                            )}
-                            estimatedItemSize={gridSize}
-                            numColumns={COLUMNS}
-                            keyExtractor={(item) => item.id}
-                            testID="media-grid"
-                            accessible
-                            accessibilityLabel="Media selection grid"
-                            onScroll={handleScroll}
-                        />
-                    </Animated.View>
-                </>) : (
-                    <NoPermissionsFallback 
+                {hasPermission ? (
+                    <>
+                        <PreviewView heightValue={heightValue} height={gridSize * 3} />
+                        <Animated.View style={[styles.container, { paddingBottom: insets.bottom }]}>
+                            <FlashList
+                                data={mediaItems}
+                                extraData={mediaKey}
+                                renderItem={({ item }) => (
+                                    <MediaGridItem
+                                        item={item}
+                                        gridSize={gridSize}
+                                        selectMedia={selectMedia}
+                                        selectedMedia={media}
+                                        colors={colors}
+                                    />
+                                )}
+                                estimatedItemSize={gridSize}
+                                numColumns={COLUMNS}
+                                keyExtractor={(item) => item.id}
+                                testID="media-grid"
+                                accessible
+                                accessibilityLabel="Media selection grid"
+                                onScroll={handleScroll}
+                            />
+                        </Animated.View>
+                    </>
+                ) : (
+                    <NoPermissionsFallback
                         onPickImage={pickImageFromLibrary}
                         onRequestPermissions={loadMediaLibrary}
                         isLoading={isLoading}

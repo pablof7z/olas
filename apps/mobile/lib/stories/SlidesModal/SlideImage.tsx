@@ -1,21 +1,24 @@
 import type { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
 import { Image, type ImageStyle, useImage } from 'expo-image';
-import { useSetAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions } from 'react-native';
 
-import { durationAtom, isLoadingAtom } from './store';
-
 const screenWidth = Dimensions.get('screen').width;
 const screenHeight = Dimensions.get('screen').height;
+
+// Default duration for images (in milliseconds)
+const DEFAULT_DURATION = 8000;
 
 const isOverLandscapeThreshold = (width: number, height: number) => {
     return width / height > 1.1;
 };
 
-export function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
-    const setIsLoading = useSetAtom(isLoadingAtom);
-    const setDuration = useSetAtom(durationAtom);
+interface SlideImageProps {
+    imeta: NDKImetaTag;
+    onContentLoaded: (duration: number) => void;
+}
+
+export function SlideImage({ imeta, onContentLoaded }: SlideImageProps) {
     const [isLandscape, setIsLandscape] = useState(false);
 
     const imageSource = useImage(
@@ -56,11 +59,10 @@ export function SlideImage({ imeta }: { imeta: NDKImetaTag }) {
             source={imageSource}
             style={style}
             onLoadStart={() => {
-                setIsLoading(true);
+                // Loading starts
             }}
             onDisplay={() => {
-                setIsLoading(false);
-                setDuration(8000);
+                onContentLoaded(DEFAULT_DURATION);
                 if (
                     imageSource?.width &&
                     imageSource?.height &&

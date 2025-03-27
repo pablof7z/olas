@@ -1,6 +1,5 @@
 import { NDKImage, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Dimensions, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,7 +9,6 @@ import { SlideImage } from './SlideImage';
 import StoryProgress from './SlideProgress';
 import { SlideStory } from './SlideStory';
 import { SlideVideo } from './SlideVideo';
-import { activeSlideAtom, durationAtom, isLoadingAtom } from './store';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -33,52 +31,62 @@ export function Slide({
     onPrevSlide,
     onClose,
 }: SlideProps) {
-    const [activeSlide, setActiveSlide] = useAtom(activeSlideAtom);
-    const duration = useAtomValue(durationAtom);
-    const [loading, setLoading] = useAtom(isLoadingAtom);
+    const [activeImeta, setActiveImeta] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [loading, setLoading] = useState(true);
     const [isLongPressed, setIsLongPressed] = useState(false);
     const insets = useSafeAreaInsets();
 
-    useEffect(() => {
-        setActiveSlide(0);
-    }, [active, setActiveSlide]);
+    const handleContentLoaded = useCallback((contentDuration: number) => {
+        setDuration(contentDuration);
+        setLoading(false);
+    }, []);
 
     const goPrev = useCallback(
         (newSlide: number) => {
-            if (newSlide < 0) {
-                return onPrevSlide();
-            }
-            setLoading(true);
-            setActiveSlide(newSlide);
+            if (newSlide >= 0) setActiveImeta(newSlide);
+            else onPrevSlide();
         },
-        [onPrevSlide, setLoading, setActiveSlide]
+        [onPrevSlide]
     );
 
     const goNext = useCallback(
         (newSlide: number) => {
-            if (!(item instanceof NDKStory) && newSlide > item.imetas.length - 1) {
-                return onNextSlide();
+            if (!(item instanceof NDKStory)) {
+                if (newSlide < item.imetas.length - 1) setActiveImeta(newSlide);
             }
-            setLoading(true);
-            setActiveSlide(newSlide);
+
+            onNextSlide();
         },
-        [item, onNextSlide, setLoading, setActiveSlide]
+        [item, onNextSlide]
     );
 
     // Render the appropriate content based on item type
     const renderContent = () => {
         if (item instanceof NDKStory) {
-            return <SlideStory story={item} />;
+            // For NDKStory, we consider it active only when it's the current slide (active=true) and activeSlide=0
+            return (
+                <SlideStory
+                    story={item}
+                    isActiveSlide={active}
+                    onContentLoaded={handleContentLoaded}
+                />
+            );
         } else if (item instanceof NDKImage || item instanceof NDKVideo) {
             // Both NDKImage and NDKVideo have imetas property
-            const imeta = item.imetas[activeSlide];
+            const imeta = item.imetas[activeImeta];
             if (!imeta?.url) return null;
 
             // Determine if it's video based on the instance type
             return item instanceof NDKVideo ? (
-                <SlideVideo imeta={imeta} />
+                <SlideVideo
+                    imeta={imeta}
+                    isActiveSlide={active}
+                    onNextSlide={() => goNext(index + 1)}
+                    onContentLoaded={handleContentLoaded}
+                />
             ) : (
-                <SlideImage imeta={imeta} />
+                <SlideImage imeta={imeta} onContentLoaded={handleContentLoaded} />
             );
         }
         return null;
@@ -92,25 +100,17 @@ export function Slide({
             <View style={[StyleSheet.absoluteFillObject, { flexDirection: 'row' }]}>
                 <TouchableWithoutFeedback
                     delayLongPress={200}
-                    onPressOut={() => {
-                        setIsLongPressed(false);
-                    }}
-                    onLongPress={() => {
-                        setIsLongPressed(true);
-                    }}
-                    onPress={() => goPrev(activeSlide - 1)}
+                    onPressOut={() => setIsLongPressed(false)}
+                    onLongPress={() => setIsLongPressed(true)}
+                    onPress={() => goPrev(activeImeta - 1)}
                 >
                     <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
                 <TouchableWithoutFeedback
                     delayLongPress={200}
-                    onPressOut={() => {
-                        setIsLongPressed(false);
-                    }}
-                    onLongPress={() => {
-                        setIsLongPressed(true);
-                    }}
-                    onPress={() => goNext(activeSlide + 1)}
+                    onPressOut={() => setIsLongPressed(false)}
+                    onLongPress={() => setIsLongPressed(true)}
+                    onPress={() => goNext(activeImeta + 1)}
                 >
                     <View style={{ backgroundColor: 'transparent', flex: 1 }} />
                 </TouchableWithoutFeedback>
@@ -128,20 +128,16 @@ export function Slide({
                     top: insets.top,
                 }}
             >
-                {[0].map((_, i) => {
-                    return (
-                        <StoryProgress
-                            isLongPressed={isLongPressed || isScrolling}
-                            activeIndex={activeSlide}
-                            index={i}
-                            key={`story-progress-${index}-${i}`}
-                            done={activeSlide > i}
-                            active={activeSlide === i && !loading && active}
-                            duration={duration}
-                            onEnd={goNext}
-                        />
-                    );
-                })}
+                <StoryProgress
+                    isLongPressed={isLongPressed || isScrolling}
+                    activeIndex={activeImeta}
+                    index={0}
+                    key={`story-progress-${index}-${0}`}
+                    done={activeImeta > 0}
+                    active={activeImeta === 0 && !loading && active}
+                    duration={duration}
+                    onEnd={goNext}
+                />
             </View>
 
             {/* Header */}

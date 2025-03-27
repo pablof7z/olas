@@ -1,8 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -25,22 +24,6 @@ const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
 type Devices = {
     [key in CameraPosition]?: CameraDevice;
-};
-
-// Helper function to select optimal format
-const _selectOptimalFormat = (device: CameraDevice) => {
-    // Sort formats by resolution (prefer lower resolution for better performance)
-    const formats = device.formats.sort((a, b) => {
-        const aRes = a.videoHeight * a.videoWidth;
-        const bRes = b.videoHeight * b.videoWidth;
-        return aRes - bRes; // Lower resolution first
-    });
-
-    // Find the smallest format that is at least 720p
-    const optimalFormat = null; // formats.find((f) => f.videoHeight > 720 && f.videoWidth > 720);
-
-    // If no 720p format is found, use the highest resolution format available
-    return optimalFormat || formats[formats.length - 1];
 };
 
 export default function StoryCameraScreen() {
@@ -243,21 +226,21 @@ export default function StoryCameraScreen() {
                 ]}
             >
                 {!hasCameraPermission ? (
-                    <NoPermissionsFallback 
+                    <NoPermissionsFallback
                         onPickImage={handleSelectMedia}
                         onRequestPermissions={requestCameraPermission}
                         isLoading={isLoading}
                         type="permission"
                     />
                 ) : !hasMicPermission ? (
-                    <NoPermissionsFallback 
+                    <NoPermissionsFallback
                         onPickImage={handleSelectMedia}
                         onRequestPermissions={requestMicPermission}
                         isLoading={isLoading}
                         type="microphone-permission"
                     />
                 ) : !hasCameraDevice ? (
-                    <NoPermissionsFallback 
+                    <NoPermissionsFallback
                         onPickImage={handleSelectMedia}
                         onRequestPermissions={checkDevicesAgain}
                         isLoading={isLoading}

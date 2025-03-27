@@ -1,9 +1,9 @@
 import type { NDKImage, NDKStory, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import type * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Dimensions, FlatList, type FlatListProps, StyleSheet } from 'react-native';
+import { Dimensions, FlatList, type FlatListProps, StyleSheet, type ViewToken } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -18,8 +18,6 @@ import { Slide } from './Slide';
 
 import {
     activeSlideAtom,
-    durationAtom,
-    isLoadingAtom,
     showStoriesModalAtom,
     storiesAtom,
 } from '@/lib/stories/SlidesModal/store';
@@ -54,6 +52,8 @@ const StoryItem = ({
     flatListRef,
 }: StoryItemProps) => {
     const inputRange = [(index - 0.5) * width, index * width, (index + 0.5) * width];
+
+    console.log('StoryItem', { id: item.id.substring(0, 10), index, activeIndex });
 
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: interpolate(scrollX.value, inputRange, [0.5, 1, 0.5], Extrapolation.CLAMP),
@@ -117,17 +117,13 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
     const [isScrolling, setIsScrolling] = useState(false);
     const stories = useAtomValue(storiesAtom) as NDKImage[];
     const ref = useRef<FlatList<NDKImage | NDKVideo | NDKStory>>(null);
-    const setIsLoading = useSetAtom(isLoadingAtom);
-    const setDuration = useSetAtom(durationAtom);
 
     const close = useCallback(() => {
         onClose ? onClose() : router.back();
         setShowStoriesModal(false);
         setActiveIndex(0);
-        setIsLoading(true);
-        setDuration(-1);
         ref.current?.scrollToOffset({ offset: 0, animated: false });
-    }, [setShowStoriesModal, onClose, setActiveIndex, setIsLoading, setDuration]);
+    }, [setShowStoriesModal, onClose, setActiveIndex]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -140,9 +136,20 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
             runOnJS(setIsScrolling)(false);
         },
         onMomentumEnd: (event) => {
-            runOnJS(setActiveIndex)(Math.floor(event.contentOffset.x / width));
+            runOnJS(setActiveIndex)(Math.round(event.contentOffset.x / width));
         },
     });
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50,
+        minimumViewTime: 0,
+    }).current;
+
+    const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+            setActiveIndex(viewableItems[0].index);
+        }
+    }).current;
 
     return (
         <Animated.View style={styles.container}>
@@ -154,6 +161,8 @@ export default function StoriesModal({ onClose }: { onClose?: () => void }) {
                 showsHorizontalScrollIndicator={false}
                 onScroll={scrollHandler}
                 pagingEnabled
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
                 renderItem={({
                     item,
                     index,

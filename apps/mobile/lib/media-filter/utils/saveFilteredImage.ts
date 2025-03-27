@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useNodejsImportProtocol: buffer is correctly installed
 import { Buffer } from 'buffer';
 import { ImageFormat, Skia } from '@shopify/react-native-skia';
 import * as FileSystem from 'expo-file-system';

@@ -37,8 +37,15 @@ import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { relayNoticesAtom } from '@/stores/relays';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
+
+// This is the default configuration
+configureReanimatedLogger({
+    level: ReanimatedLogLevel.warn,
+    strict: false, // Reanimated runs in strict mode by default
+});
 
 // LogBox.ignoreAllLogs();
 

@@ -1,30 +1,25 @@
 import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
-import { Image, ImageStyle, useImage } from 'expo-image';
+import { Image, useImage } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 
 import StoryStickersContainer from '../StoryStickersContainer';
-import StoryText from '../StoryText';
-import { StoryHeader } from '../header';
 
-import { useColorScheme } from '@/lib/useColorScheme';
 import { urlIsVideo } from '@/utils/media';
 
 interface SimpleStoryViewerProps {
     story: NDKStory;
-    active?: boolean;
-    onNext?: () => void;
-    onPrev?: () => void;
+    onMediaLoaded?: () => void;
+    isActive?: boolean;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function SimpleStoryViewer({
     story,
-    active = true,
-    onNext,
-    onPrev,
+    onMediaLoaded,
+    isActive = true,
 }: SimpleStoryViewerProps) {
     const imeta = story.imeta;
 
@@ -33,7 +28,11 @@ export default function SimpleStoryViewer({
 
     return (
         <View style={[styles.container, { backgroundColor: 'black' }]}>
-            {isVideo ? <VideoContent url={imeta.url} /> : <ImageContent url={imeta.url} />}
+            {isVideo ? (
+                <VideoContent url={imeta.url} onMediaLoaded={onMediaLoaded} isActive={isActive} />
+            ) : (
+                <ImageContent url={imeta.url} onMediaLoaded={onMediaLoaded} />
+            )}
 
             {/* Stickers Layer */}
             <StoryStickersContainer event={story} />
@@ -41,16 +40,46 @@ export default function SimpleStoryViewer({
     );
 }
 
-const VideoContent = ({ url }: { url: string }) => {
+const VideoContent = ({
+    url,
+    onMediaLoaded,
+    isActive = true,
+}: {
+    url: string;
+    onMediaLoaded?: () => void;
+    isActive?: boolean;
+}) => {
     const videoSource = useVideoPlayer({ uri: url }, (player) => {
-        player.play();
         player.loop = true;
+        player.muted = false;
+
+        // Signal that media has loaded when video is ready to play
+        player.addListener('statusChange', () => {
+            if (player.status === 'readyToPlay' && onMediaLoaded) {
+                onMediaLoaded();
+            }
+        });
+
+        return () => {
+            player.removeAllListeners('statusChange');
+        };
     });
+
+    // Control playback based on active status
+    useEffect(() => {
+        if (videoSource && videoSource.status === 'readyToPlay') {
+            if (isActive) {
+                videoSource.play();
+            } else {
+                videoSource.pause();
+            }
+        }
+    }, [isActive, videoSource, videoSource?.status]);
 
     return <VideoView player={videoSource} style={[styles.media]} contentFit="cover" />;
 };
 
-const ImageContent = ({ url }: { url: string }) => {
+const ImageContent = ({ url, onMediaLoaded }: { url: string; onMediaLoaded?: () => void }) => {
     // Handle both remote and local file URIs
     // Local URIs will be in the format "file:///path/to/file"
     const imageSource = useImage({ uri: url });
@@ -59,8 +88,17 @@ const ImageContent = ({ url }: { url: string }) => {
         <Image
             style={styles.media}
             source={imageSource}
-            // Add contentFit to ensure it displays properly
             contentFit="cover"
+            onLoadStart={() => {}}
+            onLoad={() => {}}
+            onLoadEnd={() => {}}
+            onError={() => {}}
+            // Signal that media has loaded when image is displayed
+            onDisplay={() => {
+                if (onMediaLoaded) {
+                    onMediaLoaded();
+                }
+            }}
         />
     );
 };
