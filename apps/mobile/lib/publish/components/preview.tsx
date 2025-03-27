@@ -1,6 +1,7 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useState } from 'react';
 
 interface PreviewProps {
     selectedMedia: {
@@ -8,15 +9,16 @@ interface PreviewProps {
         uri: string;
     } | null;
     height: number;
+    tapToUnmute?: boolean;
 }
 
-export function Preview({ selectedMedia, height }: PreviewProps) {
+export function Preview({ selectedMedia, height, tapToUnmute = false }: PreviewProps) {
     return (
         <View style={[styles.previewContainer, { height }]}>
             {selectedMedia?.type === 'image' ? (
                 <PreviewImage uri={selectedMedia.uri} />
             ) : selectedMedia?.type === 'video' ? (
-                <PreviewVideo uri={selectedMedia.uri} />
+                <PreviewVideo uri={selectedMedia.uri} tapToUnmute={tapToUnmute} />
             ) : null}
         </View>
     );
@@ -34,13 +36,45 @@ export function PreviewImage({ uri }: { uri: string }) {
     );
 }
 
-export function PreviewVideo({ uri }: { uri: string }) {
+export function PreviewVideo({ uri, tapToUnmute = false }: { uri: string; tapToUnmute?: boolean }) {
+    const [isMuted, setIsMuted] = useState(true);
+    
     const player = useVideoPlayer({ uri }, (player) => {
         player.loop = true;
+        player.muted = isMuted;
         player.play();
     });
 
-    return <VideoView player={player} style={styles.previewContent} />;
+    const handleTap = () => {
+        if (tapToUnmute) {
+            setIsMuted(false);
+            if (player) {
+                player.muted = false;
+            }
+        }
+    };
+
+    if (tapToUnmute) {
+        return (
+            <TouchableOpacity activeOpacity={0.9} onPress={handleTap} style={styles.previewContent}>
+                <VideoView
+                    player={player}
+                    style={styles.previewContent}
+                    nativeControls={false}
+                    contentFit='contain'
+                />
+            </TouchableOpacity>
+        );
+    }
+
+    return (
+        <VideoView
+            player={player}
+            style={styles.previewContent}
+            nativeControls={false}
+            contentFit='contain'
+        />
+    );
 }
 
 const styles = StyleSheet.create({

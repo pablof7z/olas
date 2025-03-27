@@ -28,7 +28,6 @@ import * as SettingsStore from 'expo-secure-store';
 import { FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
-import { useNutzapMonitor, useWalletMonitor } from '@/hooks/wallet';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
@@ -37,8 +36,9 @@ import { settingsStore } from '@/lib/settings-store';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
 import CommentsBottomSheet from '@/lib/comments/bottom-sheet';
-import { useAppSub, useSessionSub } from '@/hooks/app-sub';
-import SignerReady from '@/components/SignerReady';
+
+import AppReady from '@/components/headless/AppReady';
+import SignerReady from '@/components/headless/SignerReady';
 
 // LogBox.ignoreAllLogs();
 
@@ -104,8 +104,7 @@ export function RootLayout() {
         setFeedType(feedType);
     }, []);
 
-    // useAppSub();
-    useSessionSub();
+    
 
     useEffect(() => {
         if (!ndk) return;
@@ -129,6 +128,7 @@ export function RootLayout() {
 
     return (
         <>
+            {ndk && <AppReady />}
             {!!ndk?.signer && <SignerReady />}
             <StatusBar key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`} style={isDarkColorScheme ? 'light' : 'dark'} />
             <GestureHandlerRootView style={{ flex: 1 }}>

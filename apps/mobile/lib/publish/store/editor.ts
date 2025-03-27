@@ -102,8 +102,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                 contentMode: 'portrait', // Default value, should be updated later
             };
 
-            console.log('newPostMedia', newPostMedia);
-
             if (state.isMultipleSelectionMode) {
                 // Check if the media item is already selected
                 const mediaExists = state.media.some((item) => item.id === id);
@@ -128,7 +126,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         // Extract location from EXIF data if available and no location is set yet
         if (mediaType === 'image') {
             const location = await extractLocationFromMedia(uri);
-            console.log('location', location);
             if (location) {
                 set({ location });
             }
@@ -199,8 +196,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             if (location && includeLocation) {
                 metadata.location = location;
             }
-
-            console.log('metadata', metadata);
 
             const result = await generateEvent(ndk, metadata, uploadedMedia);
 

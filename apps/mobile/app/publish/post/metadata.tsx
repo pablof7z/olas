@@ -61,7 +61,7 @@ export default function PostMetadataScreen() {
                             justifyContent: 'center',
                             alignItems: 'center',
                         }}>
-                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} />
+                        <Preview selectedMedia={{ type: item.mediaType, uri: item.uris[0] }} height={mediaSize} tapToUnmute={true} />
                     </View>
                 ))}
             </ScrollView>

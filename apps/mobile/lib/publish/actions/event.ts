@@ -27,8 +27,6 @@ function mediaToImeta(media: PostMedia): NDKImetaTag {
     imeta.m = media.mimeType;
     imeta.size = media.size?.toString?.();
 
-    console.log('translated media to imeta', { imeta: JSON.stringify(imeta, null, 4), media: JSON.stringify(media, null, 4) });
-
     return imeta;
 }
 
@@ -40,7 +38,6 @@ function generateVideoEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]
         const imeta = mediaToImeta(m);
         imetas.push(imeta);
         event.duration ??= m.duration;
-        console.log('setting duration to', m.duration);
     }
 
     event.imetas = imetas;
@@ -101,8 +98,6 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
     }
 
     await event.sign();
-
-    console.log('signed media event', JSON.stringify(event.rawEvent(), null, 4));
 
     return {
         event,

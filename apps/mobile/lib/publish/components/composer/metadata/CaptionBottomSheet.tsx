@@ -4,21 +4,29 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export const captionBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
 const captionAtom = atom('');
 
 function Content() {
     const [localCaption, setLocalCaption] = useAtom(captionAtom);
+    const { isDarkColorScheme, colors } = useColorScheme();
 
     return (
         <BottomSheetTextInput
             placeholder="Write a caption..."
+            placeholderTextColor={colors.muted}
             multiline
-            style={styles.captionInput}
+            style={[
+                styles.captionInput,
+                {
+                    color: colors.foreground,
+                    backgroundColor: 'transparent'
+                }
+            ]}
             value={localCaption}
             onChangeText={setLocalCaption}
             autoFocus
