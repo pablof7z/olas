@@ -18,17 +18,20 @@ const MintListItem = ({
     const [units, setUnits] = useState<string[]>([]);
 
     const url = item.tagValue('u');
-    if (!url) return null;
-
+    
     useEffect(() => {
-        CashuMint.getInfo(url).then(setMintInfo);
-        const mint = new CashuMint(url);
-        mint.getKeySets().then((keySets) => {
-            const units = new Set<string>();
-            keySets.keysets.forEach((keySet) => units.add(keySet.unit));
-            setUnits(Array.from(units));
-        });
+        if (url) {
+            CashuMint.getInfo(url).then(setMintInfo);
+            const mint = new CashuMint(url);
+            mint.getKeySets().then((keySets) => {
+                const units = new Set<string>();
+                keySets.keysets.forEach((keySet) => units.add(keySet.unit));
+                setUnits(Array.from(units));
+            });
+        }
     }, [url]);
+
+    if (!url) return null;
 
     function toggleMint() {
         setChecked(!isChecked);

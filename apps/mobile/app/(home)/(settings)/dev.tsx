@@ -7,8 +7,7 @@ import { cn } from '@/lib/cn';
 
 type Row = { id: string; title: string; value: string };
 
-function getSubscriptions(): Row[] {
-    const { ndk } = useNDK();
+function getSubscriptions(ndk: any): Row[] {
     const subManager = ndk.subManager;
     const subscriptions = subManager.subscriptions;
 
@@ -94,7 +93,7 @@ export default function DevScreen() {
     const db = adapter.db;
 
     const data: Row[] = [];
-    data.push(...getSubscriptions());
+    data.push(...getSubscriptions(ndk));
     data.push(...getUnpublishedEvents(db));
     data.push(...getProfileCount(db));
     data.push(...getEventCount(db));

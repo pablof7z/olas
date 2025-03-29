@@ -40,7 +40,8 @@ export default function AvatarAndName({
     const profileData = useUserProfile(!userProfile ? pubkey : undefined);
     const _userProfile = profileData?.userProfile;
     const __userProfile = userProfile || _userProfile;
-    const flare = skipFlare ? undefined : useUserFlare(pubkey);
+    const flare = useUserFlare(pubkey);
+    const displayFlare = skipFlare ? undefined : flare;
 
     const viewProfile = useCallback(() => {
         if (onPress) {
@@ -56,7 +57,7 @@ export default function AvatarAndName({
                 imageSize={imageSize}
                 borderColor={borderColor}
                 canSkipBorder={canSkipBorder}
-                flare={flare}
+                flare={displayFlare}
             />
             <User.Name
                 userProfile={__userProfile}

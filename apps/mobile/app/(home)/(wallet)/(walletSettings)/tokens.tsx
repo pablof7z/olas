@@ -37,18 +37,17 @@ import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function TokensScreen() {
     const { activeWallet } = useNDKWallet();
+    const [forceSyncing, setForceSyncing] = useState(false);
+
+    const forceSync = useCallback(() => {
+        setForceSyncing(true);
+    }, []);
 
     if (!(activeWallet instanceof NDKCashuWallet)) {
         return <Text>This wallet is not a NIP-60 wallet</Text>;
     }
 
     const tokens = activeWallet.state.getTokens();
-
-    const [forceSyncing, setForceSyncing] = useState(false);
-
-    const forceSync = useCallback(() => {
-        setForceSyncing(true);
-    }, []);
 
     if (forceSyncing) {
         return <ForceSync />;
@@ -329,6 +328,9 @@ const rightActionStyles = StyleSheet.create({
 });
 
 function ForceSync() {
+    const { activeWallet } = useNDKWallet();
+    const [validating, setValidating] = useState(false);
+    const [result, setResult] = useState<string | null>(null);
     const currentUser = useNDKCurrentUser();
     const { events: tokenEvents } = useSubscribe<NDKCashuToken>(
         [{ kinds: [NDKKind.CashuToken], authors: [currentUser?.pubkey] }],
@@ -394,6 +396,10 @@ function ForceSync() {
         return deletedIds;
     }, [deletedEvents.length, tokenEvents.length]);
 
+    if (!(activeWallet instanceof NDKCashuWallet)) {
+        return <Text>This wallet is not a NIP-60 wallet</Text>;
+    }
+
     return (
         <View>
             <Text>Force-Syncing...</Text>
@@ -414,16 +420,12 @@ function ForceSyncItem({
     const { activeWallet } = useNDKWallet();
     const [validating, setValidating] = useState(false);
     const [result, setResult] = useState<string | null>(null);
-
-    if (!(activeWallet instanceof NDKCashuWallet)) {
-        return <Text>This wallet is not a NIP-60 wallet</Text>;
-    }
-
+    
     const startValidation = useCallback(async () => {
         setValidating(true);
         await consolidateMintTokens(
             mint,
-            activeWallet,
+            activeWallet as NDKCashuWallet,
             proofs.map((p) => p.proof),
             (res) => {
                 const a = walletProofChangeToText(res);
@@ -432,7 +434,11 @@ function ForceSyncItem({
             (error) => setResult(`Failed to validate: ${error}`)
         );
         setValidating(false);
-    }, []);
+    }, [mint, activeWallet, proofs]);
+
+    if (!(activeWallet instanceof NDKCashuWallet)) {
+        return <Text>This wallet is not a NIP-60 wallet</Text>;
+    }
 
     return (
         <View key={mint}>

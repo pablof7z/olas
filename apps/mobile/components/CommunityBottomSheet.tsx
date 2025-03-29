@@ -21,20 +21,19 @@ export const communityBottomSheetRefAtom = atom<
 >(null, (_get, set, value) => set(communityBottomSheetRefAtom, value));
 
 export function CommunityBottomSheet() {
-    if (!COMMUNITIES_ENABLED) return null;
-
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(communityBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-
     const myGroups = useMyGroups();
 
     useEffect(() => {
-        setBottomSheetRef(ref);
-
-        return () => {
-            setBottomSheetRef(null);
-        };
+        if (COMMUNITIES_ENABLED) {
+            setBottomSheetRef(ref);
+            
+            return () => {
+                setBottomSheetRef(null);
+            };
+        }
     }, [ref, setBottomSheetRef]);
 
     const setGroup = useCallback(
@@ -43,6 +42,8 @@ export function CommunityBottomSheet() {
         },
         [ref]
     );
+
+    if (!COMMUNITIES_ENABLED) return null;
 
     return (
         <Sheet

@@ -68,9 +68,7 @@ function TaggedEvent({
     const { ndk } = useNDK();
     const [taggedEvent, setTaggedEvent] = useState<NDKEvent | null>(null);
     const marker = tag[3];
-
-    if (marker === 'created' || marker === 'redeemed') return null;
-
+    
     useEffect(() => {
         const fetch = tag[1];
 
@@ -82,6 +80,8 @@ function TaggedEvent({
             setTaggedEvent(e);
         });
     }, [originalEvent, index]);
+
+    if (marker === 'created' || marker === 'redeemed') return null;
 
     if (!taggedEvent) return null;
 

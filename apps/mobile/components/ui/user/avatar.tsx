@@ -65,35 +65,25 @@ const UserAvatar = forwardRef(function UserAvatar(
     imageSize ??= size / 3;
     borderWidth ??= imageSize / 16;
 
-    let proxiedImageUrl: string | null = null;
+    const imageSource = useMemo<ImageSourcePropType | null>(() => {
+        if (!userProfile?.picture) return null;
 
-    if (userProfile?.picture) {
-        if (skipProxy) proxiedImageUrl = userProfile.picture;
-        else proxiedImageUrl = getProxiedImageUrl(userProfile.picture, 300);
-    }
+        let imageUrl = userProfile.picture;
+        let proxiedImageUrl = !skipProxy ? getProxiedImageUrl(imageUrl, 300) : undefined;
 
-    borderColor ??= colors.card;
-
-    const imageSource = useImage(
-        {
-            uri: proxiedImageUrl ? proxiedImageUrl : undefined,
-            width: size,
-            height: size,
-            cacheKey: userProfile?.picture,
-        },
-        {
+        return {
+            uri: proxiedImageUrl ?? imageUrl,
+            width: imageSize,
+            height: imageSize,
             onError: () => {
                 if (proxiedImageUrl) {
                     // Handle error case
                 }
             },
         }
-    );
+    }, [userProfile?.picture, imageSize, skipProxy]);
 
-    if (!pubkey) {
-        alert('no pubkey was passed to the UserAvatar component! This is a bug');
-        return null;
-    }
+    borderColor ??= colors.card;
 
     const style = useMemo<ViewStyle>(
         () => ({
@@ -117,6 +107,11 @@ const UserAvatar = forwardRef(function UserAvatar(
         }),
         [imageSize, borderWidth, borderColor]
     );
+
+    if (!pubkey) {
+        alert('no pubkey was passed to the UserAvatar component! This is a bug');
+        return null;
+    }
 
     return (
         <View ref={ref} style={[style, externalStyle]}>

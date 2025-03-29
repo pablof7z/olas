@@ -84,36 +84,40 @@ function RenderMention({
     const handlePress = useCallback(
         (pubkey: string) => {
             if (onMentionPress) onMentionPress(pubkey);
-            else router.push(`/profile?pubkey=${pubkey}`);
         },
         [onMentionPress]
     );
+    
+    let pubkey: string | undefined = undefined;
+    
+    if (entity) {
+        try {
+            const { type, data } = nip19.decode(entity);
+            if (type === 'npub') pubkey = data as string;
+            else if (type === 'nprofile') pubkey = (data as { pubkey: string }).pubkey;
+        } catch (_e) {
+            // Invalid entity, will render fallback
+        }
+    }
+    
+    const profileData = useUserProfile(pubkey);
+    const userProfile = profileData?.userProfile;
 
     if (!entity) return null;
-
-    try {
-        const { type, data } = nip19.decode(entity);
-        let pubkey: string;
-
-        if (type === 'npub') pubkey = data as string;
-        else if (type === 'nprofile') pubkey = (data as { pubkey: string }).pubkey;
-        else return <Text style={{ fontSize }}>{entity.substring(0, 6)}...</Text>;
-
-        const profileData = useUserProfile(pubkey);
-        const userProfile = profileData?.userProfile;
-
-        return (
-            <Text
-                style={{ fontSize }}
-                className="font-bold text-primary"
-                onPress={() => handlePress(pubkey)}
-            >
-                @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare />
-            </Text>
-        );
-    } catch (_e) {
+    
+    if (!pubkey) {
         return <Text style={{ fontSize }}>{entity.substring(0, 6)}...</Text>;
     }
+    
+    return (
+        <Text
+            style={{ fontSize }}
+            className="font-bold text-primary"
+            onPress={() => handlePress(pubkey as string)}
+        >
+            @<User.Name userProfile={userProfile} pubkey={pubkey} skipFlare />
+        </Text>
+    );
 }
 
 function RenderPart({

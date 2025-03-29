@@ -304,9 +304,6 @@ function ReportUserButton({
     const user = event?.author;
     const { ndk } = useNDK();
 
-    if (currentUser?.pubkey === event.pubkey) return null;
-    if (followType) return null;
-
     const report = useCallback(() => {
         const r = new NDKEvent(ndk, {
             kind: NDKKind.Report,
@@ -319,7 +316,10 @@ function ReportUserButton({
     const handleBlock = useCallback(() => {
         mute(user.pubkey, 'pubkey');
         closeFn(undefined);
-    }, [user.pubkey, report, closeFn]);
+    }, [user?.pubkey, mute, closeFn]);
+
+    if (currentUser?.pubkey === event.pubkey) return null;
+    if (followType) return null;
 
     return (
         <Button
