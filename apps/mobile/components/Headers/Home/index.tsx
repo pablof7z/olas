@@ -63,7 +63,7 @@ export default function HomeHeader() {
     useEffect(() => {
         if (!nutzapMonitor) return;
 
-        nutzapMonitor.on('redeem', (nutzaps) => {
+        nutzapMonitor.on('redeemed', (nutzaps) => {
             setShowZap(true);
             setNutzaps(nutzaps);
             setTimeout(() => {

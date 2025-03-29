@@ -57,7 +57,7 @@ export default function Bookmarks() {
     const { events } = useSubscribe(filters, {}, [filters]);
 
     const sortedEvents = useMemo(
-        () => events.sort((a, b) => b.created_at! - a.created_at!),
+        () => events.sort((a, b) => b.created_at - a.created_at),
         [events]
     );
     const setActiveEvent = useSetAtom(activeEventAtom);
@@ -102,7 +102,7 @@ export default function Bookmarks() {
                         <Post
                             event={item}
                             reposts={[]}
-                            timestamp={item.created_at!}
+                            timestamp={item.created_at}
                             setActiveEvent={setActiveEvent}
                         />
                     )}

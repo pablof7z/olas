@@ -1,13 +1,15 @@
 import type NDK from '@nostr-dev-kit/ndk-mobile';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { create } from 'zustand';
 
 import { generateEvent } from '@/lib/publish/actions/event';
 import { uploadMedia } from '@/lib/publish/actions/upload';
-import type { Location, PostMedia, PostMetadata, PostState } from '@/lib/publish/types';
+import type { Location, PostMedia, PostMetadata, PostState, VisibilityType } from '@/lib/publish/types';
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
+import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
 interface EditorState {
     /** Array of media items (images/videos) to be published */
@@ -15,7 +17,6 @@ interface EditorState {
 
     /** Flag to determine if multiple media items can be selected at once */
     isMultipleSelectionMode: boolean;
-
     /** Text caption for the post */
     caption: string;
 
@@ -28,6 +29,9 @@ interface EditorState {
     /** Whether to include location data in published post */
     includeLocation: boolean;
 
+    /** Whether to share the post with a quoted kind:1 */
+    share: boolean;
+
     /** Current state of the publishing process (editing, uploading, etc.) */
     state: string;
 
@@ -36,6 +40,9 @@ interface EditorState {
 
     /** Flag to indicate whether a publish operation is in progress */
     isPublishing: boolean;
+
+    /** Visibility of the post, determines where it appears */
+    visibility: VisibilityType;
 
     /** Add a new media item to the post */
     addMedia: (uri: string, mediaType: 'image' | 'video', id?: string) => Promise<void>;
@@ -53,6 +60,9 @@ interface EditorState {
     reorderMedia: (fromIndex: number, toIndex: number) => void;
 
     /** Toggle between single and multiple selection modes */
+
+    /** Set the multiple selection mode */
+    setIsMultipleSelectionMode: (isMultipleSelectionMode: boolean) => void;
     toggleSelectionMode: () => void;
 
     /** Set the post caption text */
@@ -64,8 +74,14 @@ interface EditorState {
     /** Set the geographic location associated with the post */
     setLocation: (location: Location | null) => void;
 
+    /** Set whether to share the post with a quoted kind:1 */
+    setShare: (share: boolean) => void;
+
     /** Control whether location data should be included in the published post */
     setIncludeLocation: (include: boolean) => void;
+
+    /** Set visibility type of the post */
+    setVisibility: (visibility: VisibilityType) => void;
 
     /** Update the current state of the publishing process */
     setState: (state: PostState) => void;
@@ -84,9 +100,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     expiration: null,
     location: null,
     includeLocation: true,
+    share: false,
     state: 'idle',
     error: null,
     isPublishing: false,
+    visibility: 'media-apps',
 
     addMedia: async (uri, mediaType) => {
         const convertedUri = await convertMediaPath(uri, mediaType);
@@ -103,6 +121,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             if (state.isMultipleSelectionMode) {
                 // Check if the media item is already selected
                 const mediaExists = state.media.some((item) => item.id === id);
+
+                console.log('mediaExists', mediaExists, 'for', id);
 
                 if (mediaExists) {
                     // If the item exists, remove it (toggle off)
@@ -152,6 +172,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             return { media: newMedia };
         }),
 
+    setIsMultipleSelectionMode: (isMultipleSelectionMode) => set({ isMultipleSelectionMode }),
+
     toggleSelectionMode: () =>
         set((state) => ({
             isMultipleSelectionMode: !state.isMultipleSelectionMode,
@@ -164,7 +186,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     setLocation: (location) => set({ location }),
 
+    setShare: (share) => set({ share }),
+
     setIncludeLocation: (include) => set({ includeLocation: include }),
+
+    setVisibility: (visibility) => set({ visibility }),
 
     setState: (state) => set({ state }),
 
@@ -189,8 +215,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
             set({ state: 'uploaded' });
 
-            const { location, includeLocation, caption, expiration } = get();
-            const metadata: PostMetadata = { caption, expiration: expiration || undefined };
+            const { location, includeLocation, caption, expiration, share, visibility } = get();
+            const metadata: PostMetadata = { 
+                caption, 
+                expiration: expiration || undefined,
+                visibility
+            };
 
             // Add location data to metadata if it exists and should be included
             if (location && includeLocation) {
@@ -210,6 +240,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
             if (PUBLISH_ENABLED) {
                 await event.publish(relaySet);
+
+                if (share) publishShareEvent(ndk, event);
+                else console.log('not sharing');
+                await event.publish(relaySet);
+            } else {
+                console.log('not publishing');
             }
 
             // Reset state after successful publish
@@ -245,3 +281,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
 /** Atom that controls what type of content is being published (post, story, or video) */
 export const publishPostTypeAtom = atom<'post' | 'story' | 'video'>('post');
+
+async function publishShareEvent(ndk: NDK, event: NDKEvent) {
+    // don't share what is already a kind:1 event
+    if (event.kind === NDKKind.Text) return;
+    
+    console.log('publishShareEvent');
+    const shareEvent = new NDKEvent(ndk, {
+        kind: NDKKind.Text,
+        content: `nostr:${event.encode()}`
+    });
+    shareEvent.tag(event, undefined, true, 'q');
+    console.log('shareEvent', shareEvent.rawEvent());
+    // await shareEvent.publish();
+}

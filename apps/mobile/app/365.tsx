@@ -256,7 +256,7 @@ export default function Wallpapers() {
         for (const event of events) {
             const imeta = event?.imetas?.[0];
             if (!imeta?.url) continue;
-            const day = getDayOfYear(event.created_at!);
+            const day = getDayOfYear(event.created_at);
             if (!day) continue;
             days[day - 1].event = event;
             days[day - 1].imeta = imeta;

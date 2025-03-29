@@ -1,6 +1,6 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, getBolt11ExpiresAt } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
 import { ClipboardPasteButton } from 'expo-clipboard';
@@ -49,11 +49,12 @@ export default function Scan() {
         setPayload(payload);
 
         if (payloadType === 'lightning') {
+            let payloadToUse = payload;
             if (payload.startsWith('lightning:')) {
-                payload = payload.replace('lightning:', '');
+                payloadToUse = payload.replace('lightning:', '');
             }
 
-            const decoded = decodeBolt11(payload);
+            const decoded = decodeBolt11(payloadToUse);
             const amount = Number(
                 decoded.sections.find((section) => section.name === 'amount')?.value
             );
@@ -61,7 +62,8 @@ export default function Scan() {
                 (section) => section.name === 'description'
             )?.value;
             setAmount(amount);
-            setDescription(description);
+            setDescription(description ?? null);
+            setPayload(payloadToUse);
             return;
         }
 

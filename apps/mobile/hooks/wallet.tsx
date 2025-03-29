@@ -27,6 +27,11 @@ import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from '@/st
 import { usePaymentStore } from '@/stores/payments';
 import { useDebounce } from '@/utils/debounce';
 
+const start = Date.now();
+function log(message: string) {
+    console.log(`[WALLET HOOK, ${Date.now() - start}ms] ${message}`);
+}
+
 interface Nip60WalletStoreState {
     wallet: NDKCashuWallet | undefined;
     init: (ndk: NDK, pubkey: Hexpubkey) => void;
@@ -38,16 +43,18 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, _get) => 
     init: (ndk: NDK, pubkey: Hexpubkey) => {
         const loadingEventIds = new Set<string>();
 
+        log(`init nip60 wallet, ${pubkey}`);
+
         ndk.subscribe(
             [{ kinds: [NDKKind.CashuWallet], authors: [pubkey] }],
             {
                 subId: 'nip60-wallet',
                 skipVerification: true,
-                cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE,
             },
             undefined,
             {
                 onEvent: (event) => {
+                    log(`onEvent, ${event.id}`);
                     if (loadingEventIds.has(event.id)) return;
 
                     loadingEventIds.add(event.id);
@@ -76,7 +83,6 @@ export function useNip60Wallet() {
 export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const nip60Wallet = useNip60Wallet();
-    const timer = useRef<NodeJS.Timeout | null>(null);
     const walletType = useAppSettingsStore((s) => s.walletType);
     const walletPayload = useAppSettingsStore((s) => s.walletPayload);
     const setCurrentUser = usePaymentStore((s) => s.setCurrentUser);
@@ -118,9 +124,11 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
         }
     }, [activeWallet?.walletId]);
 
-    const delayedInitWallet = useCallback(async () => {
+    const initWallet = useCallback(async () => {
         if (!pubkey) return;
         let wallet: NDKWallet | undefined;
+
+        log(`initWallet, ${walletType}, ${walletPayload}`);
 
         if (walletType === 'none') return;
         else if (walletType === 'nwc' && walletPayload) {
@@ -136,6 +144,7 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
                 ) as { created_at: number };
                 since = mostRecentCachedEvent?.created_at;
             }
+            log(`initWallet, starting nip60 wallet, ${since}`);
             nip60Wallet.start({ subId: 'wallet', skipVerification: true, since });
             wallet = nip60Wallet;
         } else {
@@ -148,10 +157,7 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
     useEffect(() => {
         if (!pubkey || activeWallet) return;
 
-        if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(() => {
-            delayedInitWallet();
-        }, 1000);
+        initWallet();
     }, [pubkey, activeWallet?.walletId, nip60Wallet]);
 
     const updateStorage = useCallback(() => {

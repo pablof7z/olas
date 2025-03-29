@@ -17,33 +17,13 @@ import {
     useMicrophonePermission,
 } from 'react-native-vision-camera';
 
+import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
+
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 
 type Devices = {
     [key in CameraPosition]?: CameraDevice;
 };
-
-const PermissionRequest = ({
-    type,
-    onRequestPermission,
-}: { type: 'camera' | 'microphone'; onRequestPermission: () => void }) => (
-    <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Ionicons
-            name={type === 'camera' ? 'camera-outline' : 'mic-outline'}
-            size={64}
-            color="white"
-            style={{ marginBottom: 16 }}
-        />
-        <Text style={styles.permissionText}>
-            {type === 'camera'
-                ? 'Camera access is required to take photos and videos'
-                : 'Microphone access is required to record videos'}
-        </Text>
-        <TouchableOpacity onPress={onRequestPermission} style={styles.permissionButton}>
-            <Text style={styles.permissionButtonText}>Grant Access</Text>
-        </TouchableOpacity>
-    </View>
-);
 
 // Helper function to select optimal format
 const _selectOptimalFormat = (device: CameraDevice) => {
@@ -69,6 +49,7 @@ export default function StoryCameraScreen() {
     const [cameraPosition, setCameraPosition] = useState<CameraPosition>('back');
     const [isRecording, setIsRecording] = useState(false);
     const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const scale = useSharedValue(1);
     const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } =
         useCameraPermission();
@@ -213,13 +194,38 @@ export default function StoryCameraScreen() {
         }
     }, [isRecording, onMediaCaptured]);
 
+    const handleSelectFromLibrary = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            router.push('/story/selector');
+        } catch (error) {
+            console.error('Failed to navigate to selector:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router]);
+
     // Handle permissions
     if (!hasCameraPermission) {
-        return <PermissionRequest type="camera" onRequestPermission={requestCameraPermission} />;
+        return (
+            <NoPermissionsFallback
+                onPickImage={handleSelectFromLibrary}
+                onRequestPermissions={requestCameraPermission}
+                isLoading={isLoading}
+                type="permission"
+            />
+        );
     }
 
     if (!hasMicPermission) {
-        return <PermissionRequest type="microphone" onRequestPermission={requestMicPermission} />;
+        return (
+            <NoPermissionsFallback
+                onPickImage={handleSelectFromLibrary}
+                onRequestPermissions={requestMicPermission}
+                isLoading={isLoading}
+                type="microphone-permission"
+            />
+        );
     }
 
     return (
@@ -242,40 +248,49 @@ export default function StoryCameraScreen() {
                             onError={handleCameraError}
                             testID="camera-view"
                         />
-                    ) : null}
+                    ) : (
+                        <NoPermissionsFallback
+                            onPickImage={handleSelectFromLibrary}
+                            onRequestPermissions={() => {}}
+                            isLoading={isLoading}
+                            type="no-device-available"
+                        />
+                    )}
                 </View>
 
-                <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
-                    <TouchableOpacity
-                        onPress={() => router.push('/story/selector')}
-                        style={styles.selectorButton}
-                        testID="selector-button"
-                    >
-                        <Ionicons name="images-outline" size={30} color="white" />
-                    </TouchableOpacity>
+                {device && (
+                    <View style={[styles.controls, { paddingBottom: insets.bottom + 20 }]}>
+                        <TouchableOpacity
+                            onPress={() => router.push('/story/selector')}
+                            style={styles.selectorButton}
+                            testID="selector-button"
+                        >
+                            <Ionicons name="images-outline" size={30} color="white" />
+                        </TouchableOpacity>
 
-                    <Pressable
-                        onPress={onShortPress}
-                        onLongPress={onLongPress}
-                        onPressOut={() => {
-                            if (isRecording) {
-                                onLongPress();
-                            }
-                        }}
-                        style={[styles.captureButton, isRecording && styles.recording]}
-                        testID="capture-button"
-                        disabled={isSwitchingCamera}
-                    />
+                        <Pressable
+                            onPress={onShortPress}
+                            onLongPress={onLongPress}
+                            onPressOut={() => {
+                                if (isRecording) {
+                                    onLongPress();
+                                }
+                            }}
+                            style={[styles.captureButton, isRecording && styles.recording]}
+                            testID="capture-button"
+                            disabled={isSwitchingCamera}
+                        />
 
-                    <TouchableOpacity
-                        onPress={onFlipCamera}
-                        style={[styles.flipButton, isSwitchingCamera && styles.disabledButton]}
-                        disabled={isSwitchingCamera}
-                        testID="flip-button"
-                    >
-                        <Ionicons name="camera-reverse" size={30} color="white" />
-                    </TouchableOpacity>
-                </View>
+                        <TouchableOpacity
+                            onPress={onFlipCamera}
+                            style={[styles.flipButton, isSwitchingCamera && styles.disabledButton]}
+                            disabled={isSwitchingCamera}
+                            testID="flip-button"
+                        >
+                            <Ionicons name="camera-reverse" size={30} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </>
     );
@@ -318,24 +333,6 @@ const styles = StyleSheet.create({
         height: 50,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    permissionText: {
-        color: 'white',
-        fontSize: 16,
-        textAlign: 'center',
-        marginHorizontal: 32,
-        marginBottom: 24,
-    },
-    permissionButton: {
-        backgroundColor: 'white',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
-    },
-    permissionButtonText: {
-        color: 'black',
-        fontSize: 16,
-        fontWeight: '600',
     },
     disabledButton: {
         opacity: 0.5,

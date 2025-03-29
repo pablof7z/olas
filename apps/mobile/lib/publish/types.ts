@@ -41,15 +41,15 @@ export type PostMedia = {
     height?: number;
 };
 
-export type PostMetadata = {
-    // Caption of the post
+export interface PostMetadata {
     caption: string;
-    tags?: string[];
     expiration?: number;
-    boost?: boolean;
-    removeLocation?: boolean;
     location?: Location;
+    tags?: string[];
     groups?: GroupEntry[];
-};
+    visibility?: VisibilityType;
+}
+
+export type VisibilityType = 'text-apps' | 'media-apps';
 
 export type PostState = 'editing' | 'uploading' | 'uploaded' | 'publishing' | 'error' | string;

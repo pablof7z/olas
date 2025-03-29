@@ -31,7 +31,6 @@ export default async function compress(
     let duration: number | undefined;
     let _width: number | undefined;
     let _height: number | undefined;
-    let size: number | undefined;
 
     if (mediaType === 'image') {
         compressedUri = await CompressedImage.compress(file, {
@@ -67,7 +66,7 @@ export default async function compress(
     }
 
     const mimeType = await determineMimeType(compressedUri);
-    size = await RNFS.stat(compressedUri).then((stats) => stats.size);
+    const size = await RNFS.stat(compressedUri).then((stats) => stats.size);
 
     return {
         compressedUri,

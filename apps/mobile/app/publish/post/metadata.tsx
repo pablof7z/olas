@@ -1,4 +1,3 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { Stack, router } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -13,11 +12,11 @@ import {
 } from 'react-native';
 
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import PostCaptionBottomSheet from '@/lib/publish/components/composer/metadata/CaptionBottomSheet';
-import LocationBottomSheet from '@/lib/publish/components/composer/metadata/LocationBottomSheet';
+import Visibility from '@/lib/publish/components/composer/metadata/visibility';
 import Caption from '@/lib/publish/components/composer/metadata/caption';
 import Expiration from '@/lib/publish/components/composer/metadata/expiration';
 import Location from '@/lib/publish/components/composer/metadata/location';
+import ShareOptions from '@/lib/publish/components/composer/metadata/share';
 import { Preview } from '@/lib/publish/components/preview';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
@@ -31,6 +30,7 @@ export default function PostMetadataScreen() {
     const publish = useEditorStore((state) => state.publish);
     const { ndk } = useNDK();
     const blossomServer = useActiveBlossomServer();
+    const visibility = useEditorStore((state) => state.visibility);
 
     const mediaSize = dimensions.height * 0.3;
 
@@ -89,7 +89,7 @@ export default function PostMetadataScreen() {
     const { colors } = useColorScheme();
 
     return (
-        <BottomSheetModalProvider>
+        <>
             <Stack.Screen
                 options={{
                     contentStyle: {
@@ -131,14 +131,13 @@ export default function PostMetadataScreen() {
                 <ScrollView>
                     {renderMediaPreview()}
                     <Caption />
+                    <Visibility />
                     <Expiration />
                     <Location />
+                    <ShareOptions />
                 </ScrollView>
-
-                <PostCaptionBottomSheet />
-                <LocationBottomSheet />
             </View>
-        </BottomSheetModalProvider>
+        </>
     );
 }
 

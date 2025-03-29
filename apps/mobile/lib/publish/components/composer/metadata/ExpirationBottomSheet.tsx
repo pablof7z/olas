@@ -14,6 +14,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { valueSheetStyles } from './style';
 
 export const EXPIRATION_OPTIONS = [
     { label: 'No expiration', value: null },
@@ -41,12 +42,16 @@ function ExpirationContent() {
     );
 
     return (
-        <View style={styles.contentContainer}>
-            <Text style={styles.title}>Expiration</Text>
+        <View style={valueSheetStyles.contentContainer}>
+            <View style={valueSheetStyles.headerContainer}>
+                <View style={valueSheetStyles.titleContainer}>
+                    <Text style={valueSheetStyles.title}>Expiration</Text>
+                </View>
 
-            <Text style={[styles.description, { color: colors.muted }]}>
-                Relays and clients will be instructed to delete the post after the specified time.
-            </Text>
+                <Text style={[valueSheetStyles.description, { color: colors.muted }]}>
+                    Relays and clients will be instructed to delete the post after the specified time.
+                </Text>
+            </View>
 
             <FlatList
                 data={EXPIRATION_OPTIONS}
@@ -59,7 +64,7 @@ function ExpirationContent() {
                         onPress={() => handleSelect(item.value)}
                     />
                 )}
-                contentContainerStyle={styles.flatListContent}
+                contentContainerStyle={valueSheetStyles.flatListContent}
             />
         </View>
     );

@@ -48,7 +48,7 @@ export default function PostScreen() {
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [hasPermission, setHasPermission] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const { media, addMedia } = useEditorStore();
+    const { media, addMedia, setIsMultipleSelectionMode } = useEditorStore();
     const heightValue = useSharedValue(0);
     const gridSize = Dimensions.get('window').width / COLUMNS;
 
@@ -126,18 +126,23 @@ export default function PostScreen() {
         setIsLoading(true);
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                mediaTypes: ['images', 'videos'],
                 allowsEditing: false,
                 quality: 1,
-                allowsMultipleSelection: false,
+                allowsMultipleSelection: true,
             });
 
             if (!result.canceled && result.assets.length > 0) {
-                const asset = result.assets[0];
-                const mediaType = asset.type === 'video' ? 'video' : 'image';
-                const id = `picker-${Date.now()}`;
-
-                await addMedia(asset.uri, mediaType, id);
+                if (result.assets.length > 1) {
+                    setIsMultipleSelectionMode(true);
+                }
+                
+                for (const asset of result.assets) {
+                    const mediaType = asset.type === 'video' ? 'video' : 'image';
+                    const id = `picker-${Date.now()}`;
+                    await addMedia(asset.uri, mediaType, id);
+                    console.log('Added media:', asset.uri, mediaType, id);
+                }
                 openPreview();
                 router.push('/publish/post/edit');
             }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { FILTER_PRESETS } from '../presets';
 import { useMediaFilterStore } from '../store';
@@ -19,23 +19,25 @@ export function useMediaFilter() {
         return currentFilter.parameters;
     }, [currentFilter]);
 
-    // Handle filter selection
+    // Handle filter selection - don't clear filter when selecting 'normal' anymore
+    // We'll only clear the filter when explicitly requested
     const selectFilter = useCallback(
         (filterId: string) => {
             if (!sourceUri) return;
 
-            if (filterId === 'normal') {
-                clearFilter();
-                return;
-            }
-
+            // Find the filter preset
             const filterPreset = FILTER_PRESETS.find((f) => f.id === filterId);
             if (filterPreset) {
                 applyFilter(filterId, filterPreset.parameters);
             }
         },
-        [sourceUri, currentFilter, applyFilter, clearFilter]
+        [sourceUri, applyFilter]
     );
+
+    // Explicitly clear the filter (used by reset button)
+    const resetFilter = useCallback(() => {
+        clearFilter();
+    }, [clearFilter]);
 
     // Handles saving a filtered image
     const saveImage = useCallback(async (): Promise<string | null> => {
@@ -56,6 +58,7 @@ export function useMediaFilter() {
         currentFilterId,
         currentFilterParams,
         selectFilter,
+        resetFilter,
         updateFilterParams,
         setSource,
         saveImage,

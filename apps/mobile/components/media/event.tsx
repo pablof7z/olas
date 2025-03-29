@@ -70,11 +70,10 @@ export function EventMediaGridContainer({
                     onPress={onPress}
                     forceProxy={forceProxy}
                     onLongPress={onLongPress}
-                    style={[styles.mediaGridContainer]}
+                    style={[styles.mediaGridContainer, style]}
                     singleMode
                     width={size}
                     height={size}
-                    style={style}
                     {...props}
                 />
             </ProductGridContainer>

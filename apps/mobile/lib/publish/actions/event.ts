@@ -5,6 +5,7 @@ import {
     NDKKind,
     NDKRelaySet,
     NDKVideo,
+    NDKEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 
@@ -59,27 +60,32 @@ export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: Pos
 
     let event: NDKImage | NDKVideo;
 
-    switch (media[0].mediaType) {
-        case 'image':
-            event = generateImageEvent(ndk, metadata, media);
-            break;
-        case 'video':
-            event = generateVideoEvent(ndk, metadata, media);
-            break;
+    if (metadata.visibility === 'text-apps') {
+        const tagKind = media[0].mediaType === 'image' ? NDKKind.Image : NDKKind.ShortVideo;
+        
+        // For maximum reach, use kind:1 event
+        event = new NDKEvent(ndk, {
+            kind: NDKKind.Text,
+            content: metadata.caption,
+            tags: [
+                ['k', tagKind.toString()]
+            ]
+        }) as NDKImage | NDKVideo;
+
+        // Add media URLs to content
+        event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
+    } else {
+        // For followers, use the appropriate media-specific event type
+        switch (media[0].mediaType) {
+            case 'image':
+                event = generateImageEvent(ndk, metadata, media);
+                break;
+            case 'video':
+                event = generateVideoEvent(ndk, metadata, media);
+                break;
+        }
+        event.content = metadata.caption;
     }
-
-    event.content = metadata.caption;
-
-    // if (event.kind === NDKKind.Text) {
-    //     let kind: NDKKind;
-
-    //     if (media[0].mediaType === 'image') kind = NDKKind.Image;
-    //     else if (media[0].contentMode === 'portrait') kind = NDKKind.VerticalVideo;
-    //     else kind = NDKKind.HorizontalVideo;
-
-    //     event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
-    //     event.tags = [['k', kind.toString()]];
-    // }
 
     let relaySet: NDKRelaySet | undefined;
 

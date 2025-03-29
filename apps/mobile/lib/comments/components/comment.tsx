@@ -77,7 +77,7 @@ export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<Vie
                         className="font-semibold text-foreground"
                     />
                     <RelativeTime
-                        timestamp={item.created_at!}
+                        timestamp={item.created_at}
                         className="text-xs text-muted-foreground"
                     />
                 </View>

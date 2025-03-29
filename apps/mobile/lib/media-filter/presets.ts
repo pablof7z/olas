@@ -4,7 +4,16 @@ export const FILTER_PRESETS: FilterPreset[] = [
     {
         id: 'normal',
         name: 'Normal',
-        parameters: {},
+        thumbnailColor: '#f0f0f0',
+        parameters: {
+            brightness: 1,
+            contrast: 1,
+            saturation: 1,
+            temperature: 0,
+            vignette: 0,
+            grayscale: false,
+            sepia: 0
+        },
     },
     {
         id: 'clarendon',

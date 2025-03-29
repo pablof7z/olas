@@ -245,7 +245,7 @@ function DataList() {
         });
         filters.push({
             kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.GenericRepost],
-            '#k': ['20'],
+            '#k': ['20', '21', '22'],
             ...hashtagFilter,
             limit: 50,
         });
@@ -297,9 +297,9 @@ function DataList() {
     const { colors } = useColorScheme();
 
     return (
-        <View style={{ flex: 1, paddingTop: insets.top }}>
+        <View style={{ flex: 1 }}>
             <Feed
-                prepend={<Stories style={{ marginTop: headerHeight - insets.top }} />}
+                prepend={<Stories style={{ marginTop: headerHeight }} />}
                 filters={filters}
                 relayUrls={relayUrls}
                 filterKey={key}

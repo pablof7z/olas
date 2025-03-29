@@ -64,7 +64,7 @@ function Header({ event }: { event: NDKEvent }) {
             />
 
             <Text style={headerStyles.timestamp}>
-                <RelativeTime timestamp={event.created_at!} />
+                <RelativeTime timestamp={event.created_at} />
             </Text>
         </View>
     );

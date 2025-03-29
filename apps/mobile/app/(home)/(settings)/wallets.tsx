@@ -1,5 +1,5 @@
-import { type NDKRelay, NDKRelayStatus, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import { type NDKCashuWallet, NDKWallet } from '@nostr-dev-kit/ndk-wallet';
+import { type NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';

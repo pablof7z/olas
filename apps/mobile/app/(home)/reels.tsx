@@ -182,7 +182,7 @@ export default function ReelsScreen() {
     const sortedEvents = useMemo(() => {
         return (
             events
-                .sort((a, b) => b.created_at! - a.created_at!)
+                .sort((a, b) => b.created_at - a.created_at)
                 // ensure one event per pubkey
                 .filter((event, index, self) => {
                     return self.findIndex((e) => e.pubkey === event.pubkey) === index;

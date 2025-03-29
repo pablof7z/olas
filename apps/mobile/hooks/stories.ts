@@ -80,8 +80,8 @@ function isStory(event: NDKImage | NDKVideo | NDKStory) {
 
     const expiration = event.tagValue('expiration');
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
-    const videoInPast24Hours = event instanceof NDKVideo && event.created_at! > twentyFourHoursAgo;
-    const storyInPast24Hours = event instanceof NDKStory && event.created_at! > twentyFourHoursAgo;
+    const videoInPast24Hours = event instanceof NDKVideo && event.created_at > twentyFourHoursAgo;
+    const storyInPast24Hours = event instanceof NDKStory && event.created_at > twentyFourHoursAgo;
     if (!expiration && !videoInPast24Hours && !storyInPast24Hours) return false;
 
     const firstImeta = event.imetas?.[0];
@@ -110,5 +110,5 @@ function isInRightTimeframe(event: NDKEvent) {
     // must be in the last 24 hours
     const now = Math.floor(Date.now() / 1000);
     const twentyFourHoursAgo = now - 24 * 60 * 60;
-    return event.created_at! >= twentyFourHoursAgo && event.created_at! <= now;
+    return event.created_at >= twentyFourHoursAgo && event.created_at <= now;
 }

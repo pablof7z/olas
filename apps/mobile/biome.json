@@ -11,7 +11,8 @@
                 "noUnusedVariables": "off",
                 "noUndeclaredVariables": "off",
                 "useExhaustiveDependencies": "off",
-                "noUnreachable": "warn"
+                "noUnreachable": "warn",
+                "useHookAtTopLevel": "error"
             },
             "suspicious": {
                 "noExplicitAny": "off",
@@ -29,6 +30,10 @@
             },
             "security": {
                 "noDangerouslySetInnerHtml": "warn"
+            },
+            "a11y": {
+                "useKeyWithClickEvents": "error",
+                "useKeyWithMouseEvents": "error"
             }
         }
     },

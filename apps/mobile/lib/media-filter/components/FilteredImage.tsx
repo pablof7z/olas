@@ -40,7 +40,10 @@ export const FilteredImage = forwardRef<FilteredImageRef, FilteredImageProps>(
         image ??= useImage(filePath || '');
         const canvasRef = useCanvasRef();
 
-        const colorMatrix = useMemo(() => createColorMatrix(filterParams), [filterParams]);
+        const colorMatrix = useMemo(() => {
+            console.log('FilteredImage: Creating color matrix with params:', filterParams);
+            return createColorMatrix(filterParams);
+        }, [filterParams]);
 
         useImperativeHandle(
             ref,
@@ -53,7 +56,7 @@ export const FilteredImage = forwardRef<FilteredImageRef, FilteredImageProps>(
                         }
 
                         // Capture the current canvas state as an image
-                        const snapshot = Skia.Image.makeImageSnapshot(canvasRef.current);
+                        const snapshot = canvasRef.current.makeImageSnapshot();
                         if (!snapshot) {
                             console.error('Failed to create snapshot from canvas');
                             return null;

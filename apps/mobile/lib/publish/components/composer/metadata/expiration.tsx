@@ -11,6 +11,7 @@ import ExpirationBottomSheet, {
 
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { iconSize, styles } from './style';
 
 export default function Expiration() {
     const { colors } = useColorScheme();
@@ -38,11 +39,14 @@ export default function Expiration() {
     };
 
     return (
-        <>
-            <TouchableOpacity style={styles.container} onPress={handleOpenBottomSheet}>
-                <View style={styles.leftContainer}>
-                    <Timer size={20} color={colors.foreground} />
-                    <Text style={[styles.label, { color: colors.foreground }]}>Expiration</Text>
+        <View style={styles.container}>
+            <TouchableOpacity style={styles.rowContainer} onPress={handleOpenBottomSheet}>
+                <Timer size={iconSize} color={colors.foreground} />
+                <View style={styles.textContainer}>
+                    <Text style={[styles.title, { color: colors.foreground }]}>Expiration</Text>
+                    <Text style={styles.subtitle}>
+                        Add an expiration date to your post.
+                    </Text>
                 </View>
                 <Text style={[styles.value, { color: colors.foreground }]}>
                     {getExpirationLabel()}
@@ -54,29 +58,6 @@ export default function Expiration() {
                 initialValue={expiration}
                 onValueChange={setExpiration}
             />
-        </>
+        </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    leftContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    value: {
-        fontSize: 16,
-    },
-});

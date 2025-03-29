@@ -12,7 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as SettingsStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useAtom, useSetAtom } from 'jotai';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -40,6 +40,7 @@ import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
+import { Text } from '@/components/nativewindui/Text';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -131,7 +132,7 @@ export function RootLayout() {
     return (
         <>
             {ndk && <AppReady />}
-            {!!ndk?.signer && <SignerReady />}
+            {ndk && <SignerReady />}
             <StatusBar
                 key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
                 style={isDarkColorScheme ? 'light' : 'dark'}

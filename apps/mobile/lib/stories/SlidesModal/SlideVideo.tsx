@@ -42,7 +42,6 @@ export function SlideVideo({
                 if (player.duration > 0 && !durationSet.current) {
                     // Round to milliseconds
                     const videoDuration = Math.round(player.duration * 1000);
-                    console.log('Video duration set:', videoDuration);
                     onContentLoaded(videoDuration);
                     durationSet.current = true;
                 }

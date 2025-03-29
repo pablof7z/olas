@@ -85,7 +85,7 @@ function updateStats(
                 if (!stats.reactedByUser) {
                     stats.reactionCount++;
                     stats.reactedByUser = event;
-                } else if (event.created_at! > stats.reactedByUser.created_at!) {
+                } else if (event.created_at > stats.reactedByUser.created_at) {
                     stats.reactedByUser = event;
                 }
             } else {

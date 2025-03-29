@@ -2,7 +2,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { Sliders, X } from 'lucide-react-native';
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
@@ -49,9 +49,10 @@ const dimensions = Dimensions.get('window');
 
 interface PreviewContentProps {
     previewHeight: number;
+    forceShowFiltered: boolean;
 }
 
-function PreviewContent({ previewHeight }: PreviewContentProps) {
+function PreviewContent({ previewHeight, forceShowFiltered }: PreviewContentProps) {
     const { media } = useEditorStore();
     const [selectedMediaIndex, setSelectedMediaIndex] = useAtom(selectedMediaIndexAtom);
 
@@ -67,6 +68,8 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
         }
     }, [currentMedia, setSource]);
 
+    console.log('we have', media.length, 'media');
+
     const handleScroll = useCallback(
         (event: any) => {
             const offsetX = event.nativeEvent.contentOffset.x;
@@ -78,7 +81,8 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
         [dimensions.width, selectedMediaIndex, media.length, setSelectedMediaIndex]
     );
 
-    if (currentFilterId !== 'normal' && sourceUri) {
+    // Show filtered image if forceShowFiltered is true
+    if (sourceUri && forceShowFiltered) {
         return (
             <View
                 style={{ flex: 1, width: '100%', minHeight: previewHeight, position: 'relative' }}
@@ -95,6 +99,7 @@ function PreviewContent({ previewHeight }: PreviewContentProps) {
         );
     }
 
+    // Otherwise show the scrollable view
     return (
         <ScrollView
             horizontal
@@ -131,60 +136,142 @@ export default function PostEditScreen() {
     const previewHeight = dimensions.height * 0.6;
     const headerHeight = useHeaderHeight();
     const [isSaving, setIsSaving] = useState(false);
+    const [isFilterApplied, setIsFilterApplied] = useState(false);
+    const [isEditingFilter, setIsEditingFilter] = useState(false);
 
     const filterSheetRef = useAtomValue(filterBottomSheetRefAtom);
     const adjustmentsSheetRef = useAtomValue(adjustmentsBottomSheetRefAtom);
 
-    // Use the media filter hook
-    const { currentFilterId, selectFilter, sourceUri, saveImage } = useMediaFilter();
-
     const currentMedia = media[selectedMediaIndex];
+    const hasMultipleImages = media.length > 1;
+
+    // Use the media filter hook
+    const { currentFilterId, selectFilter, sourceUri, saveImage, currentFilterParams, updateFilterParams, resetFilter } = useMediaFilter();
+
+    // Determine if there's a filter to apply - filter is not 'normal' and we're actively editing
+    const hasFilterToApply = currentFilterId !== 'normal' && isEditingFilter;
+
+    // Reset filter editing state when changing images
+    useEffect(() => {
+        setIsEditingFilter(false);
+        setIsFilterApplied(false);
+    }, [selectedMediaIndex]);
 
     const handleFilters = useCallback(() => {
+        setIsEditingFilter(true);
         filterSheetRef?.current?.present();
     }, [filterSheetRef]);
 
     const handleAdjustments = useCallback(() => {
+        setIsEditingFilter(true);
         adjustmentsSheetRef?.current?.present();
     }, [adjustmentsSheetRef]);
 
     const handleFilterSelect = useCallback(
         (filterId: string) => {
             selectFilter(filterId);
+            setIsEditingFilter(true);
+            setIsFilterApplied(false);
         },
         [selectFilter]
     );
 
-    const handleSaveFilteredImage = async () => {
+    const handleResetFilter = () => {
+        resetFilter();
+        setIsEditingFilter(false);
+        setIsFilterApplied(false);
+    };
+
+    const handleFilterSheetDismiss = useCallback(() => {
+        // Only keep editing if a non-normal filter is selected
+        if (currentFilterId === 'normal') {
+            setIsEditingFilter(false);
+        }
+    }, [currentFilterId]);
+
+    const handleAdjustmentSheetDismiss = useCallback(() => {
+        // Only keep editing if a non-normal filter is selected
+        if (currentFilterId === 'normal') {
+            setIsEditingFilter(false);
+        }
+    }, [currentFilterId]);
+
+    // Apply the filter to the current image
+    const applyFilter = useCallback(async () => {
         if (!currentMedia || currentFilterId === 'normal') return;
 
         try {
             setIsSaving(true);
-
+            
             // Save the filtered image
             const newUri = await saveImage();
-
+            
             if (newUri) {
                 // Update the media item with the new URI at the beginning of the uris array
                 updateMedia(currentMedia.id, {
                     uris: [newUri, ...currentMedia.uris],
                 });
-                return newUri;
+                
+                // Mark this filter as applied and no longer editing
+                setIsFilterApplied(true);
+                setIsEditingFilter(false);
             }
         } catch (error) {
             console.error('Error saving filtered image:', error);
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [currentFilterId, sourceUri, currentMedia, saveImage, updateMedia]);
 
-    const handleResetFilter = () => {
-        selectFilter('normal');
-    };
-
+    // Navigate to next screen
     const handleNext = useCallback(() => {
-        router.push('/publish/post/metadata');
-    }, []);
+        // If there's a filter to apply for a single image, apply it and navigate
+        if (hasFilterToApply && !hasMultipleImages) {
+            // Apply the filter and then navigate
+            const applyFilterAndNavigate = async () => {
+                await applyFilter();
+                router.push('/publish/post/metadata');
+            };
+            applyFilterAndNavigate();
+        } else {
+            // Just navigate without applying
+            router.push('/publish/post/metadata');
+        }
+    }, [hasFilterToApply, hasMultipleImages, applyFilter]);
+
+    // Determine what to display for the button
+    const buttonText = useMemo(() => {
+        if (isSaving) return 'Applying...';
+        if (hasMultipleImages && hasFilterToApply) return 'Apply';
+        return 'Next';
+    }, [hasMultipleImages, hasFilterToApply, isSaving]);
+
+    // Debug logs for tracking state
+    useEffect(() => {
+        console.log('State update:', { 
+            hasMultipleImages, 
+            isFilterApplied,
+            isEditingFilter,
+            currentFilterId,
+            hasFilterToApply,
+            buttonText,
+            mediaLength: media.length,
+            forceShowFiltered: !hasMultipleImages || isEditingFilter
+        });
+    }, [hasMultipleImages, isFilterApplied, isEditingFilter, currentFilterId, hasFilterToApply, buttonText, media.length]);
+
+    // Determine what action to take when the button is pressed
+    const handleButtonPress = useCallback(() => {
+        if (hasMultipleImages && hasFilterToApply) {
+            applyFilter();
+        } else {
+            handleNext();
+        }
+    }, [hasMultipleImages, hasFilterToApply, applyFilter, handleNext]);
+
+    // For multiple images, we only force show the filtered view when actively editing
+    // For single image, we always show the filtered view
+    const shouldForceShowFiltered = !hasMultipleImages || isEditingFilter;
 
     const insets = useSafeAreaInsets();
 
@@ -206,7 +293,10 @@ export default function PostEditScreen() {
             />
             <View style={[styles.container, { paddingTop: headerHeight }]}>
                 <View style={[styles.previewContainer, { height: previewHeight }]}>
-                    <PreviewContent previewHeight={previewHeight} />
+                    <PreviewContent 
+                        previewHeight={previewHeight} 
+                        forceShowFiltered={shouldForceShowFiltered} 
+                    />
                 </View>
 
                 <View style={[styles.bottomActions, { bottom: insets.bottom }]}>
@@ -221,7 +311,8 @@ export default function PostEditScreen() {
 
                     <Pressable
                         style={[styles.actionButton, { backgroundColor: 'white' }]}
-                        onPress={handleNext}
+                        onPress={handleButtonPress}
+                        disabled={isSaving}
                     >
                         <Text
                             style={[
@@ -229,7 +320,7 @@ export default function PostEditScreen() {
                                 { color: 'black', paddingHorizontal: 8 },
                             ]}
                         >
-                            Next
+                            {buttonText}
                         </Text>
                     </Pressable>
                 </View>
@@ -241,25 +332,17 @@ export default function PostEditScreen() {
                             onSelectFilter={handleFilterSelect}
                             previewImageUri={sourceUri}
                             onResetFilter={handleResetFilter}
-                            onDismiss={handleResetFilter}
-                            isApplying={isSaving}
-                            handleSaveFilteredImage={handleSaveFilteredImage}
+                            onDismiss={handleFilterSheetDismiss}
                         />
-                        <AdjustmentsBottomSheet />
+                        <AdjustmentsBottomSheet 
+                            onDismiss={handleAdjustmentSheetDismiss}
+                        />
                     </>
                 )}
             </View>
         </>
     );
 }
-
-const _headerStyles = StyleSheet.create({
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-});
 
 const styles = StyleSheet.create({
     container: {

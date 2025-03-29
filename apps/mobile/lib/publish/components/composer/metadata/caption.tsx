@@ -6,7 +6,7 @@ import { captionBottomSheetRefAtom } from './CaptionBottomSheet';
 
 import { Text } from '@/components/nativewindui/Text';
 import { useEditorStore } from '@/lib/publish/store/editor';
-
+import CaptionBottomSheet from './CaptionBottomSheet';
 export default function Caption() {
     const caption = useEditorStore((state) => state.caption);
     const [captionBottomSheetRef] = useAtom(captionBottomSheetRefAtom);
@@ -16,9 +16,13 @@ export default function Caption() {
     }, [captionBottomSheetRef]);
 
     return (
-        <TouchableOpacity style={styles.captionContainer} onPress={openCaptionSheet}>
-            <Text style={styles.captionText}>{caption || 'Add a caption...'}</Text>
-        </TouchableOpacity>
+        <>
+            <TouchableOpacity style={styles.captionContainer} onPress={openCaptionSheet}>
+                <Text style={styles.captionText}>{caption || 'Add a caption...'}</Text>
+            </TouchableOpacity>
+
+            <CaptionBottomSheet />
+        </>
     );
 }
 

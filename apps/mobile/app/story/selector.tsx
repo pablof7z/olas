@@ -1,18 +1,18 @@
 import { FlashList } from '@shopify/flash-list';
 import * as MediaLibrary from 'expo-media-library';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
     Dimensions,
-    FlatList,
     Image,
-    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
 
 const { width, height } = Dimensions.get('window');
 const aspectRatio = width / height;
@@ -20,26 +20,62 @@ const aspectRatio = width / height;
 export default function MediaSelector() {
     const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     const numColumns = 3;
     const itemSize = width / numColumns;
 
-    useEffect(() => {
-        (async () => {
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            setHasPermission(status === 'granted');
+    const requestPermissions = async () => {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        setHasPermission(status === 'granted');
 
-            if (status === 'granted') {
-                const assets = await MediaLibrary.getAssetsAsync({
-                    mediaType: ['photo'],
-                    sortBy: ['creationTime'],
-                    first: 100,
-                });
-                setMedia(assets.assets);
-            }
-        })();
+        if (status === 'granted') {
+            loadMedia();
+        }
+        
+        return status === 'granted';
+    };
+
+    const loadMedia = async () => {
+        const assets = await MediaLibrary.getAssetsAsync({
+            mediaType: ['photo'],
+            sortBy: ['creationTime'],
+            first: 100,
+        });
+        setMedia(assets.assets);
+    };
+
+    useEffect(() => {
+        requestPermissions();
     }, []);
+
+    const handlePickImage = async () => {
+        setIsLoading(true);
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsMultipleSelection: false,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets.length > 0) {
+                const asset = result.assets[0];
+                
+                router.push({
+                    pathname: '/story/preview' as const,
+                    params: {
+                        path: asset.uri,
+                        type: 'photo',
+                    },
+                });
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSelect = async (asset: MediaLibrary.Asset) => {
         // For iOS photo assets, we need to ensure the ID is properly formatted
@@ -57,21 +93,15 @@ export default function MediaSelector() {
         });
     };
 
-    if (hasPermission === null) {
+    if (hasPermission === null || hasPermission === false) {
         return (
             <View style={styles.container}>
-                <Text>Requesting media library permissions...</Text>
-            </View>
-        );
-    }
-
-    if (hasPermission === false) {
-        return (
-            <View style={styles.container}>
-                <Text>No access to media library</Text>
-                <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-                    <Text style={styles.buttonText}>Go Back</Text>
-                </TouchableOpacity>
+                <NoPermissionsFallback
+                    onPickImage={handlePickImage}
+                    onRequestPermissions={requestPermissions}
+                    isLoading={isLoading}
+                    type="permission"
+                />
             </View>
         );
     }

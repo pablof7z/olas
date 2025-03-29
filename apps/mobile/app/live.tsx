@@ -212,7 +212,7 @@ function Chat({ event }: { event: NDKEvent }) {
     );
 
     const filteredEvents = useMemo(
-        () => events.sort((a, b) => a.created_at! - b.created_at!),
+        () => events.sort((a, b) => a.created_at - b.created_at),
         [events.length]
     );
 

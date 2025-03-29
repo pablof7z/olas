@@ -127,7 +127,7 @@ export default function Feed({
             // const bHasImeta = b.event.tags.some(tag => tag.name === 'imeta');
             // if (aHasImeta && !bHasImeta) return -1;
             // if (!aHasImeta && bHasImeta) return 1;
-            // return a.event.created_at! - b.event.created_at!;
+            // return a.event.created_at - b.event.created_at;
             // });
         }
 

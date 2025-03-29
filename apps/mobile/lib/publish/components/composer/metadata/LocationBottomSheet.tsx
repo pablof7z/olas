@@ -34,15 +34,6 @@ const LocationBottomSheet = forwardRef<LocationBottomSheetRef, object>((_, ref) 
     const setIncludeLocation = useEditorStore((state) => state.setIncludeLocation);
     const { colors } = useColorScheme();
 
-    useImperativeHandle(
-        ref,
-        () => ({
-            present: () => sheetRef.current?.present(),
-            dismiss: () => sheetRef.current?.dismiss(),
-        }),
-        [sheetRef]
-    );
-
     useEffect(() => {
         setBottomSheetRef(sheetRef);
     }, [setBottomSheetRef]);

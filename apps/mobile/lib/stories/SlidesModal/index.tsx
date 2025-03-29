@@ -53,8 +53,6 @@ const StoryItem = ({
 }: StoryItemProps) => {
     const inputRange = [(index - 0.5) * width, index * width, (index + 0.5) * width];
 
-    console.log('StoryItem', { id: item.id.substring(0, 10), index, activeIndex });
-
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: interpolate(scrollX.value, inputRange, [0.5, 1, 0.5], Extrapolation.CLAMP),
         transform: [

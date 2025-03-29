@@ -62,16 +62,10 @@ export default function FilterBottomSheet({
         }
     }, [visible, ref]);
 
-    const handleApplyFilter = async () => {
-        // Dismiss the sheet immediately when Apply is clicked
+    const handleApplyFilter = () => {
+        // Just dismiss the sheet without applying the filter permanently
+        // The filter will be applied when the user hits Next
         ref.current?.dismiss();
-
-        if (handleSaveFilteredImage) {
-            const newUri = await handleSaveFilteredImage();
-            if (newUri && onFilterApplied) {
-                onFilterApplied(newUri);
-            }
-        }
     };
 
     const handleReset = () => {

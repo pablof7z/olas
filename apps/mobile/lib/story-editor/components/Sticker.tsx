@@ -67,14 +67,7 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
     const savedTranslateY = useSharedValue(sticker.transform.translateY);
     const savedScale = useSharedValue(sticker.transform.scale);
     const savedRotate = useSharedValue(sticker.transform.rotate);
-    const scaleFactor = useMemo(() => {
-        return 1;
-        if (sticker.type === NDKStoryStickerType.Text) return 0.4;
-        if (sticker.type === NDKStoryStickerType.Pubkey) return 0.4;
-        if (sticker.type === NDKStoryStickerType.Countdown) return 0.4;
-        if (sticker.type === NDKStoryStickerType.Event) return 0.4;
-        return 1;
-    }, [sticker.type]);
+    const scaleFactor = 1;
 
     // Add a shared value for the width and height
     const width = useSharedValue(0);
