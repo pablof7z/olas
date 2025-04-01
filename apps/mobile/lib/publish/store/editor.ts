@@ -8,7 +8,7 @@ import type { Location, PostMedia, PostMetadata, PostState, VisibilityType } fro
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { NDKImage, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
 interface EditorState {
@@ -234,9 +234,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                 return;
             }
 
+            console.log("generated event for publish", result.event.inspect);
+
             const { event, relaySet } = result;
             await event.sign();
             set({ state: 'publishing' });
+
+            console.log("generated event for publish", result.event.inspect, { isImage: result.event instanceof NDKImage });
 
             if (PUBLISH_ENABLED) {
                 await event.publish(relaySet);

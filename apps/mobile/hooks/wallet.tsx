@@ -1,16 +1,8 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import type NDK from '@nostr-dev-kit/ndk-mobile';
 import {
     type Hexpubkey,
-    NDKCacheAdapterSqlite,
-    type NDKCashuMintList,
-    NDKKind,
-    NDKSubscriptionCacheUsage,
-    useNDK,
-    useNDKCurrentUser,
-    useNDKNutzapMonitor,
-    useNDKSessionEventKind,
-    useNDKWallet,
+    NDKCacheAdapterSqlite, NDKKind, useNDKNutzapMonitor,
+    useNDKWallet
 } from '@nostr-dev-kit/ndk-mobile';
 import {
     NDKCashuWallet,
@@ -18,7 +10,7 @@ import {
     type NDKWallet,
     migrateCashuWallet,
 } from '@nostr-dev-kit/ndk-wallet';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { create } from 'zustand';
 
 import { useAppSettingsStore } from '@/stores/app';
@@ -26,6 +18,7 @@ import { db } from '@/stores/db';
 import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from '@/stores/db/cashu';
 import { usePaymentStore } from '@/stores/payments';
 import { useDebounce } from '@/utils/debounce';
+import NDK from '@nostr-dev-kit/ndk';
 
 const start = Date.now();
 function log(message: string) {
@@ -211,8 +204,7 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
 export function useNutzapMonitor(ndk: NDK, pubkey: Hexpubkey) {
     const [start, setStart] = useState(false);
     const { activeWallet } = useNDKWallet();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
-    const { nutzapMonitor } = useNDKNutzapMonitor(mintList, start);
+    const { nutzapMonitor } = useNDKNutzapMonitor(undefined, start);
     const cashuWallet = useNip60Wallet();
     const [hasOldWallets, setHasOldWallets] = useState<boolean | null>(null);
 
@@ -250,5 +242,5 @@ export function useNutzapMonitor(ndk: NDK, pubkey: Hexpubkey) {
         setTimeout(() => {
             setStart(true);
         }, 2000);
-    }, [pubkey, start, hasOldWallets, activeWallet?.walletId]);
+    }, [start, hasOldWallets, activeWallet?.walletId]);
 }

@@ -56,6 +56,8 @@ export default function MediaComponent({
         };
     }, [imeta]);
 
+    if (!url) return null;
+
     if (urlIsVideo(url)) {
         return (
             <VideoComponent

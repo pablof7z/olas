@@ -6,6 +6,7 @@ packages:
   - packages/ndk/ndk-mobile
   - packages/ndk/ndk-cache-dexie
   - packages/ndk/ndk-wallet
+  - packages/ndk/ndk-hooks
   - packages/ndk/ndk-svelte
   - packages/ndk/ndk-svelte-components
   - packages/ndk/ndk-test-utils

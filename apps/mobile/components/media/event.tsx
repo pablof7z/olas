@@ -131,6 +131,8 @@ export default function EventMediaContainer({
     const { colors } = useColorScheme();
     const imetas = getImetas(event);
 
+    event.dump();
+
     maxWidth ??= Dimensions.get('window').width;
 
     if (imetas.length === 0) {

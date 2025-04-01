@@ -1,6 +1,5 @@
 import { RelayMock } from '@nostr-dev-kit/ndk-test-utils';
 import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { describe, expect, it, beforeEach } from 'vitest';
 
 import { generateEvent } from '../event';
 import type { PostMedia, PostMetadata, VisibilityType } from '../../types';
@@ -41,11 +40,20 @@ describe('generateEvent', () => {
     });
 
     it('generates kind 1 event for text-apps visibility', async () => {
-        const metadata = createBaseMetadata();
+        const metadata = createBaseMetadata('text-apps');
         const media = createTestMedia('image');
 
         const result = await generateEvent(ndk, metadata, media);
         expect(result?.event.kind).toBe(NDKKind.Text);
+    });
+
+    it('generates kind 1 event for videos with text-apps visibility', async () => {
+        const metadata = createBaseMetadata('text-apps');
+        const media = createTestMedia('video');
+        
+        const result = await generateEvent(ndk, metadata, media);
+        expect(result?.event.kind).toBe(NDKKind.Text);
+        expect(result?.event.tags.some(tag => tag[0] === 'k' && tag[1] === NDKKind.ShortVideo.toString())).toBe(true);
     });
 
     it('includes shared URLs in content for text-apps visibility', async () => {
@@ -84,4 +92,4 @@ describe('generateEvent', () => {
         expect(expirationTag).toBeDefined();
         expect(Number(expirationTag?.[1])).toBeCloseTo(now + expiration, -1); // Allow 1 second difference
     });
-}); 
+});

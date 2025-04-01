@@ -6,6 +6,7 @@ import {
     NDKRelaySet,
     NDKVideo,
     NDKEvent,
+    imetaTagToTag,
 } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
 
@@ -55,25 +56,38 @@ function generateVideoEvent(ndk: NDK, _metadata: PostMetadata, media: PostMedia[
     return event;
 }
 
+function generateTextEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKEvent {
+    const tagKind = media[0].mediaType === 'image' ? NDKKind.Image : NDKKind.ShortVideo;
+    
+    // For maximum reach, use kind:1 event
+    const event = new NDKEvent(ndk, {
+        kind: NDKKind.Text,
+        content: metadata.caption,
+        tags: [
+            ['k', tagKind.toString()]
+        ]
+    });
+
+    // Add media URLs to content
+    event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
+
+    // Add imetas to the kind:1 event as tags
+    for (const m of media) {
+        const imeta = mediaToImeta(m);
+        // Convert imeta object to a tag array using imetaTagToTag
+        event.tags.push(imetaTagToTag(imeta));
+    }
+
+    return event;
+}
+
 export async function generateEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]) {
     if (media.length === 0) return;
 
-    let event: NDKImage | NDKVideo;
+    let event: NDKImage | NDKVideo | NDKEvent;
 
     if (metadata.visibility === 'text-apps') {
-        const tagKind = media[0].mediaType === 'image' ? NDKKind.Image : NDKKind.ShortVideo;
-        
-        // For maximum reach, use kind:1 event
-        event = new NDKEvent(ndk, {
-            kind: NDKKind.Text,
-            content: metadata.caption,
-            tags: [
-                ['k', tagKind.toString()]
-            ]
-        }) as NDKImage | NDKVideo;
-
-        // Add media URLs to content
-        event.content = [event.content, ...media.map((m) => m.uploadedUri)].join('\n');
+        event = generateTextEvent(ndk, metadata, media);
     } else {
         // For followers, use the appropriate media-specific event type
         switch (media[0].mediaType) {

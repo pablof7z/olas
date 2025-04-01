@@ -159,20 +159,16 @@
     "jest": {
         "preset": "jest-expo",
         "transformIgnorePatterns": [
-            "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@shopify/react-native-skia|react-native-reanimated)"
+            "node_modules/(?!(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@shopify/react-native-skia|react-native-reanimated|@bacons/text-decoder)"
         ],
         "setupFilesAfterEnv": [
             "@testing-library/jest-native/extend-expect"
         ],
+        "moduleNameMapper": {
+            "^@nostr-dev-kit/ndk-mobile$": "<rootDir>/../../packages/ndk/ndk-mobile/dist/module/index.js"
+        },
         "setupFiles": [
             "./__tests__/jest.setup.ts"
-        ],
-        "moduleNameMapper": {
-            "^@/(.*)$": "<rootDir>/$1"
-        },
-        "testPathIgnorePatterns": [
-            "<rootDir>/node_modules/",
-            "<rootDir>/__tests__/jest.setup.ts"
         ],
         "testRegex": "(/__tests__/.*\\.(test|spec))\\.[jt]sx?$"
     }
