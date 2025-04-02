@@ -1,6 +1,5 @@
 packages:
   - apps/mobile
-  - apps/web
   - packages/eslint-config
   - packages/ndk/ndk-core
   - packages/ndk/ndk-mobile
@@ -12,6 +11,6 @@ packages:
   - packages/ndk/ndk-test-utils
   - packages/ndk/packages/*
 onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - esbuild
   - maestro
-ignoredBuiltDependencies:
-  - aws-sdk

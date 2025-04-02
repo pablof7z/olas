@@ -6,7 +6,7 @@ import {
     useNDK,
     useNDKCurrentUser,
     useSubscribe,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
@@ -32,19 +32,34 @@ import { activeEventAtom } from '@/stores/event';
 
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 
-const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom], void>(null, (_get, set, event) => {
-    set(replyToAtom, event);
+// Allow setting the atom to null
+const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom | null], void>(null, (_get, set, value) => {
+    set(replyToAtom, value);
 });
 
 export default function LiveScreen() {
-    const activeEvent = useAtomValue(activeEventAtom);
-    let source = activeEvent?.tagValue?.('streaming');
-    source ??= activeEvent?.tagValue?.('recording');
-    const video = useVideoPlayer(source, (player) => {
+    // Explicitly assert the type from the atom
+    const activeEvent = useAtomValue(activeEventAtom) as NDKEvent | null;
+    // Ensure activeEvent is not null before accessing properties
+    let source = activeEvent ? activeEvent.tagValue?.('streaming') : undefined;
+    if (activeEvent && !source) {
+        source = activeEvent.tagValue?.('recording');
+    }
+    // Ensure source is defined before using it
+    const videoSource = source ? { uri: source } : undefined;
+
+    // If no video source, don't render the player component
+    if (!videoSource) {
+        console.error("No video source found for live event.");
+        // Optionally return a placeholder or error message component
+        return <View><Text>Error: Video source not available.</Text></View>;
+    }
+
+    const video = useVideoPlayer(videoSource, (player) => {
         player.muted = false;
         player.play();
     });
-    const title = activeEvent.tagValue('title');
+    const title = activeEvent?.tagValue('title');
     const [showChat, setShowChat] = useState(true);
     const headerHeight = useHeaderHeight();
     const [contentFit, setContentFit] = useState<VideoContentFit>('cover');
@@ -99,7 +114,7 @@ export default function LiveScreen() {
                         startsPictureInPictureAutomatically
                         contentFit={contentFit}
                         nativeControls={false}
-                        style={style}
+                        style={style as any} // Cast to any as temporary workaround for style error
                     />
                 </Pressable>
 
@@ -123,7 +138,7 @@ export default function LiveScreen() {
                             minHeight: 500,
                         }}
                     >
-                        <Chat event={activeEvent} />
+                        {activeEvent && <Chat event={activeEvent} />}
                     </BottomSheetScrollView>
                 </Sheet>
 
@@ -156,7 +171,7 @@ function ChatInput({ event }: { event: NDKEvent }) {
     const [value, setValue] = useState('');
     const currentUser = useNDKCurrentUser();
     const { ndk } = useNDK();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey);
     const replyValue = useAtomValue(replyToAtom);
     const { event: replyTo, profile: replyToProfile } = replyValue ?? {};
 
@@ -167,6 +182,11 @@ function ChatInput({ event }: { event: NDKEvent }) {
     };
 
     const onSubmit = async () => {
+        if (!ndk) {
+            console.error("NDK not available to send chat message.");
+            // Optionally show a toast or error message
+            return;
+        }
         const chat = new NDKEvent(ndk);
         chat.content = value.trim();
         chat.kind = 1311;
@@ -178,7 +198,9 @@ function ChatInput({ event }: { event: NDKEvent }) {
 
     return (
         <View className="w-full flex-row items-center gap-4 py-4">
-            <UserAvatar userProfile={userProfile} pubkey={currentUser?.pubkey} imageSize={24} />
+            {currentUser?.pubkey && ( // Check if pubkey exists
+                <UserAvatar userProfile={userProfile} pubkey={currentUser.pubkey} imageSize={24} />
+            )}
             <View className="flex-1 flex-col">
                 {replyTo && (
                     <Text className="text-xs text-orange-500">@{replyToProfile?.name}</Text>
@@ -212,7 +234,7 @@ function Chat({ event }: { event: NDKEvent }) {
     );
 
     const filteredEvents = useMemo(
-        () => events.sort((a, b) => a.created_at - b.created_at),
+        () => events.sort((a: NDKEvent, b: NDKEvent) => (a.created_at ?? 0) - (b.created_at ?? 0)), // Added types and null check for created_at
         [events.length]
     );
 
@@ -239,14 +261,19 @@ function Chat({ event }: { event: NDKEvent }) {
 }
 
 function ChatItem({ event }: { event: NDKEvent }) {
-    const { userProfile } = useUserProfile(event.pubkey);
+    const userProfile = useProfile(event.pubkey);
     const [replyTo, setReplyTo] = useAtom(replyToAtom);
 
     const onPress = () => {
         if (replyTo?.event?.id === event.id) {
-            setReplyTo(null);
+            setReplyTo(null); // Remove cast, atom now accepts null
         } else {
-            setReplyTo({ event, profile: userProfile });
+            if (userProfile) { // Check if userProfile is defined
+                setReplyTo({ event, profile: userProfile });
+            } else {
+                // Handle case where profile is not available, maybe show a message or don't set reply
+                console.warn("Cannot set reply: User profile not found for", event.pubkey);
+            }
         }
     };
 

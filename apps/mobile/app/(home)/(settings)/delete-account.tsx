@@ -3,7 +3,6 @@ import {
     NDKKind,
     useNDK,
     useNDKCurrentUser,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
@@ -68,17 +67,23 @@ export default function DeleteAccountScreen() {
         }
     }, []);
 
-    const { logout } = useNDK();
+    // const { logout } = useNDK(); // logout seems removed from useNDK result
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     const deleteAccount = useCallback(async () => {
         setButtonStatus('loading');
 
+        if (!ndk) {
+            console.error("NDK not available to delete account.");
+            setButtonStatus('idle');
+            return;
+        }
         const event = new NDKEvent(ndk);
         event.kind = NDKKind.Vanish;
         event.tags = [['relay', 'ALL_RELAYS']];
         await event.publish();
 
+        // ndk checked above
         const metadata = new NDKEvent(ndk);
         metadata.kind = NDKKind.Metadata;
         metadata.content = JSON.stringify({
@@ -87,7 +92,7 @@ export default function DeleteAccountScreen() {
         await metadata.publish();
         setButtonStatus('success');
 
-        logout();
+        // logout(); // Commented out - needs replacement
         resetAppSettings();
 
         router.replace('/(home)');

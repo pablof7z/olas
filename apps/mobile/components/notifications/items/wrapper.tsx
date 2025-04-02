@@ -3,7 +3,7 @@ import {
     NDKKind,
     getRootEventId,
     useNDK,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
@@ -26,14 +26,14 @@ export function NotificationContainer({
     children,
 }: { event: NDKEvent; label: string; children: React.ReactNode }) {
     const { ndk } = useNDK();
-    const { userProfile } = useUserProfile(event.pubkey);
+    const userProfile = useProfile(event.pubkey);
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 
     const onPress = useCallback(() => {
         const taggedEventId = event.getMatchingTags('E')[0] || event.getMatchingTags('e')[0];
         if (taggedEventId) {
-            ndk.fetchEventFromTag(taggedEventId, event).then((event) => {
+            ndk?.fetchEventFromTag(taggedEventId, event).then((event) => {
                 if (!event) return;
                 setActiveEvent(event);
                 router.push('/view');
@@ -92,7 +92,8 @@ function RightActions({ event }: { event: NDKEvent }) {
 
     const handleOpen = useCallback(() => {
         const rootId = getRootEventId(event);
-        const rootEvent = rootId ? ndk.fetchEventSync([{ ids: [rootId] }])[0] : null;
+        const fetchedEvents = rootId ? ndk?.fetchEventSync([{ ids: [rootId] }]) : null;
+        const rootEvent = fetchedEvents && fetchedEvents.length > 0 ? fetchedEvents[0] : null;
         const openEvent = rootEvent || event;
         openComment(openEvent, openEvent.id !== event.id ? event : undefined);
     }, [event?.id]);

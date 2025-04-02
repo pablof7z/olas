@@ -1,4 +1,4 @@
-import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { Tabs, router, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
@@ -186,7 +186,7 @@ export default function TabsLayout() {
 function UserButton({ size = 32 }: { size?: number }) {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey);
     const userFlare = useUserFlare(currentUser?.pubkey);
 
     if (currentUser) {

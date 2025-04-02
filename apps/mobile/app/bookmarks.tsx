@@ -2,7 +2,7 @@ import {
     NDKKind,
     NDKList,
     useNDK,
-    useNDKSessionEventKind,
+    useNDKSessionEvent,
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
@@ -19,7 +19,7 @@ import { activeEventAtom } from '@/stores/event';
 
 export default function Bookmarks() {
     const { ndk } = useNDK();
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, {
+    const imageCurationSet = useNDKSessionEvent<NDKList>(NDKKind.ImageCurationSet, {
         create: NDKList,
     });
     const [showOthers, setShowOthers] = useState(false);

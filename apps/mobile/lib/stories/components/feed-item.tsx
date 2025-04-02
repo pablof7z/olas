@@ -1,4 +1,4 @@
-import { type NDKEvent, useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, useNDKCurrentUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
@@ -17,7 +17,7 @@ const AVATAR_SIZE = 80;
 
 function StoryPrompt() {
     const currentUser = useNDKCurrentUser();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey);
     const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
@@ -52,11 +52,9 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
         ({
             item: [pubkey, { events, live }],
             index,
-            target,
         }: {
             item: [string, { events: NDKEvent[]; live: boolean }];
             index: number;
-            target: any;
         }) => {
             if (pubkey === 'prompt') {
                 return <StoryPrompt />;
@@ -71,7 +69,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
     // }
 
     const storyEntries = Array.from(stories.entries());
-    if (!stories.has(currentUser?.pubkey)) {
+    if (currentUser?.pubkey && !stories.has(currentUser.pubkey)) {
         const prompt: [string, { events: NDKEvent[]; live: boolean }] = [
             'prompt',
             { events: [], live: false },
@@ -103,7 +101,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
 
 function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
     const pubkey = events[0].pubkey;
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     const flare = useUserFlare(pubkey);
 
     const setStories = useSetAtom(storiesAtom);

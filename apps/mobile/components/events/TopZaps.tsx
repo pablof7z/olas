@@ -1,4 +1,4 @@
-import { type NDKEvent, type NDKUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -59,7 +59,7 @@ export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
 }
 
 function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: boolean }) {
-    const { userProfile } = useUserProfile(zap.sender);
+    const userProfile = useProfile(zap.sender);
     const opacity = useSharedValue(0);
     const scale = useSharedValue(5); // Start scaled up 5x
     const rotate = useSharedValue(0);

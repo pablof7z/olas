@@ -3,7 +3,7 @@ import {
     NDKKind,
     NDKUserProfile,
     useSubscribe,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
@@ -41,7 +41,7 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 function Header({ event }: { event: NDKEvent }) {
-    const { userProfile } = useUserProfile(event.pubkey);
+    const userProfile = useProfile(event.pubkey);
     const insets = useSafeAreaInsets();
     const _flare = useUserFlare(event.pubkey);
 
@@ -83,7 +83,14 @@ const headerStyles = StyleSheet.create({
 });
 
 export default function ViewScreen() {
-    const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
+    // Explicitly assert the type from the atom
+    const activeEvent = useAtomValue(activeEventAtom) as NDKEvent | null;
+
+    // Handle the case where activeEvent might be null
+    if (!activeEvent) {
+        // Optionally return a loading indicator or an error message
+        return <View><Text>Loading event...</Text></View>;
+    }
     const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
     const { events } = useSubscribe(
         activeEvent ? [activeEvent.filter()] : false,

@@ -37,6 +37,8 @@ import { relayNoticesAtom } from '@/stores/relays';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
+import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
+import { Text } from '@/components/nativewindui/Text';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -62,22 +64,24 @@ const _appRenderCount = 0;
 
 export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
+    const initializeNDK = useNDKInit();
+
+    console.log('rendering App')
 
     useEffect(() => {
+        initializeNDK(ndk);
         setAppReady(true);
     }, []);
     return (
         <LoaderScreen appReady={appReady} wotReady>
-            {!!ndk && <RootLayout />}
+             {!!ndk && <RootLayout />}
         </LoaderScreen>
     );
 }
 
-const _rootLayoutRenderCount = 0;
-
 export function RootLayout() {
     useInitialAndroidBarSync();
-    const { colorScheme, isDarkColorScheme } = useColorScheme();
+    const { isDarkColorScheme } = useColorScheme();
 
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const setFeedType = useSetAtom(feedTypeAtom);

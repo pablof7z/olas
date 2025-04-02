@@ -7,7 +7,7 @@ import {
     useNDKWallet, // Import from ndk-hooks
     useProfile, // Import from ndk-hooks
     // useWOT, // Removed - hook no longer exists
-} from '@nostr-dev-kit/ndk-hooks';
+} from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { Image } from 'expo-image';

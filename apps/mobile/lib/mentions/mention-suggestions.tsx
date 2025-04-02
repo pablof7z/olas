@@ -5,7 +5,6 @@ import {
     type NDKUserProfile,
     searchProfiles,
     useNDK,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useState } from 'react';

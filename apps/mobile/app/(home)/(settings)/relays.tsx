@@ -1,24 +1,20 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import {
-    NDKKind,
-    NDKList,
     type NDKRelay,
     NDKRelayStatus,
-    useNDK,
-    useNDKSessionEventKind,
+    useNDK
 } from '@nostr-dev-kit/ndk-mobile';
 import { Icon } from '@roninoss/icons';
 import { router, usePathname } from 'expo-router';
 import { atom, useAtom } from 'jotai';
-import { DotSquare, DotSquareIcon, MoreHorizontal, Settings } from 'lucide-react-native';
+import { Settings } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { colors } from 'react-native-keyboard-controller/lib/typescript/components/KeyboardToolbar/colors';
 
 import { Button } from '@/components/nativewindui/Button';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
-import { RelayEntry, getRelays, setRelays } from '@/stores/db/relays';
+import { getRelays, setRelays } from '@/stores/db/relays';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import {
     ESTIMATED_ITEM_HEIGHT,

@@ -3,8 +3,7 @@ import {
     NDKKind,
     NDKList,
     NostrEvent,
-    useNDKSessionEventKind,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useRef } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -50,7 +49,7 @@ export function Reactions({
             <React
                 event={event}
                 inactiveColor={inactiveColor}
-                reactedByUser={reactedByUser}
+                reactedByUser={reactedByUser ?? undefined}
                 reactionCount={reactionCount}
                 iconSize={28}
             />
@@ -108,7 +107,7 @@ export function InlinedComments({
 }
 
 export function InlineComment({ comment }: { comment: NDKEvent }) {
-    const { userProfile } = useUserProfile(comment.pubkey);
+    const userProfile = useProfile(comment.pubkey);
     return (
         <Text>
             <Text className="text-sm font-medium text-foreground">@{userProfile?.name} </Text>

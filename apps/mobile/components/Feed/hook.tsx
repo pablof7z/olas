@@ -1,4 +1,4 @@
-import NDK, {
+import {
     type Hexpubkey,
     NDKEvent,
     type NDKEventId,
@@ -9,8 +9,9 @@ import NDK, {
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';
+import { useMuteFilter } from '@nostr-dev-kit/ndk-hooks';
 import { type VerifiedEvent, matchFilters } from 'nostr-tools';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { usePubkeyBlacklist } from '@/hooks/blacklist';
 import { usePaymentStore } from '@/stores/payments';
@@ -68,7 +69,7 @@ export function useFeedEvents(
         filterFn?: (feedEntry: FeedEntry, index: number) => boolean;
         relayUrls?: string[];
     } = {},
-    dependencies = []
+    dependencies: any[] = []
 ) {
     subId ??= 'feed';
 
@@ -120,14 +121,14 @@ export function useFeedEvents(
     const [newEntries, setNewEntries] = useState<FeedEntry[]>([]);
 
     const pubkeyBlacklist = usePubkeyBlacklist();
-    const isMutedEvent = useMuteFilter();
+    const isMutedEvent = useMuteFilter(); // Instantiate the hook
 
     const freezeState = useRef(false);
 
     const entriesFromIds = (ids: Set<NDKEventId>) =>
         Array.from(ids.values())
             .map((id) => allEntriesRef.current.get(id))
-            .filter((entry) => !!entry);
+            .filter((entry): entry is FeedEntry => !!entry); // Type guard
 
     /**
      * This modifies entries in a way that the user of the hook will receive the
@@ -193,7 +194,7 @@ export function useFeedEvents(
         let changed = false;
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            if (isMutedEvent(entry?.event) || pubkeyBlacklist.has(entry?.event?.pubkey)) {
+            if (entry?.event && (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event.pubkey))) {
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -208,7 +209,7 @@ export function useFeedEvents(
         // same thing for new entries
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
-            if (isMutedEvent(entry?.event) || pubkeyBlacklist.has(entry?.event?.pubkey)) {
+            if (entry?.event && (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event.pubkey))) {
                 // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
@@ -229,13 +230,13 @@ export function useFeedEvents(
      * @param freezeState Whether the state should not be updated -- this is useful when adding events in bulk
      */
     const updateEntry = useCallback(
-        (id: string, cb: (currentEntry: FeedEntry) => FeedEntry) => {
-            let entry: FeedEntry = allEntriesRef.current.get(id);
-            if (!entry) entry = { id, reposts: [], timestamp: -1 };
-            const ret = cb(entry);
+        (id: string, cb: (currentEntry: FeedEntry | undefined) => FeedEntry | undefined) => {
+            let entry: FeedEntry | undefined = allEntriesRef.current.get(id);
+            // Provide default if entry is undefined before calling cb
+            const ret = cb(entry ?? { id, reposts: [], timestamp: -1 });
             if (ret) {
                 // check this isn't muted or blacklisted
-                if (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event?.pubkey)) return;
+                if (ret.event && (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event.pubkey))) return;
 
                 if (!ret.timestamp) ret.timestamp = ret.event?.created_at ?? -1;
 
@@ -278,16 +279,18 @@ export function useFeedEvents(
             }
             return ret;
         },
-        [updateEntries, setNewEntries]
+        [updateEntries, setNewEntries, filterFn, pubkeyBlacklist] // Added dependencies
     );
 
     const handleContentEvent = useCallback(
         (eventId: string, event: NDKEvent) => {
-            updateEntry(eventId, (entry: FeedEntry) => {
-                return { ...entry, event, timestamp: event.created_at };
+            updateEntry(eventId, (entry) => {
+                // Ensure entry is defined before spreading, provide default if not
+                const baseEntry = entry ?? { id: eventId, reposts: [], timestamp: -1 };
+                return { ...baseEntry, event, timestamp: event.created_at };
             });
         },
-        [setNewEntries, updateEntry]
+        [updateEntry]
     );
 
     /**
@@ -298,42 +301,49 @@ export function useFeedEvents(
         const repostedId = event.tagValue('e');
         if (!repostedId) return;
 
-        updateEntry(repostedId, (entry: FeedEntry) => {
-            entry.reposts.push(event);
+        updateEntry(repostedId, (entry) => {
+            // Ensure entry is defined before modifying, provide default if not
+            let currentEntry = entry ?? { id: repostedId, reposts: [], timestamp: -1 };
+            currentEntry.reposts.push(event);
 
-            if (!entry.event) {
+            if (!currentEntry.event) {
                 try {
+                    if (!ndk) return currentEntry; // Need NDK instance
                     const payload = JSON.parse(event.content);
-                    entry = {
+                    // Create a new entry object instead of modifying the parameter directly
+                    currentEntry = {
                         id: payload.id,
                         event: new NDKEvent(ndk, payload),
                         reposts: [event],
                         timestamp: event.created_at,
                     };
                 } catch {
-                    entry = undefined;
+                    // If parsing fails, return the entry as it was before trying to parse
+                    // Or potentially return undefined if the entry should be discarded
+                    return currentEntry; // Keep existing state on error
                 }
             }
 
-            if (!entry.timestamp || event.created_at > entry.timestamp) {
-                entry.timestamp = event.created_at;
+            // Use the potentially updated currentEntry
+            if (!currentEntry.timestamp || event.created_at > currentEntry.timestamp) {
+                currentEntry.timestamp = event.created_at;
             }
 
-            return entry;
+            return currentEntry;
         });
-    }, []);
+    }, [ndk, updateEntry]); // Added ndk dependency
 
     const handleBookmark = useCallback(
         (event: NDKEvent) => {
             const bookmarkedId = event.tagValue('e');
             if (!bookmarkedId) return;
 
-            updateEntry(bookmarkedId, (entry: FeedEntry) => {
-                if (!entry || entry.timestamp < event.created_at) {
-                    entry ??= { id: bookmarkedId, reposts: [], timestamp: -1 };
-                    entry.timestamp = event.created_at;
+            updateEntry(bookmarkedId, (entry) => {
+                let currentEntry = entry ?? { id: bookmarkedId, reposts: [], timestamp: -1 };
+                if (!currentEntry.timestamp || currentEntry.timestamp < event.created_at) {
+                    currentEntry.timestamp = event.created_at;
                 }
-                return entry;
+                return currentEntry;
             });
         },
         [updateEntry]
@@ -341,30 +351,45 @@ export function useFeedEvents(
 
     const handleDeletion = useCallback(
         (event: NDKEvent) => {
-            for (const deletedId of event.getMatchingTags('e')) {
-                const entry = allEntriesRef.current.get(deletedId[0]);
+            for (const deletedIdTuple of event.getMatchingTags('e')) {
+                const deletedId = deletedIdTuple[1]; // Get the ID from the tag tuple
+                if (!deletedId) continue; // Skip if ID is missing
+
+                const entry = allEntriesRef.current.get(deletedId);
                 if (entry?.event) {
                     // check if the pubkey matches
                     if (entry.event.pubkey === event.pubkey) {
                         entry.deleted = true;
+                        // Potentially trigger an update if needed, e.g., by re-setting the entry
+                        allEntriesRef.current.set(deletedId, { ...entry });
+                        // Force re-render if this entry is currently visible
+                        if (renderedEntryIdsRef.current.has(deletedId)) {
+                            updateEntries('deletion');
+                        }
                     }
                 } else {
                     // we don't have the event, let's just record the deletion
-                    updateEntry(deletedId[0], (entry) => ({
-                        ...entry,
-                        deletedBy: [...(entry.deletedBy || []), event.pubkey],
-                    }));
+                    updateEntry(deletedId, (currentEntry) => {
+                        // Ensure the base object has the required 'id' property
+                        const baseEntry = currentEntry ?? { id: deletedId, reposts: [], timestamp: -1 };
+                        return {
+                            ...baseEntry,
+                            deletedBy: [...(baseEntry.deletedBy || []), event.pubkey],
+                        };
+                    });
                 }
             }
         },
-        [updateEntry]
+        [updateEntry, updateEntries] // Added updateEntries dependency
     );
 
     const handleEvent = useCallback(
-        (event: NDKEvent) => {
+        (event: NDKEvent, logIt = true) => {
             const eventId = event.tagId();
             if (addedEventIds.current.has(eventId)) return;
             addedEventIds.current.add(eventId);
+
+            if (logIt) console.log('\thandling new event', event.kind)
 
             switch (event.kind) {
                 case NDKKind.VerticalVideo:
@@ -389,9 +414,10 @@ export function useFeedEvents(
 
     const handleBulkEvents = useCallback(
         (events: NDKEvent[]) => {
+            console.log('calling handleBulkEvents', events.length)
             freezeState.current = true;
             for (const event of events) {
-                handleEvent(event);
+                handleEvent(event, false);
             }
 
             freezeState.current = false;
@@ -415,8 +441,8 @@ export function useFeedEvents(
         // Go through the currently-rendered entries and see if we need to change them
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
             const keep =
-                entry.event && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent);
-            if (!keep || !passesFilter(entry)) {
+                entry?.event && filters && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent);
+            if (!entry || !keep || !passesFilter(entry)) { // Ensure entry is defined
                 changed = true;
                 renderedIdsRef.current.delete(entry.id);
             } else {
@@ -432,13 +458,14 @@ export function useFeedEvents(
         if (!changed) {
             for (const id of newEntriesRef.current) {
                 const feedEntry = allEntriesRef.current.get(id);
-                if (!feedEntry.event || addedEventIds.current.has(id)) continue;
-                if (!passesFilter(feedEntry)) continue;
+                // Ensure feedEntry and feedEntry.event exist
+                if (!feedEntry || !feedEntry.event || addedEventIds.current.has(id)) continue;
+                if (!passesFilter(feedEntry)) continue; // passesFilter expects FeedEntry, already checked feedEntry exists
 
                 const keep =
-                    feedEntry.event &&
+                    filters && // Ensure filters exist
                     matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent);
-                if (!keep || !passesFilter(feedEntry)) {
+                if (!keep || !passesFilter(feedEntry)) { // passesFilter expects FeedEntry
                     newEntriesRef.current.delete(id);
                     // addedEventIds.current.add(id);
                     changed = true;
@@ -447,7 +474,7 @@ export function useFeedEvents(
         }
 
         if (changed) updateEntries('filtering out events');
-    }, dependencies);
+    }, [filters, filterFn, updateEntries, entriesFromIds]); // Added dependencies
 
     const subscriptionStartTime = useRef(0);
 
@@ -459,7 +486,7 @@ export function useFeedEvents(
 
         if (subscription.current) {
             subscription.current.stop();
-            subscription.current = null;
+            subscription.current = undefined;
             eosed.current = false;
             addedEventIds.current.clear();
 
@@ -471,12 +498,12 @@ export function useFeedEvents(
             relaySet = NDKRelaySet.fromRelayUrls(relayUrls, ndk);
         }
 
+        console.log('Feed hooks creating subscription', JSON.stringify(filters))
+        
         const sub = ndk.subscribe(
             filters,
-            { wrap: true, groupable: false, skipVerification: true, subId },
-            relaySet,
+            { wrap: true, groupable: false, skipVerification: true, subId, relaySet },
             {
-                onEvent: handleEvent,
                 onEose: handleEose,
                 onEvents: handleBulkEvents,
             }
@@ -490,7 +517,7 @@ export function useFeedEvents(
         return () => {
             sub.stop();
         };
-    }, [ndk, ...dependencies]);
+    }, dependencies); // Added dependencies
 
     return {
         entries,
@@ -498,120 +525,78 @@ export function useFeedEvents(
 
         /**
          * When new events arrive after EOSE, they will be collected in the newEntries, this is
-         * so that the feed doesn't jump around and instead we can show a "new events received".
-         *
-         * The application should call ingestNewEntries when it's ready to render them.
+         * the function to call to render them.
          */
-        updateEntries,
+        updateEntries
     };
 }
 
-/**
- * This hook receives a list of events that.
- *
- * We want to monitor for events that are tagging the events in the active slices.
- *
- * We may keep one or two subscriptions that will be fetching data for the items.
- *
- * As the user is scrolling down, when they are close to reaching the end of the current slice's index a new
- * subscription is created with the next slice.
- * If the user keeps scrolling down, after a threshold, the previous subscription is closed
- *
- * @param events: Events to monitor
- * @param closeThreshold Distance to the previous slice at which that subscription is closed.
- * @param sliceSize Sice of the slice
- */
 type Slice = {
-    /** The event IDs in this slice */
-    eventIds: string[];
-    /** Original start index in the events array */
-    startIndex: number;
-    /** Original end index in the events array */
-    endIndex: number;
+    eventIds: NDKEventId[];
     sub?: NDKSubscription;
     removeTimeout?: NodeJS.Timeout;
 };
 
-const _sliceToFilter = (slice: Slice): NDKFilter[] => {
-    return [{ '#e': slice.eventIds }];
-};
-
+/**
+ * Calculates the slices needed based on the current index and slice size.
+ */
 function calcNeededSlices(currentIndex: number, sliceSize: number, events: NDKEvent[]) {
-    const slices: Slice[] = [];
-    const totalLength = events.length;
+    const neededSlices: Slice[] = [];
+    const halfSlice = Math.floor(sliceSize / 2);
 
-    // Create slices around current position
-    const ranges = [
-        {
-            // Previous slice
-            start: Math.max(0, currentIndex - sliceSize),
-            end: currentIndex,
-        },
-        {
-            // Next slice
-            start: currentIndex,
-            end: Math.min(totalLength, currentIndex + sliceSize),
-        },
-    ];
+    const startIndex = Math.max(0, currentIndex - halfSlice);
+    const endIndex = Math.min(events.length, startIndex + sliceSize);
 
-    ranges.forEach(({ start, end }) => {
-        if (start >= end) return;
-
-        const sliceEvents = events.slice(start, end);
-        if (sliceEvents.length === 0) return;
-
-        slices.push({
-            eventIds: sliceEvents.map((e) => e.id),
-            startIndex: start,
-            endIndex: end,
+    if (events.length > 0) {
+        neededSlices.push({
+            eventIds: events.slice(startIndex, endIndex).map((e) => e.tagId()),
         });
-    });
+    }
 
-    return slices;
+    return neededSlices;
 }
 
+/**
+ * Monitors a feed of events and subscribes to related events (reactions, zaps, etc.)
+ * for events within a sliding window around the currently active index.
+ *
+ * @param events The list of events in the feed.
+ * @param sliceSize The size of the window to monitor around the active index.
+ */
 export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
     const { ndk } = useNDK();
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
-    const activeIds = useRef<Set<string>>(new Set());
-    const activeSlices = useRef<Slice[]>([]);
     const currentUser = useNDKCurrentUser();
-    const addRelatedEvents = useReactionsStore((s) => s.addEvents);
-    const addPayments = usePaymentStore((s) => s.addPayments);
-
-    // useEffect(() => {
-    //     if
-    // }, [events[0]?.id, ])
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const activeSlices = useRef<Slice[]>([]);
+    const activeIds = useRef<Set<NDKEventId>>(new Set());
+    const { addPayments } = usePaymentStore();
+    const { addEvents } = useReactionsStore();
 
     const addSlice = (newSlice: Slice) => {
-        if (newSlice.eventIds.length === 0) return;
+        if (!ndk) return; // Explicit check for ndk before use
 
-        const idsToAdd = new Set(newSlice.eventIds);
-        for (const id of idsToAdd) {
-            if (activeIds.current.has(id)) idsToAdd.delete(id);
-        }
+        const filter = {
+            '#e': newSlice.eventIds,
+            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost],
+        };
 
-        if (idsToAdd.size === 0) return;
+        const zapFilter = {
+            kinds: [NDKKind.ZapRequest],
+            '#p': newSlice.eventIds.map((id) => ndk.getUser({ hexpubkey: id }).pubkey),
+        };
 
-        newSlice.eventIds = Array.from(idsToAdd);
-
-        const filters = [{ '#e': newSlice.eventIds }];
         newSlice.sub = ndk.subscribe(
-            filters,
-            {
-                closeOnEose: false,
-                groupable: false,
-                skipVerification: true,
-                subId: `feedmonitor-${newSlice.startIndex}-${newSlice.endIndex}`,
-            },
-            undefined,
+            [filter, zapFilter],
+            { closeOnEose: false, groupable: true, groupableDelay: 300 },
             {
                 onEvent: (event) => {
-                    addRelatedEvents([event], currentUser?.pubkey);
+                    console.log('feed hook received an event', event.kind)
+                    addEvents([event], currentUser?.pubkey);
                     addPayments([event]);
                 },
                 onEvents: (events) => {
-                    addRelatedEvents(events, currentUser?.pubkey);
+                    console.log('Feed hook onEvents received', events.length)
+                    addEvents(events, currentUser?.pubkey);
                     addPayments(events);
                 },
             }
@@ -624,7 +609,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
-            slice.sub.stop();
+            slice.sub?.stop(); // Ensure optional chaining is used
             activeSlices.current = activeSlices.current.filter(
                 (s) => s.eventIds[0] !== slice.eventIds[0]
             );
@@ -649,7 +634,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
             } else if (activeSlice.removeTimeout) {
                 clearTimeout(activeSlice.removeTimeout);
-                activeSlice.removeTimeout = null;
+                activeSlice.removeTimeout = undefined; // Ensure undefined is assigned
             }
         }
 
@@ -663,11 +648,12 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
         }
 
         // // clean up active subs on unmount
-    }, [activeIndex !== null ? events[activeIndex]?.id : null, events.length < sliceSize]);
+    }, [activeIndex !== null ? events[activeIndex]?.id : null, events.length < sliceSize, sliceSize, ndk, currentUser?.pubkey, addPayments]); // Added dependencies
 
     useEffect(() => {
+        // Stop all subscriptions when the component unmounts
         return () => {
-            activeSlices.current.forEach((slice) => slice.sub.stop());
+            activeSlices.current.forEach((slice) => slice.sub?.stop()); // Ensure optional chaining is used
         };
     }, []);
 

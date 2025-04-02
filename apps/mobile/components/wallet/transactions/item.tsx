@@ -6,7 +6,7 @@ import {
     type NDKPaymentConfirmation,
     type NDKZapSplit,
     useNDK,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuDeposit, type NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
@@ -26,7 +26,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import type { PendingZap } from '@/stores/payments';
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out'; pubkey?: string }) => {
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     const { colors } = useColorScheme();
 
     const color = colors.primary;
@@ -117,9 +117,14 @@ function HistoryItemPendingZap({
         }, 2000);
     }
 
-    item.zapper.once('split:complete', (_split: NDKZapSplit, result: NDKPaymentConfirmation) => {
-        if (result instanceof Error) {
-            setError(result);
+    // Fix callback signature for zapper.once
+    item.zapper.once('split:complete', (_split: NDKZapSplit, info: Error | NDKPaymentConfirmation | undefined) => {
+        if (info instanceof Error) {
+            setError(info);
+        } else if (info) {
+            // Handle successful confirmation if needed
+        } else {
+            // Handle undefined case if needed
         }
     });
 
@@ -133,7 +138,7 @@ function HistoryItemPendingZap({
             )}
             target={target}
             item={{
-                id: item.internalId,
+                title: '', // Removed id, title handled by children
             }}
             leftView={<LeftView direction="out" pubkey={targetPubkey} />}
             rightView={<ItemRightColumn isPending amount={amount} unit={item.zapper.unit} />}
@@ -205,20 +210,27 @@ function HistoryItemEvent({
     onPress: () => void;
 }) {
     const { ndk } = useNDK();
-    const [nutzap, setNutzap] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id));
+    // Convert undefined from cache to null for useState
+    const [nutzap, setNutzap] = useState<NDKNutzap | null>(nutzapItemCache.get(item.id) ?? null);
     const id = item.tagId();
     const [walletChange, setWalletChange] = useState<NDKCashuWalletTx | null>(
-        historyItemCache.get(id)
+        // Convert undefined from cache to null for useState
+        historyItemCache.get(id) ?? null
     );
 
     useEffect(() => {
         if (!walletChange && item.content.length > 0) {
             NDKCashuWalletTx.from(item)
                 .then((walletChange) => {
-                    if (item.id === walletChange.id) {
-                        setWalletChange(walletChange);
+                    // Check if walletChange is defined before accessing id
+                    if (walletChange && item.id === walletChange.id) {
+                        // Convert undefined to null for setWalletChange
+                        setWalletChange(walletChange ?? null);
                     }
-                    historyItemCache.set(walletChange.tagId(), walletChange);
+                    // Check if walletChange is defined before setting cache
+                    if (walletChange) {
+                        historyItemCache.set(walletChange.tagId(), walletChange);
+                    }
                 })
                 .catch((e) => {
                     console.error('error converting item id', item.id, 'to walletChange id', e);
@@ -249,12 +261,20 @@ function HistoryItemEvent({
 
         if (eTag && isValid && ndk && !nutzap && !nutzapFetched) {
             nutzapFetched = true;
-            ndk.fetchEventFromTag(eTag, walletChange).then((event) => {
-                if (event && isValid) {
-                    setNutzap(NDKNutzap.from(event));
-                    nutzapItemCache.set(item.id, NDKNutzap.from(event));
-                }
-            });
+            // Ensure ndk, eTag, and walletChange (as NDKEvent) are valid before fetching
+            if (ndk && eTag && walletChange) {
+                ndk.fetchEventFromTag(eTag, walletChange).then((event) => {
+                    if (event && isValid) {
+                        const fetchedNutzap = NDKNutzap.from(event);
+                        // Convert undefined to null for setNutzap
+                        setNutzap(fetchedNutzap ?? null);
+                        // Only set cache if nutzap is valid
+                        if (fetchedNutzap) {
+                            nutzapItemCache.set(item.id, fetchedNutzap);
+                        }
+                    }
+                });
+            }
         }
 
         return () => {
@@ -266,7 +286,18 @@ function HistoryItemEvent({
     const handleLongPress = () => {};
 
     if (!walletChange) return <></>;
-    if (walletChange.amount < 0) return <Text>invalid item {item.id}</Text>;
+    // Ensure walletChange is valid before proceeding
+    if (!walletChange) {
+         console.error("Missing walletChange data for item:", item.id);
+         // Return a minimal representation or null if walletChange is missing
+         return <ListItem index={index} target={target} item={{ title: "Loading..." }} />;
+    }
+
+    // Ensure amount is valid
+    if (typeof walletChange.amount !== 'number' || walletChange.amount < 0) {
+        console.error("Invalid amount in walletChange data for item:", item.id, walletChange);
+        return <ListItem index={index} target={target} item={{ title: "Invalid Amount" }} />;
+    }
 
     return (
         <Animated.View entering={SlideInDown}>
@@ -277,21 +308,26 @@ function HistoryItemEvent({
                 )}
                 target={target}
                 leftView={
-                    <LeftView direction={walletChange.direction} pubkey={nutzapCounterparts?.[0]} />
+                    // Conditionally render LeftView based on valid direction
+                    (walletChange.direction === 'in' || walletChange.direction === 'out')
+                        ? <LeftView direction={walletChange.direction} pubkey={nutzapCounterparts?.[0]} />
+                        : null // Render nothing if direction is invalid
                 }
                 item={{
-                    id: item.id,
+                    // id: item.id, // Removed as it's not a valid prop for the item object structure
+                    // Provide default title if condition is false
                     title:
                         nutzapCounterparts && nutzapCounterparts.length > 1
                             ? `${nutzapCounterparts.length} zappers`
-                            : undefined,
+                            : '', // Use empty string as default title
                 }}
                 titleClassName="font-bold"
                 rightView={
                     <ItemRightColumn
                         mint={walletChange.mint}
-                        amount={walletChange.amount}
-                        unit={walletChange.unit}
+                        // Pass validated amount and unit (defaulting if necessary)
+                        amount={walletChange.amount} // Already validated above
+                        unit={walletChange.unit ?? 'sat'} // Default unit if undefined
                         isPending={false}
                     />
                 }
@@ -299,16 +335,23 @@ function HistoryItemEvent({
                 onPress={onPress}
                 onLongPress={handleLongPress}
             >
-                {nutzapCounterparts && nutzapCounterparts.length === 1 && (
+                {/* Children passed to ListItem */}
+                {nutzapCounterparts && nutzapCounterparts.length === 1 && nutzapCounterparts[0] ? (
+                    // Case 1: Single valid counterparty
                     <Counterparty pubkey={nutzapCounterparts[0]} timestamp={item.created_at}>
-                        <Text className="text-sm text-muted-foreground">
-                            {walletChange.description}
+                        <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                            {walletChange?.description}
                         </Text>
                     </Counterparty>
-                )}
-                {nutzapCounterparts && nutzapCounterparts.length > 1 && (
-                    <Text className="text-sm text-muted-foreground">
-                        {walletChange.description}
+                ) : nutzapCounterparts && nutzapCounterparts.length > 1 ? (
+                     // Case 2: Multiple counterparties (title already shows count)
+                     <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                        {walletChange?.description}
+                    </Text>
+                ) : (
+                    // Case 3: No counterparties or invalid data (render description directly)
+                     <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                        {walletChange?.description ?? 'Transaction'}
                     </Text>
                 )}
             </ListItem>

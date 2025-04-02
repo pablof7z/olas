@@ -1,4 +1,4 @@
-import { useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
@@ -9,7 +9,7 @@ export const Counterparty = ({
     timestamp,
     children,
 }: { pubkey: string; timestamp?: number; children?: React.ReactNode }) => {
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     return (
         <View className="flex-col gap-0">
             <Text

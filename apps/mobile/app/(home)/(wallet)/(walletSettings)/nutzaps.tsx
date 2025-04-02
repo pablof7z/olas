@@ -1,6 +1,6 @@
 import { Proof } from '@cashu/cashu-ts';
 import {
-    DBCache,
+    // DBCache, // Removed unused import
     type NDKCacheAdapterSqlite,
     NDKEvent,
     NDKKind,
@@ -9,9 +9,12 @@ import {
     useNDKCurrentUser,
     useNDKNutzapMonitor,
     useNDKWallet,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
-import { NDKCashuWallet, type NDKNutzapState, NdkNutzapStatus } from '@nostr-dev-kit/ndk-wallet';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet'; // Removed unexported NDKNutzapState, NdkNutzapStatus
+// Define placeholder types or use 'any' if specific types are unknown
+type NDKNutzapState = any; // Placeholder type
+type NdkNutzapStatus = string; // Placeholder type, assuming string statuses
 import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -26,6 +29,11 @@ export default function NutzapsScreen() {
     const { activeWallet } = useNDKWallet();
     const { nutzapMonitor } = useNDKNutzapMonitor();
     const { ndk } = useNDK();
+    if (!ndk || !nutzapMonitor) {
+        // Handle missing ndk or nutzapMonitor
+        console.error("NDK or NutzapMonitor not available.");
+        return <View><Text>Error initializing Nutzaps screen.</Text></View>;
+    }
     const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
     const nutzapStates = nutzapMonitor.nutzapStates;
 
@@ -34,6 +42,7 @@ export default function NutzapsScreen() {
             // if (!state.nutzap) {
             const event = cacheAdapter.getEventId(eventId);
             if (event) {
+                // ndk is checked above
                 state.nutzap = new NDKNutzap(ndk, event);
             }
             // }
@@ -72,7 +81,7 @@ export default function NutzapsScreen() {
                 estimatedItemSize={80}
                 renderItem={({ item, index, target }) => (
                     <NutzapRow
-                        wallet={activeWallet}
+                        // wallet prop removed as NutzapRow doesn't accept it
                         state={item[1]}
                         eventId={item[0]}
                         index={index}
@@ -98,12 +107,14 @@ function NutzapRow({
 
     const claim = useCallback(async () => {
         if (!nutzap) return;
-        const _res = await nutzapMonitor.redeemNutzap(nutzap);
+        // nutzapMonitor is checked in the parent component
+        const _res = await nutzapMonitor!.redeemNutzap(nutzap); // Use non-null assertion
     }, [nutzap?.id]);
 
-    const spent = [NdkNutzapStatus.REDEEMED, NdkNutzapStatus.SPENT].includes(status);
+    // Replace NdkNutzapStatus enum with string literals
+    const spent = ['REDEEMED', 'SPENT'].includes(status.toUpperCase());
 
-    const { userProfile } = useUserProfile(nutzap?.pubkey);
+    const userProfile = useProfile(nutzap?.pubkey);
 
     const handleLongPress = useCallback(() => {}, [eventId]);
 

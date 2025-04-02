@@ -12,8 +12,8 @@ import {
     useNDKCurrentUser,
     useObserver,
     useSubscribe,
-    useUserProfile,
-    useUsersStore,
+    useProfile,
+    // useUsersStore, // Removed as it's likely deprecated/changed in NDK
 } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
 import * as Clipboard from 'expo-clipboard';
@@ -136,14 +136,19 @@ function Header({
 
     const startProfileEdit = useCallback(() => {
         setEditState('edit');
-        setEditProfile(userProfile);
+        setEditProfile(userProfile ?? null); // Pass null if userProfile is undefined
     }, [setEditState, setEditProfile, userProfile]);
 
     const { ndk } = useNDK();
-    const updateUserProfile = useUsersStore((s) => s.update);
+    // const updateUserProfile = useUsersStore((s) => s.update); // Commented out due to useUsersStore removal
 
     const saveProfileEdit = useCallback(async () => {
         setEditState('saving');
+        if (!ndk) {
+            toast.error("NDK not available to save profile.");
+            setEditState('edit'); // Revert state if NDK is missing
+            return;
+        }
         const e = new NDKEvent(ndk, { kind: 0 } as NostrEvent);
         const profileWithoutEmptyValues = Object.fromEntries(
             Object.entries(editProfile || {}).filter(([_, value]) => value !== null)
@@ -152,9 +157,9 @@ function Header({
 
         e.content = JSON.stringify(profileWithoutEmptyValues);
         await e.publishReplaceable();
-        if (editProfile) updateUserProfile(pubkey, editProfile);
+        // if (editProfile) updateUserProfile(pubkey, editProfile); // Commented out due to useUsersStore removal
         setEditState(null);
-    }, [editProfile, setEditState, pubkey, ndk, updateUserProfile]);
+    }, [editProfile, setEditState, pubkey, ndk]); // Removed updateUserProfile from dependencies
 
     return (
         <AnimatedBlurView
@@ -260,9 +265,16 @@ const headerStyles = StyleSheet.create({
 export default function Profile() {
     const { pubkey, view } = useLocalSearchParams() as { pubkey: string; view?: string };
     const { ndk } = useNDK();
-    const user = ndk.getUser({ pubkey });
+    const user = ndk?.getUser({ pubkey }); // Use optional chaining
+
+    if (!user) {
+        // Handle case where user object couldn't be created (ndk is null or getUser failed)
+        console.error(`Could not get user object for pubkey: ${pubkey}`);
+        toast.error("Failed to load user data.");
+        return <View><Text>Error loading profile</Text></View>; // Render an error state
+    }
     const currentUser = useNDKCurrentUser();
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     const flare = useUserFlare(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const { events: content } = useSubscribe(
@@ -287,15 +299,15 @@ export default function Profile() {
     }, [currentUser?.pubkey, editState, pubkey]);
 
     const olasContent = useMemo(() => {
-        return content.filter((e) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
+        return content.filter((e: NDKEvent) => e.kind === NDKKind.Image || e.kind === NDKKind.VerticalVideo);
     }, [content.length]);
 
     const followCount = useMemo(() => {
-        const contacts = content.find((e) => e.kind === NDKKind.Contacts);
+        const contacts = content.find((e: NDKEvent) => e.kind === NDKKind.Contacts);
         if (!contacts) return 0;
-        const followTags = contacts.tags.filter((t) => t[0] === 'p');
+        const followTags = contacts.tags.filter((t: string[]) => t[0] === 'p');
         if (!followTags) return 0;
-        return new Set(followTags.map((t) => t[1])).size;
+        return new Set(followTags.map((t: string[]) => t[1])).size;
     }, [content]);
 
     const insets = useSafeAreaInsets();
@@ -314,7 +326,7 @@ export default function Profile() {
     );
 
     const hasProducts = useMemo(() => {
-        return content.some((e) => e.kind === 30402);
+        return content.some((e: NDKEvent) => e.kind === 30402);
     }, [content]);
 
     if (!pubkey) return null;
@@ -418,7 +430,7 @@ export default function Profile() {
 }
 
 function Banner({ pubkey }: { pubkey: string }) {
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     const insets = useSafeAreaInsets();
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     const editState = useAtomValue(editStateAtom);
@@ -439,6 +451,10 @@ function Banner({ pubkey }: { pubkey: string }) {
             const media = await prepareMedia([
                 { uris: [image.path], id: 'banner', mediaType: 'image', contentMode: 'landscape' },
             ]);
+            if (!ndk) {
+                toast.error("NDK not available to upload banner.");
+                return;
+            }
             const uploaded = await uploadMedia(media, ndk);
             if (!uploaded[0].uploadedUri) {
                 toast.error('Failed to upload profile banner');
@@ -489,7 +505,7 @@ function Banner({ pubkey }: { pubkey: string }) {
                         width: 40,
                         height: 40,
                     }}
-                    onPress={handleChooseImage}
+                    // onPress removed from View, handled by outer TouchableOpacity
                 >
                     <ImageIcon size={18} color="white" />
                 </View>
@@ -516,7 +532,7 @@ function Avatar({
 }: {
     pubkey: string;
     userProfile?: NDKUserProfile;
-    flare?: NDKUserFlare;
+    flare?: string; // Updated type to string | undefined (implicitly handled by ?)
     colors: Record<string, string>;
 }) {
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
@@ -538,6 +554,10 @@ function Avatar({
             const media = await prepareMedia([
                 { uris: [image.path], id: 'avatar', mediaType: 'image', contentMode: 'square' },
             ]);
+            if (!ndk) {
+                toast.error("NDK not available to upload avatar.");
+                return;
+            }
             const uploaded = await uploadMedia(media, ndk);
             if (!uploaded[0].uploadedUri) {
                 toast.error('Failed to upload profile picture');
@@ -774,24 +794,44 @@ function ProfileContent({ pubkey, hasProducts }: { pubkey: string; hasProducts: 
         numColumns: number;
     }>(() => {
         let numColumns = 3;
-        let filterFn: (entry: FeedEntry) => boolean | undefined;
+        // Initialize filterFn with a default that returns true
+        let assignedFilterFn: (entry: FeedEntry) => boolean | undefined = () => true;
         const res: NDKFilter[] = [];
+        const currentView = view ?? 'posts'; // Default to 'posts' if view is undefined
+        const filterKey = pubkey + currentView; // Construct filterKey
 
-        if (view === 'posts') {
+        if (currentView === 'posts') {
             res.push({ kinds: [NDKKind.Text], authors: [pubkey] });
-            filterFn = postFilterFn;
-            numColumns = 3;
-        } else if (view === 'reels') {
+            assignedFilterFn = postFilterFn; // Assign specific filter for posts
+            numColumns = 1; // Posts view usually has 1 column
+        } else if (currentView === 'reels') {
             res.push({ kinds: [NDKKind.VerticalVideo, 21], authors: [pubkey] });
-        } else if (view === 'photos') {
+            // Keep default filterFn or assign specific one if available
+            numColumns = 3;
+        } else if (currentView === 'photos') {
             res.push({ kinds: [NDKKind.Image], authors: [pubkey] });
             res.push({ kinds: [NDKKind.Text], '#k': ['20'], authors: [pubkey] });
-        } else if (view === 'products') {
+            // Keep default filterFn or assign specific one if available
+            numColumns = 3;
+        } else if (currentView === 'products') {
             res.push({ kinds: [30402], authors: [pubkey] });
+            // Keep default filterFn or assign specific one if available
+            numColumns = 2;
+        } else {
+             // Handle potential unknown view values, default to posts
+            res.push({ kinds: [NDKKind.Text], authors: [pubkey] });
+            assignedFilterFn = postFilterFn;
+            numColumns = 1;
         }
 
-        return { filters: res, filterKey: pubkey + view, filterFn, numColumns };
-    }, [view]);
+        // Ensure the final filter function strictly returns boolean
+        const filterFn = (entry: FeedEntry): boolean => {
+            const result = assignedFilterFn(entry);
+            return result === true; // Explicitly return true or false
+        };
+
+        return { filters: res, filterKey: filterKey, filterFn, numColumns };
+    }, [view, pubkey]); // Added pubkey dependency
 
     const { colors } = useColorScheme();
 

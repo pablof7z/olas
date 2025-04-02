@@ -1,21 +1,13 @@
 import {
-    Hexpubkey,
     NDKEvent,
     NDKKind,
-    NDKList,
-    NDKRelay,
-    NDKRelaySet,
-    NDKSimpleGroupMemberList,
-    NDKSimpleGroupMetadata,
-    NDKSubscriptionCacheUsage,
-    useFollows,
+    NDKList, NDKRelaySet, useFollows,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionEventKind,
-    wrapEvent,
+    useNDKSessionEvent
 } from '@nostr-dev-kit/ndk-mobile';
-import { Image, useImage } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
@@ -24,8 +16,9 @@ import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { cn } from '@/lib/cn';
-import { type GroupEntry, useAllGroups } from '@/lib/groups/store';
-import { useDebounce, useThrottle } from '@/utils/debounce';
+import { useAllGroups } from '@/lib/groups/store';
+import { useThrottle } from '@/utils/debounce';
+import { GroupEntry } from '@/lib/groups/types';
 
 const relays = ['wss://groups.0xchat.com'];
 
@@ -105,7 +98,7 @@ function RightViewItem({ groupEntry }: { groupEntry: GroupEntry }) {
     const currentUser = useNDKCurrentUser();
     const isMember = currentUser && groupEntry.members.has(currentUser.pubkey);
     const { ndk } = useNDK();
-    const groupList = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { create: NDKList });
+    const groupList = useNDKSessionEvent<NDKList>(NDKKind.SimpleGroupList, { create: NDKList });
 
     const join = useCallback(
         async (groupEntry: GroupEntry) => {

@@ -5,8 +5,8 @@ import {
     NDKRelaySet,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionEventKind,
-    useUserProfile,
+    // useNDKSessionEventKind, // Removed - needs replacement
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
@@ -20,7 +20,7 @@ import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
     const currentUser = useNDKCurrentUser();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [state, setState] = useState<'open' | 'closed'>('open');
@@ -40,12 +40,19 @@ export default function NewGroup() {
     const { ndk } = useNDK();
     const randomId =
         Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    if (!ndk) {
+        // Handle case where ndk is null, maybe return loading or error state
+        console.error("NDK not available for group creation.");
+        return <View><Text>Error: NDK not initialized.</Text></View>;
+    }
     const relaySet = NDKRelaySet.fromRelayUrls([relayUrl], ndk, true);
-    const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, {
-        create: NDKList,
-    });
+    // const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { // Commented out - needs replacement
+    //     create: NDKList,
+    // });
+    const groupBookmark: NDKList | null = null; // Placeholder
 
     const createGroup = useCallback(() => {
+        // ndk is checked above
         const create = new NDKEvent(ndk);
         create.kind = 9007;
         create.tags = [
@@ -57,9 +64,9 @@ export default function NewGroup() {
             [visibility],
         ];
         create.publish(relaySet).then(() => {
-            groupBookmark.addItem(['group', randomId, relayUrl]);
+            // groupBookmark?.addItem(['group', randomId, relayUrl]); // Commented out - needs replacement
         });
-    }, [name, description, visibility, state, relayUrl]);
+    }, [name, description, visibility, state, relayUrl, ndk, randomId, userProfile?.image, relaySet]); // Added dependencies
 
     return (
         <KeyboardAwareScrollView

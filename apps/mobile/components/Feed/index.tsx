@@ -3,7 +3,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     type NativeScrollEvent,
     type NativeSyntheticEvent,
@@ -11,6 +11,7 @@ import {
     RefreshControl,
     StyleSheet,
     Text,
+    type ViewToken,
 } from 'react-native';
 
 import Post from '../events/Post';
@@ -59,22 +60,23 @@ export default function Feed({
         { subId: 'feed', filterFn, relayUrls, ...filterOpts },
         [filterKey + refreshCount]
     );
-    const { setActiveIndex } = useFeedMonitor(
-        entries.map((e) => e.event),
-        sliceIndex
-    );
+    // const { setActiveIndex } = useFeedMonitor(
+    //     entries.map((e) => e.event),
+    //     sliceIndex
+    // );
 
     const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
 
     const onViewableItemsChanged = useCallback(
-        ({ viewableItems }) => {
+        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
             visibleIndex.current = viewableItems[0]?.index ?? 0;
             if (visibleIndex.current === 0 && showNewEntriesPrompt) {
                 setShowNewEntriesPrompt(false);
             }
-            setActiveIndex(visibleIndex.current);
+            // setActiveIndex(visibleIndex.current);
         },
-        [setActiveIndex, showNewEntriesPrompt]
+        [showNewEntriesPrompt]
+        // [setActiveIndex, showNewEntriesPrompt]
     );
 
     const update = useCallback(() => {
@@ -136,16 +138,25 @@ export default function Feed({
         return ret;
     }, [entries, prepend, numColumns]);
 
+    console.log('Feed renderEntries', renderEntries.length)
+
     const handleGridPress = useCallback((event: NDKEvent) => {
         setActiveEvent(event);
         router.push('/view');
     }, []);
 
     const renderItem = useCallback(
-        ({ item, index }: { item: FeedEntry | PrependEntry; index: number }) => {
-            if (numColumns === 1 && index === 0 && item.id === 'prepend')
-                return (item as PrependEntry).node;
+        ({ item, index }: { item: FeedEntry | PrependEntry; index: number }): React.ReactElement | null => {
+            if (numColumns === 1 && index === 0 && item.id === 'prepend') {
+                const node = (item as PrependEntry).node;
+                // Ensure we return ReactElement or null, as required by FlashList
+                // Use React.isValidElement to ensure it's a renderable element for FlashList
+                return React.isValidElement(node) ? node : null;
+            }
             item = item as FeedEntry;
+
+            // Ensure item.event exists before rendering components that require it
+            if (!item.event) return null;
 
             if (numColumns === 1)
                 return (
@@ -163,7 +174,7 @@ export default function Feed({
                         index={index}
                         forceProxy
                         numColumns={numColumns}
-                        onPress={() => handleGridPress(item.event)}
+                        onPress={() => handleGridPress(item.event!)} // Assert non-null as checked above
                     />
                 );
         },

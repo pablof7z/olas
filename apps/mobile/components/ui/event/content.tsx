@@ -1,4 +1,4 @@
-import { type NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { nip19 } from 'nostr-tools';
@@ -100,8 +100,7 @@ function RenderMention({
         }
     }
     
-    const profileData = useUserProfile(pubkey);
-    const userProfile = profileData?.userProfile;
+    const userProfile = useProfile(pubkey);
 
     if (!entity) return null;
     

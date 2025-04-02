@@ -1,4 +1,4 @@
-import { type NDKEvent, type NDKImage, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKImage, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import {
     Pressable,
@@ -12,7 +12,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as User from '@/components/ui/user';
-import { StoryData } from '@/lib/stories/interfaces';
 
 export type StoryHeaderProps = {
     item?: NDKEvent | NDKImage;
@@ -24,9 +23,10 @@ export type StoryHeaderProps = {
 export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) {
     // Get pubkey from item or use direct pubkey
     const userPubkey = item ? item.pubkey : pubkey;
-    const profileData = useUserProfile(userPubkey);
-    const userProfile = profileData?.userProfile;
+    const userProfile = useProfile(userPubkey);
     const insets = useSafeAreaInsets();
+
+    if (!userPubkey) return null;
 
     return (
         <View style={[styles.container, style, { paddingTop: insets.top }]}>

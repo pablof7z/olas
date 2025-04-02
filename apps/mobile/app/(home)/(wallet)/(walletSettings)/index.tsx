@@ -6,7 +6,7 @@ import {
     NDKKind,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionEventKind,
+    useNDKSessionEvent,
     useNDKWallet,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet, type NDKNWCGetInfoResult, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -30,7 +30,7 @@ import { useColorScheme } from '~/lib/useColorScheme';
 
 export default function WalletSettings() {
     const currentUser = useNDKCurrentUser();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList);
+    const mintList = useNDKSessionEvent<NDKCashuMintList>(NDKKind.CashuMintList);
     const { activeWallet, balance } = useNDKWallet();
     const [syncing, setSyncing] = useState(false);
     const { colors } = useColorScheme();

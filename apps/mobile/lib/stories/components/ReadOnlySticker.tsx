@@ -2,7 +2,7 @@ import {
     type NDKEvent,
     NDKStoryStickerType,
     useNDK,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -157,11 +157,10 @@ function MentionSticker({
 }: { sticker: Sticker; onLayout?: (event: LayoutChangeEvent) => void }) {
     const { ndk } = useNDK();
     const user = useMemo(
-        () => ndk.getUser({ pubkey: sticker.value as string }),
+        () => ndk?.getUser({ pubkey: sticker.value as string }),
         [ndk, sticker.value]
     );
-    const profileData = useUserProfile(user.pubkey);
-    const userProfile = profileData?.userProfile;
+    const userProfile = useProfile(user?.pubkey);
 
     const pubkeySticker = useMemo<Sticker<NDKStoryStickerType.Pubkey>>(
         () =>
@@ -197,7 +196,7 @@ function EventSticker({
     const [event, setEvent] = useState<NDKEvent | null>(null);
 
     useEffect(() => {
-        ndk.fetchEvent(sticker.value as unknown as string).then((event) => {
+        ndk?.fetchEvent(sticker.value as unknown as string).then((event) => {
             if (event) setEvent(event);
         });
     }, [sticker.value]);

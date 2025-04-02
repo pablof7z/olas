@@ -2,7 +2,7 @@ import {
     NDKCacheAdapterSqlite,
     useNDK,
     useNDKCurrentUser,
-    useProfile as useUserProfile, // Rename import to maintain usage below
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -35,7 +35,7 @@ export default function LoaderScreen({
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
-    const profileData = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey); // Use useProfile directly
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     useEffect(() => {
@@ -43,14 +43,14 @@ export default function LoaderScreen({
     }, [currentUser?.pubkey]);
 
     useEffect(() => {
-        if (!profileData?.name || !currentUser?.pubkey) return;
+        if (!userProfile?.name || !currentUser?.pubkey) return;
 
-        if (profileData.name === 'deleted-account') {
+        if (userProfile.name === 'deleted-account') {
             alert('This account has been deleted. You need to create a new account to continue.');
             if (switchToUser) switchToUser(''); // Switch to empty pubkey for logout
             resetAppSettings();
         }
-    }, [currentUser?.pubkey, profileData?.name]);
+    }, [currentUser?.pubkey, userProfile?.name]);
 
     useEffect(() => {
         if (!ndk) {

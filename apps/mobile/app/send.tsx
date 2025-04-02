@@ -9,8 +9,9 @@ import {
     NDKZapper,
     useFollows,
     useNDK,
+    useNDKCurrentUser,
     useNDKWallet,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
@@ -28,7 +29,7 @@ import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { usePaymentStore } from '@/stores/payments';
 export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     return (
         <View className="flex-1 flex-col items-center gap-2">
             <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={100} />
@@ -44,7 +45,15 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     const { activeWallet } = useNDKWallet();
     const inputRef = useRef<TextInput | null>(null);
     const [amount, setAmount] = useState(21);
-    const user = useMemo(() => ndk.getUser({ pubkey }), [pubkey]);
+    const user = useMemo(() => ndk?.getUser({ pubkey }), [pubkey, ndk]);
+
+    if (!user) {
+        // Handle case where user couldn't be fetched (e.g., ndk is null or getUser failed)
+        console.error(`Could not get user object for pubkey: ${pubkey}`);
+        toast.error("Failed to load user data.");
+        // Optionally, return a loading or error state, or null
+        return null;
+    }
 
     const [note, setNote] = useState('');
 
@@ -59,10 +68,13 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     const [methods, setMethods] = useState<Map<NDKZapMethod, NDKZapMethodInfo>>(new Map());
     const [buttonState, setButtonState] = useState<ButtonState>('idle');
     const { addPendingPayment } = usePaymentStore();
+    const currentUser = useNDKCurrentUser();
 
     useEffect(() => {
         zap.amount = amount * 1000;
-        zap.getZapMethods(ndk, pubkey).then(setMethods);
+        if (ndk) {
+            zap.getZapMethods(ndk, pubkey).then(setMethods);
+        }
     }, [pubkey]);
 
     async function send() {
@@ -72,7 +84,14 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
             setButtonState('success');
         });
         zap.zap();
-        addPendingPayment(zap);
+        if (currentUser?.pubkey) {
+            addPendingPayment(zap, currentUser.pubkey);
+        } else {
+            console.error("Cannot add pending payment: current user pubkey not found.");
+            toast.error("Error initiating payment: User not identified.");
+            setButtonState('idle'); // Reset button state if sender is missing
+            return; // Prevent further execution
+        }
         setTimeout(() => {
             router.back();
         }, 500);
@@ -110,7 +129,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
 
                     <WalletBalance
                         amount={amount}
-                        unit={(activeWallet as NDKCashuWallet).unit}
+                        unit={'sat'}
                         onPress={() => inputRef.current?.focus()}
                     />
 
@@ -142,7 +161,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
 
                             {method === 'nip61' && (
                                 <View className="flex flex-col gap-2">
-                                    {(info as CashuPaymentInfo).mints.map((mint) => {
+                                    {(info as CashuPaymentInfo)?.mints?.map((mint) => {
                                         return (
                                             <Text
                                                 key={mint}
@@ -173,19 +192,18 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
 
 function FollowItem({
     index,
-    target,
+    target, // Destructure target here
     item,
     onPress,
-}: { index: number; target: ListItemTarget; item: string; onPress: () => void }) {
-    const { userProfile } = useUserProfile(item);
+}: { index: number; target: any; item: string; onPress: () => void }) {
+    const userProfile = useProfile(item);
 
     return (
         <ListItem
-            index={index}
             target={target}
+            index={index}
             item={{
-                id: item,
-                title: '',
+                title: '', // Title is set via User.Name in leftView
             }}
             leftView={
                 <View className="flex-row items-center py-2">
@@ -244,7 +262,8 @@ export default function SendView() {
     async function getUser() {
         if (search.startsWith('npub')) {
             try {
-                const user = ndk.getUser({ npub: search });
+                const user = ndk?.getUser({ npub: search });
+                if (!user) throw new Error('User not found from npub');
                 setSelectedPubkey(user.pubkey);
                 return;
             } catch (error) {
@@ -253,6 +272,7 @@ export default function SendView() {
         }
 
         try {
+            if (!ndk) throw new Error('NDK not available');
             const user = await NDKUser.fromNip05(search, ndk);
             if (user) {
                 setSelectedPubkey(user.pubkey);
@@ -290,7 +310,7 @@ export default function SendView() {
                     renderItem={({ index, target, item }) => (
                         <FollowItem
                             index={index}
-                            target={target}
+                            target={target} // Pass target here
                             item={item}
                             onPress={() => onPress(item)}
                         />

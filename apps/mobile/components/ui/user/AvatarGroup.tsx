@@ -1,4 +1,4 @@
-import { type Hexpubkey, type NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type Hexpubkey, type NDKEvent, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useMemo } from 'react';
 import { Text, View } from 'react-native';
@@ -17,8 +17,7 @@ const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: 
     avatarSize,
     index,
 }) => {
-    const profileData = useUserProfile(pubkey);
-    const userProfile = profileData?.userProfile;
+    const userProfile = useProfile(pubkey);
 
     const style = useMemo(() => {
         return {

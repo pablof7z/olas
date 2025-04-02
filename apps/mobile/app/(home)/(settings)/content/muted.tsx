@@ -1,4 +1,5 @@
-import { NDKList, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { toast } from '@backpackapp-io/react-native-toast'; // Import toast
+import { NDKList, useMuteList, useNDK, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import type { RenderTarget } from '@shopify/flash-list';
 import { Stack, router } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
@@ -16,7 +17,8 @@ const hashtagsAtom = atom<string[]>([]);
 const pubkeysAtom = atom<string[]>([]);
 
 export default function MutedScreen() {
-    const { mutedHashtags, mutedPubkeys } = useMuteList();
+    // Update destructuring based on useMuteList return type
+    const { hashtags: mutedHashtags, pubkeys: mutedPubkeys } = useMuteList();
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
@@ -43,6 +45,11 @@ export default function MutedScreen() {
     const { ndk } = useNDK();
 
     const save = useCallback(async () => {
+        if (!ndk) {
+            console.error("NDK not available to create mute list.");
+            toast.error("Error updating mute list.");
+            return;
+        }
         const event = new NDKList(ndk);
         event.kind = 10000;
         event.tags = [...hashtags.map((h) => ['t', h]), ...pubkeys.map((p) => ['p', p])];
@@ -152,8 +159,7 @@ function MutedUserListItem({
     target,
     index,
 }: { pubkey: string; target: RenderTarget; index: number }) {
-    const profileData = useUserProfile(pubkey);
-    const userProfile = profileData?.userProfile;
+    const userProfile = useProfile(pubkey);
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {

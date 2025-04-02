@@ -1,4 +1,4 @@
-import { useNDK, useNDKWallet, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useNDK, useNDKCurrentUser, useNDKWallet, useProfile } from '@nostr-dev-kit/ndk-mobile'; // Import useNDKCurrentUser
 import { type NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
@@ -14,7 +14,7 @@ import * as User from '@/components/ui/user';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getNWCZap, getNWCZapsByPendingPaymentId } from '@/stores/db/zaps';
-import { type PendingZap, usePendingPayments } from '@/stores/payments';
+import { type Payment, usePendingPayments } from '@/stores/payments'; // Ensure Payment is imported
 
 export default function NWCListTansactions() {
     const { activeWallet } = useNDKWallet();
@@ -33,10 +33,10 @@ export default function NWCListTansactions() {
 
     useEffect(() => {
         fetchTransactions();
-        activeWallet.on('balance_updated', fetchTransactions);
+        activeWallet?.on('balance_updated', fetchTransactions); // Optional chaining
 
         return () => {
-            activeWallet.off('balance_updated', fetchTransactions);
+            activeWallet?.off('balance_updated', fetchTransactions); // Optional chaining
         };
     }, [fetchTransactions]);
 
@@ -44,19 +44,33 @@ export default function NWCListTansactions() {
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
-        const timeout = setTimeout(() => setRefreshing(false), 6000);
-        activeWallet
-            ?.updateBalance()
-            .then(() => {})
-            .catch((err) => {
-                console.error('error updating balance', err);
-            })
-            .finally(() => {
-                fetchTransactions();
-                setRefreshing(false);
-                clearTimeout(timeout);
-            });
-    }, [activeWallet?.walletId]);
+        const timeout = setTimeout(() => {
+             console.log("Refresh timeout reached");
+             setRefreshing(false);
+        }, 6000);
+
+        // Check activeWallet before calling updateBalance
+        if (activeWallet) {
+            // Explicitly cast activeWallet to NDKNWCWallet before calling method
+            (activeWallet as NDKNWCWallet).updateBalance()
+                .then(() => {
+                    console.log("Balance updated successfully");
+                })
+                .catch((err: any) => {
+                    console.error('Error updating balance:', err);
+                })
+                .finally(() => {
+                    console.log("Update balance finally block");
+                    fetchTransactions();
+                    setRefreshing(false);
+                    clearTimeout(timeout);
+                });
+        } else {
+            console.error("Cannot refresh balance: activeWallet is null.");
+            setRefreshing(false);
+            clearTimeout(timeout);
+        }
+    }, [activeWallet, fetchTransactions]);
 
     const pendingPayments = usePendingPayments();
 
@@ -70,7 +84,8 @@ export default function NWCListTansactions() {
             }
         }
 
-        return [...notFoundPendingPayments, ...txs.sort((a, b) => b.created_at - a.created_at)];
+        // Add types for sort callback
+        return [...notFoundPendingPayments, ...txs.sort((a: NDKNWCTransaction, b: NDKNWCTransaction) => (b.created_at ?? 0) - (a.created_at ?? 0))];
     }, [txs, pendingPayments.length]);
 
     return (
@@ -89,16 +104,19 @@ function Item({
     index,
     target,
     onPress,
-}: { item: PendingZap | NDKNWCTransaction; index: number; target: any; onPress: () => void }) {
+}: { item: Payment | NDKNWCTransaction; index: number; target: any; onPress: () => void }) {
+    const currentUser = useNDKCurrentUser(); // Get current user
     const { recipientPubkey, amount, type, createdAt } = useMemo(() => {
         let recipientPubkey = null;
         let amount = null;
         let createdAt = null;
-        const type: 'incoming' | 'outgoing' = 'outgoing';
+        let type: 'incoming' | 'outgoing' = 'outgoing'; // Change const to let
 
-        if ((item as NDKNWCTransaction).invoice) {
+        // Check if item is NDKNWCTransaction (has invoice) or Payment (has internalId)
+        if ('invoice' in item && item.invoice !== undefined) { // Check if item is NDKNWCTransaction
             const tx = item as NDKNWCTransaction;
-            const zapInfo = getNWCZap(tx.invoice);
+            // Ensure tx.invoice is defined before calling
+            const zapInfo = tx.invoice ? getNWCZap(tx.invoice) : null;
             if (zapInfo) {
                 recipientPubkey = zapInfo.recipient_pubkey;
             } else {
@@ -106,16 +124,22 @@ function Item({
             createdAt = tx.created_at;
             amount = tx.amount;
         } else {
-            const { zapper, internalId } = item as PendingZap;
-            recipientPubkey = zapper.target.pubkey;
-            amount = zapper.amount;
-            createdAt = Date.now() / 1000;
+            // Item is Payment (or NDKNWCTransaction without invoice)
+            const payment = item as Payment; // Assert as Payment if not NDKNWCTransaction with invoice
+            recipientPubkey = payment.recipient;
+            amount = payment.amount;
+            createdAt = payment.created_at;
+            // Determine type based on status if possible, default to outgoing
+            // Use activeWallet obtained from useNDKWallet hook
+            // Compare payment sender with current user's pubkey
+            type = (payment.status === 'confirmed' && currentUser && payment.sender !== currentUser.pubkey) ? 'incoming' : 'outgoing';
         }
 
         return { recipientPubkey, amount, createdAt, type };
-    }, [item]);
+    }, [item, currentUser]); // Add currentUser to useMemo dependencies
 
-    const isPending = !!(item as PendingZap).internalId;
+    // Check if item is Payment and has status 'pending' or 'delayed'
+    const isPending = 'status' in item && (item.status === 'pending' || item.status === 'delayed'); // Check if item is Payment and pending/delayed
 
     return (
         <ListItem
@@ -124,16 +148,20 @@ function Item({
                 index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
             )}
             target={target}
-            leftView={<LeftView direction={type} pubkey={recipientPubkey} />}
-            rightView={<ItemRightColumn amount={amount} unit="msats" isPending={isPending} />}
+            leftView={<LeftView direction={type} pubkey={recipientPubkey ?? undefined} />}
+            rightView={<ItemRightColumn amount={amount ?? 0} unit="msats" isPending={isPending} />}
             index={index}
             onPress={onPress}
-            item={{}}
+            // Construct the item prop for ListItem
+            item={{
+                title: recipientPubkey ? '' : (isPending ? 'Pending Zap' : 'Transaction'), // Title handled by Counterparty or default
+                subTitle: isPending ? 'Sending...' : undefined
+            }}
         >
             {recipientPubkey ? (
-                <Counterparty pubkey={recipientPubkey} timestamp={createdAt} />
+                <Counterparty pubkey={recipientPubkey} timestamp={createdAt ?? 0} />
             ) : (
-                <RelativeTime className="text-xs text-muted-foreground" timestamp={createdAt} />
+                <RelativeTime className="text-xs text-muted-foreground" timestamp={createdAt ?? 0} />
             )}
         </ListItem>
     );
@@ -143,7 +171,7 @@ const LeftView = ({
     direction,
     pubkey,
 }: { direction: 'incoming' | 'outgoing'; pubkey?: string }) => {
-    const { userProfile } = useUserProfile(pubkey);
+    const userProfile = useProfile(pubkey);
     const { colors } = useColorScheme();
 
     const color = colors.primary;

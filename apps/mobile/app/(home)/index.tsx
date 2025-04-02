@@ -1,12 +1,3 @@
-import {
-    type Hexpubkey,
-    type NDKEventId,
-    type NDKFilter,
-    NDKKind,
-    type NDKSubscription,
-    useNDK,
-    useNDKCurrentUser,
-} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack } from 'expo-router';
 import { useAtomValue } from 'jotai';
@@ -26,9 +17,12 @@ import { Stories } from '@/lib/stories/components/feed-item';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { videoKinds } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
+import { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-hooks';
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
+
+    console.log('Rendering <HomeScreen>');
 
     const style = useMemo<ViewStyle>(
         () => ({
@@ -78,9 +72,9 @@ function useBookmarkIds() {
 
         if (sub.current) return;
 
-        sub.current = ndk.subscribe(bookmarksFilters, bookmarksOpts, undefined, false);
+        sub.current = ndk.subscribe(bookmarksFilters, { ...bookmarksOpts, relaySet: undefined }, false);
 
-        sub.current.on('event', (event) => {
+        sub.current.on('event', (event: NDKEvent) => {
             if (event.kind !== 3006) return;
             for (const tag of event.getMatchingTags('e')) {
                 ids.add(tag[1]);
@@ -128,18 +122,19 @@ function forYouFilter(followSet: Set<string>) {
         if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
             return false;
 
-        const isFollowed = followSet.has(feedEntry.event?.pubkey);
+        const pubkey = feedEntry.event?.pubkey;
+        const isFollowed = pubkey ? followSet.has(pubkey) : false;
         if (!isFollowed) {
             // this is an unfollowed pubkey, check if they were recently shown
             const recentTimesThisPubkeyWasShown = unfollowedPubkeysRecentlyShown.filter(
-                (p) => p === feedEntry.event?.pubkey
+                (p) => p === pubkey // Use the defined pubkey variable
             ).length;
 
             if (recentTimesThisPubkeyWasShown >= FOR_YOU_UNFOLLOWED_POST_THRESHOLD) {
                 return false;
             }
 
-            unfollowedPubkeysRecentlyShown.push(feedEntry.event?.pubkey);
+            if (pubkey) unfollowedPubkeysRecentlyShown.push(pubkey); // Only push if pubkey is defined
 
             // trim the time
             if (unfollowedPubkeysRecentlyShown.length > FOR_YOU_ROLLING_POST_WINDOW_LENGTH) {
@@ -207,11 +202,13 @@ function DataList() {
             if (!searchQuery.includes(' ')) return hashtagSearch(searchQuery);
             else return textSearch(searchQuery);
         } else if (feedType.kind === 'group') {
+            // Ensure feedType.value is a string before using it in the #h filter
+            const groupHashTag = typeof feedType.value === 'string' ? [feedType.value] : [];
             return {
                 filters: [
-                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': [feedType.value] },
+                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': groupHashTag },
                 ],
-                key: `groups-${feedType.value}`,
+                key: `groups-${feedType.value ?? 'unknown'}`,
                 filterFn: null,
                 relayUrls: feedType.relayUrls,
             };
@@ -225,8 +222,8 @@ function DataList() {
         }
 
         const keyParts = [currentUser?.pubkey ?? ''];
-        if (feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
-        else keyParts.push(feedType.value);
+        if (feedType.hashtags && feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
+        else if (feedType.value) keyParts.push(feedType.value);
 
         let hashtagFilter: NDKFilter = {};
 
@@ -260,7 +257,8 @@ function DataList() {
             filterFn = (feedEntry: FeedEntry, index: number) => {
                 if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false)
                     return false;
-                return followSet.has(feedEntry.event?.pubkey);
+                const pubkey = feedEntry.event?.pubkey;
+                return pubkey ? followSet.has(pubkey) : false;
             };
         } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
             filterFn = forYouFilter(followSet);
@@ -271,11 +269,14 @@ function DataList() {
                 if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
                     return false;
 
-                const isFollowed = followSet.has(feedEntry.event?.pubkey);
+                const event = feedEntry.event;
+                if (!event) return false; // Need event to check pubkey/kind
+
+                const isFollowed = followSet.has(event.pubkey);
                 if (isFollowed) return true;
                 if (feedType.kind === 'discover' && feedType.value === 'follows') return false;
 
-                const isVideo = videoKinds.has(feedEntry.event?.kind);
+                const isVideo = videoKinds.has(event.kind);
 
                 return !isVideo || isFollowed;
             };
@@ -300,29 +301,39 @@ function DataList() {
         <View style={{ flex: 1 }}>
             <Feed
                 prepend={<Stories style={{ marginTop: headerHeight }} />}
-                filters={filters}
+                filters={filters ?? []}
                 relayUrls={relayUrls}
                 filterKey={key}
-                filterFn={filterFn}
+                filterFn={filterFn ?? undefined}
                 numColumns={numColumns}
             />
         </View>
     );
 }
 
-const kind1MustHaveMedia = (feedEntry: FeedEntry) => {
+const kind1MustHaveMedia = (feedEntry: FeedEntry): boolean => {
+    const event = feedEntry.event;
+    // If no event, assume it passes this filter. Adjust if different logic is needed.
+    if (!event) return true;
+
     // if it's a kind 1, make sure we have a URL of an image or video
-    if (feedEntry.event?.kind === 1) {
-        const imeta = feedEntry.event?.tagValue('imeta');
+    if (event.kind === 1) {
+        const imeta = event.tagValue('imeta');
         if (imeta) return true;
-        const matches = feedEntry.event?.content.match(imageOrVideoUrlRegexp);
+        const matches = event.content.match(imageOrVideoUrlRegexp);
         return matches !== null;
     }
+
+    // If event.kind is not 1, it passes this specific filter
+    return true;
 };
 
 const videosMustBeFromFollows = (feedEntry: FeedEntry, _index: number, followSet: Set<string>) => {
-    if (videoKinds.has(feedEntry.event?.kind)) {
-        return followSet.has(feedEntry.event?.pubkey);
+    const event = feedEntry.event;
+    if (!event) return true; // If no event, can't be a video from non-follow
+
+    if (videoKinds.has(event.kind)) {
+        return followSet.has(event.pubkey);
     }
     return true;
 };

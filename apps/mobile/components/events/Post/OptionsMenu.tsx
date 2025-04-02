@@ -9,7 +9,7 @@ import {
     useMuteList,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionEventKind,
+    useNDKSessionEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -54,7 +54,7 @@ function OptionsContent({
     event,
     sheetRef,
 }: { event: NDKEvent; sheetRef: React.RefObject<BottomSheetModal> }) {
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, {
+    const imageCurationSet = useNDKSessionEvent<NDKList>(NDKKind.ImageCurationSet, {
         create: NDKList,
     });
     const { colors } = useColorScheme();

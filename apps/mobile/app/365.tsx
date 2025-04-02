@@ -6,7 +6,6 @@ import {
     NDKKind,
     NDKSubscriptionCacheUsage,
     useSubscribe,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
 import { Image as ExpoImage, Image, type ImageRef, useImage } from 'expo-image';
@@ -67,7 +66,7 @@ function AnimatedBackground({
     index: number;
     scrollX: { value: number };
     cardCount: number;
-    image: ImageRef | null;
+    // image: ImageRef | null; // Removed unused prop
 }) {
     const imageAnimatedStyle = useAnimatedStyle(() => {
         const animated = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
@@ -104,8 +103,9 @@ function AnimatedBackground({
         <SafeAreaView key={`bg-item-${item.day}`} style={StyleSheet.absoluteFill}>
             <AnimatedImage
                 source={{ uri: item.imeta.url }}
-                style={[StyleSheet.absoluteFill, { blurRadius: 30 }, imageAnimatedStyle]}
-                blurhash={item.imeta.blurhash}
+                // blurRadius is not a standard style prop here, removed. Apply blur via other means if needed.
+                style={[StyleSheet.absoluteFill, imageAnimatedStyle]}
+                // blurhash removed - not directly supported by Animated.createAnimatedComponent(Image)
             />
             <View
                 style={{
@@ -212,7 +212,7 @@ function AnimatedRenderItem({
         >
             <Pressable onPress={handleCardPress}>
                 <AnimatedImage
-                    blurhash={item.imeta.blurhash}
+                    // blurhash removed - not directly supported by Animated.createAnimatedComponent(Image)
                     style={[
                         {
                             width: IMAGE_WIDTH,
@@ -247,6 +247,12 @@ export default function Wallpapers() {
 
     const [cardEntries, gridEntries] = useMemo(() => {
         const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
+
+        // Ensure dayOfTodayInTheYear is a valid number
+        if (typeof dayOfTodayInTheYear !== 'number' || dayOfTodayInTheYear <= 0) {
+            return [[], []]; // Return empty arrays if day is invalid
+        }
+
         let days = Array.from({ length: dayOfTodayInTheYear }, (_, index) => ({
             day: index + 1,
             event: null,
@@ -269,7 +275,9 @@ export default function Wallpapers() {
 
         days = days.reverse();
 
-        return [days.filter((e) => !!e.event), days];
+        // Filter both card and grid entries to ensure event and imeta are not null
+        const validEntries = days.filter((e): e is { day: number; event: NDKEvent; imeta: NDKImetaTag } => !!e.event && !!e.imeta);
+        return [validEntries, validEntries]; // Use filtered entries for both card and grid
     }, [events]);
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -334,7 +342,8 @@ export default function Wallpapers() {
                         <Animated.FlatList
                             data={cardEntries}
                             extraData={cardEntries}
-                            keyExtractor={(item) => String(item.event.id)}
+                            // Use optional chaining for keyExtractor
+                            keyExtractor={(item) => String(item.event?.id ?? item.day)}
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{
@@ -384,10 +393,11 @@ function EmptyDay() {
     return <View style={{ backgroundColor: '#ddd', flex: 1, width: '100%', height: '100%' }} />;
 }
 
-export function Olas365View({ entries }: { entries: { day: number; event: NDKImage }[] }) {
+// Adjust expected type for entries to match the filtered data
+export function Olas365View({ entries }: { entries: { day: number; event: NDKEvent; imeta: NDKImetaTag }[] }) {
     const openStory = useStoriesView();
     const handleCardPress = useCallback(
-        (event: NDKImage) => {
+        (event: NDKEvent) => { // Adjust type here as well
             openStory([event]);
             router.push('/stories');
         },
@@ -395,7 +405,7 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKIma
     );
 
     const renderItem = useCallback(
-        ({ item: { day, event } }: { item: { day: number; event: NDKImage } }) => {
+        ({ item: { day, event, imeta } }: { item: { day: number; event: NDKEvent; imeta: NDKImetaTag } }) => { // Adjust type
             return (
                 <View
                     style={{
@@ -411,7 +421,7 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKIma
                             onPress={() => handleCardPress(event)}
                         >
                             <AnimatedImage
-                                source={{ uri: event?.imetas?.[0]?.url }}
+                                source={{ uri: imeta.url }} // Use imeta directly
                                 style={{ flex: 1 }}
                             />
                         </TouchableOpacity>

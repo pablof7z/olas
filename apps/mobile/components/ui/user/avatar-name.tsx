@@ -1,4 +1,4 @@
-import { type NDKUserProfile, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKUserProfile, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback } from 'react';
 import {
     type StyleProp,
@@ -37,8 +37,10 @@ export default function AvatarAndName({
     nameStyle,
     pressableStyle,
 }: AvatarAndNameProps) {
-    const profileData = useUserProfile(!userProfile ? pubkey : undefined);
-    const _userProfile = profileData?.userProfile;
+    // Fetch profile only if userProfile prop is not provided
+    const fetchedProfile = useProfile(!userProfile ? pubkey : undefined);
+    // Use provided userProfile prop first, fallback to fetched profile
+    const _userProfile = userProfile ?? fetchedProfile;
     const __userProfile = userProfile || _userProfile;
     const flare = useUserFlare(pubkey);
     const displayFlare = skipFlare ? undefined : flare;

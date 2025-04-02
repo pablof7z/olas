@@ -3,7 +3,7 @@ import {
     NDKKind,
     type NDKStoryStickerType,
     useSubscribe,
-    useUserProfile,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import React from 'react';
 import { ActivityIndicator, type LayoutChangeEvent, View, type ViewStyle } from 'react-native';
@@ -52,7 +52,7 @@ export default function EventStickerView({ sticker, onLayout, maxWidth }: EventS
 }
 
 function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerStyle }) {
-    const { userProfile } = useUserProfile(event?.pubkey);
+    const userProfile = useProfile(event?.pubkey);
 
     // Convert NDKUserProfile to UserProfile if needed
     const profile = userProfile

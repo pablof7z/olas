@@ -1,11 +1,8 @@
 import {
-    NDKCashuMintList,
     type NDKCashuToken,
     NDKKind,
-    useNDKCurrentUser,
-    useNDKSessionEventKind,
-    useNDKWallet,
-    useSubscribe,
+    useNDKCurrentUser, useNDKWallet,
+    useSubscribe
 } from '@nostr-dev-kit/ndk-mobile';
 import {
     NDKCashuWallet,
@@ -17,7 +14,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import { Check, Delete, Trash } from 'lucide-react-native';
+import { Check, Trash } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,

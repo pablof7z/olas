@@ -1,4 +1,4 @@
-import { type NDKEvent, NDKKind, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
@@ -36,6 +36,7 @@ import { isUserProfileDeleted } from '@/lib/utils/user';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
+import { Text } from '@/components/nativewindui/Text';
 
 export const MediaSection = function MediaSection({
     event,
@@ -200,7 +201,9 @@ export default function Post({
     reposts: NDKEvent[];
     timestamp: number;
 }) {
-    const { userProfile } = useUserProfile(event.pubkey);
+    const userProfile = useProfile(event.pubkey);
+
+    console.log('rendering', event.id, 'userProfile', !!userProfile, 'pubkey', event.pubkey)
 
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {

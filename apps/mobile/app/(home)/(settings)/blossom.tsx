@@ -3,7 +3,7 @@ import {
     NDKList,
     NostrEvent,
     useNDK,
-    useNDKSessionEventKind,
+    useNDKSessionEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -26,7 +26,7 @@ import { cn } from '~/lib/cn';
 
 export default function BlossomScreen() {
     const { ndk } = useNDK();
-    const blossomList = useNDKSessionEventKind<NDKList>(NDKKind.BlossomList, { create: NDKList });
+    const blossomList = useNDKSessionEvent<NDKList>(NDKKind.BlossomList, { create: NDKList });
     const [searchText, setSearchText] = useState<string | null>(null);
     const [blossoms, setBlossoms] = useState<string[]>(
         blossomList?.items.filter((item) => item[0] === 'server').map((item) => item[1])

@@ -2,8 +2,7 @@ import {
     NDKCashuMintList,
     NDKKind,
     useNDK,
-    useNDKSession,
-    useNDKSessionEventKind,
+    useNDKSessionEvent,
     useNDKWallet,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -29,7 +28,7 @@ import { useColorScheme } from '~/lib/useColorScheme';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, {
+    const mintList = useNDKSessionEvent<NDKCashuMintList>(NDKKind.CashuMintList, {
         create: NDKCashuMintList,
     });
     const { activeWallet } = useNDKWallet();
