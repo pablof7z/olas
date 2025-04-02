@@ -22,7 +22,7 @@ import { createNip60Wallet } from '@/utils/wallet';
 
 export function SignUp() {
     const [username, setUsername] = useAtom(usernameAtom);
-    const { ndk, login } = useNDK();
+    const { ndk, addSigner } = useNDK();
     const setMode = useSetAtom(modeAtom);
     const { setActiveWallet } = useNDKWallet();
     const avatar = useAtomValue(avatarAtom);
@@ -44,7 +44,8 @@ export function SignUp() {
         }
 
         const signer = NDKPrivateKeySigner.generate();
-        await login(signer.nsec);
+        // addSigner will create and switch to the user by default
+        await addSigner(signer);
 
         let imageUrl = `https://api.dicebear.com/9.x/bottts-neutral/png?seed=${username}`;
 
@@ -63,6 +64,9 @@ export function SignUp() {
         }
 
         try {
+            if (!ndk) {
+                throw new Error("NDK instance is not available");
+            }
             const event = new NDKEvent(ndk, {
                 kind: 0,
                 content: JSON.stringify({
@@ -84,7 +88,7 @@ export function SignUp() {
             console.error('Error creating account:', error);
             Alert.alert('Error', 'Failed to create account');
         }
-    }, [username, avatar, ndk, login, setActiveWallet]);
+    }, [username, avatar, ndk, addSigner, setActiveWallet]);
 
     const switchToLogin = useCallback(() => {
         setMode('login');

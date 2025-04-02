@@ -1,13 +1,13 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
-    type NDKCacheAdapterSqlite,
-    useNDK,
-    useNDKCurrentUser,
-    useNDKUnpublishedEvents,
-    useNDKWallet,
-    useUserProfile,
-    useWOT,
-} from '@nostr-dev-kit/ndk-mobile';
+    type NDKCacheAdapter, // Use generic cache adapter type
+    useNDK, // Import from ndk-hooks
+    useNDKCurrentUser, // Import from ndk-hooks
+    useNDKUnpublishedEvents, // Import from ndk-hooks
+    useNDKWallet, // Import from ndk-hooks
+    useProfile, // Import from ndk-hooks
+    // useWOT, // Removed - hook no longer exists
+} from '@nostr-dev-kit/ndk-hooks';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon, MaterialIconName } from '@roninoss/icons';
 import { Image } from 'expo-image';
@@ -36,6 +36,7 @@ import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
 
+// ... (Keep const definitions for items like relaysItem, keyItem, etc. from lines 39-87)
 const relaysItem = {
     id: 'relays',
     title: 'Relays',
@@ -86,13 +87,14 @@ const emptyCache = {
     },
 };
 
+
 export default function SettingsIosStyleScreen() {
-    const { ndk, logout } = useNDK();
+    const { ndk, switchToUser } = useNDK(); // Changed from logout
     const currentUser = useNDKCurrentUser();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey); // Changed from { userProfile } = ...
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const defaultBlossomServer = useActiveBlossomServer();
-    const wot = useWOT();
+    // const wot = useWOT(); // Removed - hook no longer exists
     const unpublishedEvents = useNDKUnpublishedEvents();
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
     const unlinkWallet = useAppSettingsStore((s) => s.unlinkWallet);
@@ -103,8 +105,8 @@ export default function SettingsIosStyleScreen() {
         router.back();
         resetAppSettings();
         SecureStore.setItem('timeSinceLastAppSync', '0');
-        logout();
-    }, [logout, resetAppSettings]);
+        if (switchToUser) switchToUser(''); // Changed from logout()
+    }, [switchToUser, resetAppSettings]); // Changed dependency
 
     const appVersion = useMemo(() => {
         return `${Platform.OS} ${Platform.Version}`;
@@ -121,199 +123,270 @@ export default function SettingsIosStyleScreen() {
     }, [unlinkWallet, setActiveWallet]);
 
     const handleNukeDatabase = useCallback(() => {
-        const db = (ndk?.cacheAdapter as NDKCacheAdapterSqlite).db;
-        // get all the tables and delete them
-        db.runSync('DROP TABLE IF EXISTS events;');
-        db.runSync('DROP TABLE IF EXISTS profiles;');
-        db.runSync('DROP TABLE IF EXISTS relay_status;');
-        db.runSync('DROP TABLE IF EXISTS event_tags;');
-        db.runSync('PRAGMA user_version = 0;');
-        toast.success('Local database reset successfully');
-        process.exit(0);
+        // Check if the adapter has a 'db' property before casting
+        if (ndk?.cacheAdapter && typeof (ndk.cacheAdapter as any).db?.runSync === 'function') {
+            const db = (ndk.cacheAdapter as any).db; // Use 'any' for the cast after check
+            // get all the tables and delete them
+            db.runSync('DROP TABLE IF EXISTS events;');
+            db.runSync('DROP TABLE IF EXISTS profiles;');
+            db.runSync('DROP TABLE IF EXISTS relay_status;');
+            db.runSync('DROP TABLE IF EXISTS event_tags;');
+            db.runSync('PRAGMA user_version = 0;');
+            toast.success('Local database reset successfully');
+            process.exit(0);
+        } else {
+            toast.error('Could not access database to reset.');
+        }
     }, [ndk]);
-
-    const { colors } = useColorScheme();
-
-    const data = useMemo(() => {
-        const opts: ListDataItem[] = [];
+    
+    // Define the configuration for list items separately
+    const itemsConfig = useMemo(() => {
+        const config: Array<string | { type: string; title: string; subTitle?: string }> = [];
 
         if (currentUser) {
-            // opts.unshift({
-            //     id: 'wot',
-            //     title: 'Web-of-trust',
-            //     leftView: <IconView name="person-outline" className="bg-red-500" />,
-            //     rightText: <Text variant="body" className="text-muted-foreground">{wot?.size.toString() ?? '0'}</Text>,
-            // });
-
-            opts.push({
-                id: 'profile',
-                onPress: () => {
-                    router.push(`/profile?pubkey=${currentUser.pubkey}`);
-                },
-                title: (
-                    <View className="flex-row items-center gap-4">
-                        <User.Avatar
-                            pubkey={currentUser.pubkey}
-                            userProfile={userProfile}
-                            imageSize={24}
-                            canSkipBorder
-                        />
-                        <User.Name
-                            userProfile={userProfile}
-                            pubkey={currentUser.pubkey}
-                            className="text-lg font-medium text-foreground"
-                        />
-                    </View>
-                ),
-            });
+            config.push({ type: 'profile', title: userProfile?.name || userProfile?.displayName || userProfile?.nip05 || currentUser.pubkey.substring(0, 8) });
 
             if (advancedMode) {
                 if (unpublishedEvents.length) {
-                    opts.push(' ');
-                    opts.push({
-                        id: 'unpublished-events',
-                        title: 'Unpublished Events',
-                        leftView: <IconView name="warning" className="bg-green-500" />,
-                        rightText: unpublishedEvents.length,
-                        onPress: () => router.push('/unpublished'),
-                    });
+                    config.push(' '); // Section separator
+                    config.push({ type: 'unpublished-events', title: 'Unpublished Events', subTitle: `${unpublishedEvents.length} items` });
                 }
             }
 
             if (WALLET_ENABLED) {
-                opts.push('Wallet & zaps');
+                config.push('Wallet & zaps'); // Section header
                 if (activeWallet) {
                     let _name = activeWallet.type.toString();
                     if (activeWallet instanceof NDKCashuWallet) _name = activeWallet.walletId;
-
-                    opts.push({
-                        id: 'wallet-balance',
-                        title: 'Wallet',
-                        subTitle: humanWalletType(activeWallet.type),
-                        leftView: <IconView name="lightning-bolt" className="bg-orange-500" />,
-                        rightView: (
-                            <View className="m-2 flex-col items-center justify-center">
-                                <Button
-                                    variant="secondary"
-                                    className="flex-col"
-                                    onPress={handleUnlinkWallet}
-                                >
-                                    <Text className="text-sm font-medium text-red-500">Unlink</Text>
-                                </Button>
-                            </View>
-                        ),
-                        onPress: () => {
-                            if (!activeWallet) return;
-                            activeWallet.updateBalance?.();
-                            router.push('/(home)/(wallet)');
-                        },
-                    });
-
-                    opts.push({
-                        id: 'zaps',
-                        title: 'Zaps',
-                        leftView: <IconView name="lightning-bolt" className="bg-yellow-500" />,
-                        onPress: () => router.push('/(home)/(settings)/zaps'),
-                    });
+                    config.push({ type: 'wallet-balance', title: 'Wallet', subTitle: humanWalletType(activeWallet.type) });
+                    config.push({ type: 'zaps', title: 'Zaps' });
                 } else {
-                    opts.push(walletItem);
+                    config.push({ type: 'wallet-setup', title: 'Wallet' });
                 }
             }
 
-            opts.push('      ');
+            config.push('      '); // Section separator
 
-            opts.push({
-                id: 'content',
-                title: 'Content Preferences',
-                subTitle: 'Manage the type of content you see',
-                leftView: <IconView name="text" className="bg-purple-500" />,
-                onPress: () => router.push('/(home)/(settings)/content'),
-            });
+            config.push({ type: 'content', title: 'Content Preferences', subTitle: 'Manage the type of content you see' });
 
             if (advancedMode) {
-                opts.push('  ');
-
-                opts.push({
-                    id: 'blossom',
-                    title: 'Media Servers',
-                    subTitle: defaultBlossomServer,
-                    leftView: (
-                        <IconView>
-                            <Text>🌸</Text>
-                        </IconView>
-                    ),
-                    onPress: () => router.push('/(home)/(settings)/blossom'),
-                });
+                config.push('  '); // Section separator
+                config.push({ type: 'blossom', title: 'Media Servers', subTitle: defaultBlossomServer });
             }
         }
 
         if (advancedMode) {
-            opts.push('   ');
-
-            opts.push(relaysItem);
-            opts.push(keyItem);
+            config.push('   '); // Section separator
+            config.push({ type: 'relays', title: 'Relays' });
+            config.push({ type: 'key', title: 'Key' });
         }
 
         if (currentUser?.pubkey) {
-            opts.push('    ');
-
-            opts.push({
-                id: '4',
-                title: 'Logout',
-                leftView: <IconView name="send-outline" className="bg-destructive" />,
-                onPress: appLogout,
-            });
+            config.push('    '); // Section separator
+            config.push({ type: 'logout', title: 'Logout' });
         }
 
-        opts.push('        ');
+        config.push('        '); // Section separator
 
-        opts.push({
-            id: 'advanced',
-            title: 'Advanced',
-            subTitle: 'Settings for advanced users',
-            rightView: (
-                <Switch
-                    value={advancedMode}
-                    onValueChange={toggleAdvancedMode}
-                    style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-                />
-            ),
-        });
+        config.push({ type: 'advanced-toggle', title: 'Advanced', subTitle: 'Settings for advanced users' });
+
         if (advancedMode) {
-            opts.push(devItem);
-            opts.push(viewCacheContent);
-            opts.push(emptyCache);
-            opts.push({
-                id: 'nuke-database',
-                title: 'Reset local database',
-                leftView: <IconView name="database-remove" className="bg-red-500" />,
-                onPress: handleNukeDatabase,
-            });
+            config.push({ type: 'dev', title: 'Development' });
+            config.push({ type: 'cache-view', title: 'View Content cache' });
+            config.push({ type: 'cache-empty', title: 'Empty Content cache' });
+            config.push({ type: 'nuke-database', title: 'Reset local database' });
         }
 
-        opts.push(`Version ${appVersion} (${buildVersion})`);
+        config.push(`Version ${appVersion} (${buildVersion})`); // Footer string
 
         if (currentUser?.pubkey) {
-            opts.push('       ');
-
-            opts.push({
-                id: 'delete',
-                title: 'Delete Account',
-                leftView: <IconView name="delete-outline" className="bg-destructive" />,
-                onPress: () => router.push('/(home)/(settings)/delete-account'),
-            });
+            config.push('       '); // Section separator
+            config.push({ type: 'delete', title: 'Delete Account' });
         }
-
-        return opts;
+        return config;
     }, [
-        currentUser?.pubkey,
-        activeWallet?.walletId,
-        wot,
+        currentUser, // Use currentUser object
+        activeWallet, // Use activeWallet object
         defaultBlossomServer,
         unpublishedEvents.length,
         advancedMode,
-        userProfile?.name,
+        userProfile, // Use userProfile object
+        appVersion,
+        buildVersion,
+        // Handlers are used in renderItem, no need for dependency here if renderItem is defined in scope
     ]);
+
+    // Map the config to the format expected by the List component's data prop
+    const dataForList = useMemo(() => {
+        return itemsConfig.map(item => {
+            if (typeof item === 'string') return item;
+            return { title: item.title, subTitle: item.subTitle };
+        });
+    }, [itemsConfig]);
+
+    // Define renderItem within the component scope to access state and handlers
+    const renderItem = useCallback((info: ListRenderItemInfo<ListDataItem>) => {
+        const configItem = itemsConfig[info.index]; // Get full config using index
+
+        if (typeof info.item === 'string') {
+            // Handle section headers (string items) and footers
+            if (info.item.startsWith('Version')) {
+                return <ListSectionHeader {...info} textClassName="normal-case text-muted-foreground text-center"/>;
+            }
+            return <ListSectionHeader {...info} />;
+        }
+
+        // Handle object items based on the 'type' stored in configItem
+        let leftView: React.ReactNode = null;
+        let rightView: React.ReactNode = <ChevronRight />;
+        let onPress: (() => void) | undefined = undefined;
+        let itemTitle: string | React.ReactNode = info.item.title; // Default to string title
+
+        // Assign props based on type from the original config
+        switch (typeof configItem === 'object' ? configItem.type : null) { // Handle string case
+            case 'profile':
+                 // Use React Node for title to include Avatar and Name
+                 itemTitle = (
+                     <View className="flex-row items-center gap-4">
+                         <User.Avatar
+                             pubkey={currentUser?.pubkey ?? ''} // Pass empty string if undefined
+                             userProfile={userProfile}
+                             imageSize={24}
+                             canSkipBorder
+                         />
+                         <User.Name
+                             userProfile={userProfile}
+                             pubkey={currentUser?.pubkey ?? ''} // Pass empty string if undefined
+                             className="text-lg font-medium text-foreground"
+                         />
+                     </View>
+                 );
+                 leftView = null; // Avatar/Name are now part of the title element
+                 onPress = () => {
+                     if (currentUser?.pubkey) router.push(`/profile?pubkey=${currentUser.pubkey}`); // Check pubkey exists
+                 };
+                 break;
+            case 'unpublished-events':
+                leftView = <IconView name="delete-circle-outline" className="bg-orange-500" />;
+                rightView = (
+                     <View className="flex-1 flex-row items-center justify-center gap-2 px-4">
+                         <Text variant="callout" className="ios:px-0 px-2 text-muted-foreground">
+                             {unpublishedEvents.length}
+                         </Text>
+                         <ChevronRight />
+                     </View>
+                );
+                onPress = () => router.push('/unpublished');
+                break;
+             case 'wallet-balance':
+                 leftView = <IconView name="lightning-bolt" className="bg-orange-500" />;
+                 rightView = (
+                     <View className="m-2 flex-col items-center justify-center">
+                         <Button variant="secondary" className="flex-col" onPress={handleUnlinkWallet}>
+                             <Text className="text-sm font-medium text-red-500">Unlink</Text>
+                         </Button>
+                     </View>
+                 );
+                 onPress = () => {
+                     if (!activeWallet) return;
+                     activeWallet?.updateBalance?.(); // Check activeWallet exists
+                     router.push('/(home)/(wallet)');
+                 };
+                 break;
+             case 'zaps':
+                 leftView = <IconView name="lightning-bolt" className="bg-yellow-500" />;
+                 onPress = () => router.push('/(home)/(settings)/zaps');
+                 break;
+             case 'wallet-setup':
+                 leftView = <IconView name="lightning-bolt" className="bg-green-500" />;
+                 onPress = () => router.push('/(home)/(settings)/wallets');
+                 break;
+             case 'content':
+                 leftView = <IconView name="format-list-bulleted" className="bg-purple-500" />;
+                 onPress = () => router.push('/(home)/(settings)/content');
+                 break;
+             case 'blossom':
+                 leftView = <IconView><Text>🌸</Text></IconView>;
+                 onPress = () => router.push('/(home)/(settings)/blossom');
+                 break;
+             case 'relays':
+                 leftView = <IconView name="wifi" className="bg-blue-500" />;
+                 onPress = () => router.push('/(home)/(settings)/relays');
+                 break;
+             case 'key':
+                 leftView = <IconView name="key-outline" className="bg-gray-500" />;
+                 onPress = () => router.push('/(home)/(settings)/key');
+                 break;
+             case 'logout':
+                 leftView = <IconView name="power" className="bg-destructive" />; // Trying 'power' icon again
+                 onPress = appLogout;
+                 break;
+             case 'advanced-toggle':
+                 leftView = null; // No icon needed for toggle usually
+                 rightView = (
+                     <Switch
+                         value={advancedMode}
+                         onValueChange={toggleAdvancedMode}
+                         style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                     />
+                 );
+                 break;
+             case 'dev':
+                 leftView = <IconView name="code-braces" className="bg-green-500" />;
+                 onPress = () => router.push('/(home)/(settings)/dev');
+                 break;
+             case 'cache-view':
+                 leftView = <IconView name="tray-arrow-up" className="bg-red-500" />;
+                 onPress = () => router.push('/(home)/(settings)/content/cache');
+                 break;
+             case 'cache-empty':
+                 leftView = <IconView name="tray-arrow-up" className="bg-red-500" />;
+                 onPress = () => {
+                     Image.clearDiskCache();
+                     Image.clearMemoryCache();
+                     toast.success('Content cache cleared');
+                 };
+                 break;
+             case 'nuke-database':
+                 leftView = <IconView name="database-remove-outline" className="bg-red-500" />;
+                 onPress = handleNukeDatabase;
+                 break;
+             case 'delete':
+                 leftView = <IconView name="delete-off-outline" className="bg-destructive" />; // Using suggested icon
+                 onPress = () => router.push('/(home)/(settings)/delete-account');
+                 break;
+             default:
+                 rightView = null;
+                 break;
+        }
+
+        return (
+            <ListItem
+                // Pass item which contains { title, subTitle }
+                item={{...info.item, title: itemTitle as string}} // Cast title
+                // Pass other props determined by the switch case
+                leftView={leftView}
+                rightView={rightView}
+                onPress={onPress}
+                // Pass original ListRenderItemInfo props
+                index={info.index}
+                target={info.target}
+                // separators={info.separators} // Removed
+                // Pass props needed by ListItem internal logic
+                // isFirstInSection={info.isFirstInSection} // Removed
+                // isLastInSection={info.isLastInSection} // Removed
+                // variant={info.variant} // Removed
+                // sectionHeaderAsGap={info.sectionHeaderAsGap} // Removed
+                // Add styling etc.
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
+                titleClassName="text-lg" // Apply default title class
+            />
+        );
+    }, [itemsConfig, currentUser, userProfile, activeWallet, unpublishedEvents, advancedMode, defaultBlossomServer, handleUnlinkWallet, appLogout, toggleAdvancedMode, handleNukeDatabase]); // Add dependencies used inside renderItem
+
 
     return (
         <>
@@ -322,62 +395,23 @@ export default function SettingsIosStyleScreen() {
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
                 variant="insets"
-                data={data}
+                data={dataForList} // Use the mapped data
                 estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
+                renderItem={renderItem} // Use the memoized renderItem
+                keyExtractor={keyExtractor} // Use the updated keyExtractor
             />
         </>
     );
 }
 
-function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>) {
-    if (typeof info.item === 'string') {
-        return <ListSectionHeader {...info} />;
-    }
-    return (
-        <ListItem
-            className={cn(
-                'ios:pl-0 pl-2',
-                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
-            )}
-            titleClassName="text-lg"
-            leftView={info.item.leftView}
-            rightView={
-                info.item.rightView ? (
-                    info.item.rightView
-                ) : (
-                    <View className="flex-1 flex-row items-center justify-center gap-2 px-4">
-                        {info.item.rightText && (
-                            <Text variant="callout" className="ios:px-0 px-2 text-muted-foreground">
-                                {info.item.rightText}
-                            </Text>
-                        )}
-                        {info.item.badge && (
-                            <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text
-                                    variant="footnote"
-                                    className="font-bold leading-4 text-destructive-foreground"
-                                >
-                                    {info.item.badge}
-                                </Text>
-                            </View>
-                        )}
-                        <ChevronRight />
-                    </View>
-                )
-            }
-            {...info}
-            onPress={() => info.item.onPress?.()}
-        />
-    );
-}
+// Removed duplicate renderItem function
 
 function ChevronRight() {
     const { colors } = useColorScheme();
-    return <Icon name="chevron-right" size={17} color={colors.grey} />;
+    return <Icon name="chevron-right" size={24} color={colors.grey} />;
 }
 
-function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | string) {
-    return typeof item === 'string' ? item : item.id;
+function keyExtractor(item: ListDataItem | string, index: number): string {
+    if (typeof item === 'string') return `header-${index}`;
+    return item.title ?? `item-${index}`; // Use title or index as key
 }

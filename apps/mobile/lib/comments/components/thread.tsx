@@ -1,10 +1,8 @@
-import { type NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useObserver } from '@nostr-dev-kit/ndk-mobile';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Comment } from './comment';
-
-import { useObserver } from '@/hooks/observer';
 
 export function Thread({
     event,

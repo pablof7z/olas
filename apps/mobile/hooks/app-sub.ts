@@ -6,13 +6,13 @@ import {
     type NDKUser,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionInit,
+    useNDKSessions,
+    useObserver,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as SecureStore from 'expo-secure-store';
 import { useAtom } from 'jotai';
 import { useEffect, useRef } from 'react';
 
-import { useObserver } from './observer';
 import { useUserFlareStore } from './user-flare';
 
 import { settingsStore } from '@/lib/settings-store';
@@ -29,7 +29,7 @@ const sessionKinds = new Map([
 export function useSessionSub() {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
-    const initializeSession = useNDKSessionInit();
+    const initializeSession = useNDKSessions(s => s.initSession);
     const [appReady, setAppReady] = useAtom(appReadyAtom);
     const timeoutRef = useRef(null);
 

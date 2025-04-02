@@ -2,7 +2,7 @@ import {
     NDKCacheAdapterSqlite,
     useNDK,
     useNDKCurrentUser,
-    useUserProfile,
+    useProfile as useUserProfile, // Rename import to maintain usage below
 } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -31,7 +31,7 @@ export default function LoaderScreen({
     const inset = useSafeAreaInsets();
     const haveInterval = useRef(false);
     const [_ignoreWot, setIgnoreWot] = useState(true);
-    const { ndk, logout } = useNDK();
+    const { ndk, switchToUser } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
@@ -43,14 +43,14 @@ export default function LoaderScreen({
     }, [currentUser?.pubkey]);
 
     useEffect(() => {
-        if (!profileData?.userProfile?.name || !currentUser?.pubkey) return;
+        if (!profileData?.name || !currentUser?.pubkey) return;
 
-        if (profileData.userProfile.name === 'deleted-account') {
+        if (profileData.name === 'deleted-account') {
             alert('This account has been deleted. You need to create a new account to continue.');
-            logout();
+            if (switchToUser) switchToUser(''); // Switch to empty pubkey for logout
             resetAppSettings();
         }
-    }, [currentUser?.pubkey, profileData?.userProfile?.name]);
+    }, [currentUser?.pubkey, profileData?.name]);
 
     useEffect(() => {
         if (!ndk) {

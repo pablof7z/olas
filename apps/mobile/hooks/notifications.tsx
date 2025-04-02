@@ -6,12 +6,10 @@ import {
     type NostrEvent,
     useNDK,
     useNDKCurrentUser,
-    useSubscribe,
+    useObserver
 } from '@nostr-dev-kit/ndk-mobile';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
-import { useObserver } from './observer';
 
 import { registerForPushNotificationsAsync } from '@/lib/notifications';
 import { useAppSettingsStore } from '@/stores/app';

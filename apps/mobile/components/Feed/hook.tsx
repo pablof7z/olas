@@ -6,8 +6,6 @@ import NDK, {
     NDKKind,
     NDKRelaySet,
     type NDKSubscription,
-    NDKSubscriptionCacheUsage,
-    useMuteFilter,
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';

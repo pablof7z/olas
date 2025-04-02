@@ -4,15 +4,14 @@ import '@bacons/text-decoder/install';
 import { Toasts } from '@backpackapp-io/react-native-toast';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
-import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+import type { NDKRelay } from '@nostr-dev-kit/ndk'; // Import NDKRelay type
 import { PortalHost } from '@rn-primitives/portal';
 import { type ScreenProps, Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SettingsStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useAtom, useSetAtom } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -31,7 +30,6 @@ import FeedEditorBottomSheet from '@/lib/feed-editor/bottom-sheet';
 import { initializeNDK } from '@/lib/ndk';
 import { ProductViewBottomSheet } from '@/lib/product-view/bottom-sheet';
 import ReactionPickerBottomSheet from '@/lib/reaction-picker/bottom-sheet';
-import { settingsStore } from '@/lib/settings-store';
 import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
@@ -39,8 +37,6 @@ import { relayNoticesAtom } from '@/stores/relays';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
-import { NAV_THEME } from '~/theme';
-import { Text } from '@/components/nativewindui/Text';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -66,7 +62,6 @@ const _appRenderCount = 0;
 
 export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
-    useNDKInit(ndk, settingsStore);
 
     useEffect(() => {
         setAppReady(true);
@@ -114,11 +109,14 @@ export function RootLayout() {
 
     useEffect(() => {
         if (!ndk) return;
-        ndk.pool.on('notice', (relay, notice) => {
-            setRelayNotices((prev) => ({
-                ...prev,
-                [relay?.url]: [...(prev[relay?.url] || []), notice],
-            }));
+        ndk.pool.on('notice', (relay: NDKRelay | null, notice: string) => {
+            if (relay?.url) {
+                const url = relay.url; // Ensure url is a string
+                setRelayNotices((prev) => ({
+                    ...prev,
+                    [url]: [...(prev[url] || []), notice],
+                }));
+            }
         });
     }, [ndk]);
 
@@ -141,7 +139,7 @@ export function RootLayout() {
                 <BottomSheetModalProvider>
                     <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
                         <ActionSheetProvider>
-                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                            <>
                                 <PortalHost />
                                 <Stack>
                                     <Stack.Screen name="login" />
@@ -233,7 +231,7 @@ export function RootLayout() {
                                 <CommentsBottomSheet />
                                 <ZapperBottomSheet />
                                 <ProductViewBottomSheet />
-                            </NavThemeProvider>
+                            </>
                         </ActionSheetProvider>
                         <Toasts />
                         <DevelopmentStatus />

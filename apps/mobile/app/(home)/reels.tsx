@@ -4,8 +4,9 @@ import {
     NDKSubscriptionCacheUsage,
     type NDKVideo,
     useNDK,
+    useObserver,
+    useProfile,
     useSubscribe,
-    useUserProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
@@ -29,7 +30,6 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { useObserver } from '@/hooks/observer';
 import { getClientName } from '@/utils/event';
 
 const visibleItemAtom = atom<string | null, [string | null], void>(null, (_get, set, update) => {
@@ -42,7 +42,7 @@ const Reel = memo(
         const isVisible = visibleItem === event.id;
         const [isLoading, setIsLoading] = useState(true);
         const videoRef = useRef<VideoView>(null);
-        const { userProfile } = useUserProfile(event.pubkey);
+        const userProfile = useProfile(event.pubkey);
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
         const pathname = usePathname();

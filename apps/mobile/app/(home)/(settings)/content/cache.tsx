@@ -1,4 +1,4 @@
-import type { NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { useObserver, type NDKImage } from '@nostr-dev-kit/ndk-mobile';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system';
@@ -6,8 +6,6 @@ import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import { Alert, Button, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-
-import { useObserver } from '@/hooks/observer';
 
 function ContentCacheScreen() {
     const navigation = useNavigation();

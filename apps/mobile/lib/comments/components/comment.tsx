@@ -3,7 +3,8 @@ import {
     type NDKEvent,
     NDKKind,
     useNDKCurrentUser,
-    useUserProfile,
+    useObserver,
+    useProfile,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
@@ -18,14 +19,13 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { useObserver } from '@/hooks/observer';
 import { useUserFlare } from '@/hooks/user-flare';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { colorWithOpacity } from '@/theme/colors';
 
 export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<ViewStyle> }) {
-    const { userProfile } = useUserProfile(item.pubkey);
+    const userProfile = useProfile(item.pubkey);
     const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();

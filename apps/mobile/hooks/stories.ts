@@ -11,8 +11,6 @@ import {
 } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useObserver } from './observer';
-
 type StoryEntry = {
     events: NDKEvent[];
     live: boolean;

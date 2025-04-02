@@ -15,7 +15,6 @@ import { create } from 'zustand';
 
 import { useAppSettingsStore } from '@/stores/app';
 import { db } from '@/stores/db';
-import { dbGetMintInfo, dbGetMintKeys, dbSetMintInfo, dbSetMintKeys } from '@/stores/db/cashu';
 import { usePaymentStore } from '@/stores/payments';
 import { useDebounce } from '@/utils/debounce';
 import NDK from '@nostr-dev-kit/ndk';
@@ -51,7 +50,7 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, _get) => 
                     if (loadingEventIds.has(event.id)) return;
 
                     loadingEventIds.add(event.id);
-                    NDKCashuWallet.from(event)
+                    NDKCashuWallet.from(event as any) // Cast to any to resolve type conflict
                         .then((newWallet) => set({ wallet: newWallet }))
                         .catch((e) =>
                             console.error(
@@ -85,29 +84,36 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
     }, [pubkey]);
 
     useEffect(() => {
-        if (!(activeWallet instanceof NDKCashuWallet)) return;
+        if (!(activeWallet instanceof NDKCashuWallet) || !(ndk.cacheAdapter instanceof NDKCacheAdapterSqlite)) {
+            // If the wallet is not Cashu or the cache adapter is not SQLite, we can't use the DB methods
+            // Potentially log a warning or handle this case appropriately
+            console.warn("Wallet is not NDKCashuWallet or CacheAdapter is not SQLite. Cannot set DB callbacks.");
+            return;
+        }
+
+        const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
 
         activeWallet.onMintInfoLoaded = (mint, mintInfo) => {
-            dbSetMintInfo(mint, mintInfo);
+            cacheAdapter.setMintInfo(mint, mintInfo);
         };
 
         activeWallet.onMintKeysLoaded = (mint, keyMap) => {
             for (const [keysetId, keys] of keyMap.entries()) {
-                dbSetMintKeys(mint, keysetId, keys);
+                cacheAdapter.setMintKeys(mint, keysetId, keys);
             }
         };
 
         activeWallet.onMintInfoNeeded = (mint) => {
-            const mintInfo = dbGetMintInfo(mint);
+            const mintInfo = cacheAdapter.getMintInfo(mint);
             if (mintInfo) return Promise.resolve(mintInfo);
             return Promise.resolve(undefined);
         };
 
         activeWallet.onMintKeysNeeded = (mint) => {
-            const keys = dbGetMintKeys(mint);
+            const keys = cacheAdapter.getMintKeys(mint);
             return Promise.resolve(keys);
         };
-    }, [activeWallet?.walletId]);
+    }, [activeWallet?.walletId, ndk.cacheAdapter]); // Add ndk.cacheAdapter dependency
 
     const setWalletConfig = useAppSettingsStore((s) => s.setWalletConfig);
 
@@ -125,7 +131,7 @@ export function useWalletMonitor(ndk: NDK, pubkey: Hexpubkey) {
 
         if (walletType === 'none') return;
         else if (walletType === 'nwc' && walletPayload) {
-            wallet = new NDKNWCWallet(ndk, { pairingCode: walletPayload });
+            wallet = new NDKNWCWallet(ndk as any, { pairingCode: walletPayload }); // Cast to any
         } else if (nip60Wallet) {
             const cacheAdapter = ndk.cacheAdapter;
             let since: number | undefined;
@@ -212,7 +218,7 @@ export function useNutzapMonitor(ndk: NDK, pubkey: Hexpubkey) {
         if (!cashuWallet || !nutzapMonitor) return;
         if (activeWallet instanceof NDKCashuWallet) return;
 
-        nutzapMonitor.wallet = activeWallet;
+        nutzapMonitor.wallet = activeWallet ?? undefined;
     }, [cashuWallet, nutzapMonitor, activeWallet]);
 
     useEffect(() => {
@@ -225,7 +231,7 @@ export function useNutzapMonitor(ndk: NDK, pubkey: Hexpubkey) {
                 setHasOldWallets(hasNonDeleted);
                 if (hasNonDeleted) {
                     toast('Migrating nostr-wallets, this may take some time');
-                    migrateCashuWallet(ndk).then(() => setHasOldWallets(false));
+                    migrateCashuWallet(ndk as any).then(() => setHasOldWallets(false)); // Cast to any
                 }
             }
         );

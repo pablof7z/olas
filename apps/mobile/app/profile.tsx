@@ -10,6 +10,7 @@ import {
     type NostrEvent,
     useNDK,
     useNDKCurrentUser,
+    useObserver,
     useSubscribe,
     useUserProfile,
     useUsersStore,
@@ -54,7 +55,6 @@ import ReelIcon from '@/components/icons/reel';
 import EventMediaContainer from '@/components/media/event';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { useObserver } from '@/hooks/observer';
 import { useUserFlare } from '@/hooks/user-flare';
 import { uploadMedia } from '@/lib/publish/actions/upload';
 import { useColorScheme } from '@/lib/useColorScheme';

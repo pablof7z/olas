@@ -1,10 +1,7 @@
-import { NDKEvent, NDKKind, NDKUser, type NostrEvent } from '@nostr-dev-kit/ndk-mobile';
-import { Bookmark } from 'lucide-react-native';
-import { useCallback, useMemo } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import { useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { Text } from '@/components/nativewindui/Text';
-import { useObserver } from '@/hooks/observer';
 
 type BookmarkProps = {
     /**
