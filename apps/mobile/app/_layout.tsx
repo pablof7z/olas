@@ -21,6 +21,7 @@ import { PromptForNotifications } from './notification-prompt';
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { type FeedType, feedTypeAtom } from '@/components/FeedType/store';
 import LoaderScreen from '@/components/LoaderScreen';
+import SessionMonitor from '@/components/SessionMonitor';
 import { TagSelectorBottomSheet } from '@/components/TagSelectorBottomSheet';
 import PostOptionsMenu from '@/components/events/Post/OptionsMenu';
 import AppReady from '@/components/headless/AppReady';
@@ -35,10 +36,9 @@ import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { relayNoticesAtom } from '@/stores/relays';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
-import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
-import { Text } from '@/components/nativewindui/Text';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -60,13 +60,9 @@ const modalPresentation = (
     return { presentation, headerShown, ...opts };
 };
 
-const _appRenderCount = 0;
-
 export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
     const initializeNDK = useNDKInit();
-
-    console.log('rendering App')
 
     useEffect(() => {
         initializeNDK(ndk);
@@ -74,7 +70,8 @@ export default function App() {
     }, []);
     return (
         <LoaderScreen appReady={appReady} wotReady>
-             {!!ndk && <RootLayout />}
+            <SessionMonitor />
+             <RootLayout />
         </LoaderScreen>
     );
 }

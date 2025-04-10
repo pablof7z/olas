@@ -55,6 +55,7 @@ export function initializeNDK(currentUser?: Hexpubkey) {
         },
         ...opts,
     });
+    cacheAdapter.ndk = ndk;
     if (currentUser) ndk.activeUser = ndk.getUser({ pubkey: currentUser });
 
     ndk.connect();

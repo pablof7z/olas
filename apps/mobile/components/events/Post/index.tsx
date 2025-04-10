@@ -28,6 +28,7 @@ import { InlinedComments, Reactions } from './Reactions';
 
 import Lightning from '@/components/icons/lightning';
 import EventMediaContainer from '@/components/media/event';
+import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
 import { useZap } from '@/hooks/zap';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
@@ -36,7 +37,6 @@ import { isUserProfileDeleted } from '@/lib/utils/user';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
-import { Text } from '@/components/nativewindui/Text';
 
 export const MediaSection = function MediaSection({
     event,
@@ -202,8 +202,6 @@ export default function Post({
     timestamp: number;
 }) {
     const userProfile = useProfile(event.pubkey);
-
-    console.log('rendering', event.id, 'userProfile', !!userProfile, 'pubkey', event.pubkey)
 
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {

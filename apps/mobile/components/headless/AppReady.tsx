@@ -1,8 +1,8 @@
-import { useAppSub, useSessionSub } from '@/hooks/app-sub';
+import { useAppSub } from '@/hooks/app-sub';
 
 export default function AppReady() {
     useAppSub();
-    useSessionSub();
+    // useSessionSub();
 
     return null;
 }

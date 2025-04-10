@@ -295,7 +295,7 @@ function HistoryItemEvent({
 
     // Ensure amount is valid
     if (typeof walletChange.amount !== 'number' || walletChange.amount < 0) {
-        console.error("Invalid amount in walletChange data for item:", item.id, walletChange);
+        console.error("Invalid amount in walletChange data for item:", item.id, typeof walletChange.amount);
         return <ListItem index={index} target={target} item={{ title: "Invalid Amount" }} />;
     }
 

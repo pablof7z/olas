@@ -24,18 +24,18 @@ export function useStories() {
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60 * 10;
     const filters = useMemo(() => {
         const filters: NDKFilter[] = [{ kinds: [NDKKind.Story], since: twentyFourHoursAgo }];
-        if (follows?.length > 0) {
+        if (follows?.size > 0) {
             filters.push({
                 kinds: [NDKKind.VerticalVideo, NDKKind.ShortVideo],
-                authors: follows,
+                authors: Array.from(follows),
                 since: twentyFourHoursAgo,
             });
         }
         return filters;
-    }, [follows?.length]);
+    }, [follows?.size]);
     const { events } = useSubscribe<NDKImage | NDKVideo | NDKStory>(
         filters,
-        { wrap: true, cacheUnconstrainFilter: [] },
+        { skipValidation: true, wrap: true, cacheUnconstrainFilter: [] },
         [filters]
     );
 

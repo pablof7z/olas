@@ -1,41 +1,39 @@
-import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
-import { useEffect, useState } from 'react';
+import { useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
+import { useEffect, useState } from "react";
 
-import { useNip60WalletStore, useNutzapMonitor, useWalletMonitor } from '@/hooks/wallet';
+import { useNip60WalletStore, useNutzapMonitor, useWalletMonitor } from "@/hooks/wallet";
 
 export default function SignerReady() {
     const { ndk } = useNDK();
-    const [signerReady, setSignerReady] = useState(!!ndk?.signer);
+    const currentUser = useNDKCurrentUser();
+    const [signerReady, setSignerReady] = useState(!!ndk?.signer && !!currentUser?.pubkey);
 
     useEffect(() => {
         if (signerReady || !ndk) return;
-        ndk.once('signer:ready', () => {
+        ndk.once("signer:ready", () => {
             setSignerReady(true);
         });
-    }, [ndk, signerReady])
+    }, [ndk, signerReady, currentUser]);
 
-    if (!signerReady) return null;
-    
+    if (!signerReady || !currentUser) return null;
+
     return <SignerIsReady />;
 }
 
 function SignerIsReady() {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
-    const initNip60Wallet = useNip60WalletStore((state) => state.init);
+    const initNip60Wallet = useNip60WalletStore.getState().init;
 
-    useWalletMonitor(ndk, currentUser?.pubkey);
+    useWalletMonitor(currentUser?.pubkey);
 
-    console.log('SignerReady');
-    
     useEffect(() => {
-        console.log('SignerReady useEffect', currentUser?.pubkey);
-        if (currentUser?.pubkey) {
-            initNip60Wallet(ndk, currentUser?.pubkey);
-        }
+        if (!ndk || !currentUser?.pubkey) return;
+
+        initNip60Wallet(ndk, currentUser?.pubkey);
     }, [ndk, currentUser?.pubkey]);
 
-    useNutzapMonitor(ndk, currentUser?.pubkey);
+    useNutzapMonitor(ndk!, currentUser!.pubkey);
 
     return null;
 }

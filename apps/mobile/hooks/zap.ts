@@ -33,7 +33,7 @@ export const useZap = () => {
          * @param delayMs - Amount of time to wait before actually zapping. When called with a delay, a cancel function is returned.
          * @returns
          */
-        (message, sats: number, target: NDKEvent | NDKUser, delayMs = 0) => {
+        (message: string, sats: number, target: NDKEvent | NDKUser, delayMs = 0) => {
             if (!activeWallet) {
                 alert("You don't have a wallet connected yet.");
                 router.push('/wallets');

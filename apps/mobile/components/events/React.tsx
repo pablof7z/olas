@@ -51,7 +51,6 @@ export function useReactEvent() {
             addRelatedEvents([r], true);
 
             r.publish()
-                .then((_relays) => {})
                 .catch((e) => {
                     console.error(e);
                 });

@@ -6,8 +6,8 @@
     "dev:mobile": "turbo dev --filter=\"{./apps/mobile}...\"",
     "lint": "biome check .",
     "test": "turbo test",
-    "build": "turbo build",
-    "build:mobile": "turbo build --filter=\"...{./apps/mobile}\"",
+    "prepare": "turbo build --filter=@nostr-dev-kit/ndk-wallet",
+    "build": "turbo build --filter=@nostr-dev-kit/ndk-wallet; turbo build --filter=@nostr-dev-kit/ndk-mobile; turbo build --filter=\"...{./apps/mobile}\"",
     "format": "biome format --write ."
   },
   "devDependencies": {
@@ -41,6 +41,7 @@
     "@expo-google-fonts/inter": "^0.2.3",
     "@expo-google-fonts/pacifico": "^0.2.3",
     "@expo-google-fonts/permanent-marker": "^0.2.3",
+        "@nostr-dev-kit/ndk-wallet": "workspace:*",
     "expo-font": "^13.0.4",
     "expo-linear-gradient": "~14.0.2"
   }

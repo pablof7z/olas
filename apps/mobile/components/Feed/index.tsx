@@ -60,10 +60,10 @@ export default function Feed({
         { subId: 'feed', filterFn, relayUrls, ...filterOpts },
         [filterKey + refreshCount]
     );
-    // const { setActiveIndex } = useFeedMonitor(
-    //     entries.map((e) => e.event),
-    //     sliceIndex
-    // );
+    const { setActiveIndex } = useFeedMonitor(
+        entries.map((e) => e.event).filter(e => !!e),
+        sliceIndex
+    );
 
     const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
 
@@ -73,10 +73,9 @@ export default function Feed({
             if (visibleIndex.current === 0 && showNewEntriesPrompt) {
                 setShowNewEntriesPrompt(false);
             }
-            // setActiveIndex(visibleIndex.current);
+            setActiveIndex(visibleIndex.current);
         },
-        [showNewEntriesPrompt]
-        // [setActiveIndex, showNewEntriesPrompt]
+        [setActiveIndex, showNewEntriesPrompt]
     );
 
     const update = useCallback(() => {
@@ -137,8 +136,6 @@ export default function Feed({
 
         return ret;
     }, [entries, prepend, numColumns]);
-
-    console.log('Feed renderEntries', renderEntries.length)
 
     const handleGridPress = useCallback((event: NDKEvent) => {
         setActiveEvent(event);

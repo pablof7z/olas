@@ -1,5 +1,5 @@
-import { NDKEvent, NDKKind, getRootTag } from '@nostr-dev-kit/ndk-mobile';
-import { create } from 'zustand';
+import { NDKEvent, NDKKind, getRootTag } from "@nostr-dev-kit/ndk-mobile";
+import { create } from "zustand";
 
 export type ReactionStats = {
     reactionCount: number;
@@ -42,12 +42,19 @@ export const useReactionsStore = create<ReactionsStore>((set, _get) => ({
     reactions: new Map(),
 
     addEvents: (events: NDKEvent[], currentPubkey?: string | boolean) => {
+        if (events.length === 0) return; // Early return if no events
+
         set((state: ReactionsStore) => {
+            // Filter out events that are already in the store
+            const newEvents = events.filter((event) => !state.seenEventIds.has(event.id));
+            if (newEvents.length === 0) return state; // No changes if all events are already seen
+
             const newSeenEventIds = new Set(state.seenEventIds);
             const newReactions = new Map(state.reactions);
 
-            for (const event of events) {
-                if (newSeenEventIds.has(event.id)) continue;
+            for (const event of newEvents) {
+                // Iterate over newEvents only
+                // No need to check newSeenEventIds here as we filtered already
                 newSeenEventIds.add(event.id);
 
                 const targetRootEventId = getTargetRootEventId(event);
@@ -55,9 +62,7 @@ export const useReactionsStore = create<ReactionsStore>((set, _get) => ({
                     continue;
                 }
 
-                const stats = cloneReactionStats(
-                    newReactions.get(targetRootEventId) || DEFAULT_STATS
-                );
+                const stats = cloneReactionStats(newReactions.get(targetRootEventId) || DEFAULT_STATS);
                 updateStats(stats, event, currentPubkey);
                 newReactions.set(targetRootEventId, stats);
             }
@@ -74,11 +79,7 @@ function getTargetRootEventId(event: NDKEvent): string | undefined {
     return rootTag?.[1];
 }
 
-function updateStats(
-    stats: ReactionStats,
-    event: NDKEvent,
-    currentPubkey?: string | boolean
-): void {
+function updateStats(stats: ReactionStats, event: NDKEvent, currentPubkey?: string | boolean): void {
     switch (event.kind) {
         case NDKKind.Reaction:
             if (event.pubkey === currentPubkey || currentPubkey === true) {
@@ -119,9 +120,7 @@ function updateStats(
 function cloneReactionStats(stats: ReactionStats): ReactionStats {
     return {
         reactionCount: stats.reactionCount,
-        reactedByUser: stats.reactedByUser
-            ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser)
-            : null,
+        reactedByUser: stats.reactedByUser ? new NDKEvent(stats.reactedByUser.ndk, stats.reactedByUser) : null,
         commentCount: stats.commentCount,
         commentedByUser: stats.commentedByUser,
         comments: [...stats.comments],
