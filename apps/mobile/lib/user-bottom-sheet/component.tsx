@@ -1,27 +1,24 @@
-import { useAtom, useAtomValue } from "jotai";
-import { userBottomSheetAtom } from "./store";
-import { Sheet, useSheetRef } from "@/components/nativewindui/Sheet";
-import { Dimensions, StyleProp, ViewStyle } from "react-native";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { Text } from "@/components/nativewindui/Text";
-import { useEffect, useCallback, useRef, useMemo } from "react";
-import { View, StyleSheet } from "react-native";
-import { Button } from "@/components/nativewindui/Button";
-import { ChevronRight, List, ListFilter, Lock, UserMinus, UserPlus, WheatIcon } from "lucide-react-native";
-import { useColorScheme } from "../useColorScheme";
-import { NDKUser, useMuteList, useNDK, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import * as User from "@/components/ui/user";
-import usePrivateFollows from "@/stores/db/private-follows";
-import { useFollowType } from "@/hooks/follows";
-import FollowIcon from "@/components/icons/follow";
-import PrivateFollowIcon from "@/components/icons/private-follow";
-import Bookmark from "@/components/icons/bookmark";
-import { feedEditorBottomSheetRefAtom, useFeedEditorStore } from "../feed-editor/store";
-import { publishFollow } from "@/components/buttons/follow";
+import { BottomSheetView } from '@gorhom/bottom-sheet';
+import { type NDKUser, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect } from 'react';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+
+import { useColorScheme } from '../useColorScheme';
+import { userBottomSheetAtom } from './store';
+
+import { publishFollow } from '@/components/buttons/follow';
+import FollowIcon from '@/components/icons/follow';
+import PrivateFollowIcon from '@/components/icons/private-follow';
+import { Button } from '@/components/nativewindui/Button';
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
+import { useFollowType } from '@/hooks/follows';
+import usePrivateFollows from '@/stores/db/private-follows';
 
 export default function BottomSheet() {
     const ref = useSheetRef();
-    const [ user, setUser ] = useAtom(userBottomSheetAtom);
+    const [user, setUser] = useAtom(userBottomSheetAtom);
 
     useEffect(() => {
         if (!ref) return;
@@ -51,9 +48,10 @@ export default function BottomSheet() {
     //     feedEditorRef.current?.expand();
     // }, [feedEditorRef, feedEditorStore, user?.pubkey]);
 
-    return <Sheet ref={ref} onDismiss={handleDismiss}>
-        <BottomSheetView style={styles.container}>
-            {/* {userProfile && user && (
+    return (
+        <Sheet ref={ref} onDismiss={handleDismiss}>
+            <BottomSheetView style={styles.container}>
+                {/* {userProfile && user && (
                 <View style={styles.profileContainer}>
                     <User.Avatar pubkey={user.pubkey} userProfile={userProfile} imageSize={48} />
 
@@ -62,12 +60,12 @@ export default function BottomSheet() {
                     </View>
                 </View>
             )} */}
-            <View style={styles.buttonContainer}>
-                <FollowButton user={user} close={close} />
+                <View style={styles.buttonContainer}>
+                    <FollowButton user={user} close={close} />
 
-                <PrivateFollowButton user={user} style={styles.buttonItem} close={close} /> 
-                
-                {/* <Button variant="secondary"  onPress={handleAddToCollection}>
+                    <PrivateFollowButton user={user} style={styles.buttonItem} close={close} />
+
+                    {/* <Button variant="secondary"  onPress={handleAddToCollection}>
                     <Bookmark size={38} color1={colors.grey2} color2={colors.grey5} />
                     <View className="flex-col items-start flex-1">
                         <Text>Add to collection</Text>
@@ -77,25 +75,42 @@ export default function BottomSheet() {
                     </View>
                     <ChevronRight size={38} color={colors.grey2} />
                 </Button> */}
-            </View>
-        </BottomSheetView>
-    </Sheet>
+                </View>
+            </BottomSheetView>
+        </Sheet>
+    );
 }
 
-function Btn({ active, Icon, children, onPress }: { active: boolean, Icon: React.ComponentType<{ color1?: string, color2?: string, size: number }>, children: React.ReactNode, onPress: () => void }) {
+function Btn({
+    active,
+    Icon,
+    children,
+    onPress,
+}: {
+    active: boolean;
+    Icon: React.ComponentType<{ color1?: string; color2?: string; size: number }>;
+    children: React.ReactNode;
+    onPress: () => void;
+}) {
     const { colors } = useColorScheme();
 
-    return <Button variant={!active ? 'secondary' : 'tonal'} style={styles.buttonItem} onPress={onPress}>
-        {active ? (
-            <Icon size={38} />
-        ) : (
-            <Icon color1={colors.grey2} color2={colors.grey2} size={38} />
-        )}
-        {children}
-    </Button>
+    return (
+        <Button
+            variant={!active ? 'secondary' : 'tonal'}
+            style={styles.buttonItem}
+            onPress={onPress}
+        >
+            {active ? (
+                <Icon size={38} />
+            ) : (
+                <Icon color1={colors.grey2} color2={colors.grey2} size={38} />
+            )}
+            {children}
+        </Button>
+    );
 }
 
-function FollowButton({ user, close }: { user: NDKUser, close: () => void }) {
+function FollowButton({ user, close }: { user: NDKUser; close: () => void }) {
     const { ndk } = useNDK();
     const followType = useFollowType(user?.pubkey);
 
@@ -105,15 +120,21 @@ function FollowButton({ user, close }: { user: NDKUser, close: () => void }) {
         close();
     }, [user?.pubkey, ndk]);
 
-    return <Btn active={followType !== 'private'} Icon={FollowIcon} onPress={handleFollow}>
-        <Text>Follow</Text>
-    </Btn>
+    return (
+        <Btn active={followType !== 'private'} Icon={FollowIcon} onPress={handleFollow}>
+            <Text>Follow</Text>
+        </Btn>
+    );
 }
-function PrivateFollowButton({ user, style, close }: { user: NDKUser, style: StyleProp<ViewStyle>, close: () => void }) {
+function PrivateFollowButton({
+    user,
+    style,
+    close,
+}: { user: NDKUser; style: StyleProp<ViewStyle>; close: () => void }) {
     const addPrivateFollow = usePrivateFollows((state) => state.add);
     const removePrivateFollow = usePrivateFollows((state) => state.remove);
     const followType = useFollowType(user?.pubkey);
-    
+
     const handlePrivateFollow = useCallback(() => {
         if (!user) return;
         if (followType === 'private') {
@@ -125,21 +146,19 @@ function PrivateFollowButton({ user, style, close }: { user: NDKUser, style: Sty
     }, [user?.pubkey, followType]);
 
     const active = followType === 'private';
-    
+
     return (
         <Btn active={active} Icon={PrivateFollowIcon} onPress={handlePrivateFollow}>
             <View className="flex-col items-start">
                 <Text>Private Follow</Text>
                 <Text className="text-xs text-muted-foreground">
-                    {active ? (
-                        "You are currently following this user privately"
-                    ) : (
-                        "Follow this user without anyone knowing"
-                    )}
+                    {active
+                        ? 'You are currently following this user privately'
+                        : 'Follow this user without anyone knowing'}
                 </Text>
             </View>
         </Btn>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -178,12 +197,12 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
     },
-    
+
     buttonContainer: {
         flexDirection: 'column',
         gap: 10,
         width: '100%',
-        flex: 1
+        flex: 1,
     },
     buttonItem: {
         flexDirection: 'row',

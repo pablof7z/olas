@@ -1,18 +1,19 @@
+import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { View, StyleSheet } from 'react-native';
+import { ArrowLeft, Search } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { ArrowLeft, Search } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NDKKind, NDKSubscriptionCacheUsage, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+
 import Feed from '@/components/Feed';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 const inputAtom = atom('#photography');
 
-const relays = ['wss://relay.olas.app'] as const;
+const _relays = ['wss://relay.olas.app'] as const;
 
 export default function SearchScreen() {
     const [input, setInput] = useAtom(inputAtom);
@@ -31,8 +32,11 @@ export default function SearchScreen() {
 
     const filters = useMemo(() => {
         return [
-            { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#t': [input.trim().replace('#', '')] },
-        ]
+            {
+                kinds: [NDKKind.Image, NDKKind.VerticalVideo],
+                '#t': [input.trim().replace('#', '')],
+            },
+        ];
     }, [input]);
 
     const insets = useSafeAreaInsets();
@@ -40,8 +44,8 @@ export default function SearchScreen() {
         return {
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
-        }
-    }, [insets])
+        };
+    }, [insets]);
     const { colors } = useColorScheme();
 
     return (
@@ -57,20 +61,16 @@ export default function SearchScreen() {
                     <Pressable onPress={() => router.replace('/(home)')}>
                         <ArrowLeft size={24} color={colors.foreground} />
                     </Pressable>
-                    <View className="border-b border-border flex-1">
+                    <View className="flex-1 border-b border-border">
                         <Input onSearch={onSearch} />
                     </View>
                 </View>
 
-            <View style={{ flex: 1 }}>
-                <Feed
-                    filters={filters}
-                    filterKey={input}
-                    numColumns={3}
-                />
-            </View>
+                <View style={{ flex: 1 }}>
+                    <Feed filters={filters} filterKey={input} numColumns={3} />
+                </View>
             </KeyboardAvoidingView>
-            </>
+        </>
     );
 }
 
@@ -102,8 +102,8 @@ function Input({ onSearch }: { onSearch: (input: string) => void }) {
                 autoComplete="off"
                 autoCorrect={false}
                 style={{
-                  flex: 1,
-                  color: colors.foreground,
+                    flex: 1,
+                    color: colors.foreground,
                 }}
                 className="text-xl font-bold"
             />
@@ -122,5 +122,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
-    }
-})
+    },
+});

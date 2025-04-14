@@ -1,5 +1,5 @@
-import { IconProps, MaterialIconName } from '@roninoss/icons';
-import { AlertButton, AlertType, KeyboardType, View } from 'react-native';
+import type { IconProps, MaterialIconName } from '@roninoss/icons';
+import type { AlertButton, AlertType, KeyboardType, View } from 'react-native';
 
 type AlertInputValue = { login: string; password: string } | string;
 

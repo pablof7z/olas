@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from 'react';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -9,9 +9,11 @@ import Animated, {
     Extrapolate,
     runOnJS,
     useDerivedValue,
-} from "react-native-reanimated";
-import Lightning from "@/components/icons/lightning";
-import { AnimatedText } from "./AnimatedText";
+} from 'react-native-reanimated';
+
+import { AnimatedText } from './AnimatedText';
+
+import Lightning from '@/components/icons/lightning';
 
 interface ZapModalProps {
     visible: boolean;
@@ -63,16 +65,10 @@ export function ZapModal({
             const diff = zapAmount.value - defaultZapAmount;
             const currentBgOpacity =
                 transitionProgress.value *
-                interpolate(
-                    diff,
-                    [0, 1000],
-                    [0.3, 0.9],
-                    Extrapolate.CLAMP
-                );
+                interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
             frozenBackgroundOpacity.value = currentBgOpacity;
             const growth = Math.max(0, (zapAmount.value - defaultZapAmount) / 1000);
-            const currentSize =
-                baseIconSize * (1 + transitionProgress.value * 0.2 + growth);
+            const currentSize = baseIconSize * (1 + transitionProgress.value * 0.2 + growth);
             frozenBaseSize.value = currentSize;
             const currentRotation = Math.min((diff / 1000) * 15, 15);
             frozenRotation.value = currentRotation;
@@ -98,13 +94,7 @@ export function ZapModal({
     const animatedBackgroundStyle = useAnimatedStyle(() => {
         const diff = zapAmount.value - defaultZapAmount;
         const computedOpacity =
-            transitionProgress.value *
-            interpolate(
-                diff,
-                [0, 1000],
-                [0.3, 0.9],
-                Extrapolate.CLAMP
-            );
+            transitionProgress.value * interpolate(diff, [0, 1000], [0.3, 0.9], Extrapolate.CLAMP);
         return {
             opacity:
                 shouldExplode.value === 1
@@ -116,9 +106,7 @@ export function ZapModal({
     const animatedIconContainerStyle = useAnimatedStyle(() => {
         let rotation = 0;
         if (shouldExplode.value === 1) {
-            rotation =
-                frozenRotation.value +
-                (15 - frozenRotation.value) * explosionProgress.value;
+            rotation = frozenRotation.value + (15 - frozenRotation.value) * explosionProgress.value;
         } else {
             const diff = zapAmount.value - defaultZapAmount;
             rotation = Math.min((diff / 1000) * 15, 15);
@@ -155,42 +143,42 @@ export function ZapModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: "#000000",
-        alignItems: "center",
-        justifyContent: "center",
+        backgroundColor: '#000000',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     counter: {
-        fontWeight: "800",
-        color: "white",
+        fontWeight: '800',
+        color: 'white',
         fontSize: 96,
     },
     sats: {
-        color: "white",
+        color: 'white',
         fontSize: 18,
-        fontWeight: "300",
+        fontWeight: '300',
     },
     counterContainer: {
-        position: "absolute",
+        position: 'absolute',
         bottom: 100,
-        flexDirection: "column",
-        alignItems: "center",
+        flexDirection: 'column',
+        alignItems: 'center',
     },
     cancelZone: {
-        position: "absolute",
+        position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 100009999,
         height: 100,
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
         borderTopWidth: 2,
-        backgroundColor: "#000000",
+        backgroundColor: '#000000',
     },
     cancelText: {
-        color: "orange",
-        fontWeight: "bold",
+        color: 'orange',
+        fontWeight: 'bold',
         fontSize: 16,
     },
 });

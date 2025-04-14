@@ -1,0 +1,119 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Navigate to story creation by tapping the + button (usually in the bottom center)
+- tapOn:
+      point: 50%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take a photo or select from gallery (tap the camera icon)
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Mock selecting an image from gallery
+- tapOn:
+      point: 25%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Add text sticker
+- tapOn:
+      point: 85%,95% # Add sticker button
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,25% # Text sticker option
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,50% # Tap the sticker to edit
+- inputText: 'First sticker'
+- tapOn:
+      point: 90%,10% # OK button
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Add event sticker
+- tapOn:
+      point: 85%,95% # Add sticker button
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,45% # Event sticker option
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,40% # Event ID input
+- inputText: 'note1test123456789'
+- tapOn:
+      point: 50%,60% # Event title input
+- inputText: 'Test Event'
+- tapOn:
+      point: 50%,80% # Add button
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Add countdown sticker
+- tapOn:
+      point: 85%,95% # Add sticker button
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,65% # Countdown sticker option
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      point: 50%,40% # Countdown name input
+- inputText: 'Launch Event'
+- tapOn:
+      point: 50%,60% # Date picker
+- tapOn:
+      point: 90%,90% # OK button
+- tapOn:
+      point: 50%,80% # Add button
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Reposition stickers
+- tapOn:
+      point: 30%,30% # First sticker
+- swipe:
+      direction: UP
+- waitForAnimationToEnd:
+      timeout: 500
+
+- tapOn:
+      point: 50%,50% # Second sticker
+- swipe:
+      direction: LEFT
+- waitForAnimationToEnd:
+      timeout: 500
+
+- tapOn:
+      point: 70%,70% # Third sticker
+- swipe:
+      direction: DOWN
+- waitForAnimationToEnd:
+      timeout: 500
+
+# Take a screenshot with all stickers
+- takeScreenshot: multiple-stickers
+
+# Submit story with stickers
+- tapOn:
+      point: 90%,95% # Preview button
+- waitForAnimationToEnd:
+      timeout: 2000
+- tapOn:
+      point: 90%,95% # Submit button
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Take screenshot of success state
+- takeScreenshot: multiple-stickers-success

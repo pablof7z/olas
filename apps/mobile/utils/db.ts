@@ -1,15 +1,11 @@
-import NDK, { NDKCacheAdapterSqlite, NDKKind, NDKEvent } from "@nostr-dev-kit/ndk-mobile";
-
-const module = "UTILS/DB";
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, type NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 /**
  * Get all events by users directly from the local database.
- * @returns 
+ * @returns
  */
-export function getPostsByUser(
-    ndk: NDK,
-    pubkeys: string[]
-): NDKEvent[] {
+export function getPostsByUser(ndk: NDK, pubkeys: string[]): NDKEvent[] {
     if (!(ndk?.cacheAdapter instanceof NDKCacheAdapterSqlite)) return [];
 
     const cacheAdapter = ndk.cacheAdapter;

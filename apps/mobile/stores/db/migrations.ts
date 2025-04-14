@@ -1,5 +1,5 @@
-import * as SQLite from 'expo-sqlite';
 import * as SecureStore from 'expo-secure-store';
+import type * as SQLite from 'expo-sqlite';
 
 export const migrations = [
     {
@@ -13,7 +13,7 @@ export const migrations = [
                     last_try_at INTEGER
                 );`
             );
-        }
+        },
     },
     {
         version: 1,
@@ -32,7 +32,7 @@ export const migrations = [
                     UNIQUE (wallet_id, proof_c, mint)
                 );`
             );
-        }
+        },
     },
 
     {
@@ -45,7 +45,7 @@ export const migrations = [
                     updated_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
@@ -64,11 +64,17 @@ export const migrations = [
 
             for (const search of predefinedSearches) {
                 db.runSync(
-                    `INSERT INTO saved_searches (title, subtitle, hashtags, created_at, updated_at) VALUES (?, ?, ?, ?, ?);`,
-                    [search.title, search.subTitle, search.hashtags.join(' '), Date.now(), Date.now()]
+                    'INSERT INTO saved_searches (title, subtitle, hashtags, created_at, updated_at) VALUES (?, ?, ?, ?, ?);',
+                    [
+                        search.title,
+                        search.subTitle,
+                        search.hashtags.join(' '),
+                        Date.now(),
+                        Date.now(),
+                    ]
                 );
             }
-        }
+        },
     },
 
     {
@@ -80,7 +86,7 @@ export const migrations = [
                     connect BOOLEAN
                 );`
             );
-        }
+        },
     },
 
     {
@@ -88,12 +94,9 @@ export const migrations = [
         up: (db: SQLite.SQLiteDatabase) => {
             const relays = (SecureStore.getItem('relays') || '').split(',');
             for (const relay of relays) {
-                db.runSync(
-                    `INSERT INTO relays (url, connect) VALUES (?, ?);`,
-                    [relay, true]
-                );
+                db.runSync('INSERT INTO relays (url, connect) VALUES (?, ?);', [relay, true]);
             }
-        }
+        },
     },
 
     {
@@ -109,7 +112,7 @@ export const migrations = [
                     updated_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
@@ -121,37 +124,39 @@ export const migrations = [
                     created_at INTEGER
                 );`
             );
-        }
+        },
     },
 
     {
         version: 8,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps RENAME COLUMN preimage TO pr;` );
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN preimage TEXT;` );
-        }
+            db.execSync('ALTER TABLE nwc_zaps RENAME COLUMN preimage TO pr;');
+            db.execSync('ALTER TABLE nwc_zaps ADD COLUMN preimage TEXT;');
+        },
     },
 
     {
         version: 9,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN amount INTEGER;` );
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN unit TEXT;` );
-        }
+            db.execSync('ALTER TABLE nwc_zaps ADD COLUMN amount INTEGER;');
+            db.execSync('ALTER TABLE nwc_zaps ADD COLUMN unit TEXT;');
+        },
     },
 
     {
         version: 10,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `ALTER TABLE nwc_zaps ADD COLUMN pending_payment_id TEXT;` );
-        }
+            db.execSync('ALTER TABLE nwc_zaps ADD COLUMN pending_payment_id TEXT;');
+        },
     },
 
     {
         version: 11,
         up: (db: SQLite.SQLiteDatabase) => {
-            db.execSync( `CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);` );
-        }
+            db.execSync(
+                'CREATE INDEX IF NOT EXISTS idx_nwc_zaps_pending_payment_id ON nwc_zaps (pending_payment_id);'
+            );
+        },
     },
 
     {
@@ -163,7 +168,7 @@ export const migrations = [
                 created_at INTEGER,
                 updated_at INTEGER
             )`);
-        }
+        },
     },
 
     {
@@ -176,14 +181,13 @@ export const migrations = [
                 created_at INTEGER,
                 updated_at INTEGER
             )`);
-        }
+        },
     },
 
     {
         version: 15,
         up: (db: SQLite.SQLiteDatabase) => {
             const walletConfig = SecureStore.getItem('wallet');
-            console.log('walletConfig', walletConfig);
             db.execSync(`CREATE TABLE IF NOT EXISTS app_settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
@@ -191,17 +195,23 @@ export const migrations = [
 
             if (walletConfig) {
                 if (walletConfig === 'none') {
-                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_type', 'none');`);
+                    db.runSync(
+                        "INSERT INTO app_settings (key, value) VALUES ('wallet_type', 'none');"
+                    );
                 } else {
                     const payload = JSON.parse(walletConfig);
-                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_type', '${payload.type}');`);
-                    db.runSync(`INSERT INTO app_settings (key, value) VALUES ('wallet_payload', '${payload.pairingCode ?? payload.bech32}');`);
+                    db.runSync(
+                        `INSERT INTO app_settings (key, value) VALUES ('wallet_type', '${payload.type}');`
+                    );
+                    db.runSync(
+                        `INSERT INTO app_settings (key, value) VALUES ('wallet_payload', '${payload.pairingCode ?? payload.bech32}');`
+                    );
                 }
             }
 
             SecureStore.deleteItemAsync('wallet');
             SecureStore.deleteItemAsync('wallet_last_updated_at');
-        }
+        },
     },
 
     {
@@ -221,7 +231,7 @@ export const migrations = [
                 updated_at INTEGER,
                 receipt_id TEXT
             )`);
-        }
+        },
     },
 
     {
@@ -232,8 +242,8 @@ export const migrations = [
                 flare_type TEXT,
                 created_at INTEGER
             )`);
-        }
-    }
+        },
+    },
 ];
 
 export const predefinedSearches = [
@@ -241,7 +251,11 @@ export const predefinedSearches = [
     { title: '#photography', subTitle: 'Photography posts', hashtags: ['introductions'] },
     { title: '#family', subTitle: 'Family posts', hashtags: ['family', 'kids', 'parenting'] },
     { title: '#food', subTitle: 'Food posts', hashtags: ['food', 'foodstr'] },
-    { title: '#nature', subTitle: 'Nature posts', hashtags: ['nature', 'beach', 'mountains', 'forest', 'animals', 'wildlife'] },
+    {
+        title: '#nature',
+        subTitle: 'Nature posts',
+        hashtags: ['nature', 'beach', 'mountains', 'forest', 'animals', 'wildlife'],
+    },
     { title: '#music', subTitle: 'Music posts', hashtags: ['music', 'jitterbug'] },
     { title: '#art', subTitle: 'Art posts', hashtags: ['art', 'artstr', 'aiart', 'circunvagar'] },
     { title: '#travel', subTitle: 'Travel posts', hashtags: ['travel', 'explore'] },

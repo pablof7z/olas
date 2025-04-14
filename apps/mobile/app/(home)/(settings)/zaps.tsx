@@ -1,21 +1,28 @@
-import { LargeTitleHeader } from "@/components/nativewindui/LargeTitleHeader/LargeTitleHeader.ios";
-import { List, ListItem, ListRenderItemProps, ListSectionHeader } from "@/components/nativewindui/List";
-import { Text } from "@/components/nativewindui/Text";
-import ZapButton from "@/components/events/Post/Reactions/Zaps";
-import { useAppSettingsStore } from "@/stores/app";
-import { router } from "expo-router";
-import { useAtom, useAtomValue } from "jotai";
-import { atom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Switch, TextInput, TouchableOpacity, View } from "react-native";
-import { Slider } from "@/components/nativewindui/Slider";
+import { router } from 'expo-router';
+import { atom, useAtom, useAtomValue } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Switch, TextInput, TouchableOpacity, View } from 'react-native';
+
+import ZapButton from '@/components/events/Post/Reactions/Zaps';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader/LargeTitleHeader.ios';
+import {
+    List,
+    ListItem,
+    ListRenderItemProps,
+    ListSectionHeader,
+} from '@/components/nativewindui/List';
+import { Slider } from '@/components/nativewindui/Slider';
+import { Text } from '@/components/nativewindui/Text';
+import { useAppSettingsStore } from '@/stores/app';
 
 export type ZapOption = {
     amount: number;
     message: string;
-}
+};
 
-const defaultZapAtom = atom<ZapOption, [ZapOption], null>(null, (get, set, zap) => set(defaultZapAtom, zap));
+const defaultZapAtom = atom<ZapOption, [ZapOption], null>(null, (_get, set, zap) =>
+    set(defaultZapAtom, zap)
+);
 const yoloZapsAtom = atom<boolean>();
 const yoloZapsGrowthFactorAtom = atom<number>();
 
@@ -23,7 +30,7 @@ function DefaultZapRow({ index, target }) {
     const [defaultZap, setDefaultZap] = useAtom(defaultZapAtom);
     const inputRef = useRef<TextInput>(null);
 
-    const appDefaultZap = useAppSettingsStore(s => s.defaultZap);
+    const appDefaultZap = useAppSettingsStore((s) => s.defaultZap);
     useEffect(() => {
         if (!defaultZap) {
             setDefaultZap(appDefaultZap);
@@ -31,11 +38,9 @@ function DefaultZapRow({ index, target }) {
     }, [appDefaultZap, defaultZap, setDefaultZap]);
 
     return (
-        <View
-            className="flex-row justify-between flex-1 gap-2"
-        >
+        <View className="flex-1 flex-row justify-between gap-2">
             <TextInput
-                className="flex-1 py-4 px-4 text-foreground bg-card rounded-lg"
+                className="flex-1 rounded-lg bg-card px-4 py-4 text-foreground"
                 value={defaultZap?.message}
                 onChangeText={(text) => setDefaultZap({ ...defaultZap, message: text })}
                 returnKeyLabel="Next"
@@ -44,14 +49,14 @@ function DefaultZapRow({ index, target }) {
             />
             <TextInput
                 ref={inputRef}
-                className="py-2 px-4 text-foreground bg-card rounded-lg w-[100px]"
+                className="w-[100px] rounded-lg bg-card px-4 py-2 text-foreground"
                 value={defaultZap?.amount?.toString()}
                 textAlign="right"
                 keyboardType="numeric"
                 onChangeText={(text) => setDefaultZap({ ...defaultZap, amount: Number(text) })}
             />
         </View>
-    )
+    );
 }
 
 function YoloZapsRow({ index, target }) {
@@ -66,84 +71,101 @@ function YoloZapsRow({ index, target }) {
         if (saveTimer.current) clearTimeout(saveTimer.current);
 
         saveTimer.current = setTimeout(() => {
-            console.log('saving yolo zaps growth factor', aggressiveness);
             setYoloZapsGrowthFactor(aggressiveness);
             saveTimer.current = null;
         }, 100);
     }, [aggressiveness, setYoloZapsGrowthFactor]);
 
-    return <>
-        <ListItem
-            index={index}
-            target={target}
-            item={{
-                title: 'YOLO zaps',
-                subTitle: 'Zap by swiping the ⚡️ icon',
-            }}
-            rightView={
-                <View style={{ paddingRight: 10 }}>
-                    <Switch
-                        value={yoloZaps}
-                        onValueChange={setYoloZaps}
-                    />
-                </View>
-            }
-        />
-        {yoloZaps && (
+    return (
+        <>
             <ListItem
                 index={index}
                 target={target}
                 item={{
-                    title: 'Growth factor',
-                    subTitle: "How fast yolo zaps increase"
+                    title: 'YOLO zaps',
+                    subTitle: 'Zap by swiping the ⚡️ icon',
                 }}
                 rightView={
-                    <View style={{ width: 24, height: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <ZapButton iconSize={24} inactiveColor="gray" growthFactor={aggressiveness} />
+                    <View style={{ paddingRight: 10 }}>
+                        <Switch value={yoloZaps} onValueChange={setYoloZaps} />
                     </View>
                 }
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Slider
-                        minimumValue={0.0000001}
-                        maximumValue={1.5}
-                        value={aggressiveness}
-                        onValueChange={setAggressiveness}
-                        style={{ flex: 1 }}
-                    />
-                </View>
-            </ListItem>
-        )}
-        <Text variant="caption1" className="text-muted-foreground p-2">
-            After sending a YOLO zap, you can tap it for a few seconds to cancel it.
-        </Text>
-    </>
+            />
+            {yoloZaps && (
+                <ListItem
+                    index={index}
+                    target={target}
+                    item={{
+                        title: 'Growth factor',
+                        subTitle: 'How fast yolo zaps increase',
+                    }}
+                    rightView={
+                        <View
+                            style={{
+                                width: 24,
+                                height: 24,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <ZapButton
+                                iconSize={24}
+                                inactiveColor="gray"
+                                growthFactor={aggressiveness}
+                            />
+                        </View>
+                    }
+                >
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <Slider
+                            minimumValue={0.0000001}
+                            maximumValue={1.5}
+                            value={aggressiveness}
+                            onValueChange={setAggressiveness}
+                            style={{ flex: 1 }}
+                        />
+                    </View>
+                </ListItem>
+            )}
+            <Text variant="caption1" className="p-2 text-muted-foreground">
+                After sending a YOLO zap, you can tap it for a few seconds to cancel it.
+            </Text>
+        </>
+    );
 }
 
 export default function Zaps() {
     const settings = useMemo(() => {
         const opts = [];
-        
+
         opts.push('One-tap zap');
         opts.push('default-zap');
 
-        opts.push('YOLO zaps')
-        opts.push('yolo-zaps')
+        opts.push('YOLO zaps');
+        opts.push('yolo-zaps');
 
         return opts;
-    }, [1])
+    }, [1]);
 
-    const setDefaultZap = useAppSettingsStore(s => s.setDefaultZap);
-    const yoloZaps = useAppSettingsStore(s => s.yoloZaps);
-    const yoloZapsGrowthFactor = useAppSettingsStore(s => s.yoloZapsGrowthFactor);
+    const setDefaultZap = useAppSettingsStore((s) => s.setDefaultZap);
+    const yoloZaps = useAppSettingsStore((s) => s.yoloZaps);
+    const yoloZapsGrowthFactor = useAppSettingsStore((s) => s.yoloZapsGrowthFactor);
 
-    const defaultZap = useAppSettingsStore(s => s.defaultZap);
-    const setYoloZaps = useAppSettingsStore(s => s.setYoloZaps);
-    const setYoloZapsGrowthFactor = useAppSettingsStore(s => s.setYoloZapsGrowthFactor);
+    const defaultZap = useAppSettingsStore((s) => s.defaultZap);
+    const setYoloZaps = useAppSettingsStore((s) => s.setYoloZaps);
+    const setYoloZapsGrowthFactor = useAppSettingsStore((s) => s.setYoloZapsGrowthFactor);
 
     const [defaultZapLocal, setDefaultZapLocal] = useAtom(defaultZapAtom);
     const [yoloZapLocal, setYoloZapLocal] = useAtom(yoloZapsAtom);
-    const [yoloZapGrowthFactorLocal, setYoloZapGrowthFactorLocal] = useAtom(yoloZapsGrowthFactorAtom);
+    const [yoloZapGrowthFactorLocal, setYoloZapGrowthFactorLocal] =
+        useAtom(yoloZapsGrowthFactorAtom);
 
     const save = useCallback(() => {
         setDefaultZap(defaultZapLocal);
@@ -157,7 +179,7 @@ export default function Zaps() {
         setYoloZapLocal(yoloZaps);
         setYoloZapGrowthFactorLocal(yoloZapsGrowthFactor);
     }, [defaultZap, setDefaultZap, yoloZaps, yoloZapsGrowthFactor]);
-    
+
     return (
         <>
             <LargeTitleHeader
@@ -187,12 +209,6 @@ function Item({ item, index, target }) {
     } else if (typeof item === 'string') {
         return <ListSectionHeader {...{ item, index, target }} />;
     }
-    
-    return (
-        <ListItem
-            index={index}
-            target={target}
-            item={item}
-        />
-    );
+
+    return <ListItem index={index} target={target} item={item} />;
 }

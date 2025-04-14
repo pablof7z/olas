@@ -1,10 +1,11 @@
-import { useVideoPlayer, VideoPlayer, VideoView } from 'expo-video';
+import { type VideoPlayer, VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { MediaDimensions } from './types';
-import { calcDimensions } from './image';
 
-let knownVideoDimensions: Record<string, MediaDimensions> = {};
+import { calcDimensions } from './image';
+import type { MediaDimensions } from './types';
+
+const knownVideoDimensions: Record<string, MediaDimensions> = {};
 
 export default function VideoComponent({
     url,
@@ -34,7 +35,7 @@ export default function VideoComponent({
     if (dimensions && !renderDimensions) {
         renderDimensions = calcDimensions(dimensions, maxDimensions);
     }
-    
+
     loop ??= true;
     muted ??= true;
     const player = useVideoPlayer(url, (player) => {
@@ -47,14 +48,23 @@ export default function VideoComponent({
     });
 
     const _style = useMemo(() => {
-        let width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
-        let height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
+        const width = renderDimensions?.width ?? maxDimensions?.width ?? '100%';
+        const height = renderDimensions?.height ?? maxDimensions?.height ?? '100%';
         return { width, height };
-    }, [renderDimensions?.width, renderDimensions?.height, maxDimensions?.width, maxDimensions?.height, url])
-    
+    }, [
+        renderDimensions?.width,
+        renderDimensions?.height,
+        maxDimensions?.width,
+        maxDimensions?.height,
+        url,
+    ]);
 
     return (
-        <Pressable style={styles.container} onPress={() => onPress?.(player)} onLongPress={onLongPress}>
+        <Pressable
+            style={styles.container}
+            onPress={() => onPress?.(player)}
+            onLongPress={onLongPress}
+        >
             <VideoView
                 style={{ width: _style.width, height: _style.height, flex: 1 }}
                 contentFit="cover"
@@ -67,11 +77,10 @@ export default function VideoComponent({
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-    }
+    },
 });

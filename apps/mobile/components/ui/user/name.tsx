@@ -1,6 +1,7 @@
-import React from 'react';
-import { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Text, TextProps, View } from 'react-native';
+import type { NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
+import { Text, type TextProps, View } from 'react-native';
+
 import FlareLabel, { FlareElement } from './flare';
 
 interface NameProps extends TextProps {
@@ -14,17 +15,22 @@ interface NameProps extends TextProps {
  * Renders the name of a user
  */
 const Name: React.FC<NameProps> = ({ userProfile, pubkey, flare, skipFlare, ...props }) => {
-    const nameToDisplay = userProfile?.displayName || userProfile?.name || pubkey?.substring?.(0, 6) || 'Unknown';
-    
+    const nameToDisplay =
+        userProfile?.displayName || userProfile?.name || pubkey?.substring?.(0, 6) || 'Unknown';
+
     if (skipFlare || !flare) {
         return (
-            <Text style={[ props.style, ]} {...props}>{nameToDisplay}</Text>
+            <Text style={[props.style]} {...props}>
+                {nameToDisplay}
+            </Text>
         );
     }
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[ props.style, ]} {...props}>{nameToDisplay}</Text>
+            <Text style={[props.style]} {...props}>
+                {nameToDisplay}
+            </Text>
             <FlareLabel flare={flare} pubkey={pubkey} />
         </View>
     );

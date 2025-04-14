@@ -1,0 +1,73 @@
+{
+    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+    "organizeImports": {
+        "enabled": true
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "correctness": {
+                "noUnusedVariables": "off",
+                "noUndeclaredVariables": "off",
+                "useExhaustiveDependencies": "off",
+                "noUnreachable": "warn",
+                "useHookAtTopLevel": "error"
+            },
+            "suspicious": {
+                "noExplicitAny": "off",
+                "noConsoleLog": "warn",
+                "noArrayIndexKey": "off"
+            },
+            "complexity": {
+                "noForEach": "off"
+            },
+            "style": {
+                "useConst": "warn",
+                "noNonNullAssertion": "off",
+                "noUselessElse": "off",
+                "noParameterAssign": "warn"
+            },
+            "security": {
+                "noDangerouslySetInnerHtml": "warn"
+            },
+            "a11y": {
+                "useKeyWithClickEvents": "error",
+                "useKeyWithMouseEvents": "error"
+            }
+        }
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "trailingCommas": "es5",
+            "semicolons": "always"
+        },
+        "globals": ["React"]
+    },
+    "files": {
+        "ignore": [
+            "node_modules/**/*",
+            "build/**/*",
+            ".expo/**/*",
+            ".expo-shared/**/*",
+            ".turbo/**/*",
+            "ios/**/*",
+            "android/**/*",
+            ".vscode/**/*",
+            ".goose/**/*",
+            ".maestro/**/*",
+            "dist/**/*",
+            "**/*.d.ts",
+            "__mocks__/**/*",
+            "app.json"
+        ]
+    }
+}

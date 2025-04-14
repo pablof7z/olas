@@ -1,6 +1,6 @@
-import React from "react";
-import Animated, { useAnimatedProps } from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
+import React from 'react';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
@@ -13,7 +13,7 @@ interface LightningProps {
 }
 
 const Lightning = ({
-    fill = "none",
+    fill = 'none',
     size = 24,
     strokeWidth = 1.5,
     animatedSize,

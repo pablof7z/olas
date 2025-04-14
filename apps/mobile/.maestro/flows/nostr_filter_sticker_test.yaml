@@ -1,0 +1,75 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Navigate to story creation by tapping the + button (usually in the bottom center)
+- tapOn:
+      point: 50%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take a photo or select from gallery (tap the camera icon)
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Mock selecting an image from gallery
+- tapOn:
+      point: 25%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Open sticker menu (usually a button in the toolbar)
+- tapOn:
+      point: 85%,95%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Test adding a Nostr Filter sticker (last option in the sticker menu)
+- tapOn:
+      point: 50%,85%
+- waitForAnimationToEnd:
+      timeout: 1000
+- assertVisible: 'Create Nostr Filter'
+
+# Create filter
+- tapOn:
+      point: 50%,30%
+- inputText: '1'
+- tapOn:
+      point: 50%,50%
+- inputText: 'npub1test123456789'
+- tapOn:
+      point: 50%,70%
+- inputText: '10'
+- tapOn:
+      point: 50%,90%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Take a screenshot with the filter sticker
+- takeScreenshot: filter-sticker-added
+
+# Test filter sticker positioning
+- tapOn:
+      point: 50%,50%
+- swipe:
+      direction: RIGHT
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Submit story with stickers
+- tapOn:
+      point: 90%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+- tapOn:
+      point: 90%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Take screenshot of success state
+- takeScreenshot: nostr-filter-sticker-success

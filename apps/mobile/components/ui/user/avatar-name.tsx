@@ -1,8 +1,15 @@
-import { NDKUserProfile, useUserProfile } from "@nostr-dev-kit/ndk-mobile";
-import { TouchableOpacity, StyleSheet, StyleProp, TextStyle, ViewStyle } from "react-native";
-import * as User from "@/components/ui/user";
-import { useCallback } from "react";
-import { useUserFlare } from "@/hooks/user-flare";
+import { type NDKUserProfile, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useCallback } from 'react';
+import {
+    type StyleProp,
+    StyleSheet,
+    type TextStyle,
+    TouchableOpacity,
+    type ViewStyle,
+} from 'react-native';
+
+import * as User from '@/components/ui/user';
+import { useUserFlare } from '@/hooks/user-flare';
 
 interface AvatarAndNameProps {
     pubkey: string;
@@ -30,9 +37,13 @@ export default function AvatarAndName({
     nameStyle,
     pressableStyle,
 }: AvatarAndNameProps) {
-    const { userProfile: _userProfile, user, loading } = useUserProfile(!userProfile ? pubkey : undefined);
+    // Fetch profile only if userProfile prop is not provided
+    const fetchedProfile = useProfile(!userProfile ? pubkey : undefined);
+    // Use provided userProfile prop first, fallback to fetched profile
+    const _userProfile = userProfile ?? fetchedProfile;
     const __userProfile = userProfile || _userProfile;
-    const flare = useUserFlare(skipFlare ? undefined : pubkey);
+    const flare = useUserFlare(pubkey);
+    const displayFlare = skipFlare ? undefined : flare;
 
     const viewProfile = useCallback(() => {
         if (onPress) {
@@ -40,13 +51,23 @@ export default function AvatarAndName({
         }
     }, [onPress]);
 
-
     return (
         <TouchableOpacity onPress={viewProfile} style={[styles.container, pressableStyle]}>
-            <User.Avatar pubkey={pubkey} userProfile={__userProfile} imageSize={imageSize} borderColor={borderColor} canSkipBorder={canSkipBorder} flare={flare} />
-            <User.Name userProfile={__userProfile} pubkey={pubkey} style={[styles.userName, nameStyle]} />
+            <User.Avatar
+                pubkey={pubkey}
+                userProfile={__userProfile}
+                imageSize={imageSize}
+                borderColor={borderColor}
+                canSkipBorder={canSkipBorder}
+                flare={displayFlare}
+            />
+            <User.Name
+                userProfile={__userProfile}
+                pubkey={pubkey}
+                style={[styles.userName, nameStyle]}
+            />
         </TouchableOpacity>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -62,4 +83,4 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         marginLeft: 12,
     },
-})
+});

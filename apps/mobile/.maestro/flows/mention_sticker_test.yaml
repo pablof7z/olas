@@ -1,0 +1,78 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Navigate to story creation by tapping the + button (usually in the bottom center)
+- tapOn:
+      point: 50%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take a photo or select from gallery (tap the camera icon)
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Mock selecting an image from gallery
+- tapOn:
+      point: 25%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Open sticker menu (usually a button in the toolbar)
+- tapOn:
+      point: 85%,95%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Test adding a mention sticker (second option in the sticker menu)
+- tapOn:
+      point: 50%,35%
+- waitForAnimationToEnd:
+      timeout: 1000
+- takeScreenshot: mention-selection-screen
+
+# Search for a user
+- tapOn:
+      point: 50%,20%
+- inputText: 'test'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Select the first user from search results
+- tapOn:
+      point: 50%,30%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Verify mention sticker is visible
+- takeScreenshot: mention-sticker-added
+
+# Manipulate the mention sticker
+- tapOn:
+      point: 50%,50%
+- swipe:
+      direction: RIGHT
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Verify sticker is still visible after manipulation
+- takeScreenshot: mention-sticker-moved
+
+# Submit story with mention sticker
+- tapOn:
+      point: 90%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Continue with submission
+- tapOn:
+      point: 90%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Take screenshot of success state
+- takeScreenshot: mention-sticker-success

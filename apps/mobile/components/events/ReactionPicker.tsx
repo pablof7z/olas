@@ -1,15 +1,17 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
-import { Sheet, useSheetRef } from "@/components/nativewindui/Sheet";
-import { Text } from "@/components/nativewindui/Text";
-import { Ruler } from "../Ruler";
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { Ruler } from '../Ruler';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
 
 type ReactionPickerProps = {
     onSelect: (emoji: string) => void;
     onClose: () => void;
 };
 
-const reactionList = ['❤️', '😂', '😮', '😢', '😡', '👍'];
+const _reactionList = ['❤️', '😂', '😮', '😢', '😡', '👍'];
 
 export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
     const sheetRef = useSheetRef();
@@ -18,17 +20,17 @@ export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProp
     return (
         <Sheet ref={sheetRef} onDismiss={onClose}>
             <View style={styles.container}>
-        <View style={{ marginBottom: 24, paddingHorizontal: 20 }}>
-            <Text>New value for the ruler (State)</Text>
-            <Text style={{ fontSize: 32 }}>{value ?? "No value yet"}</Text>
-        </View>
-        <Ruler
-            fadeColor='#eeeeee'
-            onChange={(value) => {
-            setValue(value);
-            }}
-        />
-        </View>
+                <View style={{ marginBottom: 24, paddingHorizontal: 20 }}>
+                    <Text>New value for the ruler (State)</Text>
+                    <Text style={{ fontSize: 32 }}>{value ?? 'No value yet'}</Text>
+                </View>
+                <Ruler
+                    fadeColor="#eeeeee"
+                    onChange={(value) => {
+                        setValue(value);
+                    }}
+                />
+            </View>
             {/* <View style={styles.container}>
                 <Text variant="title1" style={styles.title}>React with</Text>
                 <View style={styles.emojisContainer}>
@@ -52,12 +54,12 @@ export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProp
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: "#eeeeee",
-      gap: 24,
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#eeeeee',
+        gap: 24,
     },
-  });
+});
 
 // const styles = StyleSheet.create({
 //     container: {

@@ -1,20 +1,36 @@
-import { NDKCashuMintList, NDKKind, useNDK, useNDKSession, useNDKSessionEventKind, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKCashuMintList,
+    NDKKind,
+    useNDK,
+    useNDKSessionEvent,
+    useNDKWallet,
+} from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+
+import { Button } from '@/components/nativewindui/Button';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
-import { ESTIMATED_ITEM_HEIGHT, List, ListDataItem, ListItem, ListRenderItemInfo, ListSectionHeader } from '~/components/nativewindui/List';
+import {
+    ESTIMATED_ITEM_HEIGHT,
+    List,
+    type ListDataItem,
+    ListItem,
+    type ListRenderItemInfo,
+    ListSectionHeader,
+} from '~/components/nativewindui/List';
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
-import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
-import { Button } from '@/components/nativewindui/Button';
 
 export default function WalletRelayScreen() {
     const { ndk } = useNDK();
-    const mintList = useNDKSessionEventKind<NDKCashuMintList>(NDKKind.CashuMintList, { create: NDKCashuMintList });
+    const mintList = useNDKSessionEvent<NDKCashuMintList>(NDKKind.CashuMintList, {
+        create: NDKCashuMintList,
+    });
     const { activeWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, setRelays] = useState<string[]>([]);
@@ -23,7 +39,7 @@ export default function WalletRelayScreen() {
 
     useEffect(() => {
         if (!mintList) return;
-        setRelays([...mintList.relays])
+        setRelays([...mintList.relays]);
     }, [mintList?.relays?.length]);
 
     const addFn = () => {
@@ -36,14 +52,17 @@ export default function WalletRelayScreen() {
             const relay = ndk?.addExplicitRelay(url);
             if (relay) setRelays([...relays, relay.url]);
             setUrl('');
-        } catch (e) {
+        } catch (_e) {
             alert('Invalid URL');
         }
     };
 
-    const removeRelay = useCallback((url: string) => {
-        setRelays(relays.filter((r) => r !== url));
-    }, [relays]);
+    const removeRelay = useCallback(
+        (url: string) => {
+            setRelays(relays.filter((r) => r !== url));
+        },
+        [relays]
+    );
 
     const data = useMemo(() => {
         let r: string[] = relays;
@@ -64,7 +83,9 @@ export default function WalletRelayScreen() {
                     </View>
                 ),
             }))
-            .filter((item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!));
+            .filter(
+                (item) => (searchText ?? '').trim().length === 0 || item.title.match(searchText!)
+            );
     }, [searchText, relays]);
 
     const save = useCallback(async () => {
@@ -72,14 +93,17 @@ export default function WalletRelayScreen() {
         setIsSaving(true);
         mintList.relays = relays;
         await activeWallet.getP2pk();
-        activeWallet.publish().then(() => {
-            router.back()
-            mintList.mints ??= activeWallet.mints;
-            mintList.p2pk = activeWallet.p2pk;
-            mintList.publishReplaceable();
-        }).finally(() => {
-            setIsSaving(false);
-        });
+        activeWallet
+            .publish()
+            .then(() => {
+                router.back();
+                mintList.mints ??= activeWallet.mints;
+                mintList.p2pk = activeWallet.p2pk;
+                mintList.publishReplaceable();
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
     }, [relays, activeWallet]);
 
     return (
@@ -90,7 +114,7 @@ export default function WalletRelayScreen() {
                     iosHideWhenScrolling: true,
                     onChangeText: setSearchText,
                 }}
-                rightView={() => (
+                rightView={() =>
                     !isSaving ? (
                         <TouchableOpacity onPress={save}>
                             <Text className="text-primary">Save</Text>
@@ -98,7 +122,7 @@ export default function WalletRelayScreen() {
                     ) : (
                         <ActivityIndicator />
                     )
-                )}
+                }
             />
             <List
                 contentContainerClassName="pt-4"
@@ -118,7 +142,11 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     if (info.item.id === 'add') {
         return (
             <ListItem
-                className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                className={cn(
+                    'ios:pl-0 pl-2',
+                    info.index === 0 &&
+                        'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                )}
                 titleClassName="text-lg"
                 leftView={info.item.leftView}
                 rightView={
@@ -126,7 +154,8 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         <Text className="mt-2 pr-4 text-primary">Add</Text>
                     </TouchableOpacity>
                 }
-                {...info}>
+                {...info}
+            >
                 <TextInput
                     className="flex-1 text-lg text-foreground placeholder:text-muted-foreground"
                     placeholder="Add relay"
@@ -141,7 +170,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
     }
     return (
         <ListItem
-            className={cn('ios:pl-0 pl-2', info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+            className={cn(
+                'ios:pl-0 pl-2',
+                info.index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+            )}
             titleClassName="text-lg"
             leftView={info.item.leftView}
             rightView={
@@ -154,7 +186,10 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                         )}
                         {info.item.badge && (
                             <View className="h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                                <Text variant="footnote" className="font-bold leading-4 text-destructive-foreground">
+                                <Text
+                                    variant="footnote"
+                                    className="font-bold leading-4 text-destructive-foreground"
+                                >
                                     {info.item.badge}
                                 </Text>
                             </View>
@@ -164,7 +199,7 @@ function renderItem<T extends (typeof data)[number]>(info: ListRenderItemInfo<T>
                 )
             }
             {...info}
-            onPress={() => console.log('onPress')}
+            onPress={() => {}}
         />
     );
 }

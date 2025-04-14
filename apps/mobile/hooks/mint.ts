@@ -1,15 +1,21 @@
-import { CashuMint, GetInfoResponse } from "@cashu/cashu-ts";
-import { useEffect, useState } from "react";
-import { dbGetMintInfo, dbSetMintInfo } from "../stores/db/cashu";
+import { CashuMint, type GetInfoResponse } from '@cashu/cashu-ts';
+import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useState } from 'react';
 
-let activeMintFetches = new Map<string, Promise<GetInfoResponse>>();
+const activeMintFetches = new Map<string, Promise<GetInfoResponse>>();
 
 export function useMintInfo(url?: string) {
-    const fromDb = url ? dbGetMintInfo(url) : null;
-    
+    const { ndk } = useNDK();
+    const cacheAdapter = ndk?.cacheAdapter;
+    let fromDb: GetInfoResponse | null = null;
+    if (cacheAdapter instanceof NDKCacheAdapterSqlite && url) {
+        fromDb = cacheAdapter.getAllMintInfo(url);
+
+    }
+
     const [mintInfo, setMintInfo] = useState<GetInfoResponse | null>(fromDb);
     const [loading, setLoading] = useState(false);
-    
+
     useEffect(() => {
         if (mintInfo || !url) return;
         let valid = true;
@@ -26,13 +32,16 @@ export function useMintInfo(url?: string) {
 
         const mint = new CashuMint(url);
         setLoading(true);
-        mint.getInfo().then((info) => {
-            if (!valid) return;
-            setMintInfo(info);
-            dbSetMintInfo(url, info);
-        }).finally(() => {
-            setLoading(false);
-        });
+        mint.getInfo()
+            .then((info) => {
+                if (!valid) return;
+                setMintInfo(info);
+                if (cacheAdapter instanceof NDKCacheAdapterSqlite)
+                    cacheAdapter.setMintInfo(url, info);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
 
         return () => {
             valid = false;

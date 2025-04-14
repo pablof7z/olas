@@ -1,3 +1,3 @@
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
-export const scrollDirAtom = atom<"up" | "down">("up");
+export const scrollDirAtom = atom<'up' | 'down'>('up');

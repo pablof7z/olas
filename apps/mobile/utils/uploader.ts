@@ -1,7 +1,8 @@
-import { BlobDescriptor, BlossomClient, SignedEvent } from './blossom-client';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import type { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
+
 import { generateMediaEventFromBlobDescriptor, signWith } from './blossom';
-import { NDKSigner } from '@nostr-dev-kit/ndk-mobile';
-import NDK from '@nostr-dev-kit/ndk-mobile';
+import { type BlobDescriptor, BlossomClient, type SignedEvent } from './blossom-client';
 
 export class Uploader {
     private fileUri: string;
@@ -28,22 +29,19 @@ export class Uploader {
     }
 
     set onProgress(cb: (progress: number) => void) {
-        console.log('UPLOADER set onProgress', !!cb);
         this._onProgress = cb;
     }
 
     set onError(cb: (error: Error) => void) {
-        console.log('UPLOADER set onError', !!cb);
         this._onError = cb;
     }
 
     set onUploaded(cb: (blob: BlobDescriptor) => void) {
-        console.log('UPLOADER set onUploaded', !!cb);
         this._onUploaded = cb;
     }
 
     private encodeAuthorizationHeader(uploadAuth: SignedEvent): string {
-        return 'Nostr ' + btoa(unescape(encodeURIComponent(JSON.stringify(uploadAuth))));
+        return `Nostr ${btoa(unescape(encodeURIComponent(JSON.stringify(uploadAuth))))}`;
     }
 
     async start() {
@@ -66,12 +64,10 @@ export class Uploader {
 
             // Attach progress event listener to xhr.upload
             this.xhr.upload.addEventListener('progress', (e) => {
-                console.log('Progress event:', { loaded: e.loaded, total: e.total, lengthComputable: e.lengthComputable });
                 if (e.lengthComputable && this._onProgress) {
                     const percentCompleted = Math.round((e.loaded / e.total) * 100);
                     this._onProgress(percentCompleted);
                 } else if (!e.lengthComputable) {
-                    console.log('Progress not computable; total size unknown');
                 }
             });
 
@@ -89,7 +85,7 @@ export class Uploader {
         }
     }
 
-    private xhrOnLoad(e: Event) {
+    private xhrOnLoad() {
         const status = this.xhr.status;
         if (status >= 200 && status < 300) {
             try {
@@ -97,18 +93,17 @@ export class Uploader {
                 if (this._onUploaded && this.response) {
                     this._onUploaded(this.response);
                 }
-            } catch (parseError) {
-                console.log('Failed to parse response:', parseError);
+            } catch (_parseError) {
                 this._onError?.(new Error('Failed to parse server response'));
             }
         } else {
-            console.log('Upload failed with status:', status, this.xhr.responseText);
-            this._onError?.(new Error(`Upload failed with status ${status}: ${this.xhr.responseText}`));
+            this._onError?.(
+                new Error(`Upload failed with status ${status}: ${this.xhr.responseText}`)
+            );
         }
     }
 
-    private xhrOnError(e: Event) {
-        console.log('UPLOADER xhrOnError:', e);
+    private xhrOnError(_e: Event) {
         this._onError?.(new Error(this.xhr.responseText || 'Failed to upload file'));
     }
 

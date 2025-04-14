@@ -1,7 +1,7 @@
 import Video from 'expo-video';
 
 // Render item for the FlashList grid preview
-const renderPreviewItem = ({ item }: { item: typeof fileData[0] }) => {
+const _renderPreviewItem = ({ item }: { item: (typeof fileData)[0] }) => {
     if (item.extension === 'mp4') {
         return (
             <Video
@@ -13,10 +13,5 @@ const renderPreviewItem = ({ item }: { item: typeof fileData[0] }) => {
             />
         );
     }
-    return (
-        <Image
-            source={{ uri: item.uri }}
-            style={styles.previewImage}
-        />
-    );
-}; 
+    return <Image source={{ uri: item.uri }} style={styles.previewImage} />;
+};

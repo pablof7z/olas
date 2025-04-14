@@ -1,48 +1,52 @@
-import { View, StyleSheet, TextInput } from "react-native";
-import { useFeedEditorStore } from "./store";
-import { useCallback, useState } from "react";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { Text } from "@/components/nativewindui/Text";
-import { Button } from "@/components/nativewindui/Button";
-import Tabs from "@/components/tabs";
-import { atom } from "jotai";
+import { atom } from 'jotai';
+import { useCallback, useState } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
-const tabAtom = atom<string>('New');
+import { useFeedEditorStore } from './store';
+
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import Tabs from '@/components/tabs';
+
+const _tabAtom = atom<string>('New');
 
 export default function New() {
     const store = useFeedEditorStore();
-    
-    const [title, setTitle] = useState(store.title ?? "");
-    const [description, setDescription] = useState(store.description ?? "");
-    const [image, setImage] = useState(store.image ?? "");
-    const [hashtags, setHashtags] = useState<string[]>(store.hashtags ?? []);
-    const [pubkeys, setPubkeys] = useState<string[]>(store.pubkeys ?? []);
-    const [encrypted, setEncrypted] = useState(store.encrypted ?? false);
-    
+
+    const [title, setTitle] = useState(store.title ?? '');
+    const [_description, _setDescription] = useState(store.description ?? '');
+    const [_image, _setImage] = useState(store.image ?? '');
+    const [_hashtags, _setHashtags] = useState<string[]>(store.hashtags ?? []);
+    const [_pubkeys, _setPubkeys] = useState<string[]>(store.pubkeys ?? []);
+    const [_encrypted, _setEncrypted] = useState(store.encrypted ?? false);
+
     const save = useCallback(() => {
         store.save();
     }, [store]);
-    
-    return (<KeyboardAvoidingView style={styles.container}>
-        <View style={styles.innerContainer}>
-            <View style={styles.fieldContainer}>
-                <Text variant="caption1">Title</Text>
-                <TextInput
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder="Title"
-                    style={styles.titleInput}
-                    className="text-xl font-bold border border-border"
-                />
-            </View>
-        </View>
 
-        <View style={styles.buttonContainer}>
-            <Button size="lg" variant="primary" onPress={save}>
-                <Text>Save</Text>
-            </Button>
-        </View>
-    </KeyboardAvoidingView>)
+    return (
+        <KeyboardAvoidingView style={styles.container}>
+            <View style={styles.innerContainer}>
+                <View style={styles.fieldContainer}>
+                    <Text variant="caption1">Title</Text>
+                    <TextInput
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="Title"
+                        style={styles.titleInput}
+                        className="border border-border text-xl font-bold"
+                    />
+                </View>
+            </View>
+
+            <View style={styles.buttonContainer}>
+                <Button size="lg" variant="primary" onPress={save}>
+                    <Text>Save</Text>
+                </Button>
+            </View>
+        </KeyboardAvoidingView>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -66,5 +70,5 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         marginTop: 10,
-    }
+    },
 });

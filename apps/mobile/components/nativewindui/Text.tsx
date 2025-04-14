@@ -1,4 +1,4 @@
-import { VariantProps, cva } from 'class-variance-authority';
+import { type VariantProps, cva } from 'class-variance-authority';
 import { cssInterop } from 'nativewind';
 import * as React from 'react';
 import { UITextView } from 'react-native-uitextview';
@@ -44,7 +44,12 @@ function Text({
     ...props
 }: React.ComponentPropsWithoutRef<typeof UITextView> & VariantProps<typeof textVariants>) {
     const textClassName = React.useContext(TextClassContext);
-    return <UITextView className={cn(textVariants({ variant, color }), textClassName, className)} {...props} />;
+    return (
+        <UITextView
+            className={cn(textVariants({ variant, color }), textClassName, className)}
+            {...props}
+        />
+    );
 }
 
 export { Text, TextClassContext, textVariants };

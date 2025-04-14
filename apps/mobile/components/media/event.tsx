@@ -1,8 +1,24 @@
-import { mapImetaTag, NDKEvent, NDKImage, NDKImetaTag, NDKKind, NDKVideo } from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
-import MediaComponent from './media';
+import {
+    type NDKEvent,
+    NDKImage,
+    type NDKImetaTag,
+    NDKKind,
+    NDKVideo,
+    mapImetaTag,
+} from '@nostr-dev-kit/ndk-mobile';
+import {
+    Dimensions,
+    ScrollView,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
+
 import ProductGridContainer from '../product/grid-container';
+import MediaComponent from './media';
+
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export type EventMediaProps = {
     event: NDKEvent;
@@ -14,7 +30,7 @@ export type EventMediaProps = {
     forceProxy?: boolean;
     contentFit?: 'contain' | 'cover';
     style?: StyleProp<ViewStyle>;
-    priority?: 'low' | 'normal' | 'high',
+    priority?: 'low' | 'normal' | 'high';
     maxWidth?: number;
     maxHeight?: number;
     onPress?: () => void;
@@ -47,24 +63,27 @@ export function EventMediaGridContainer({
     size ??= Dimensions.get('window').width / numColumns;
 
     if (event.kind === 30402) {
-        return <ProductGridContainer event={event}>
-            <EventMediaContainer
-                event={event}
-                onPress={onPress}
-                forceProxy={forceProxy}
-                onLongPress={onLongPress}
-                style={[styles.mediaGridContainer]}
-                singleMode
-                width={size}
-                height={size}
-                style={style}
-                {...props}
-            />
-        </ProductGridContainer>
+        return (
+            <ProductGridContainer event={event}>
+                <EventMediaContainer
+                    event={event}
+                    onPress={onPress}
+                    forceProxy={forceProxy}
+                    onLongPress={onLongPress}
+                    style={[styles.mediaGridContainer, style]}
+                    singleMode
+                    width={size}
+                    height={size}
+                    {...props}
+                />
+            </ProductGridContainer>
+        );
     }
 
     return (
-        <View style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}] }>
+        <View
+            style={[styles.mediaGridContainer, index % numColumns !== 0 ? { marginLeft: 0.5 } : {}]}
+        >
             <EventMediaContainer
                 event={event}
                 onPress={onPress}
@@ -88,7 +107,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
         marginBottom: 0.5,
-    }
+    },
 });
 
 export default function EventMediaContainer({
@@ -125,7 +144,7 @@ export default function EventMediaContainer({
                 width={width}
                 height={height}
                 contentFit={contentFit}
-                forceProxy={true}
+                forceProxy
                 maxWidth={maxWidth}
                 maxHeight={maxHeight}
                 priority={priority}
@@ -149,7 +168,8 @@ export default function EventMediaContainer({
                 minimumZoomScale={1}
                 maximumZoomScale={5}
                 contentContainerStyle={{ flexGrow: 1 }}
-                style={{ flex: 1, width: '100%' }}>
+                style={{ flex: 1, width: '100%' }}
+            >
                 {imetas.map((imeta, index) => (
                     <MediaComponent
                         key={index}
@@ -200,24 +220,27 @@ export const getImetas = (event: NDKEvent): NDKImetaTag[] => {
             const parsed = JSON.parse(event.content);
             const imetas = parsed.images.map((image: string) => ({ url: image }));
             return imetas;
-        } catch { return []; }
+        } catch {
+            return [];
+        }
         // const imetas = event.getMatchingTags("images")
     } else if (event.kind === 30402) {
-        const imaages = event.getMatchingTags("image").map((t) => ({ url: t[1] }));
+        const imaages = event.getMatchingTags('image').map((t) => ({ url: t[1] }));
         return imaages;
     }
-    
+
     if (event instanceof NDKImage || event instanceof NDKVideo) {
         return event.imetas;
     }
 
-    const imetas = event.getMatchingTags("imeta")
-        .map(mapImetaTag)
+    const imetas = event.getMatchingTags('imeta').map(mapImetaTag);
     if (imetas.length > 0) return imetas;
-    
+
     try {
         if (event.kind === NDKKind.Text) {
-            const urls = event.content.match(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi);
+            const urls = event.content.match(
+                /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|mkv)/gi
+            );
             if (urls?.length) return urls.map((url) => ({ url }));
         }
 

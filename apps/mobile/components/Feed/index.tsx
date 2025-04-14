@@ -1,15 +1,25 @@
-import { NDKEvent, NDKFilter, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk-mobile";
-import { FlashList } from "@shopify/flash-list";
-import Post from "../events/Post";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FeedEntry, useFeedEvents, useFeedMonitor } from "./hook";
-import { Pressable, RefreshControl, Text, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
-import { useSetAtom } from "jotai";
-import { activeEventAtom } from "@/stores/event";
-import { router } from "expo-router";
-import { useScrollToTop } from "@react-navigation/native";
-import { EventMediaGridContainer } from "../media/event";
-import { scrollDirAtom } from "./store";
+import type { NDKEvent, NDKFilter, NDKSubscriptionOptions } from '@nostr-dev-kit/ndk-mobile';
+import { useScrollToTop } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { useSetAtom } from 'jotai';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    type ViewToken,
+} from 'react-native';
+
+import Post from '../events/Post';
+import { EventMediaGridContainer } from '../media/event';
+import { type FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
+import { scrollDirAtom } from './store';
+
+import { activeEventAtom } from '@/stores/event';
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -17,15 +27,15 @@ type FeedProps = {
     filterKey: string;
     filterOpts?: NDKSubscriptionOptions;
     prepend?: React.ReactNode;
-    filterFn?: (feedEntry: FeedEntry, index: number) => boolean
-    relayUrls?: string[]
-    numColumns?: number
-}
+    filterFn?: (feedEntry: FeedEntry, index: number) => boolean;
+    relayUrls?: string[];
+    numColumns?: number;
+};
 
 type PrependEntry = {
     id: string;
     node: React.ReactNode;
-}
+};
 
 const keyExtractor = (entry: FeedEntry | PrependEntry) => entry.id;
 
@@ -36,7 +46,7 @@ export default function Feed({
     filterFn,
     relayUrls,
     numColumns = 1,
-    filterOpts
+    filterOpts,
 }: FeedProps) {
     const visibleIndex = useRef(0);
     const ref = useRef<FlashList<any> | null>(null);
@@ -45,24 +55,34 @@ export default function Feed({
     useScrollToTop(ref);
 
     const sliceIndex = numColumns * 7;
-    const { entries, newEntries, updateEntries } = useFeedEvents(filters, { subId: 'feed', filterFn, relayUrls, ...filterOpts }, [filterKey + refreshCount]);
-    const { setActiveIndex } = useFeedMonitor(entries.map(e => e.event), sliceIndex)
+    const { entries, newEntries, updateEntries } = useFeedEvents(
+        filters,
+        { subId: 'feed', filterFn, relayUrls, ...filterOpts },
+        [filterKey + refreshCount]
+    );
+    const { setActiveIndex } = useFeedMonitor(
+        entries.map((e) => e.event).filter(e => !!e),
+        sliceIndex
+    );
 
     const [showNewEntriesPrompt, setShowNewEntriesPrompt] = useState(false);
 
-    const onViewableItemsChanged = useCallback(({ viewableItems }) => {
-        visibleIndex.current = viewableItems[0]?.index ?? 0;
-        if (visibleIndex.current === 0 && showNewEntriesPrompt) {
-            setShowNewEntriesPrompt(false);
-        }
-        setActiveIndex(visibleIndex.current);
-    }, [setActiveIndex, showNewEntriesPrompt]);
+    const onViewableItemsChanged = useCallback(
+        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+            visibleIndex.current = viewableItems[0]?.index ?? 0;
+            if (visibleIndex.current === 0 && showNewEntriesPrompt) {
+                setShowNewEntriesPrompt(false);
+            }
+            setActiveIndex(visibleIndex.current);
+        },
+        [setActiveIndex, showNewEntriesPrompt]
+    );
 
     const update = useCallback(() => {
         if (!ref.current) return;
         ref.current.scrollToIndex({
             animated: true,
-            index: 0
+            index: 0,
         });
         updateEntries('update run');
         setShowNewEntriesPrompt(false);
@@ -97,9 +117,9 @@ export default function Feed({
             setRefreshing(false);
         }, 1000);
     }, [updateEntries, refreshCount]);
-    
+
     const renderEntries = useMemo(() => {
-        let ret: (FeedEntry | PrependEntry)[] = [...entries];
+        const ret: (FeedEntry | PrependEntry)[] = [...entries];
 
         if (numColumns > 1) {
             // sort entries by whether they have an imeta tag, if they do, sort by timestamp
@@ -108,48 +128,63 @@ export default function Feed({
             // const bHasImeta = b.event.tags.some(tag => tag.name === 'imeta');
             // if (aHasImeta && !bHasImeta) return -1;
             // if (!aHasImeta && bHasImeta) return 1;
-            // return a.event.created_at! - b.event.created_at!;
+            // return a.event.created_at - b.event.created_at;
             // });
         }
-        
+
         if (prepend && numColumns === 1) ret.unshift({ id: 'prepend', node: prepend });
 
         return ret;
-    }, [entries, prepend, numColumns])
+    }, [entries, prepend, numColumns]);
 
     const handleGridPress = useCallback((event: NDKEvent) => {
         setActiveEvent(event);
-        router.push(`/view`);
-    }, [])
+        router.push('/view');
+    }, []);
 
-    const renderItem = useCallback(({ item, index }: { item: FeedEntry | PrependEntry, index: number }) => {
-        if (numColumns === 1 && index === 0 && item.id === 'prepend') return (item as PrependEntry).node;
-        item = item as FeedEntry;
-        
-        if (numColumns === 1) return (
-            <Post
-                event={item.event}
-                index={index}
-                reposts={item.reposts}
-                timestamp={item.timestamp}
-            />
-        )
-        else return <EventMediaGridContainer
-            event={item.event}
-            index={index}
-            forceProxy={true}
-            numColumns={numColumns}
-            onPress={() => handleGridPress(item.event)}
-        />
-    }, [numColumns])
+    const renderItem = useCallback(
+        ({ item, index }: { item: FeedEntry | PrependEntry; index: number }): React.ReactElement | null => {
+            if (numColumns === 1 && index === 0 && item.id === 'prepend') {
+                const node = (item as PrependEntry).node;
+                // Ensure we return ReactElement or null, as required by FlashList
+                // Use React.isValidElement to ensure it's a renderable element for FlashList
+                return React.isValidElement(node) ? node : null;
+            }
+            item = item as FeedEntry;
+
+            // Ensure item.event exists before rendering components that require it
+            if (!item.event) return null;
+
+            if (numColumns === 1)
+                return (
+                    <Post
+                        event={item.event}
+                        index={index}
+                        reposts={item.reposts}
+                        timestamp={item.timestamp}
+                    />
+                );
+            else
+                return (
+                    <EventMediaGridContainer
+                        event={item.event}
+                        index={index}
+                        forceProxy
+                        numColumns={numColumns}
+                        onPress={() => handleGridPress(item.event!)} // Assert non-null as checked above
+                    />
+                );
+        },
+        [numColumns]
+    );
 
     const scrollPosRef = useRef(0);
-    const scrollDirRef = useRef<"up" | "down">("down");
+    const scrollDirRef = useRef<'up' | 'down'>('down');
     const minScrollThreshold = 60; // minimum pixels to scroll before changing direction
 
     useEffect(() => {
         setScrollDir('up');
-    }, [filterKey])
+    }, [filterKey]);
 
     const setScrollDir = useSetAtom(scrollDirAtom);
     const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -174,13 +209,13 @@ export default function Feed({
             scrollDirRef.current = 'down';
         }
         scrollPosRef.current = currentScrollPos;
-    }, [])
+    }, []);
 
     return (
         <>
             {showNewEntriesPrompt && (
                 <Pressable style={styles.newEntriesPrompt} onPress={update}>
-                    <Text className="text-white text-sm">{newEntries.length} new posts</Text>
+                    <Text className="text-sm text-white">{newEntries.length} new posts</Text>
                 </Pressable>
             )}
             {renderEntries.length > 0 && (
@@ -193,14 +228,16 @@ export default function Feed({
                     onScroll={onScroll}
                     scrollEventThrottle={100}
                     numColumns={numColumns}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />}
-                    getItemType={item => item.id === 'prepend' ? 'prepend' : 'post'}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />
+                    }
+                    getItemType={(item) => (item.id === 'prepend' ? 'prepend' : 'post')}
                     renderItem={renderItem}
-                    disableIntervalMomentum={true}
+                    disableIntervalMomentum
                 />
             )}
         </>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -215,6 +252,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         flexDirection: 'row',
         gap: 10,
-    }
-
-})
+    },
+});

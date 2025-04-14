@@ -1,29 +1,21 @@
-import { router, Tabs, usePathname } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { Home, Search, UserCircle2, WalletIcon } from 'lucide-react-native';
+import { useNDKCurrentUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
-import { useNDKCurrentUser, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
+import { Tabs, router, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
+import { Home, UserCircle2 } from 'lucide-react-native';
+import { useEffect, useMemo } from 'react';
+import type { ViewStyle } from 'react-native';
+import { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
+import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
+import { scrollDirAtom } from '@/components/Feed/store';
+import WalletButton from '@/components/buttons/wallet';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { usePostEditorStore } from '@/lib/post-editor/store';
-import { useMemo, useRef, useEffect } from 'react';
-import WalletButton from '@/components/buttons/wallet';
 import { useUserFlare } from '@/hooks/user-flare';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { WALLET_ENABLED } from '@/utils/const';
-import { Button } from '@/components/nativewindui/Button';
-import { scrollDirAtom } from '@/components/Feed/store';
-import { Animated, Platform, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Reanimated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withSpring,
-    interpolate,
-    runOnJS,
-} from 'react-native-reanimated';
 
 export default function TabsLayout() {
     const currentUser = useNDKCurrentUser();
@@ -31,17 +23,15 @@ export default function TabsLayout() {
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const tabBarAnim = useSharedValue(0);
 
-    const openPickerIfEmpty = usePostEditorStore(s => s.openPickerIfEmpty);
+    // Create a ref that's always defined but may point to null
+    const safeScrollRef = useMemo(
+        () => ({
+            current: scrollRef?.current || null,
+        }),
+        [scrollRef]
+    );
 
-    // Create a ref that we can safely pass to useScrollToTop
-    const safeScrollRef = useMemo(() => {
-        return scrollRef?.current ? { current: scrollRef.current } : null;
-    }, [scrollRef]);
-
-    // Only use useScrollToTop if we have a valid ref
-    if (safeScrollRef) {
-        useScrollToTop(safeScrollRef);
-    }
+    useScrollToTop(safeScrollRef);
 
     const scrollDir = useAtomValue(scrollDirAtom);
 
@@ -53,20 +43,18 @@ export default function TabsLayout() {
             stiffness: 200,
             mass: 0.5, // Add a bit less mass for faster response
         });
-    }, [scrollDir]);
+    }, [scrollDir, tabBarAnim]);
 
     const isReels = usePathname() === '/reels';
-    
+
     // Create animated style using Reanimated
     const animatedTabBarStyle = useAnimatedStyle(() => {
         return {
-            transform: [{
-                translateY: interpolate(
-                    tabBarAnim.value,
-                    [0, 1],
-                    [0, 100]
-                )
-            }],
+            transform: [
+                {
+                    translateY: interpolate(tabBarAnim.value, [0, 1], [0, 100]),
+                },
+            ],
         };
     });
 
@@ -82,22 +70,14 @@ export default function TabsLayout() {
             return {
                 tabBarActiveTintColor: 'white',
                 tabBarInactiveTintColor: 'white',
-                tabBarStyle: [
-                    baseStyle,
-                    { backgroundColor: 'black' },
-                    animatedTabBarStyle
-                ]
-            }
+                tabBarStyle: [baseStyle, { backgroundColor: 'black' }, animatedTabBarStyle],
+            };
         } else {
             return {
                 tabBarActiveTintColor: colors.foreground,
                 tabBarInactiveTintColor: colors.foreground,
-                tabBarStyle: [
-                    baseStyle,
-                    { backgroundColor: colors.card },
-                    animatedTabBarStyle
-                ]
-            }
+                tabBarStyle: [baseStyle, { backgroundColor: colors.card }, animatedTabBarStyle],
+            };
         }
     }, [isReels, colors, animatedTabBarStyle]);
 
@@ -106,8 +86,9 @@ export default function TabsLayout() {
             screenOptions={{
                 headerShown: true,
                 tabBarShowLabel: false,
-                ...screenOptions
-            }}>
+                ...screenOptions,
+            }}
+        >
             <Tabs.Screen
                 name="index"
                 options={{
@@ -115,15 +96,19 @@ export default function TabsLayout() {
                     headerTransparent: false,
                     title: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <Home size={24} color={color} strokeWidth={focused ? 3 : 2} />
+                    ),
                 }}
-                listeners={{
-                    // tabPress: (e) => {
-                    //     if (scrollRef.current) {
-                    //         scrollRef.current.scrollToOffset({ offset: 0, animated: true });
-                    //     }
-                    // },
-                }}
+                listeners={
+                    {
+                        // tabPress: (e) => {
+                        //     if (scrollRef.current) {
+                        //         scrollRef.current.scrollToOffset({ offset: 0, animated: true });
+                        //     }
+                        // },
+                    }
+                }
             />
 
             <Tabs.Screen
@@ -132,7 +117,12 @@ export default function TabsLayout() {
                     title: 'Reels',
                     headerShown: false,
                     tabBarIcon: ({ color, focused }) => (
-                        <ReelIcon width={24} height={24} strokeWidth={focused ? 2.5 : 2} color={color} />
+                        <ReelIcon
+                            width={24}
+                            height={24}
+                            strokeWidth={focused ? 2.5 : 2}
+                            color={color}
+                        />
                     ),
                 }}
             />
@@ -140,27 +130,19 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="publish2"
                 listeners={{
-                    // tabPress: (e) => {
-                    //     e.preventDefault();
-                    //     if (!currentUser) {
-                    //         router.push('/login');
-                    //     } else {
-                    //         newPost({ types: ['images', 'videos'] });
-                    //     }
-                    // },
                     tabPress: (e) => {
                         e?.preventDefault?.();
                         if (!currentUser) {
                             router.push('/login');
                         } else {
-                            openPickerIfEmpty();
-                            router.push('/(publish)');
+                            router.push('/publish');
                         }
                     },
+                    tabLongPress: () => router.push('/story'),
                 }}
                 options={{
                     title: 'Publish',
-                    tabBarIcon: ({ color, focused }) => (
+                    tabBarIcon: ({ color }) => (
                         <NewIcon width={24} height={24} strokeWidth={2.5} color={color} />
                     ),
                 }}
@@ -184,9 +166,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Settings',
                     headerShown: false,
-                    tabBarIcon: ({ color, focused }) => (
-                        <UserButton size={24} />
-                    )
+                    tabBarIcon: ({ color, focused }) => <UserButton size={24} />,
                 }}
                 listeners={{
                     tabPress: (e) => {
@@ -196,25 +176,31 @@ export default function TabsLayout() {
                         } else {
                             router.push('/(home)/(settings)');
                         }
-                    }
+                    },
                 }}
             />
         </Tabs>
     );
 }
 
-
 function UserButton({ size = 32 }: { size?: number }) {
     const currentUser = useNDKCurrentUser();
     const { colors } = useColorScheme();
-    const { userProfile } = useUserProfile(currentUser?.pubkey);
+    const userProfile = useProfile(currentUser?.pubkey);
     const userFlare = useUserFlare(currentUser?.pubkey);
 
     if (currentUser) {
-        return <UserAvatar pubkey={currentUser.pubkey} userProfile={userProfile} imageSize={size} flare={userFlare} canSkipBorder={true} borderWidth={1} />
+        return (
+            <UserAvatar
+                pubkey={currentUser.pubkey}
+                userProfile={userProfile}
+                imageSize={size}
+                flare={userFlare}
+                canSkipBorder
+                borderWidth={1}
+            />
+        );
     }
-    
-    return (
-        <UserCircle2 size={size} color={colors.foreground} strokeWidth={2} />
-    )
+
+    return <UserCircle2 size={size} color={colors.foreground} strokeWidth={2} />;
 }

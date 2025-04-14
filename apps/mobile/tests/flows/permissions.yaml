@@ -1,0 +1,40 @@
+appId: com.olas.app
+name: Permissions Flow
+tags:
+    - permissions
+
+env:
+    PERMISSION_TYPE: camera # can be overridden by parent flow
+
+---
+# Handle iOS permissions
+- runScript: |
+      if (device.platform === 'ios') {
+          const permissionType = env.PERMISSION_TYPE;
+          const permissionText = {
+              camera: '"Olas" Would Like to Access the Camera',
+              photos: '"Olas" Would Like to Access Your Photos',
+              microphone: '"Olas" Would Like to Access the Microphone'
+          }[permissionType];
+          
+          if (permissionText) {
+              flow.assertVisible(permissionText);
+              flow.tapOn('OK');
+          }
+      }
+
+# Handle Android permissions
+- runScript: |
+      if (device.platform === 'android') {
+          const permissionType = env.PERMISSION_TYPE;
+          const permissionText = {
+              camera: 'Allow Olas to take pictures and record video?',
+              photos: 'Allow Olas to access photos and media on your device?',
+              microphone: 'Allow Olas to record audio?'
+          }[permissionType];
+          
+          if (permissionText) {
+              flow.assertVisible(permissionText);
+              flow.tapOn('Allow');
+          }
+      }

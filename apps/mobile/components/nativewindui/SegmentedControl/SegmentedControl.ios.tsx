@@ -1,6 +1,6 @@
 import RNSegmentedControl from '@react-native-segmented-control/segmented-control';
 
-import { SegmentControlProps } from './types';
+import type { SegmentControlProps } from './types';
 
 function SegmentedControl({
     values,

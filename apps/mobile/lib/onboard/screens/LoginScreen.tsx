@@ -1,13 +1,15 @@
-import React, { useCallback } from 'react';
-import { View, KeyboardAvoidingView, Platform, TouchableOpacity, StyleSheet } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/nativewindui/Text';
+import { Stack, useRouter } from 'expo-router';
 import { useAtomValue } from 'jotai';
+import React, { useCallback } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { modeAtom } from '../store';
-import { SignUp } from './Signup';
 import { Login } from './Login';
+import { SignUp } from './Signup';
+
+import { Text } from '@/components/nativewindui/Text';
 
 export default function LoginScreen() {
     const mode = useAtomValue(modeAtom);
@@ -21,28 +23,30 @@ export default function LoginScreen() {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerTransparent: true,
-                title: ""
-            }} />
-            <View 
-                className="w-full flex-1 items-center justify-center bg-card px-8 py-4" 
+            <Stack.Screen
+                options={{
+                    headerTransparent: true,
+                    title: '',
+                }}
+            />
+            <View
+                className="w-full flex-1 items-center justify-center bg-card px-8 py-4"
                 style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}
             >
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.container}
                 >
                     {mode === 'login' ? <Login /> : <SignUp />}
                 </KeyboardAvoidingView>
 
-                <TouchableOpacity 
-                    onPress={handleTermsOfService} 
-                    style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        paddingBottom: 20 
+                <TouchableOpacity
+                    onPress={handleTermsOfService}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingBottom: 20,
                     }}
                 >
                     <Text className="text-sm text-muted-foreground">
@@ -64,4 +68,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 20,
     },
-}); 
+});

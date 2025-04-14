@@ -1,5 +1,6 @@
-import { GroupEntry } from "../groups/types";
-import { Location } from "@/lib/post/types";
+import type { GroupEntry } from '../groups/types';
+
+import type { Location } from '@/lib/publish/types';
 
 export type PostMediaType = 'image' | 'video';
 
@@ -28,7 +29,7 @@ export type PostMedia = {
     uploadedThumbnailUri?: string;
     uploadedSha256?: string;
     blurhash?: string;
-    
+
     contentMode: 'portrait' | 'landscape' | 'square';
     duration?: number;
     size?: number;
@@ -47,4 +48,4 @@ export type PostMetadata = {
     groups?: GroupEntry[];
 };
 
-export type PostState = "editing" | "uploading" | "uploaded" | "publishing" | "error" | string;
+export type PostState = 'editing' | 'uploading' | 'uploaded' | 'publishing' | 'error' | string;

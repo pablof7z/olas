@@ -1,11 +1,13 @@
-import { relayNoticesAtom } from '@/stores/relays';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { type NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { useLocalSearchParams } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import { FlatList, TouchableOpacity, View } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import NDK, { NDKFilter, useNDK } from '@nostr-dev-kit/ndk-mobile';
+
 import { List, ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import { relayNoticesAtom } from '@/stores/relays';
 
 type Row = {
     id: string;
@@ -24,7 +26,7 @@ function subscriptions({ relayUrl, ndk }: { relayUrl?: string; ndk: NDK }) {
 
     for (const [id, subscriptions] of subManager.subscriptions) {
         const row = {
-            id: id,
+            id,
             filters: subscriptions.flatMap((s) => s.executeFilters),
             rawFilters: subscriptions.flatMap((s) => s.executeFilters),
             count: subscriptions.length,
@@ -54,16 +56,14 @@ export default function RelayScreen() {
     const { relayUrl } = useLocalSearchParams() as { relayUrl: string };
     const relayNotices = useAtomValue(relayNoticesAtom);
 
-    const notices = useMemo(() => {
+    const _notices = useMemo(() => {
         if (!relayUrl) return [];
         return relayNotices[relayUrl] || [];
     }, [relayUrl]);
 
     const subsData = subscriptions({ relayUrl, ndk });
 
-    const show = useCallback((filters: NDKFilter[]) => {
-        console.log(JSON.stringify(filters, null, 4));
-    }, []);
+    const show = useCallback((_filters: NDKFilter[]) => {}, []);
 
     return (
         <View className="flex-1">
@@ -82,7 +82,8 @@ export default function RelayScreen() {
                             id: item.id,
                             title: item.id,
                             badge: item.count,
-                        }}>
+                        }}
+                    >
                         <TouchableOpacity onPress={() => show(item.rawFilters)}>
                             <View className="flex-col">
                                 {item.filters.map((filter, index) => (

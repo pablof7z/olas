@@ -1,13 +1,13 @@
-import { router } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import { router } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function BackButton() {
     return (
         <TouchableOpacity onPress={() => router.back()} style={style.container}>
-            <ArrowLeft size={24} color={"white"} />
+            <ArrowLeft size={24} color="white" />
         </TouchableOpacity>
-    )
+    );
 }
 
 const style = StyleSheet.create({
@@ -20,5 +20,5 @@ const style = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginHorizontal: 10,
-    }
-})
+    },
+});

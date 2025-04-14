@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
+import { type Hexpubkey, type NDKEvent, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import type React from 'react';
+import { useMemo } from 'react';
+import { Text, View } from 'react-native';
+
 import * as User from '../user';
-import { Hexpubkey, NDKEvent, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
 
 interface AvatarGroupProps {
     events?: NDKEvent[];
@@ -10,15 +12,19 @@ interface AvatarGroupProps {
     threshold: number;
 }
 
-const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: number }> = ({ pubkey, avatarSize, index }) => {
-    const { userProfile } = useUserProfile(pubkey);
+const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: number }> = ({
+    pubkey,
+    avatarSize,
+    index,
+}) => {
+    const userProfile = useProfile(pubkey);
 
     const style = useMemo(() => {
         return {
             height: avatarSize,
             width: avatarSize,
             marginLeft: index > 0 ? -(avatarSize * 1.5) : 0,
-        }
+        };
     }, [avatarSize, index]);
 
     return (
@@ -36,7 +42,12 @@ const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: 
  * This component renders a list of avatars that slightly overlap. Useful to show
  * multiple people that have participated in certain event
  */
-const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, threshold = 3 }) => {
+const AvatarGroup: React.FC<AvatarGroupProps> = ({
+    events,
+    pubkeys,
+    avatarSize,
+    threshold = 3,
+}) => {
     const pubkeyCounts = useMemo(() => {
         if (!events) return {};
 
@@ -58,12 +69,19 @@ const AvatarGroup: React.FC<AvatarGroupProps> = ({ events, pubkeys, avatarSize, 
     return (
         <View className="flex flex-row">
             {Array.from(new Set(sortedPubkeys.slice(0, threshold))).map((pubkey, index) => (
-                <AvatarGroupItem pubkey={pubkey} avatarSize={avatarSize} index={index} key={pubkey} />
+                <AvatarGroupItem
+                    pubkey={pubkey}
+                    avatarSize={avatarSize}
+                    index={index}
+                    key={pubkey}
+                />
             ))}
 
             {sortedPubkeys.length > threshold && (
                 <View>
-                    <Text className="text-xs text-gray-700">+{sortedPubkeys.length - threshold}</Text>
+                    <Text className="text-xs text-gray-700">
+                        +{sortedPubkeys.length - threshold}
+                    </Text>
                 </View>
             )}
         </View>

@@ -1,21 +1,24 @@
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
-import { NDKList, useMuteList, useNDK, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { FlatList, ScrollView, TextInput, View } from 'react-native';
-import { Text } from '@/components/nativewindui/Text';
-import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
-import * as User from '@/components/ui/user';
-import { RenderTarget } from '@shopify/flash-list';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '@/components/nativewindui/Button';
+import { toast } from '@backpackapp-io/react-native-toast'; // Import toast
+import { NDKList, useMuteList, useNDK, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import type { RenderTarget } from '@shopify/flash-list';
+import { Stack, router } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import { router, Stack } from 'expo-router';
 import { Delete } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, ScrollView, TextInput, View } from 'react-native';
+
+import { Button } from '@/components/nativewindui/Button';
+import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
+import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import * as User from '@/components/ui/user';
 
 const hashtagsAtom = atom<string[]>([]);
 const pubkeysAtom = atom<string[]>([]);
 
 export default function MutedScreen() {
-    const { mutedHashtags, mutedPubkeys } = useMuteList();
+    // Update destructuring based on useMuteList return type
+    const { hashtags: mutedHashtags, pubkeys: mutedPubkeys } = useMuteList();
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
@@ -23,62 +26,69 @@ export default function MutedScreen() {
         setHashtags(Array.from(mutedHashtags));
         setPubkeys(Array.from(mutedPubkeys));
     }, [mutedHashtags, mutedPubkeys]);
-    
+
     const data = useMemo(() => {
         const v = [];
 
         v.push({ id: 'hashtags', type: 'header', value: 'Hashtags' });
-        v.push(...hashtags.map(h => ({ id: `hashtag-${h}`, type: 'hashtag', value: h })));
+        v.push(...hashtags.map((h) => ({ id: `hashtag-${h}`, type: 'hashtag', value: h })));
         v.push({ id: 'hashtag-add', type: 'hashtag-add' });
 
         if (pubkeys.length > 0) {
-            v.push  ({ id: 'users', type: 'header', value: 'Users' });
-            v.push(...pubkeys.map(p => ({ id: `user-${p}`, type: 'user', value: p })));
+            v.push({ id: 'users', type: 'header', value: 'Users' });
+            v.push(...pubkeys.map((p) => ({ id: `user-${p}`, type: 'user', value: p })));
         }
 
         return v;
     }, [hashtags.length, pubkeys.length]);
 
-    console.log('rendering data', {hashtagCount: hashtags.length, pubkeyCount: pubkeys.length});
-
     const { ndk } = useNDK();
 
     const save = useCallback(async () => {
+        if (!ndk) {
+            console.error("NDK not available to create mute list.");
+            toast.error("Error updating mute list.");
+            return;
+        }
         const event = new NDKList(ndk);
         event.kind = 10000;
-        event.tags = [
-            ...hashtags.map(h => ['t', h]),
-            ...pubkeys.map(p => ['p', p]),
-        ]
+        event.tags = [...hashtags.map((h) => ['t', h]), ...pubkeys.map((p) => ['p', p])];
         await event.sign();
-        console.log('event', JSON.stringify(event.rawEvent(), null, 2));
         await event.publishReplaceable();
         router.back();
     }, [hashtags, pubkeys]);
-    
+
     return (
         <>
-            <Stack.Screen options={{
-                headerTitle: 'Muted Content',
-                headerRight: () => (
-                    <Button variant="plain" onPress={save}>
-                        <Text className="text-primary">Save</Text>
-                    </Button>
-                )
-            }} />
-        <List
-            data={data}
-            variant="insets"
-            estimatedItemSize={50}
-            keyExtractor={item => item.id}
-            getItemType={item => item.type}
-            renderItem={({ item, index, target }) => <Item item={item} index={index} target={target} />}
+            <Stack.Screen
+                options={{
+                    headerTitle: 'Muted Content',
+                    headerRight: () => (
+                        <Button variant="plain" onPress={save}>
+                            <Text className="text-primary">Save</Text>
+                        </Button>
+                    ),
+                }}
+            />
+            <List
+                data={data}
+                variant="insets"
+                estimatedItemSize={50}
+                keyExtractor={(item) => item.id}
+                getItemType={(item) => item.type}
+                renderItem={({ item, index, target }) => (
+                    <Item item={item} index={index} target={target} />
+                )}
             />
         </>
     );
 }
 
-function HashtagAddItem({ item, index, target }: { item: any; index: number; target: RenderTarget }) {
+function HashtagAddItem({
+    item,
+    index,
+    target,
+}: { item: any; index: number; target: RenderTarget }) {
     const [hashtag, setHashtag] = useState('');
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const getFocus = useRef(false);
@@ -88,24 +98,26 @@ function HashtagAddItem({ item, index, target }: { item: any; index: number; tar
         getFocus.current = true;
         setHashtag('');
     }, [hashtag, setHashtags]);
-    
-    return <View className="flex-row items-center justify-between gap-2 bg-card">
-        <TextInput
-            value={hashtag}
-            onChangeText={setHashtag}
-            placeholder="Add hashtag"
-            onSubmitEditing={add}
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="flex-1 p-4"
-            autoFocus={getFocus.current}
-        />
-        {hashtag.length > 0 && (
-            <Button onPress={add} variant="plain">
-                <Text>Add</Text>
-            </Button>
-        )}
-    </View>
+
+    return (
+        <View className="flex-row items-center justify-between gap-2 bg-card">
+            <TextInput
+                value={hashtag}
+                onChangeText={setHashtag}
+                placeholder="Add hashtag"
+                onSubmitEditing={add}
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="flex-1 p-4"
+                autoFocus={getFocus.current}
+            />
+            {hashtag.length > 0 && (
+                <Button onPress={add} variant="plain">
+                    <Text>Add</Text>
+                </Button>
+            )}
+        </View>
+    );
 }
 
 function Item({ item, index, target }: { item: any; index: number; target: RenderTarget }) {
@@ -122,28 +134,38 @@ function Item({ item, index, target }: { item: any; index: number; target: Rende
     return <ListItem item={item} index={index} target={target} />;
 }
 
-function HashtagItem({ hashtag, index, target }: { hashtag: string; index: number; target: RenderTarget }) {
+function HashtagItem({
+    hashtag,
+    index,
+    target,
+}: { hashtag: string; index: number; target: RenderTarget }) {
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const remove = useCallback(() => {
-        setHashtags(hashtags.filter(h => h !== hashtag));
+        setHashtags(hashtags.filter((h) => h !== hashtag));
     }, [hashtag, setHashtags, hashtags]);
-    
-    return <ListItem
-        item={{ title: hashtag }}
-        index={index}
-        target={target}
-        rightView={<RemoveButton onPress={remove} />}
-    />;
+
+    return (
+        <ListItem
+            item={{ title: hashtag }}
+            index={index}
+            target={target}
+            rightView={<RemoveButton onPress={remove} />}
+        />
+    );
 }
 
-function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: RenderTarget; index: number }) {
-    const { userProfile } = useUserProfile(pubkey);
+function MutedUserListItem({
+    pubkey,
+    target,
+    index,
+}: { pubkey: string; target: RenderTarget; index: number }) {
+    const userProfile = useProfile(pubkey);
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {
-        setPubkeys(pubkeys.filter(p => p !== pubkey));
+        setPubkeys(pubkeys.filter((p) => p !== pubkey));
     }, [pubkey, pubkeys, setPubkeys]);
-    
+
     return (
         <ListItem
             index={index}
@@ -159,7 +181,9 @@ function MutedUserListItem({ pubkey, target, index }: { pubkey: string; target: 
 }
 
 function RemoveButton({ onPress }: { onPress: () => void }) {
-    return <Button variant="plain" onPress={onPress}>
-        <Delete size={16} />
-    </Button>;
+    return (
+        <Button variant="plain" onPress={onPress}>
+            <Delete size={16} />
+        </Button>
+    );
 }

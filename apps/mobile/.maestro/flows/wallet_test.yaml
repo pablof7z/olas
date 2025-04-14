@@ -4,42 +4,42 @@ appId: com.pablof7z.snapstr
 
 # Navigate to Wallet (assuming a wallet tab or section exists)
 - tapOn:
-    id: "wallet-tab"
-    fallback:
-      - tapOn: "Wallet"
-- assertVisible: "Wallet"
+      id: 'wallet-tab'
+      fallback:
+          - tapOn: 'Wallet'
+- assertVisible: 'Wallet'
 - takeScreenshot: wallet-screen-initial
 
 # Check wallet balance (assuming there's a balance element)
 - assertVisible:
-    id: "wallet-balance"
-    fallback:
-      - assertVisible: "Balance"
+      id: 'wallet-balance'
+      fallback:
+          - assertVisible: 'Balance'
 
 # Test transaction history (assuming there's a transaction history section)
 - scrollUntilVisible:
-    element:
-      id: "transaction-history"
-      fallback:
-        text: "Transactions"
-    direction: DOWN
-    timeout: 5000
+      element:
+          id: 'transaction-history'
+          fallback:
+              text: 'Transactions'
+      direction: DOWN
+      timeout: 5000
 - assertVisible:
-    id: "transaction-history"
-    fallback:
-      - assertVisible: "Transactions"
+      id: 'transaction-history'
+      fallback:
+          - assertVisible: 'Transactions'
 - takeScreenshot: wallet-transactions
 
 # Test wallet settings (assuming there's a settings section)
 - scrollUntilVisible:
-    element:
-      id: "wallet-settings"
-      fallback:
-        text: "Settings"
-    direction: DOWN
-    timeout: 5000
+      element:
+          id: 'wallet-settings'
+          fallback:
+              text: 'Settings'
+      direction: DOWN
+      timeout: 5000
 - tapOn:
-    id: "wallet-settings"
-    fallback:
-      - tapOn: "Settings"
-- takeScreenshot: wallet-settings 
+      id: 'wallet-settings'
+      fallback:
+          - tapOn: 'Settings'
+- takeScreenshot: wallet-settings

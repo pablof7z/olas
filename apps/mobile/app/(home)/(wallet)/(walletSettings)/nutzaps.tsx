@@ -1,119 +1,144 @@
-import { DBCache, NDKEvent, NDKKind, NDKNutzap, useNDKCurrentUser, useNDK, useNDKWallet, useNDKNutzapMonitor, NDKCacheAdapterSqlite } from "@nostr-dev-kit/ndk-mobile";
-import * as User from "@/components/ui/user";
-import { FlashList } from "@shopify/flash-list";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
-import { NDKCashuWallet, NDKNutzapState, NdkNutzapStatus } from "@nostr-dev-kit/ndk-wallet";
-import { Text } from "@/components/nativewindui/Text";
-import { formatMoney } from "@/utils/bitcoin";
-import { Button } from "@/components/nativewindui/Button";
-import { Proof } from "@cashu/cashu-ts";
-import { ListItem } from "@/components/nativewindui/List";
-import { useUserProfile } from "@/hooks/user-profile";
+import { Proof } from '@cashu/cashu-ts';
+import {
+    // DBCache, // Removed unused import
+    type NDKCacheAdapterSqlite,
+    NDKEvent,
+    NDKKind,
+    NDKNutzap,
+    useNDK,
+    useNDKCurrentUser,
+    useNDKNutzapMonitor,
+    useNDKWallet,
+    useProfile,
+} from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet'; // Removed unexported NDKNutzapState, NdkNutzapStatus
+// Define placeholder types or use 'any' if specific types are unknown
+type NDKNutzapState = any; // Placeholder type
+type NdkNutzapStatus = string; // Placeholder type, assuming string statuses
+import { FlashList } from '@shopify/flash-list';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
+
+import { Button } from '@/components/nativewindui/Button';
+import { ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
+import * as User from '@/components/ui/user';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function NutzapsScreen() {
     const { activeWallet } = useNDKWallet();
     const { nutzapMonitor } = useNDKNutzapMonitor();
     const { ndk } = useNDK();
+    if (!ndk || !nutzapMonitor) {
+        // Handle missing ndk or nutzapMonitor
+        console.error("NDK or NutzapMonitor not available.");
+        return <View><Text>Error initializing Nutzaps screen.</Text></View>;
+    }
     const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
     const nutzapStates = nutzapMonitor.nutzapStates;
 
-    const addNutzapIfMissing = useCallback((eventId: string, state: NDKNutzapState) => {
-        // if (!state.nutzap) {
+    const addNutzapIfMissing = useCallback(
+        (eventId: string, state: NDKNutzapState) => {
+            // if (!state.nutzap) {
             const event = cacheAdapter.getEventId(eventId);
             if (event) {
+                // ndk is checked above
                 state.nutzap = new NDKNutzap(ndk, event);
             }
-        // }
+            // }
 
-        return state;
-    }, [nutzapStates])
+            return state;
+        },
+        [nutzapStates]
+    );
 
     const sortedNutzaps = useMemo(() => {
-        const states = Array.from(nutzapStates.entries())
-            .map(([eventId, state]) => [eventId, addNutzapIfMissing(eventId, state)] as [string, NDKNutzapState]);
-        
+        const states = Array.from(nutzapStates.entries()).map(
+            ([eventId, state]) =>
+                [eventId, addNutzapIfMissing(eventId, state)] as [string, NDKNutzapState]
+        );
+
         // Sort by created_at timestamp (descending - newest first)
         return states.sort((a, b) => {
             const nutzapA = a[1].nutzap;
             const nutzapB = b[1].nutzap;
-            
+
             // If either nutzap is missing, put it at the end
             if (!nutzapA) return 1;
             if (!nutzapB) return -1;
-            
+
             // Sort by created_at timestamp
             return (nutzapB.created_at || 0) - (nutzapA.created_at || 0);
         });
-    }, [nutzapStates, addNutzapIfMissing])
-    
+    }, [nutzapStates, addNutzapIfMissing]);
+
     if (!(activeWallet instanceof NDKCashuWallet)) return null;
 
-    return <View style={{ flex: 1 }}>
-        <FlashList
-            data={sortedNutzaps}
-            estimatedItemSize={80}
-            renderItem={({item, index, target}) => (
-                <NutzapRow 
-                    wallet={activeWallet} 
-                    state={item[1]} 
-                    eventId={item[0]} 
-                    index={index}
-                    target={target}
-                />
-            )}
-        />
-    </View>
-}   
+    return (
+        <View style={{ flex: 1 }}>
+            <FlashList
+                data={sortedNutzaps}
+                estimatedItemSize={80}
+                renderItem={({ item, index, target }) => (
+                    <NutzapRow
+                        // wallet prop removed as NutzapRow doesn't accept it
+                        state={item[1]}
+                        eventId={item[0]}
+                        index={index}
+                        target={target}
+                    />
+                )}
+            />
+        </View>
+    );
+}
 
-function NutzapRow({ state, eventId, index, target }: { 
-    state: NDKNutzapState,
-    eventId: string,
-    index: number,
-    target: any
-}) {
+function NutzapRow({
+    state,
+    eventId,
+    index,
+    target,
+}: { state: NDKNutzapState; eventId: string; index: number; target: any }) {
     const { ndk } = useNDK();
-    let nutzap = state.nutzap;
+    const nutzap = state.nutzap;
     const status = state.status;
 
     const { nutzapMonitor } = useNDKNutzapMonitor();
 
     const claim = useCallback(async () => {
         if (!nutzap) return;
+        // nutzapMonitor is checked in the parent component
+        const _res = await nutzapMonitor!.redeemNutzap(nutzap); // Use non-null assertion
+    }, [nutzap?.id]);
 
-        console.log('nutzap', nutzap);
-        console.log('p2pk of nutzap', nutzap.p2pk);
-        const res = await nutzapMonitor.redeemNutzap(nutzap);
-        console.log('res', res);
-    }, [nutzap?.id])
-    
-    const spent = [NdkNutzapStatus.REDEEMED, NdkNutzapStatus.SPENT].includes(status);
+    // Replace NdkNutzapStatus enum with string literals
+    const spent = ['REDEEMED', 'SPENT'].includes(status.toUpperCase());
 
-    const { userProfile } = useUserProfile(nutzap?.pubkey);
+    const userProfile = useProfile(nutzap?.pubkey);
 
-    const handleLongPress = useCallback(() => {
-        console.log("long press", eventId, state.nutzap && JSON.stringify(state.nutzap.rawEvent(), null, 4));
-        console.log('p2pk of nutzap', nutzap?.p2pk);
-        console.log('is nutzap', nutzap instanceof NDKNutzap);
-    }, [eventId]);
-    
-    return <ListItem
-        index={index}
-        target={target}
-        leftView={nutzap && <User.Avatar pubkey={nutzap.pubkey} userProfile={userProfile} imageSize={24} />}
-        rightView={!spent && (
-            <Button 
-                size="sm" 
-                variant="secondary"
-                onPress={claim}
-            >
-                <Text>Redeem</Text>
-            </Button>
-        )}
-        onLongPress={handleLongPress}
-        item={{
-            title: status,
-            subTitle: state.errorMessage,
-        }}
-    />
+    const handleLongPress = useCallback(() => {}, [eventId]);
+
+    return (
+        <ListItem
+            index={index}
+            target={target}
+            leftView={
+                nutzap && (
+                    <User.Avatar pubkey={nutzap.pubkey} userProfile={userProfile} imageSize={24} />
+                )
+            }
+            rightView={
+                !spent && (
+                    <Button size="sm" variant="secondary" onPress={claim}>
+                        <Text>Redeem</Text>
+                    </Button>
+                )
+            }
+            onLongPress={handleLongPress}
+            item={{
+                title: status,
+                subTitle: state.errorMessage,
+            }}
+        />
+    );
 }

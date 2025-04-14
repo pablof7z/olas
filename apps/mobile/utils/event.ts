@@ -1,4 +1,4 @@
-import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 
 export function getClientName(event: NDKEvent) {
     let clientName = event.tagValue('client');

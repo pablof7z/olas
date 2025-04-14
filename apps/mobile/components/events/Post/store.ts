@@ -1,13 +1,15 @@
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { atom } from 'jotai';
-import { RefObject } from 'react';
-import { type BottomSheetModal } from '@gorhom/bottom-sheet';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import type { RefObject } from 'react';
 
-export const optionsSheetRefAtom = atom<RefObject<BottomSheetModal> | null, [RefObject<BottomSheetModal> | null], void>(
+export const optionsSheetRefAtom = atom<
+    RefObject<BottomSheetModal> | null,
+    [RefObject<BottomSheetModal> | null],
+    void
+>(null, (_get, set, value) => set(optionsSheetRefAtom, value));
+
+export const optionsMenuEventAtom = atom<NDKEvent | null, [NDKEvent | null], void>(
     null,
-    (get, set, value) => set(optionsSheetRefAtom, value)
-);
-
-export const optionsMenuEventAtom = atom<NDKEvent | null, [NDKEvent | null], void>(null, (get, set, event) =>
-    set(optionsMenuEventAtom, event)
+    (_get, set, event) => set(optionsMenuEventAtom, event)
 );

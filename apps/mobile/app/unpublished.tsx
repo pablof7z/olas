@@ -1,15 +1,22 @@
+import { toast } from '@backpackapp-io/react-native-toast';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { type NDKPublishError, useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
+import type { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile/src/stores/ndk';
+import type { RenderTarget } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { useMemo } from 'react';
+import { TouchableOpacity, View } from 'react-native';
+
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
-import { TouchableOpacity, View } from 'react-native';
-import { RenderTarget } from '@shopify/flash-list';
-import { router } from 'expo-router';
-import NDK, { NDKPublishError, useNDK, useNDKUnpublishedEvents } from '@nostr-dev-kit/ndk-mobile';
-import { UnpublishedEventEntry } from '@nostr-dev-kit/ndk-mobile/src/stores/ndk';
-import { toast } from '@backpackapp-io/react-native-toast';
-import { useMemo } from 'react';
 
-const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, target: RenderTarget) => {
+const renderItem = (
+    ndk: NDK,
+    entry: UnpublishedEventEntry,
+    index: number,
+    target: RenderTarget
+) => {
     const discard = () => {
         ndk?.cacheAdapter?.discardUnpublishedEvent?.(entry.event.id);
     };
@@ -23,7 +30,6 @@ const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, targe
             index={index}
             target={target}
             onPress={async () => {
-                console.log(JSON.stringify(entry.event.rawEvent(), null, 2));
                 try {
                     entry.event.ndk = ndk;
                     await entry.event.publish();
@@ -31,17 +37,14 @@ const renderItem = (ndk: NDK, entry: UnpublishedEventEntry, index: number, targe
                 } catch (e: unknown) {
                     const error = e as NDKPublishError;
                     console.error('error publishing', entry.event.id, error);
-                    toast.error('Error publishing event: ' + error.message);
+                    toast.error(`Error publishing event: ${error.message}`);
                     error.errors.forEach((message, relay) => {
-                        toast.error('Error publishing event to ' + relay.url + ': ' + message);
+                        toast.error(`Error publishing event to ${relay.url}: ${message}`);
                         console.error('error publishing', message, relay.url);
                     });
                 }
             }}
-            onLongPress={() => {
-                console.log(JSON.stringify(entry.event.rawEvent(), null, 4));
-                console.log(`https://njump.me/${entry.event.encode()}`);
-            }}
+            onLongPress={() => {}}
             rightView={
                 <TouchableOpacity onPress={discard}>
                     <Text className="pr-4 text-primary">Discard</Text>
@@ -56,7 +59,7 @@ export default function Unpublished() {
     const unpublishedEvents = useNDKUnpublishedEvents();
 
     const discardAll = () => {
-        for (let entry of unpublishedEvents) {
+        for (const entry of unpublishedEvents) {
             ndk?.cacheAdapter?.discardUnpublishedEvent?.(entry.event.id);
         }
 
@@ -64,14 +67,13 @@ export default function Unpublished() {
     };
 
     const publishAll = async () => {
-        for (let entry of unpublishedEvents.values()) {
-            console.log('publishing', entry.event.id);
+        for (const entry of unpublishedEvents.values()) {
             try {
                 entry.event.ndk = ndk;
                 await entry.event.publish();
             } catch (e) {
                 console.error('error publishing', entry.event.id, e);
-                toast.error('Error publishing event: ' + e.message);
+                toast.error(`Error publishing event: ${e.message}`);
                 break;
             }
         }

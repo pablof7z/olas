@@ -1,16 +1,17 @@
-import { Text } from "@/components/nativewindui/Text";
-import { decode as decodeBolt11 } from "light-bolt11-decoder";
+import { toast } from '@backpackapp-io/react-native-toast';
+import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { Button, ButtonState } from "@/components/nativewindui/Button";
-import { View, StyleSheet } from 'react-native';
-import { getBolt11ExpiresAt, NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
-import { ClipboardPasteButton } from "expo-clipboard";
-import { useState } from "react";
-import { formatMoney } from "@/utils/bitcoin";
-import WalletBalance from "@/components/ui/wallet/WalletBalance";
-import { toast } from "@backpackapp-io/react-native-toast";
-import { useNDKWallet } from "@nostr-dev-kit/ndk-mobile";
+import { ClipboardPasteButton } from 'expo-clipboard';
+import { decode as decodeBolt11 } from 'light-bolt11-decoder';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { Button, type ButtonState } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
+import { formatMoney } from '@/utils/bitcoin';
 
 export default function Scan() {
     const [permission, requestPermission] = useCameraPermissions();
@@ -48,23 +49,30 @@ export default function Scan() {
         setPayload(payload);
 
         if (payloadType === 'lightning') {
+            let payloadToUse = payload;
             if (payload.startsWith('lightning:')) {
-                payload = payload.replace('lightning:', '');
+                payloadToUse = payload.replace('lightning:', '');
             }
-            
-            const decoded = decodeBolt11(payload);
-            let amount = Number(decoded.sections.find(section => section.name === 'amount')?.value);
-            let description = decoded.sections.find(section => section.name === 'description')?.value;
+
+            const decoded = decodeBolt11(payloadToUse);
+            const amount = Number(
+                decoded.sections.find((section) => section.name === 'amount')?.value
+            );
+            const description = decoded.sections.find(
+                (section) => section.name === 'description'
+            )?.value;
             setAmount(amount);
-            setDescription(description);
+            setDescription(description ?? null);
+            setPayload(payloadToUse);
             return;
         }
-        
+
         if (!(activeWallet instanceof NDKCashuWallet)) {
             return;
         }
 
-        (activeWallet as NDKCashuWallet).receiveToken(payload)
+        (activeWallet as NDKCashuWallet)
+            .receiveToken(payload)
             .then((result) => {
                 console.trace(result);
             })
@@ -75,66 +83,78 @@ export default function Scan() {
     }
 
     const handleQRCodeScanned = (data: string) => {
-        console.log('QR code scanned', data);
         receive(data); // Call send function with scanned data
     };
 
     const pay = async () => {
-        console.log('pay', payload);
         if (!payload) return;
 
         setState('loading');
-        activeWallet.lnPay({ pr: payload })
-            .then((result) => {
+        activeWallet
+            .lnPay({ pr: payload })
+            .then((_result) => {
                 setState('success');
             })
             .catch((error) => {
                 setState('error');
                 toast.error(`Error paying invoice: ${error.message}`);
             });
-    }
+    };
 
     if (amount) {
         return (
             <View className="flex-1 items-center justify-center p-4">
                 <Text className="text-3xl font-bold">Pay</Text>
                 <WalletBalance amount={amount / 1000} unit="sats" onPress={() => {}} />
-                <Text>{description ?? "No description"}</Text>
+                <Text>{description ?? 'No description'}</Text>
 
-                <Button className="w-full !py-4" variant="primary" size="lg" onPress={pay} state={state}>
-                    <Text className="text-xl font-bold">Pay {formatMoney({ amount, unit: 'msats' })}</Text>
+                <Button
+                    className="w-full !py-4"
+                    variant="primary"
+                    size="lg"
+                    onPress={pay}
+                    state={state}
+                >
+                    <Text className="text-xl font-bold">
+                        Pay {formatMoney({ amount, unit: 'msats' })}
+                    </Text>
                 </Button>
 
-                <Button className="w-full !py-4" variant="plain" size="lg" onPress={() => {
-                    setAmount(null);
-                    setDescription(null);
-                }}>
+                <Button
+                    className="w-full !py-4"
+                    variant="plain"
+                    size="lg"
+                    onPress={() => {
+                        setAmount(null);
+                        setDescription(null);
+                    }}
+                >
                     <Text className="text-muted-foreground">Cancel</Text>
                 </Button>
             </View>
-        )
+        );
     }
-    
+
     return (
         <View style={styles.container}>
-            <CameraView 
-                 barcodeScannerSettings={{
-                    barcodeTypes: ["qr"],
+            <CameraView
+                barcodeScannerSettings={{
+                    barcodeTypes: ['qr'],
                 }}
-                style={styles.camera} 
+                style={styles.camera}
                 onBarcodeScanned={({ data }) => handleQRCodeScanned(data)} // Add QR code scan handler
             >
                 <View style={styles.buttonContainer} />
             </CameraView>
             {Clipboard.isPasteButtonAvailable && (
                 <View style={styles.buttonContainer}>
-                  <ClipboardPasteButton 
-                      style={[styles.buttonPaste, { width: '100%', height: 50 }]} 
-                      onPress={(a) => {
-                          if (a.text) receive(a.text)
-                      }}
-                      displayMode="iconAndLabel" 
-                  />
+                    <ClipboardPasteButton
+                        style={[styles.buttonPaste, { width: '100%', height: 50 }]}
+                        onPress={(a) => {
+                            if (a.text) receive(a.text);
+                        }}
+                        displayMode="iconAndLabel"
+                    />
                 </View>
             )}
         </View>
@@ -143,36 +163,36 @@ export default function Scan() {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      justifyContent: 'center',
+        flex: 1,
+        justifyContent: 'center',
         padding: 20,
     },
     message: {
-      textAlign: 'center',
-      paddingBottom: 10,
+        textAlign: 'center',
+        paddingBottom: 10,
     },
     camera: {
-      flex: 1,
-      maxHeight: '50%',
-      borderRadius: 30,
+        flex: 1,
+        maxHeight: '50%',
+        borderRadius: 30,
     },
     buttonContainer: {
-      flexDirection: 'row',
-      backgroundColor: 'transparent',
-      margin: 20,
+        flexDirection: 'row',
+        backgroundColor: 'transparent',
+        margin: 20,
     },
     button: {
-      flex: 1,
-      alignSelf: 'flex-end',
-      alignItems: 'center',
+        flex: 1,
+        alignSelf: 'flex-end',
+        alignItems: 'center',
     },
     text: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
     },
     buttonPaste: {
         alignItems: 'center',
         margin: 10,
     },
-  });
+});

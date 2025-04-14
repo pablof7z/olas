@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Text, TextProps } from 'react-native';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { Text, type TextProps } from 'react-native';
 
 interface RelativeTimeProps {
     timestamp: number; // Timestamp in seconds

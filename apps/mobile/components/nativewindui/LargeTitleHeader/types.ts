@@ -2,7 +2,9 @@ import type { Stack } from 'expo-router';
 import type { NativeSyntheticEvent, TextInputSubmitEditingEventData } from 'react-native';
 import type { SearchBarCommands } from 'react-native-screens';
 
-type NativeStackNavigationOptions = NonNullable<React.ComponentPropsWithoutRef<typeof Stack.Screen>['options']>;
+type NativeStackNavigationOptions = NonNullable<
+    React.ComponentPropsWithoutRef<typeof Stack.Screen>['options']
+>;
 
 type ScreenOptions = Pick<
     NativeStackNavigationOptions,
@@ -62,7 +64,9 @@ type LargeTitleHeaderProps = {
         iosTintColor?: string;
         materialRightView?: HeaderOptions['headerRight'];
         materialBlurOnSubmit?: boolean;
-        materialOnSubmitEditing?: ((e: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => void) | undefined;
+        materialOnSubmitEditing?:
+            | ((e: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => void)
+            | undefined;
         autoCapitalize?: NativeStackNavigationSearchBarOptions['autoCapitalize'];
         inputType?: NativeStackNavigationSearchBarOptions['inputType'];
         onBlur?: () => void;
@@ -77,4 +81,9 @@ type LargeTitleHeaderProps = {
     };
 };
 
-export type { NativeStackNavigationOptions, LargeTitleSearchBarRef, LargeTitleHeaderProps, NativeStackNavigationSearchBarOptions };
+export type {
+    NativeStackNavigationOptions,
+    LargeTitleSearchBarRef,
+    LargeTitleHeaderProps,
+    NativeStackNavigationSearchBarOptions,
+};

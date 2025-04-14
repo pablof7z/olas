@@ -1,11 +1,21 @@
-import { ScrollView, View } from "react-native";
-import { Text } from "@/components/nativewindui/Text";
-import { useEffect, useState } from "react";
-import { Hexpubkey, NDKEvent, NDKTag, NDKUser, useNDK, useNDKCurrentUser, wrapEvent } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuWalletTx } from "@nostr-dev-kit/ndk-mobile";
-import { UserAsHeader } from "./send";
-import { useActiveEventStore } from "@/components/wallet/store";
-import Post from "@/components/events/Post";
+import {
+    type Hexpubkey,
+    NDKCashuWalletTx,
+    type NDKEvent,
+    type NDKTag,
+    type NDKUser,
+    useNDK,
+    useNDKCurrentUser,
+    wrapEvent,
+} from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+
+import { UserAsHeader } from './send';
+
+import Post from '@/components/events/Post';
+import { Text } from '@/components/nativewindui/Text';
+import { useActiveEventStore } from '@/components/wallet/store';
 
 export default function TxView() {
     const currentUser = useNDKCurrentUser();
@@ -28,15 +38,15 @@ export default function TxView() {
     }, []);
 
     if (!event) return null;
-    
+
     return (
-        <ScrollView className="flex-1 p-4 gap-10 flex-col">
+        <ScrollView className="flex-1 flex-col gap-10 p-4">
             {counterPart && <UserAsHeader pubkey={counterPart} />}
             <View>
                 {Object.entries(records).map(([key, value]) => (
                     <View key={key} className="flex-row gap-2">
-                        <Text className="font-mono font-bold w-1/3">{key}: </Text>
-                        <Text className="font-mono w-2/3">{value}</Text>
+                        <Text className="w-1/3 font-mono font-bold">{key}: </Text>
+                        <Text className="w-2/3 font-mono">{value}</Text>
                     </View>
                 ))}
             </View>
@@ -44,49 +54,57 @@ export default function TxView() {
             {event.getMatchingTags('e').map((tag, index) => (
                 <TaggedEvent key={index} originalEvent={event} tag={tag} index={index} />
             ))}
-            
+
             {/* <Text>{JSON.stringify(event?.rawEvent(), null, 2)}</Text> */}
         </ScrollView>
-    )
+    );
 }
 
-function TaggedEvent({ originalEvent, tag, index }: { originalEvent: NDKEvent, tag: NDKTag, index: number }) {
+function TaggedEvent({
+    originalEvent,
+    tag,
+    index,
+}: { originalEvent: NDKEvent; tag: NDKTag; index: number }) {
     const { ndk } = useNDK();
     const [taggedEvent, setTaggedEvent] = useState<NDKEvent | null>(null);
     const marker = tag[3];
     
-    if (marker === 'created' || marker === 'redeemed') return null;
-    
     useEffect(() => {
         const fetch = tag[1];
-        
-        ndk.fetchEventFromTag(tag, originalEvent)
-            .then((e) => {
-                if (e.tagId() !== fetch) {
-                    console.log('we avoided rendering a wrong event', { fetch, tagId: e.tagId()});
-                    return;
-                }
 
-                setTaggedEvent(e);
-            });
+        ndk.fetchEventFromTag(tag, originalEvent).then((e) => {
+            if (e.tagId() !== fetch) {
+                return;
+            }
+
+            setTaggedEvent(e);
+        });
     }, [originalEvent, index]);
+
+    if (marker === 'created' || marker === 'redeemed') return null;
 
     if (!taggedEvent) return null;
 
     if (marker === 'redeemed') {
-        return <View className="flex-col gap-2">
-            <Text className="font-mono font-bold">Redeemed: </Text>
-            <Text className="font-mono">{taggedEvent.id}</Text>
-            <Text className="bg-card p-4 rounded-xl text-lg font-bold font-sans">{taggedEvent.content}</Text>
-        </View>
+        return (
+            <View className="flex-col gap-2">
+                <Text className="font-mono font-bold">Redeemed: </Text>
+                <Text className="font-mono">{taggedEvent.id}</Text>
+                <Text className="rounded-xl bg-card p-4 font-sans text-lg font-bold">
+                    {taggedEvent.content}
+                </Text>
+            </View>
+        );
     }
 
     const wrappedEvent = wrapEvent(taggedEvent);
 
-    return <View className="flex-col gap-2">
-        {marker && <Text className="font-mono font-bold">{marker}: </Text>}
-        <Post event={wrappedEvent} reposts={[]} index={0} timestamp={0} />
-    </View>
+    return (
+        <View className="flex-col gap-2">
+            {marker && <Text className="font-mono font-bold">{marker}: </Text>}
+            <Post event={wrappedEvent} reposts={[]} index={0} timestamp={0} />
+        </View>
+    );
 }
 
 function getCounterPart(event: NDKCashuWalletTx, currentUser: NDKUser): Hexpubkey | undefined {
@@ -103,6 +121,6 @@ function getRecords(event: NDKCashuWalletTx): Record<string, string> {
             res[tag[0]] = tag[1];
         }
     }
-    
+
     return res;
 }

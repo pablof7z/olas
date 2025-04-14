@@ -1,0 +1,10 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Take screenshot of main screen
+- takeScreenshot: main-screen
+# This flow doesn't perform any actions, but provides a way to dump the element hierarchy
+# for identifying the correct element IDs to use in our sticker tests

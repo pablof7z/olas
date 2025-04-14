@@ -1,0 +1,205 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Navigate to story creation by tapping the + button
+- tapOn:
+      id: 'new-post-button'
+      fallback:
+          point: 50%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take a photo or select from gallery
+- tapOn:
+      id: 'camera-button'
+      fallback:
+          point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Mock selecting an image from gallery
+- tapOn:
+      id: 'select-gallery-image'
+      fallback:
+          point: 25%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Open sticker menu
+- tapOn:
+      id: 'add-stickers-button'
+      fallback:
+          point: 85%,95%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Select the mention sticker option
+- tapOn:
+      id: 'sticker-option-mention'
+      fallback:
+          point: 50%,35%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Enter search query for a user
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- inputText: 'nostr'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Select the first user from search results
+- tapOn:
+      id: 'mention-suggestion-item-0'
+      fallback:
+          point: 50%,30%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Take screenshot of default sticker style
+- takeScreenshot: mention-sticker-default-style
+
+# Test styling with double taps (iterate through 5 styles)
+# Style 1
+- tapOn:
+      point: 50%,50%
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-style-1
+
+# Style 2
+- tapOn:
+      point: 50%,50%
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-style-2
+
+# Style 3
+- tapOn:
+      point: 50%,50%
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-style-3
+
+# Style 4
+- tapOn:
+      point: 50%,50%
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-style-4
+
+# Style 5
+- tapOn:
+      point: 50%,50%
+- tapOn:
+      point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-style-5
+
+# Test rotation
+- tapOn:
+      point: 50%,50%
+- swipeFromTo:
+      from: 70%,40%
+      to: 70%,60%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-rotated
+
+# Test scaling (pinch out)
+- tapOn:
+      point: 50%,50%
+- swipeFromTo:
+      from: 45%,50%
+      to: 35%,50%
+- swipeFromTo:
+      from: 55%,50%
+      to: 65%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-scaled-up
+
+# Test scaling (pinch in)
+- tapOn:
+      point: 50%,50%
+- swipeFromTo:
+      from: 35%,50%
+      to: 45%,50%
+- swipeFromTo:
+      from: 65%,50%
+      to: 55%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-scaled-down
+
+# Test moving
+- tapOn:
+      point: 50%,50%
+- swipe:
+      direction: UP_LEFT
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-moved-up-left
+
+# Try multiple transformations together
+- tapOn:
+      point: 50%,50%
+- swipe:
+      direction: DOWN_RIGHT
+- waitForAnimationToEnd:
+      timeout: 500
+- tapOn:
+      point: 50%,50%
+- swipeFromTo:
+      from: 70%,40%
+      to: 70%,60%
+- waitForAnimationToEnd:
+      timeout: 500
+- tapOn:
+      point: 50%,50%
+- swipeFromTo:
+      from: 45%,50%
+      to: 35%,50%
+- swipeFromTo:
+      from: 55%,50%
+      to: 65%,50%
+- waitForAnimationToEnd:
+      timeout: 500
+- takeScreenshot: mention-sticker-multiple-transforms
+
+# Preview the story with transformed sticker
+- tapOn:
+      id: 'share-button'
+      fallback:
+          point: 90%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+- takeScreenshot: preview-with-transformed-sticker
+
+# Cancel creating the story
+- tapOn:
+      id: 'close-button'
+      fallback:
+          point: 10%,10%
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      id: 'close-button'
+      fallback:
+          point: 10%,95%
+- waitForAnimationToEnd:
+      timeout: 2000

@@ -1,0 +1,13 @@
+appId: com.pablof7z.snapstr
+---
+# Clear database to ensure a fresh state
+- clearState
+
+# Wait for the app to launch
+- runFlow: ../common/wait_for_app_launch.yaml
+- tapOn: 'Settings, tab, 5 of 5'
+- tapOn: 'Enter your username'
+- inputText: 'testuser${RANDOM}'
+- tapOn: 'Sign Up'
+- tapOn: 'Wallets, tab, 4 of 5'
+- assertVisible: '0 sats'

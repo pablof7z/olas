@@ -1,26 +1,34 @@
-import { atom, useAtomValue, useSetAtom } from "jotai";
-import { Sheet, useSheetRef } from "@/components/nativewindui/Sheet";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect } from "react";
-import Comments from "./index";
-import { NDKEvent } from "@nostr-dev-kit/ndk-mobile";
-import { replyEventAtom, rootEventAtom } from "./store";
-export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(null, (get, set, value) => {
-    set(sheetAtom, value);
-});
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useEffect } from 'react';
+
+import Comments from './index';
+import { replyEventAtom, rootEventAtom } from './store';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+export const sheetAtom = atom<BottomSheetModal, [BottomSheetModal], void>(
+    null,
+    (_get, set, value) => {
+        set(sheetAtom, value);
+    }
+);
 
 export function useCommentBottomSheet() {
     const sheet = useAtomValue(sheetAtom);
     const setRootEvent = useSetAtom(rootEventAtom);
     const setReplyEvent = useSetAtom(replyEventAtom);
 
-    const open = useCallback((root: NDKEvent, reply?: NDKEvent) => {
-        if (!sheet) return;
-        sheet.present();
-        sheet.snapToPosition(800);
-        setRootEvent(root);
-        setReplyEvent(reply);
-    }, [sheet]);
+    const open = useCallback(
+        (root: NDKEvent, reply?: NDKEvent) => {
+            if (!sheet) return;
+            sheet.present();
+            sheet.snapToPosition(800);
+            setRootEvent(root);
+            setReplyEvent(reply);
+        },
+        [sheet]
+    );
 
     return open;
 }
@@ -34,13 +42,7 @@ export default function CommentsBottomSheet() {
     }, [sheetRef.current]);
 
     return (
-        <Sheet
-            ref={sheetRef}
-            snapPoints={['50%']}
-            enableDynamicSizing={false}
-            index={-1}
-
-        >
+        <Sheet ref={sheetRef} snapPoints={['50%']} enableDynamicSizing={false} index={-1}>
             <Comments />
         </Sheet>
     );

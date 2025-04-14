@@ -1,21 +1,27 @@
-import { useNDK, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKSessionEventKind } from '@nostr-dev-kit/ndk-mobile';
-import { NDKList } from '@nostr-dev-kit/ndk-mobile';
-import { NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import {
+    NDKKind,
+    NDKList,
+    useNDK,
+    useNDKSessionEvent,
+    useSubscribe,
+} from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
-import Post from '@/components/events/Post';
-import { Text } from '@/components/nativewindui/Text';
-import { Album, Globe } from 'lucide-react-native';
-import { Button } from '@/components/nativewindui/Button';
 import { Stack } from 'expo-router';
 import { useSetAtom } from 'jotai';
+import { Album, Globe } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Dimensions, Pressable, View } from 'react-native';
+
+import Post from '@/components/events/Post';
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 import { activeEventAtom } from '@/stores/event';
 
 export default function Bookmarks() {
     const { ndk } = useNDK();
-    const imageCurationSet = useNDKSessionEventKind<NDKList>(NDKKind.ImageCurationSet, { create: NDKList });
+    const imageCurationSet = useNDKSessionEvent<NDKList>(NDKKind.ImageCurationSet, {
+        create: NDKList,
+    });
     const [showOthers, setShowOthers] = useState(false);
     const [bookmarkLists, setBookmarkLists] = useState<NDKList[]>([]);
 
@@ -32,12 +38,7 @@ export default function Bookmarks() {
     const otherBookmarkIds = useMemo(
         () =>
             Array.from(
-                new Set(
-                    bookmarkLists
-                        ?.map((list) => list.items)
-                        .flat()
-                        .map((item) => item[1]) ?? []
-                )
+                new Set(bookmarkLists?.flatMap((list) => list.items).map((item) => item[1]) ?? [])
             ),
         [bookmarkLists]
     );
@@ -45,7 +46,9 @@ export default function Bookmarks() {
     const filters = useMemo(
         () => [
             {
-                ids: [...imageCurationSet.items.map((i) => i[1]), ...otherBookmarkIds].filter((id) => !!id),
+                ids: [...imageCurationSet.items.map((i) => i[1]), ...otherBookmarkIds].filter(
+                    (id) => !!id
+                ),
             },
         ],
         [imageCurationSet.items.length, otherBookmarkIds]
@@ -53,7 +56,10 @@ export default function Bookmarks() {
 
     const { events } = useSubscribe(filters, {}, [filters]);
 
-    const sortedEvents = useMemo(() => events.sort((a, b) => b.created_at! - a.created_at!), [events]);
+    const sortedEvents = useMemo(
+        () => events.sort((a, b) => b.created_at - a.created_at),
+        [events]
+    );
     const setActiveEvent = useSetAtom(activeEventAtom);
 
     return (
@@ -75,8 +81,14 @@ export default function Bookmarks() {
                 {imageCurationSet.items.length === 0 && showOthers === false && (
                     <View
                         className="flex-1 flex-col items-center justify-center gap-4"
-                        style={{ paddingHorizontal: Dimensions.get('window').width * 0.2 }}>
-                        <Album size={Dimensions.get('window').width / 2} strokeWidth={1} color="gray" style={{ opacity: 0.5 }} />
+                        style={{ paddingHorizontal: Dimensions.get('window').width * 0.2 }}
+                    >
+                        <Album
+                            size={Dimensions.get('window').width / 2}
+                            strokeWidth={1}
+                            color="gray"
+                            style={{ opacity: 0.5 }}
+                        />
                         <Text>Your favorite posts will appear here once you bookmark them.</Text>
 
                         <Button variant="tonal" onPress={() => setShowOthers(!showOthers)}>
@@ -86,7 +98,14 @@ export default function Bookmarks() {
                 )}
                 <FlashList
                     data={sortedEvents}
-                    renderItem={({ item }) => <Post event={item} reposts={[]} timestamp={item.created_at!} setActiveEvent={setActiveEvent} />}
+                    renderItem={({ item }) => (
+                        <Post
+                            event={item}
+                            reposts={[]}
+                            timestamp={item.created_at}
+                            setActiveEvent={setActiveEvent}
+                        />
+                    )}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={{ paddingBottom: 30 }}
                 />

@@ -1,20 +1,25 @@
-import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Image, useImage } from 'expo-image';
-import { Pressable, StyleProp, ViewStyle, StyleSheet, Dimensions } from 'react-native';
 import React, { useMemo, useState } from 'react';
-import { type MediaDimensions } from "./types";
+import { Dimensions, Pressable, type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+
+import type { MediaDimensions } from './types';
+
+import { getProxiedImageUrl } from '@/utils/imgproxy';
 
 /**
  * This keeps a record of the known image heights for a given url.
  */
 const knownImageDimensions: Record<string, MediaDimensions> = {};
 
-export function calcDimensions(dimensions: MediaDimensions, maxDimensions: Partial<MediaDimensions>) {
+export function calcDimensions(
+    dimensions: MediaDimensions,
+    maxDimensions: Partial<MediaDimensions>
+) {
     let { width, height } = dimensions;
     const { width: maxWidth, height: maxHeight } = maxDimensions;
 
     const aspectRatio = width / height;
-    
+
     const isLandscape = width > height;
     const isOverPortraitThreshold = height / width > 1.5;
 
@@ -47,8 +52,8 @@ export default function ImageComponent({
     url: string;
     blurhash?: string;
     dimensions?: MediaDimensions;
-    priority?: 'low' | 'normal' | 'high',
-    contentFit?: 'contain' | 'cover',
+    priority?: 'low' | 'normal' | 'high';
+    contentFit?: 'contain' | 'cover';
     maxDimensions?: Partial<MediaDimensions>;
     forceDimensions?: Partial<MediaDimensions>;
     forceProxy?: boolean;
@@ -57,7 +62,9 @@ export default function ImageComponent({
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
-    const [useImgProxy, setUseImgProxy] = useState(!dimensions || (dimensions?.width > 4000 || dimensions?.height > 4000) || forceProxy);
+    const [useImgProxy, setUseImgProxy] = useState(
+        !dimensions || dimensions?.width > 4000 || dimensions?.height > 4000 || forceProxy
+    );
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
 
     const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
@@ -94,14 +101,19 @@ export default function ImageComponent({
     const imageSource = useImage({
         uri: pUri,
         cacheKey,
-    })
+    });
 
     const blurhashObj = { blurhash };
 
     if (finalDimensions?.width && !finalDimensions?.height) {
         finalDimensions.height = finalDimensions.width;
 
-        console.trace('we had a width but no height', url, { finalDimensions, dimensions, renderDimensions, maxDimensions });
+        console.trace('we had a width but no height', url, {
+            finalDimensions,
+            dimensions,
+            renderDimensions,
+            maxDimensions,
+        });
     }
 
     return (
@@ -120,11 +132,8 @@ export default function ImageComponent({
                 source={imageSource}
                 contentFit={contentFit}
                 recyclingKey={url}
-                onLoadStart={() => {
-                    console.log('onLoadStart', cacheKey)
-                }}
-                onError={(e) => {
-                    console.log('Image loading error', {cacheKey, url}, e)
+                onLoadStart={() => {}}
+                onError={(_e) => {
                     if (useImgProxy) {
                         setUseImgProxy(false);
                     }
@@ -133,8 +142,11 @@ export default function ImageComponent({
                     // console.log('onLoadEnd', cacheKey)
                     try {
                         if (!imageSource) return;
-                        const { width, height} = imageSource;
-                        knownImageDimensions[url] = calcDimensions({ width, height }, maxDimensions);
+                        const { width, height } = imageSource;
+                        knownImageDimensions[url] = calcDimensions(
+                            { width, height },
+                            maxDimensions
+                        );
                     } catch (e) {
                         console.error(e);
                     }
@@ -159,5 +171,5 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-    }
-})
+    },
+});

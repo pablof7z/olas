@@ -1,8 +1,15 @@
 import * as Slot from '@rn-primitives/slot';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps, cva } from 'class-variance-authority';
 import { AlertTriangle, Check } from 'lucide-react-native';
 import * as React from 'react';
-import { Platform, Pressable, PressableProps, View, ViewStyle, ActivityIndicator } from 'react-native';
+import {
+    ActivityIndicator,
+    Platform,
+    Pressable,
+    type PressableProps,
+    View,
+    type ViewStyle,
+} from 'react-native';
 
 import { TextClassContext } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
@@ -78,9 +85,9 @@ function convertToRGBA(rgb: string, opacity: number): string {
     if (!rgbValues || rgbValues.length !== 3) {
         throw new Error('Invalid RGB color format');
     }
-    const red = parseInt(rgbValues[0], 10);
-    const green = parseInt(rgbValues[1], 10);
-    const blue = parseInt(rgbValues[2], 10);
+    const red = Number.parseInt(rgbValues[0], 10);
+    const green = Number.parseInt(rgbValues[1], 10);
+    const blue = Number.parseInt(rgbValues[2], 10);
     if (opacity < 0 || opacity > 1) {
         throw new Error('Opacity must be a number between 0 and 1');
     }
@@ -150,16 +157,30 @@ type AndroidOnlyButtonProps = {
     androidRootClassName?: string;
 };
 
-type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps & {
-    state?: ButtonState;
-};
+type ButtonProps = PressableProps &
+    ButtonVariantProps &
+    AndroidOnlyButtonProps & {
+        state?: ButtonState;
+    };
 
 export type ButtonState = 'idle' | 'loading' | 'success' | 'error';
 
 const Root = Platform.OS === 'android' ? View : Slot.Pressable;
 
 const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-    ({ className, variant = 'primary', size, style = BORDER_CURVE, androidRootClassName, state = 'idle', children, ...props }, ref) => {
+    (
+        {
+            className,
+            variant = 'primary',
+            size,
+            style = BORDER_CURVE,
+            androidRootClassName,
+            state = 'idle',
+            children,
+            ...props
+        },
+        ref
+    ) => {
         const { colorScheme } = useColorScheme();
 
         const renderContent = () => {
@@ -184,9 +205,13 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
                             size,
                             className: androidRootClassName,
                         }),
-                    })}>
+                    })}
+                >
                     <Pressable
-                        className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size, className }))}
+                        className={cn(
+                            props.disabled && 'opacity-50',
+                            buttonVariants({ variant, size, className })
+                        )}
                         ref={ref}
                         style={style}
                         android_ripple={ANDROID_RIPPLE[colorScheme][variant]}

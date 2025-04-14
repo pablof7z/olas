@@ -1,75 +1,73 @@
-import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
-import { View, Text, Button, Switch, StyleSheet, ScrollView, Alert } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import { useObserver, type NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
+import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useNavigation } from '@react-navigation/native';
-import { useObserver } from '@/hooks/observer';
-import { NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { Alert, Button, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 function ContentCacheScreen() {
     const navigation = useNavigation();
-    const [fileData, setFileData] = useState<Array<{
-        name: string;
-        uri: string;
-        size: number;
-        extension: string;
-    }>>([]);
-    const [fileTypesBreakdown, setFileTypesBreakdown] = useState<Record<string, { count: number; totalSize: number }>>({});
+    const [fileData, setFileData] = useState<
+        {
+            name: string;
+            uri: string;
+            size: number;
+            extension: string;
+        }[]
+    >([]);
+    const [fileTypesBreakdown, setFileTypesBreakdown] = useState<
+        Record<string, { count: number; totalSize: number }>
+    >({});
     const [previewMode, setPreviewMode] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [_isLoading, setIsLoading] = useState(false);
 
     const [cacheDir, setCacheDir] = useState<string | null>(null);
-    const events = useObserver<NDKImage>([{ kinds: [20], limit: 1 }])
-    
+    const events = useObserver<NDKImage>([{ kinds: [20], limit: 1 }]);
+
     useEffect(() => {
         if (cacheDir) return;
 
         async function getCacheDir() {
             for (const event of events) {
                 if (!event.imetas?.[0]?.url) continue;
-                console.log('getting cache dir for', event.imetas?.[0]?.url)
-                const cachedImage = await Image.getCachePathAsync(event.imetas?.[0]?.url)
+                const cachedImage = await Image.getCachePathAsync(event.imetas?.[0]?.url);
                 if (cachedImage) {
-                    const dirName = cachedImage.split('/').slice(0, -1).join('/')
-                    console.log('found cache dir', cachedImage, dirName)
-                    setCacheDir(dirName)
+                    const dirName = cachedImage.split('/').slice(0, -1).join('/');
+                    setCacheDir(dirName);
                     break;
                 }
             }
         }
 
-        getCacheDir()
-    }, [events])
-    
-    
+        getCacheDir();
+    }, [events]);
 
     // Fetch files and compute breakdown
     const fetchFiles = useCallback(async () => {
         setIsLoading(true);
         try {
-            console.log('cacheDir', cacheDir);
+            if (!cacheDir) return;
             const files = await FileSystem.readDirectoryAsync(cacheDir);
             const fileInfos = await Promise.all(
                 files.map(async (filename) => {
                     const fileUri = `${cacheDir}/${filename}`;
                     const info = await FileSystem.getInfoAsync(fileUri);
-                    let [_, extension] = filename.split('.') || [filename, 'unknown']
-                    extension = extension?.toLowerCase() || 'unknown'
-                    console.log('fileInfo', fileUri, info, extension)
+                    let [_, extension] = filename.split('.') || [filename, 'unknown'];
+                    extension = extension?.toLowerCase() || 'unknown';
                     if (info.isDirectory) return null;
                     return {
                         name: filename,
                         uri: fileUri,
                         size: info.size || 0,
-                        extension
+                        extension,
                     };
                 })
             );
             const filteredFiles = fileInfos.filter(Boolean) as typeof fileData;
             setFileData(filteredFiles);
-            let breakdown: Record<string, { count: number; totalSize: number }> = {};
+            const breakdown: Record<string, { count: number; totalSize: number }> = {};
             filteredFiles.forEach((file) => {
                 const ext = file.extension;
                 if (!breakdown[ext]) {
@@ -111,21 +109,20 @@ function ContentCacheScreen() {
                     } catch (error) {
                         console.error(error);
                     }
-                }
-            }
+                },
+            },
         ]);
     }, [fetchFiles]);
 
     // Add delete cache button to the navigation header
     useLayoutEffect(() => {
         navigation.setOptions({
-            headerRight: () => <Button title="Delete Cache" onPress={handleDeleteCache} />
+            headerRight: () => <Button title="Delete Cache" onPress={handleDeleteCache} />,
         });
     }, [navigation, handleDeleteCache]);
 
     // Determine if a file is previewable (only images and mp4 videos)
     const isPreviewable = (file: { extension: string }) => {
-        return true;
         const previewableExtensions = ['jpg', 'jpeg', 'png', 'mp4'];
         return previewableExtensions.includes(file.extension);
     };
@@ -133,7 +130,7 @@ function ContentCacheScreen() {
     const previewFiles = fileData.filter(isPreviewable);
 
     // Render item for the FlashList grid preview
-    const renderPreviewItem = ({ item }: { item: typeof fileData[0] }) => {
+    const renderPreviewItem = ({ item }: { item: (typeof fileData)[0] }) => {
         if (item.extension === 'mp4') {
             return (
                 <VideoView
@@ -145,13 +142,7 @@ function ContentCacheScreen() {
                 />
             );
         }
-        return (
-            <Image
-                source={{ uri: item.uri }}
-                style={styles.previewImage}
-                contentFit="cover"
-            />
-        );
+        return <Image source={{ uri: item.uri }} style={styles.previewImage} contentFit="cover" />;
     };
 
     // Helper function to format bytes into human-readable form
@@ -161,7 +152,7 @@ function ContentCacheScreen() {
         const dm = 2;
         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
     };
 
     return (
@@ -198,12 +189,11 @@ function ContentCacheScreen() {
 export default ContentCacheScreen;
 
 const styles = StyleSheet.create({
-    container: {
-    },
+    container: {},
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 16
+        marginBottom: 16,
     },
     breakdownItem: {
         flexDirection: 'row',
@@ -211,19 +201,19 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
-        paddingBottom: 4
+        paddingBottom: 4,
     },
     breakdownText: {
-        fontSize: 16
+        fontSize: 16,
     },
     toggleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginVertical: 16
+        marginVertical: 16,
     },
     previewContainer: {
-        paddingVertical: 10
+        paddingVertical: 10,
     },
     previewImage: {
         width: 150,
@@ -232,6 +222,6 @@ const styles = StyleSheet.create({
     previewVideo: {
         width: 150,
         height: 150,
-        margin: 4
-    }
+        margin: 4,
+    },
 });

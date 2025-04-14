@@ -1,17 +1,18 @@
-import { TouchableOpacity, View, StyleSheet, Text } from 'react-native';
-import { formatMoney } from '~/utils/bitcoin';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 import { useColorScheme } from '@/lib/useColorScheme';
+import { formatMoney } from '~/utils/bitcoin';
 
 export default function WalletBalance({
-  amount,
-  onPress,
-  onLongPress,
-  unit,
+    amount,
+    onPress,
+    onLongPress,
+    unit,
 }: {
-  amount: number;
-  unit: string;
-  onPress?: () => void;
-  onLongPress?: () => void;
+    amount?: number;
+    unit: string;
+    onPress?: () => void;
+    onLongPress?: () => void;
 }) {
     const { colors } = useColorScheme();
     const numberWithThousandsSeparator = (amount: number) => {
@@ -21,12 +22,22 @@ export default function WalletBalance({
     return (
         <TouchableOpacity style={styles.container} onPress={onPress} onLongPress={onLongPress}>
             <View style={styles.balanceContainer}>
-                    <Text style={[styles.balanceText, { color: colors.foreground }]} numberOfLines={1}>
-                        {numberWithThousandsSeparator(amount)}
-                    </Text>
-                    <Text style={[styles.satText, { color: colors.foreground }]}>
-                        {formatMoney({ amount, unit: 'sat', hideAmount: true })}
-                    </Text>
+                {typeof amount === 'number' ? (
+                    <>
+                        <Text
+                            style={[styles.balanceText, { color: colors.foreground }]}
+                            numberOfLines={1}
+                            testID="balance-text"
+                        >
+                            {numberWithThousandsSeparator(amount)}
+                        </Text>
+                        <Text style={[styles.satText, { color: colors.foreground }]}>
+                            {formatMoney({ amount, unit: 'sat', hideAmount: true })}
+                        </Text>
+                    </>
+                ) : (
+                    <ActivityIndicator />
+                )}
             </View>
         </TouchableOpacity>
     );

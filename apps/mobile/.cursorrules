@@ -1,0 +1,76 @@
+You are an expert in Typescript, React Native, Expo, Nostr, and Mobile UI development.
+
+Code Style and Structure:
+
+- Write Clean, Readable Code: Ensure your code is easy to read and understand. Use descriptive names for variables and functions.
+- Use Functional Components: Prefer functional components with hooks (useState, useEffect, etc.) over class components.
+- Component Modularity: Break down components into smaller, reusable pieces. Keep components focused on a single responsibility.
+- Organize Files by Feature: Group related components, hooks, and styles into feature-based directories (e.g., user-profile, chat-screen).
+
+Syntax and Formatting
+
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+- Use Prettier for consistent code formatting.
+
+TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript interfaces.
+- Use strict mode in TypeScript for better type safety.
+
+Naming Conventions:
+
+- Variables and Functions: Use camelCase for variables and functions (e.g., isFetchingData, handleUserInput).
+- Components: Use PascalCase for component names (e.g., UserProfile, ChatScreen).
+- Directories: Use lowercase and hyphenated names for directories (e.g., user-profile, chat-screen).
+
+Typescript Usage:
+
+- Avoid Global Variables: Minimize the use of global variables to prevent unintended side effects.
+- Use ES6+ Features: Leverage ES6+ features like arrow functions, destructuring, and template literals to write concise code.
+- PropTypes: Use PropTypes for type checking in components if you're not using TypeScript.
+
+Performance Optimization:
+
+- Optimize State Management: Avoid unnecessary state updates and use local state only when needed.
+- Memoization: Use React.memo() for functional components to prevent unnecessary re-renders.
+- FlatList Optimization: Optimize FlatList with props like removeClippedSubviews, maxToRenderPerBatch, and windowSize.
+- Avoid Anonymous Functions: Refrain from using anonymous functions in renderItem or event handlers to prevent re-renders.
+- Avoid unnecessary re-renders by memoizing components and using useMemo and useCallback hooks appropriately.
+
+State Management:
+
+- Use zustand and jotai atoms when sensible.
+- Keep stores optimized and narrowly scoped.
+
+UI and Styling:
+
+- Consistent Styling: Use StyleSheet.create() for consistent styling or Styled Components for dynamic styles.
+- Responsive Design: Ensure your design adapts to various screen sizes and orientations. Consider using responsive units and libraries like react-native-responsive-screen.
+- Optimize Image Handling: Use optimized image libraries like expo-image and expo-video to handle images efficiently.
+- Leverage react-native-reanimated and react-native-gesture-handler for performant animations and gestures.
+
+Testing
+
+- Write unit tests using Jest and React Native Testing Library.
+- Implement integration tests for critical user flows using Detox.
+- Use Expo's testing tools for running tests in different environments.
+- Consider snapshot testing for components to ensure UI consistency.
+- Use Maestro for e2e testing.
+
+Best Practices:
+
+- Follow React Native's Threading Model: Be aware of how React Native handles threading to ensure smooth UI performance.
+- Use Expo Tools: Utilize Expo's EAS Build and Updates for continuous deployment and Over-The-Air (OTA) updates.
+- Expo Router: Use Expo Router for file-based routing in your React Native app. It provides native navigation, deep linking, and works across Android, iOS, and web. Refer to the official documentation for setup and usage: https://docs.expo.dev/router/introduction/
+- Always use pnpm; this is a pnpm project.
+- Never use expo-av, it's deprecated -- use expo-video
+
+Nostr:
+
+- Use @nostr-dev-kit/ndk-mobile. Refer to the official documentation and usage: https://nostr-dev-kit.github.io/ndk/snippets/
+
+Whenever you finish something, publish a summary on nostr and wait for instructions, when the instructions arrive, follow them

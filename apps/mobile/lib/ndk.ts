@@ -1,24 +1,28 @@
-import NDK, { Hexpubkey, NDKCacheAdapterSqlite, NDKRelay } from "@nostr-dev-kit/ndk-mobile";
-import { getRelays } from "@/stores/db/relays";
-import { NET_DEBUG } from "@/utils/const";
+import NDK, {
+    type Hexpubkey,
+    NDKCacheAdapterSqlite,
+    type NDKRelay,
+} from '@nostr-dev-kit/ndk-mobile';
 
-export const timeZero = Date.now();
+import { getRelays } from '@/stores/db/relays';
+import { NET_DEBUG } from '@/utils/const';
+
+const cacheAdapter = new NDKCacheAdapterSqlite('olas');
+cacheAdapter.initialize();
 
 /**
  * 1. Starts the app-database (which contains information about the relay list and stuff like that)
  * 2. Initializes the cache adapter
  * 3. Creates the NDK instance
  * 4. Connects to the relays
- * @returns 
+ * @returns
  */
 export function initializeNDK(currentUser?: Hexpubkey) {
-    const cacheAdapter = new NDKCacheAdapterSqlite('olas', false);
-
     const relays = getRelays();
     const filteredRelays = relays.filter((r) => {
         try {
             return new URL(r.url).protocol.startsWith('ws');
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     });
@@ -44,20 +48,29 @@ export function initializeNDK(currentUser?: Hexpubkey) {
         initialValidationRatio: 0.0,
         lowestValidationRatio: 0.0,
         clientName: 'olas',
-        clientNip89: '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
+        clientNip89:
+            '31990:fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52:1731850618505',
+        profileConfig: {
+            profileRefreshSeconds: 24 * 60 * 60,
+        },
         ...opts,
     });
+    cacheAdapter.ndk = ndk;
     if (currentUser) ndk.activeUser = ndk.getUser({ pubkey: currentUser });
 
     ndk.connect();
 
-    cacheAdapter.initialize();
-
     return ndk;
 }
 
-const netDebug = (msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
-    const url = new URL(relay.url);
-    if (direction === 'send' && relay.url.match(/vertex/)) console.log(`[NET +${Date.now()-timeZero}ms] 👉`, url.hostname, msg.slice(0, 400));
-    if (direction === 'recv' && relay.url.match(/vertex/)) console.log('👈', url.hostname, msg.slice(0, 600));
+const netDebug = (_msg: string, relay: NDKRelay, direction?: 'send' | 'recv') => {
+    const _url = new URL(relay.url);
+    if (direction === 'send' && relay.url.match(/vertex/)) {
+        // Handle vertex send case
+    }
+    if (direction === 'recv' && relay.url.match(/vertex/)) {
+        // Handle vertex receive case
+    }
 };
+
+const _timeZero = Date.now();

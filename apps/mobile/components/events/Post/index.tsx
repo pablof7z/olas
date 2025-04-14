@@ -1,23 +1,18 @@
-import {
-    NDKEvent,
-    NDKKind,
-    useUserProfile
-} from '@nostr-dev-kit/ndk-mobile';
-import { Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { View } from 'react-native';
+import { type NDKEvent, NDKKind, useProfile } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
-import EventContent from '@/components/ui/event/content';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import { useColorScheme } from '@/lib/useColorScheme';
-import { useMemo, useCallback, useState } from 'react';
-import { InlinedComments, Reactions } from './Reactions';
-import { Heart } from 'lucide-react-native';
-import EventMediaContainer from '@/components/media/event';
 import { useSetAtom } from 'jotai';
-import { useAppSettingsStore } from '@/stores/app';
-import { activeEventAtom } from '@/stores/event';
-import Lightning from "@/components/icons/lightning";
+import { Heart } from 'lucide-react-native';
+import { useCallback, useMemo, useState } from 'react';
+import {
+    Dimensions,
+    Pressable,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -25,15 +20,35 @@ import Animated, {
     withTiming,
     Easing,
 } from 'react-native-reanimated';
+
 import { useReactEvent } from '../React';
-import { useReactionsStore } from '@/stores/reactions';
 import TopZaps from '../TopZaps';
+import { PostHeader } from './Header';
+import { InlinedComments, Reactions } from './Reactions';
+
+import Lightning from '@/components/icons/lightning';
+import EventMediaContainer from '@/components/media/event';
+import { Text } from '@/components/nativewindui/Text';
+import EventContent from '@/components/ui/event/content';
 import { useZap } from '@/hooks/zap';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
-import { PostHeader } from './Header';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { isUserProfileDeleted } from '@/lib/utils/user';
+import { useAppSettingsStore } from '@/stores/app';
+import { activeEventAtom } from '@/stores/event';
+import { useReactionsStore } from '@/stores/reactions';
 
-export const MediaSection = function MediaSection({ event, priority, onPress, maxHeight }: { priority?: 'low' | 'normal' | 'high', event: NDKEvent; onPress?: () => void, maxHeight: number }) {
+export const MediaSection = function MediaSection({
+    event,
+    priority,
+    onPress,
+    maxHeight,
+}: {
+    priority?: 'low' | 'normal' | 'high';
+    event: NDKEvent;
+    onPress?: () => void;
+    maxHeight: number;
+}) {
     const scale = useSharedValue(0);
     const opacity = useSharedValue(0);
     const [showHeart, setShowHeart] = useState(false);
@@ -43,12 +58,12 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
 
     const animatedHeartStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
-        opacity: opacity.value
+        opacity: opacity.value,
     }));
 
     const animatedZapStyle = useAnimatedStyle(() => ({
         transform: [{ scale: zapScale.value }],
-        opacity: zapOpacity.value
+        opacity: zapOpacity.value,
     }));
 
     const triggerHeartAnimation = () => {
@@ -58,9 +73,9 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
             withTiming(1.1, { duration: 50 })
         );
         opacity.value = withSequence(
-            withTiming(1, { duration: 50 }),      // Appear in 50ms
-            withTiming(1, { duration: 250 }),     // Stay visible for 250ms
-            withTiming(0, { duration: 200 })      // Fade out in 200ms
+            withTiming(1, { duration: 50 }), // Appear in 50ms
+            withTiming(1, { duration: 250 }), // Stay visible for 250ms
+            withTiming(0, { duration: 200 }) // Fade out in 200ms
         );
     };
 
@@ -78,7 +93,7 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
     };
 
     const { react } = useReactEvent();
-    
+
     const handleDoubleTap = useCallback(() => {
         'worklet';
         setShowHeart(true);
@@ -88,10 +103,10 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
     }, [event.id]);
 
     // default zap
-    const defaultZap = useAppSettingsStore(s => s.defaultZap);
+    const defaultZap = useAppSettingsStore((s) => s.defaultZap);
 
     const setActiveEvent = useSetAtom(activeEventAtom);
-    
+
     const handleSingleTap = useCallback(() => {
         setTimeout(() => {
             setActiveEvent(event);
@@ -99,10 +114,7 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
         }, 100);
     }, [event.id]);
 
-    const doubleTapGesture = Gesture.Tap()
-        .numberOfTaps(2)
-        .runOnJS(true)
-        .onEnd(handleDoubleTap);
+    const doubleTapGesture = Gesture.Tap().numberOfTaps(2).runOnJS(true).onEnd(handleDoubleTap);
 
     const singleTapGesture = Gesture.Tap()
         .numberOfTaps(1)
@@ -118,12 +130,10 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
         triggerZapAnimation();
         sendZap(defaultZap.message, defaultZap.amount, event);
         setTimeout(() => setShowZap(false), 500);
-    }
-        
-    const handleLongPress = Gesture.LongPress()
-        .runOnJS(true)
-        .onStart(endSendZap);
-    
+    };
+
+    const handleLongPress = Gesture.LongPress().runOnJS(true).onStart(endSendZap);
+
     const combinedGesture = Gesture.Race(doubleTapGesture, handleLongPress, singleTapGesture);
 
     return (
@@ -132,64 +142,104 @@ export const MediaSection = function MediaSection({ event, priority, onPress, ma
                 <EventMediaContainer
                     event={event}
                     onPress={onPress}
-                    autoplay={true}
-                    muted={true}
+                    autoplay
+                    muted
                     maxHeight={maxHeight}
                     priority={priority}
                 />
                 {showHeart && (
-                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-                                  flex: 1, justifyContent: 'center', alignItems: 'center', 
-                                  backgroundColor: '#00000044' }}>
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: '#00000044',
+                        }}
+                    >
                         <Animated.View style={animatedHeartStyle}>
-                            <Heart size={96} color={'white'} fill={'white'} />
+                            <Heart size={96} color="white" fill="white" />
                         </Animated.View>
                     </View>
                 )}
                 {showZap && (
-                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-                                  flex: 1, justifyContent: 'center', alignItems: 'center', 
-                                  backgroundColor: '#00000044' }}>
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: '#00000044',
+                        }}
+                    >
                         <Animated.View style={animatedZapStyle}>
-                            <Lightning size={96} color={'yellow'} fill={'orange'} />
+                            <Lightning size={96} color="yellow" fill="orange" />
                         </Animated.View>
                     </View>
                 )}
             </View>
         </GestureDetector>
     );
-}
+};
 
-export default function Post({ event, reposts, timestamp, index }: { index: number, event: NDKEvent; reposts: NDKEvent[]; timestamp: number }) {
-    const { userProfile } = useUserProfile(event.pubkey);
-    
+export default function Post({
+    event,
+    reposts,
+    timestamp,
+    index,
+}: {
+    index: number;
+    event: NDKEvent;
+    reposts: NDKEvent[];
+    timestamp: number;
+}) {
+    const userProfile = useProfile(event.pubkey);
+
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
-    const priority = useMemo<('high' | 'normal' | 'low')>(() => {
+    const priority = useMemo<'high' | 'normal' | 'low'>(() => {
         if (index === 0) return 'high';
         if (index <= 2) return 'normal';
         return 'low';
-    }, [index])
+    }, [index]);
 
     const { forceSquareAspectRatio } = useAppSettingsStore();
 
     const headerHeight = useHeaderHeight();
     const screen = Dimensions.get('window');
-    const maxHeight = Math.floor(forceSquareAspectRatio ? screen.width * 1.1 : ((screen.height * 0.8) - headerHeight));
+    const maxHeight = Math.floor(
+        forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight
+    );
 
     const { colors } = useColorScheme();
 
-    const containerStyle = useMemo<StyleProp<ViewStyle>>(() => ({
-        overflow: 'hidden',
-        borderBottomWidth: 1,
-        borderBottomColor: colors.grey5,
-        paddingVertical: 10,
-    }), []);
+    const containerStyle = useMemo<StyleProp<ViewStyle>>(
+        () => ({
+            overflow: 'hidden',
+            borderBottomWidth: 1,
+            borderBottomColor: colors.grey5,
+            paddingVertical: 10,
+        }),
+        []
+    );
 
     if (isUserProfileDeleted(userProfile)) return null;
 
     return (
         <View style={containerStyle}>
-            <PostHeader event={event} reposts={reposts} timestamp={timestamp} userProfile={userProfile} />
+            <PostHeader
+                event={event}
+                reposts={reposts}
+                timestamp={timestamp}
+                userProfile={userProfile}
+            />
 
             <MediaSection event={event} priority={priority} maxHeight={maxHeight} />
 
@@ -208,7 +258,10 @@ function PostBottom({ event }: { event: NDKEvent }) {
 
         if (event.kind === NDKKind.Text) {
             // remove the urls from the content
-            content = content.replace(/https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g, '');
+            content = content.replace(
+                /https?:\/\/[^\s/$.?#].[^\s]*\.(jpg|jpeg|png|webp|mp4|mov|avi|mkv)/g,
+                ''
+            );
             // replace \n\n\n or more with \n
             content = content.replace(/\n\s*\n\s*\n+/g, '\n');
             // remove from content \n that are after the last word
@@ -217,7 +270,7 @@ function PostBottom({ event }: { event: NDKEvent }) {
 
         return content;
     }, [event.content]);
-    
+
     // const tagsToRender = useMemo(() => {
     //     const tags = new Set(event.getMatchingTags('t').map(t => t[1]));
     //     // remove the tags that are already in the content
@@ -232,7 +285,7 @@ function PostBottom({ event }: { event: NDKEvent }) {
         openComment(event);
     }, [event]);
 
-    const reactions = useReactionsStore(state => state.reactions.get(event.tagId()));
+    const reactions = useReactionsStore((state) => state.reactions.get(event.tagId()));
 
     return (
         <View style={styles.postBottom}>
@@ -273,5 +326,5 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         gap: 10,
         padding: 10,
-    }
+    },
 });

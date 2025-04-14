@@ -3,7 +3,7 @@ export function nicelyFormattedMilliSatNumber(amount: number) {
 }
 
 export function nicelyFormattedSatNumber(amount: number) {
-    let format = (num: string): string => {
+    const format = (num: string): string => {
         const str = String(num);
         const parts = str.split('.');
 
@@ -72,7 +72,7 @@ export function formatMoney({
     return `${number} ${displayUnit}`;
 }
 
-export function amountInSats({ amount, unit = 'msat' }: { amount: number, unit?: string }) {
+export function amountInSats({ amount, unit = 'msat' }: { amount: number; unit?: string }) {
     if (unit?.startsWith('msat')) return amount / 1000;
     return amount;
 }

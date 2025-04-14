@@ -1,23 +1,31 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Text } from '@/components/nativewindui/Text';
-import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Dimensions, FlatList, TextInput, View } from 'react-native';
-import { getPostsByUser } from '@/utils/db';
-import NDK, { type Hexpubkey, NDKUser, useNDK, useNDKCurrentUser, useFollows, generateHashtags } from '@nostr-dev-kit/ndk-mobile';
-import { List, ListItem } from './nativewindui/List';
-import { cn } from '@/lib/cn';
-import { myFollows } from '@/utils/myfollows';
-import { Button } from './nativewindui/Button';
-import { usePostEditorStore } from '@/lib/post-editor/store';
+import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    type NDKUser,
+    useFollows,
+    useNDK,
+    useNDKCurrentUser,
+} from '@nostr-dev-kit/ndk-mobile';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Hash } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, FlatList, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export const mountTagSelectorAtom = atom<boolean, [boolean], null>(false, (get, set, value) =>
-    set(mountTagSelectorAtom, value)
-);
+import { Button } from './nativewindui/Button';
+import { ListItem } from './nativewindui/List';
+
+import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
+import { Text } from '@/components/nativewindui/Text';
+import { cn } from '@/lib/cn';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { getPostsByUser } from '@/utils/db';
+import { myFollows } from '@/utils/myfollows';
+
+export const mountTagSelectorAtom = atom<boolean>(false);
+export const tagSelectorBottomSheetRefAtom = atom<RefObject<BottomSheetModal> | null>(null);
+export const tagSelectorBottomSheetCbAtom = atom<((tags: string[]) => void) | null>(null);
 
 type TagEntry = {
     // This is the tag as we match for internally
@@ -28,94 +36,111 @@ type TagEntry = {
 
     // This is the count of how many times this tag has been used
     count: number;
-}
+};
 
-export type TagSelectorSheetRefAtomType = RefObject<BottomSheetModal> | null;
+export type TagSelectorProps = {
+    initialTags?: string[];
+    onTagsSelected?: (tags: string[]) => void;
+    onTagsChanged?: (tags: string[]) => void;
+};
 
-export const tagSelectorBottomSheetRefAtom = atom<TagSelectorSheetRefAtomType, [TagSelectorSheetRefAtomType], null>(null, (get, set, value) =>
-    set(tagSelectorBottomSheetRefAtom, value)
-);
-
-export type TagSelectorBottomSheetCbType = (tags: string[]) => void;
-
-export const tagSelectorBottomSheetCbAtom = atom<TagSelectorBottomSheetCbType, [TagSelectorBottomSheetCbType], null>(null, (get, set, value) =>
-    set(tagSelectorBottomSheetCbAtom, value)
-);
-
-export function TagSelectorBottomSheet() {
+export function TagSelectorBottomSheet({
+    initialTags = [],
+    onTagsSelected,
+    onTagsChanged,
+}: TagSelectorProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(tagSelectorBottomSheetRefAtom);
     const inset = useSafeAreaInsets();
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
-    const selectedTags = useRef<Set<string>>(new Set());
-    const [selectedCount, setSelectedCount] = useState(0);
-    const tagSelectorCb = useAtomValue<TagSelectorBottomSheetCbType>(tagSelectorBottomSheetCbAtom);
+    const [tags, setTags] = useState<string[]>(initialTags);
+    const selectedTags = useRef<Set<string>>(new Set(initialTags));
+    const [_selectedCount, setSelectedCount] = useState(initialTags.length);
+    const tagSelectorCb = useAtomValue(tagSelectorBottomSheetCbAtom);
 
     useEffect(() => {
         selectedTags.current.clear();
-        for (const tag of metadata.tags ?? []) {
+        for (const tag of tags) {
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length])
+    }, [tags]);
 
     useEffect(() => {
         setBottomSheetRef(ref);
     }, [ref, setBottomSheetRef]);
 
-    const updateCaption = useCallback(() => {
-        const currentCaptionTags = generateHashtags(metadata?.caption ?? "");
+    const handleTagsSelected = useCallback(() => {
+        const selectedTagsArray = Array.from(selectedTags.current);
+        if (onTagsSelected) {
+            onTagsSelected(selectedTagsArray);
+        }
+        tagSelectorCb?.(selectedTagsArray);
+    }, [onTagsSelected, tagSelectorCb]);
 
-        // see if the caption has tags we don't have, if it does, let's remove them 
-        const tagsToRemove = currentCaptionTags.filter((tag) => !selectedTags.current.has(tag));
-        const newCaption = (metadata?.caption ?? "")
-            .replace(/#(\w+)/g, (match, tag) => {
-                if (tagsToRemove.includes(tag)) return '';
-                return match;
-            })
-            .trim();
-        setMetadata({ ...metadata, caption: newCaption });
-    }, [metadata, setMetadata]);
+    const handleTagsChanged = useCallback(
+        (newTags: string[]) => {
+            setTags(newTags);
+            if (onTagsChanged) {
+                onTagsChanged(newTags);
+            }
+        },
+        [onTagsChanged]
+    );
 
     return (
         <Sheet ref={ref}>
-            <BottomSheetView style={{ flexDirection: 'column', paddingBottom: inset.bottom, height: Dimensions.get('window').height * 0.8 }}>
-                <View className="px-4 py-2 flex-col gap-2 w-full">
-                    <View className="flex-row items-center justify-between w-full">
-                        <Text variant="title1" className="text-foreground">Tag your post</Text>
-                        <Button size="sm" variant="primary" onPress={() => tagSelectorCb?.(Array.from(selectedTags.current))}>
+            <BottomSheetView
+                style={{
+                    flexDirection: 'column',
+                    paddingBottom: inset.bottom,
+                    height: Dimensions.get('window').height * 0.8,
+                }}
+            >
+                <View className="w-full flex-col gap-2 px-4 py-2">
+                    <View className="w-full flex-row items-center justify-between">
+                        <Text variant="title1" className="text-foreground">
+                            Tag your post
+                        </Text>
+                        <Button size="sm" variant="primary" onPress={handleTagsSelected}>
                             <Text>Done</Text>
                         </Button>
                     </View>
-                    <Text className="text-muted-foreground">Add some tags to help others find your post</Text>
+                    <Text className="text-muted-foreground">
+                        Add some tags to help others find your post
+                    </Text>
                 </View>
-                
-                <TagSelector />
+
+                <TagSelector initialTags={tags} onTagsChanged={handleTagsChanged} />
             </BottomSheetView>
         </Sheet>
     );
 }
 
-export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void }) {
-    const metadata = usePostEditorStore(s => s.metadata);
-    const setMetadata = usePostEditorStore(s => s.setMetadata);
+export function TagSelector({
+    initialTags = [],
+    onTagsChanged,
+    onSelected,
+}: {
+    initialTags?: string[];
+    onTagsChanged?: (tags: string[]) => void;
+    onSelected?: (tag: string) => void;
+}) {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
     const follows = useFollows();
     const [search, setSearch] = useState('');
-    const selectedTags = useRef<Set<string>>(new Set());
-    const [selectedCount, setSelectedCount] = useState(0);
+    const selectedTags = useRef<Set<string>>(new Set(initialTags));
+    const [selectedCount, setSelectedCount] = useState(initialTags.length);
 
     const mountTagSelector = useAtomValue(mountTagSelectorAtom);
 
     useEffect(() => {
         selectedTags.current.clear();
-        for (const tag of metadata.tags ?? []) {
+        for (const tag of initialTags) {
             selectedTags.current.add(tag);
         }
         setSelectedCount(selectedTags.current.size);
-    }, [metadata?.tags?.length])
+    }, [initialTags]);
 
     const tagsToShow = useMemo(() => {
         if (!ndk || !currentUser || !mountTagSelector) return [];
@@ -126,26 +151,34 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
 
         // if we have a search, let's sort by the fact that the tag actually matches, if it doesn't match, it should be lower
         if (alphanumSearch) {
-            result.sort((a, b) => {
-                const aMatches = a.tag.toLowerCase().includes(alphanumSearch);
-                const bMatches = b.tag.toLowerCase().includes(alphanumSearch);
-                return aMatches ? -1 : bMatches ? 1 : 0;
-            })
-            .filter((tag) => tag.tag.toLowerCase().includes(alphanumSearch));
+            result
+                .sort((a, b) => {
+                    const aMatches = a.tag.toLowerCase().includes(alphanumSearch);
+                    const bMatches = b.tag.toLowerCase().includes(alphanumSearch);
+                    return aMatches ? -1 : bMatches ? 1 : 0;
+                })
+                .filter((tag) => tag.tag.toLowerCase().includes(alphanumSearch));
         }
 
         // if we have selected tags that are not in the result and we don't have a search active, let's add them to the top
         if (selectedTags.current.size > 0 && !alphanumSearch) {
-            const selectedTagsToAdd = Array.from(selectedTags.current).filter((tag) => !result.some((t) => t.tag === tag));
+            const selectedTagsToAdd = Array.from(selectedTags.current).filter(
+                (tag) => !result.some((t) => t.tag === tag)
+            );
             result.unshift(...selectedTagsToAdd.map((tag) => ({ id: tag, tag, count: 0 })));
         }
 
         return result;
     }, [ndk, currentUser?.pubkey, follows?.length, search, selectedTags.current, mountTagSelector]);
 
-    const setTagsInMetadata = useCallback((tags: string[]) => {
-        setMetadata({ ...metadata, tags });
-    }, [metadata, setMetadata]);
+    const updateSelectedTags = useCallback(
+        (tags: string[]) => {
+            if (onTagsChanged) {
+                onTagsChanged(tags);
+            }
+        },
+        [onTagsChanged]
+    );
 
     const addTagManually = useCallback(() => {
         if (!search) return;
@@ -156,60 +189,66 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
         }
 
         selectedTags.current.add(search);
-        setTagsInMetadata(Array.from(selectedTags.current));
+        updateSelectedTags(Array.from(selectedTags.current));
         setSelectedCount(selectedTags.current.size);
         setSearch('');
-    }, [search, setSearch, setTagsInMetadata, onSelected]);
+    }, [search, setSearch, updateSelectedTags, onSelected]);
 
-    const onItemPress = useCallback((tag: string) => {
-        if (onSelected) {
-            onSelected(tag);
+    const onItemPress = useCallback(
+        (tag: string) => {
+            if (onSelected) {
+                onSelected(tag);
+                setSearch('');
+                return;
+            }
+
+            if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
+            else selectedTags.current.add(tag);
+            updateSelectedTags(Array.from(selectedTags.current));
+            setSelectedCount(selectedTags.current.size);
             setSearch('');
-            return;
-        }
-        
-        if (selectedTags.current.has(tag)) selectedTags.current.delete(tag);
-        else selectedTags.current.add(tag);
-        setTagsInMetadata(Array.from(selectedTags.current));
-        setSelectedCount(selectedTags.current.size);
-        setSearch('');
-    }, [setTagsInMetadata, setSelectedCount, setSearch, onSelected]);
+        },
+        [updateSelectedTags, setSelectedCount, setSearch, onSelected]
+    );
 
-    const {colors} = useColorScheme();
-    
+    const { colors } = useColorScheme();
+
     const keyExtractor = (item: TagEntry) => item.tag;
-    const renderItem = useCallback(({ item, index }: { item: TagEntry, index: number, target }) => {
-        const isSelected = selectedTags.current.has(item.tag);
-        return (
-            <ListItem
-                className={cn(
-                    'ios:pl-0 pl-2',
-                )}
-                titleClassName={cn(
-                    isSelected && '!text-primary !font-bold',
-                )}
-                leftView={
-                    <Hash size={24} color={isSelected ? colors.primary : colors.muted } style={{ marginHorizontal: 10 }} />
-                }
-                item={{
-                    title: item.tag,
-                }}
-                index={index}
-                onPress={() => onItemPress(item.tag)}
-            />
-        );
-    }, [selectedCount, onItemPress]);
+    const renderItem = useCallback(
+        ({ item, index }: { item: TagEntry; index: number }) => {
+            const isSelected = selectedTags.current.has(item.tag);
+            return (
+                <ListItem
+                    className={cn('ios:pl-0 pl-2')}
+                    titleClassName={cn(isSelected && '!text-primary !font-bold')}
+                    leftView={
+                        <Hash
+                            size={24}
+                            color={isSelected ? colors.primary : colors.muted}
+                            style={{ marginHorizontal: 10 }}
+                        />
+                    }
+                    item={{
+                        title: item.tag,
+                    }}
+                    index={index}
+                    onPress={() => onItemPress(item.tag)}
+                />
+            );
+        },
+        [selectedCount, onItemPress, colors]
+    );
 
     const data = useMemo(() => {
         return tagsToShow;
-    }, [tagsToShow, selectedCount, renderItem, onItemPress]);
+    }, [tagsToShow, selectedCount]);
 
     return (
-        <View className="px-4 flex-col gap-2">
-            <View className="flex-row items-center bg-card border border-border/25 dark:border-border/80 rounded-md px-4 py-3">
+        <View className="flex-col gap-2 px-4">
+            <View className="border-border/25 dark:border-border/80 flex-row items-center rounded-md border bg-card px-4 py-3">
                 <Text className="text-foreground">#</Text>
                 <TextInput
-                    className="text-foreground flex-1 px-1"
+                    className="flex-1 px-1 text-foreground"
                     value={search}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -220,7 +259,7 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
 
                 <Button
                     size="sm"
-                    variant={tagsToShow.length === 0 ? 'primary' : 'secondary' }
+                    variant={tagsToShow.length === 0 ? 'primary' : 'secondary'}
                     disabled={search.length === 0}
                     onPress={addTagManually}
                 >
@@ -238,14 +277,13 @@ export function TagSelector({ onSelected }: { onSelected?: (tag: string) => void
     );
 }
 
-
 /**
  * This function gets the tags that should be shown to the user;
  * to do that it looks at what tags the user has used, what tags
  * the user has interacted with, and what tags are popular in their
  * network.
  */
-function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: string): Array<TagEntry> {
+function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: string): TagEntry[] {
     const tagsFromUser = getTagsUsedBy(ndk, [user.pubkey], 8, search);
 
     const tagsFromNetwork = getTagsUsedBy(ndk, follows, 20, search);
@@ -264,8 +302,6 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
     });
 
     return tagsToReturn;
-    
-    // return tagsFromUser;
 }
 
 /**
@@ -273,20 +309,20 @@ function getTagsToShow(ndk: NDK, user: NDKUser, follows: Hexpubkey[], search?: s
  * to do that it looks at what tags the user has used, what tags
  * the user has interacted with, and what tags are popular in their
  * network.
- * 
- * @param ndk 
- * @param pubkeys 
+ *
+ * @param ndk
+ * @param pubkeys
  * @param top The number of most popular tags to return
- * @returns 
+ * @returns
  */
-function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: string): Array<TagEntry> {
+function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: string): TagEntry[] {
     let postsByUser = getPostsByUser(ndk, pubkeys);
 
     if (search) {
         const lowerCaseSearch = search.toLowerCase();
-        console.log('search', postsByUser.length, search, lowerCaseSearch);
-        postsByUser = postsByUser.filter((post) => post.getMatchingTags("t").some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch)));
-        console.log('postsByUser', postsByUser.length);
+        postsByUser = postsByUser.filter((post) =>
+            post.getMatchingTags('t').some((tag) => tag[1].toLowerCase().includes(lowerCaseSearch))
+        );
     }
 
     // This tracks the different variations of how a tag is used, so #olas and #Olas would go into the same entry
@@ -296,7 +332,7 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
 
     // This counts how many tags a tag is tagged in total, regardless of the variation
     const tagCount = new Map<string, number>();
-    
+
     postsByUser.forEach((post) => {
         post.getMatchingTags('t').forEach((tag) => {
             const tagName = tag[1] as string;
@@ -316,12 +352,14 @@ function getTagsUsedBy(ndk: NDK, pubkeys: Hexpubkey[], top: number, search?: str
         .sort((a, b) => b[1] - a[1])
         .slice(0, top)
         .map(([tag, count]) => ({ id: tag.toLowerCase(), tag, count }));
-    
+
     // get the most common tag variation of each top tag and add it to the topTags array
     topTags.forEach((tag) => {
         const variations = tagVariations.get(tag.id);
-        const mostCommonVariation = Object.entries(variations).sort((a, b) => b[1] - a[1])[0];
-        tag.tag = mostCommonVariation[0];
+        if (variations) {
+            const mostCommonVariation = Object.entries(variations).sort((a, b) => b[1] - a[1])[0];
+            tag.tag = mostCommonVariation[0];
+        }
     });
 
     return topTags;

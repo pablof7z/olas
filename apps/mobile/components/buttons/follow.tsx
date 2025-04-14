@@ -1,15 +1,23 @@
-import NDK, { Hexpubkey, NDKKind } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, useNDK, useNDKCurrentUser, useFollows } from '@nostr-dev-kit/ndk-mobile';
-import { Button } from '../nativewindui/Button';
-import { ButtonProps } from '../nativewindui/Button';
-import { Text } from '../nativewindui/Text';
-import { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Check, ChevronDown, Lock } from 'lucide-react-native';
-import { useColorScheme } from '@/lib/useColorScheme';
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import {
+    type Hexpubkey,
+    NDKEvent,
+    NDKKind,
+    useFollows,
+    useNDK,
+    useNDKCurrentUser,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useSetAtom } from 'jotai';
-import { userBottomSheetAtom } from '@/lib/user-bottom-sheet/store';
+import { Check, ChevronDown, Lock } from 'lucide-react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { Button, type ButtonProps } from '../nativewindui/Button';
+import { Text } from '../nativewindui/Text';
+
 import { useFollowType } from '@/hooks/follows';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { userBottomSheetAtom } from '@/lib/user-bottom-sheet/store';
 
 export function publishFollow(ndk: NDK, pubkey: Hexpubkey) {
     const followEvent = new NDKEvent(ndk);
@@ -36,7 +44,7 @@ export default function FollowButton({
 } & Omit<ButtonProps, 'variant' | 'size'>) {
     const { ndk } = useNDK();
     const currentUser = useNDKCurrentUser();
-    const follows = useFollows();
+    const _follows = useFollows();
     const [enabling, setEnabling] = useState<Hexpubkey | null>(null);
     const { colors } = useColorScheme();
     const follow = useCallback(async () => {
@@ -50,7 +58,7 @@ export default function FollowButton({
     const setUserBottomSheet = useSetAtom(userBottomSheetAtom);
 
     const handleOpenUserBottomSheet = useCallback(() => {
-        setUserBottomSheet(ndk?.getUser({pubkey}));
+        setUserBottomSheet(ndk?.getUser({ pubkey }));
     }, [ndk, pubkey, setUserBottomSheet]);
 
     const followStatus = useFollowType(pubkey);
@@ -59,13 +67,19 @@ export default function FollowButton({
 
     if (!enabling && followStatus === 'public') return null;
 
-    if (!enabling && followStatus === 'private') return (
-        <View style={styles.container}>
-            <Button variant="plain" size="sm" className="rounded-sm" onPress={handleOpenUserBottomSheet}>
-                <Lock size={16} color={colors.muted} />
-            </Button>
-        </View>
-    );
+    if (!enabling && followStatus === 'private')
+        return (
+            <View style={styles.container}>
+                <Button
+                    variant="plain"
+                    size="sm"
+                    className="rounded-sm"
+                    onPress={handleOpenUserBottomSheet}
+                >
+                    <Lock size={16} color={colors.muted} />
+                </Button>
+            </View>
+        );
 
     return (
         <View style={styles.container}>
@@ -73,33 +87,29 @@ export default function FollowButton({
                 variant={variant}
                 size={size}
                 onPress={follow}
-                onLongPress={() => {
-                    console.log('long press');
-                }}
+                onLongPress={() => {}}
                 className="rounded-sm"
             >
                 {followStatus === 'private' && <Lock size={16} color={colors.muted} />}
-                <Text className="text-sm pr-2">
-                    {followStatus ? (
-                        "Following"
-                    ) : (
-                        "Follow"
-                    )}
-                </Text>
+                <Text className="pr-2 text-sm">{followStatus ? 'Following' : 'Follow'}</Text>
             </Button>
-            <Button variant="secondary" size="sm" className="rounded-sm" onPress={handleOpenUserBottomSheet}>
+            <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-sm"
+                onPress={handleOpenUserBottomSheet}
+            >
                 <ChevronDown size={16} color={colors.muted} />
             </Button>
         </View>
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'stretch',
         justifyContent: 'center',
-        gap: 1
+        gap: 1,
     },
 });

@@ -1,5 +1,6 @@
-import NDK, { NDKCashuMintList } from "@nostr-dev-kit/ndk-mobile";
-import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
+import type NDK from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuMintList } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 
 export function humanWalletType(type: string) {
     if (type === 'nip-60') return 'Nostr-Native Wallet';
@@ -9,7 +10,7 @@ export function humanWalletType(type: string) {
 
 export async function createNip60Wallet(ndk: NDK) {
     const wallet = new NDKCashuWallet(ndk);
-    wallet.mints = ['https://mint.coinos.io', 'https://stablenut.umint.cash', 'https://mint.minibits.cash/Bitcoin'];
+    wallet.mints = ['https://mint.coinos.io', 'https://mint.minibits.cash/Bitcoin'];
     await wallet.getP2pk();
     await wallet.publish();
     wallet.backup();
@@ -19,6 +20,6 @@ export async function createNip60Wallet(ndk: NDK) {
     mintList.publishReplaceable();
 
     wallet.start({ subId: 'wallet', skipVerification: true });
-    
+
     return wallet;
 }

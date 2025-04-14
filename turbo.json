@@ -4,6 +4,9 @@
     "lint": {
       "outputs": []
     },
+    "format": {
+      "outputs": []
+    },
     "test": {
       "dependsOn": [
         "build"
@@ -17,6 +20,7 @@
         "^build"
       ],
       "outputs": [
+        "dist/**",
         ".next/**",
         "build/**",
         "node_modules/.cache/metro/**"

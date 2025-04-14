@@ -1,20 +1,20 @@
-import { Picker } from '@react-native-picker/picker';
-import { Text } from '@/components/nativewindui/Text';
-import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
-import QRCode from 'react-native-qrcode-svg';
-import * as Clipboard from 'expo-clipboard';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet } from 'react-native';
-import { TouchableOpacity, View } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
-import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
-import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { toast } from '@backpackapp-io/react-native-toast';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { Button } from '@/components/nativewindui/Button';
+import { useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCashuWallet, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
+import { Picker } from '@react-native-picker/picker';
+import * as Clipboard from 'expo-clipboard';
 import { atom, useAtom, useAtomValue } from 'jotai';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import QRCode from 'react-native-qrcode-svg';
 
-const selectedMintAtom = atom<string | null, [string | null], void>(null, (get, set, mint) => {
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
+import WalletBalance from '@/components/ui/wallet/WalletBalance';
+
+const selectedMintAtom = atom<string | null, [string | null], void>(null, (_get, set, mint) => {
     set(selectedMintAtom, mint);
 });
 
@@ -33,29 +33,24 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
 
         // hide keyboard
         Keyboard.dismiss();
-        
+
         if (activeWallet instanceof NDKCashuWallet) {
             const deposit = (activeWallet as NDKCashuWallet).deposit(amount, selectedMint);
 
-            deposit.on('success', (token) => {
-                console.log('success', token);
+            deposit.on('success', (_token) => {
                 onReceived();
             });
 
             try {
                 const pr = await deposit.start();
-                console.log('pr', pr);
                 setBolt11(pr);
             } catch (e) {
                 toast.error(e.message);
             }
         } else if (activeWallet instanceof NDKNWCWallet) {
-            console.log('activeWallet', activeWallet);
-            const res = await activeWallet.makeInvoice(amount * 1000, "deposit");
-            console.log('res', res);
+            const res = await activeWallet.makeInvoice(amount * 1000, 'deposit');
             setBolt11(res.invoice);
         } else {
-            console.log('no active wallet', activeWallet);
         }
     }, [activeWallet?.walletId, amount, selectedMint]);
 
@@ -63,11 +58,14 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
     const copyToClipboard = useCallback(async () => {
         await Clipboard.setStringAsync(bolt11);
         setCopied(true);
-        setTimeout(() => { setCopied(false); }, 2000);
+        setTimeout(() => {
+            setCopied(false);
+        }, 2000);
     }, [bolt11]);
 
-    let unit = activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
-    
+    const unit =
+        activeWallet instanceof NDKCashuWallet ? (activeWallet as NDKCashuWallet).unit : 'sats';
+
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
             <TextInput
@@ -80,7 +78,7 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
             />
 
             {bolt11 ? ( // Conditionally render QR code
-                <View className="px-4 flex-col gap-4 w-full items-stretch justify-center">
+                <View className="w-full flex-col items-stretch justify-center gap-4 px-4">
                     <View style={styles.qrCodeContainer}>
                         <QRCode value={bolt11} size={350} />
                     </View>
@@ -91,12 +89,18 @@ export default function ReceiveLn({ onReceived }: { onReceived: () => void }) {
                 </View>
             ) : (
                 <>
-                    <WalletBalance amount={amount} unit={unit} onPress={() => inputRef.current?.focus()} />
+                    <WalletBalance
+                        amount={amount}
+                        unit={unit}
+                        onPress={() => inputRef.current?.focus()}
+                    />
                     <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
                         <Text style={styles.continueButtonText}>Continue</Text>
-                        </TouchableOpacity>
-                        
-                    {activeWallet instanceof NDKCashuWallet && <MintSelector wallet={activeWallet as NDKCashuWallet} />}
+                    </TouchableOpacity>
+
+                    {activeWallet instanceof NDKCashuWallet && (
+                        <MintSelector wallet={activeWallet as NDKCashuWallet} />
+                    )}
                 </>
             )}
         </KeyboardAvoidingView>
@@ -112,14 +116,17 @@ function MintSelector({ wallet }: { wallet: NDKCashuWallet }) {
         }
     }, [wallet?.walletId]);
 
-    
     return (
-        <Picker selectedValue={selectedMint} onValueChange={(itemValue) => setSelectedMint(itemValue)} style={styles.picker}>
+        <Picker
+            selectedValue={selectedMint}
+            onValueChange={(itemValue) => setSelectedMint(itemValue)}
+            style={styles.picker}
+        >
             {wallet.mints.map((mint, index) => (
                 <Picker.Item key={index} label={mint} value={mint} />
             ))}
         </Picker>
-    )
+    );
 }
 
 const styles = StyleSheet.create({

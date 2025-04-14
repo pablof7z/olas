@@ -1,0 +1,171 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp
+- waitForAnimationToEnd:
+      timeout: 5000
+
+# Navigate to story creation by tapping the + button
+- tapOn:
+      id: 'new-post-button'
+      fallback:
+          point: 50%,95%
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take a photo or select from gallery
+- tapOn:
+      id: 'camera-button'
+      fallback:
+          point: 50%,50%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Mock selecting an image from gallery
+- tapOn:
+      id: 'select-gallery-image'
+      fallback:
+          point: 25%,95%
+- waitForAnimationToEnd:
+      timeout: 3000
+
+# Open sticker menu
+- tapOn:
+      id: 'add-stickers-button'
+      fallback:
+          point: 85%,95%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Select the mention sticker option
+- tapOn:
+      id: 'sticker-option-mention'
+      fallback:
+          point: 50%,35%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Test 1: Try to search with no query
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- inputText: ''
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take screenshot of empty search results
+- takeScreenshot: empty-search-results
+
+# Test 2: Enter invalid search query
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- clearText
+- inputText: '$%^&*'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take screenshot of invalid search results
+- takeScreenshot: invalid-search-results
+
+# Test 3: Enter query that will likely have no results
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- clearText
+- inputText: 'nonexistentuser123456789'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take screenshot of no search results
+- takeScreenshot: no-search-results
+
+# Test 4: Enter a valid query
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- clearText
+- inputText: 'nostr'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Take screenshot of search results
+- takeScreenshot: valid-search-results
+
+# Test 5: Cancel the search by going back to sticker options
+- tapOn:
+      id: 'back-button'
+      fallback:
+          point: 15%,20%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Take screenshot after canceling search
+- takeScreenshot: search-canceled
+
+# Test 6: Try again but complete the process
+- tapOn:
+      id: 'sticker-option-mention'
+      fallback:
+          point: 50%,35%
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- inputText: 'nostr'
+- waitForAnimationToEnd:
+      timeout: 2000
+
+# Select the first user from search results
+- tapOn:
+      id: 'mention-suggestion-item-0'
+      fallback:
+          point: 50%,30%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Take screenshot of added mention sticker
+- takeScreenshot: mention-sticker-added-after-errors
+
+# Test 7: Try adding the same user again (should work)
+- tapOn:
+      id: 'add-stickers-button'
+      fallback:
+          point: 85%,95%
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      id: 'sticker-option-mention'
+      fallback:
+          point: 50%,35%
+- waitForAnimationToEnd:
+      timeout: 1000
+- tapOn:
+      id: 'mention-search-input'
+      fallback:
+          point: 50%,20%
+- inputText: 'nostr'
+- waitForAnimationToEnd:
+      timeout: 2000
+- tapOn:
+      id: 'mention-suggestion-item-0'
+      fallback:
+          point: 50%,30%
+- waitForAnimationToEnd:
+      timeout: 1000
+
+# Take screenshot of two mention stickers
+- takeScreenshot: two-mention-stickers
+
+# Cancel creating the story
+- tapOn:
+      id: 'close-button'
+      fallback:
+          point: 10%,95%
+- waitForAnimationToEnd:
+      timeout: 2000

@@ -1,0 +1,66 @@
+appId: com.pablof7z.snapstr
+name: Image Text Overlay Test
+tags:
+    - story
+    - text-overlay
+
+env:
+    TIMEOUT: 10000
+
+onFlowStart:
+    - runFlow:
+          file: ../common/wait_for_app_launch.yaml
+
+---
+# Launch the app and navigate to the preview screen
+- launchApp:
+      clearState: false
+      clearKeychain: false
+      permissions:
+          camera: true
+          microphone: true
+          photos: true
+
+# Navigate to the story camera
+# Note: This assumes you're already logged in and on the main screen
+# If you need to log in first, add those steps here
+- tapOn:
+      id: 'new-story-button'
+      optional: true
+- tapOn:
+      text: 'Your story'
+      optional: true
+
+# Wait for camera to load
+- assertVisible:
+      id: 'camera-view'
+
+# Take a photo
+- tapOn:
+      id: 'capture-button'
+
+# Verify preview screen has loaded
+- assertVisible:
+      id: 'preview-container'
+- assertVisible:
+      id: 'add-text-button'
+- takeScreenshot: preview-screen-initial
+
+# Add text overlay to the image
+- tapOn:
+      id: 'add-text-button'
+- waitForAnimationToEnd
+- assertVisible: 'Enter text here...'
+- inputText: 'Hello Nostr'
+- takeScreenshot: text-input-entered
+
+# Apply the text overlay
+- tapOn:
+      text: 'checkmark'
+- waitForAnimationToEnd
+- takeScreenshot: text-overlay-added
+
+# Verify we're back to the preview screen with the text overlay
+- assertVisible:
+      id: 'share-button'
+- takeScreenshot: final-preview-with-text

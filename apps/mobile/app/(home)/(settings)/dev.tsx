@@ -1,13 +1,13 @@
 import { NDKCacheAdapterSqlite, useNDK } from '@nostr-dev-kit/ndk-mobile';
-import { Text } from '@/components/nativewindui/Text';
+import type { SQLiteDatabase } from 'expo-sqlite';
+
 import { List, ListItem } from '@/components/nativewindui/List';
+import { Text } from '@/components/nativewindui/Text';
 import { cn } from '@/lib/cn';
-import { SQLiteDatabase } from 'expo-sqlite';
 
 type Row = { id: string; title: string; value: string };
 
-function getSubscriptions(): Row[] {
-    const { ndk } = useNDK();
+function getSubscriptions(ndk: any): Row[] {
     const subManager = ndk.subManager;
     const subscriptions = subManager.subscriptions;
 
@@ -21,7 +21,11 @@ function getSubscriptions(): Row[] {
 }
 
 function getProfileCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM profiles') as { id: string; pubkey: string; name: string }[];
+    const data = db.getAllSync('SELECT * FROM profiles') as {
+        id: string;
+        pubkey: string;
+        name: string;
+    }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -34,16 +38,26 @@ function getProfileCount(db: SQLiteDatabase): Row[] {
 }
 
 function getUnpublishedEvents(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM unpublished_events') as { id: string; kind: number; content: string }[];
-    return [{
-        id: 'unpublished-events',
-        title: 'Unpublished events',
-        value: data.length.toString()
-    }]
+    const data = db.getAllSync('SELECT * FROM unpublished_events') as {
+        id: string;
+        kind: number;
+        content: string;
+    }[];
+    return [
+        {
+            id: 'unpublished-events',
+            title: 'Unpublished events',
+            value: data.length.toString(),
+        },
+    ];
 }
 
 function getEventCount(db: SQLiteDatabase): Row[] {
-    const data = db.getAllSync('SELECT * FROM events') as { id: string; kind: number; content: string }[];
+    const data = db.getAllSync('SELECT * FROM events') as {
+        id: string;
+        kind: number;
+        content: string;
+    }[];
     const mappedData: Row[] = [];
 
     mappedData.push({
@@ -79,7 +93,7 @@ export default function DevScreen() {
     const db = adapter.db;
 
     const data: Row[] = [];
-    data.push(...getSubscriptions());
+    data.push(...getSubscriptions(ndk));
     data.push(...getUnpublishedEvents(db));
     data.push(...getProfileCount(db));
     data.push(...getEventCount(db));
@@ -93,7 +107,11 @@ export default function DevScreen() {
             renderItem={({ item, target, index }) => (
                 <ListItem
                     item={item}
-                    className={cn('ios:pl-0 pr-2', index === 0 && 'ios:border-t-0 border-border/25 dark:border-border/80 border-t')}
+                    className={cn(
+                        'ios:pl-0 pr-2',
+                        index === 0 &&
+                            'ios:border-t-0 border-border/25 dark:border-border/80 border-t'
+                    )}
                     titleClassName="text-lg"
                     index={index}
                     target={target}

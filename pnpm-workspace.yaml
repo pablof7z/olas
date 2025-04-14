@@ -1,10 +1,16 @@
 packages:
-    - 'apps/*'
-    - 'packages/eslint-config'
-    - 'packages/ndk/ndk'
-    - 'packages/ndk/ndk-test'
-    - 'packages/ndk/ndk-cache-dexie'
-    - 'packages/ndk/ndk-svelte'
-    - 'packages/ndk/ndk-mobile'
-    - 'packages/ndk/ndk-wallet'
-    - 'packages/ndk/packages/*'
+  - apps/mobile
+  - packages/eslint-config
+  - packages/ndk/ndk-core
+  - packages/ndk/ndk-mobile
+  - packages/ndk/ndk-cache-dexie
+  - packages/ndk/ndk-wallet
+  - packages/ndk/ndk-hooks
+  - packages/ndk/ndk-svelte
+  - packages/ndk/ndk-svelte-components
+  - packages/ndk/ndk-test-utils
+  - packages/ndk/packages/*
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - esbuild
+  - maestro

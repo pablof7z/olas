@@ -1,23 +1,29 @@
-import { StyleSheet, Dimensions, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import {
+    type NDKEvent,
+    NDKKind,
+    NDKUserProfile,
+    useSubscribe,
+    useProfile,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { Stack, router } from 'expo-router';
+import { useAtomValue } from 'jotai';
+import { useCallback, useMemo } from 'react';
+import { Dimensions, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import BackButton from '@/components/buttons/back-button';
+import { Reactions } from '@/components/events/Post/Reactions';
+import EventMediaContainer from '@/components/media/event';
 import { Text } from '@/components/nativewindui/Text';
-import { NDKKind, NDKUserProfile, useSubscribe, useUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import * as User from '@/components/ui/user';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
-import EventMediaContainer from '@/components/media/event';
-import { Reactions } from '@/components/events/Post/Reactions';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCallback, useMemo } from 'react';
-import { useAtomValue } from 'jotai';
-import { activeEventAtom } from '@/stores/event';
-import { router, Stack } from 'expo-router';
-import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
-import { useUserFlare } from '@/hooks/user-flare';
-import BackButton from '@/components/buttons/back-button';
-import { useReactionsStore } from '@/stores/reactions';
+import * as User from '@/components/ui/user';
 import AvatarAndName from '@/components/ui/user/avatar-name';
+import { useUserFlare } from '@/hooks/user-flare';
+import { activeEventAtom } from '@/stores/event';
+import { useReactionsStore } from '@/stores/reactions';
+import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -35,25 +41,33 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 function Header({ event }: { event: NDKEvent }) {
-    const { userProfile } = useUserProfile(event.pubkey);
+    const userProfile = useProfile(event.pubkey);
     const insets = useSafeAreaInsets();
-    const flare = useUserFlare(event.pubkey);
+    const _flare = useUserFlare(event.pubkey);
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${event.pubkey}`);
-    }, [event.pubkey])
-    
+    }, [event.pubkey]);
+
     return (
         <View style={[headerStyles.container, { paddingTop: insets.top }]}>
             <BackButton />
 
-            <AvatarAndName pubkey={event.pubkey} userProfile={userProfile} onPress={viewProfile} imageSize={24} borderColor='black' canSkipBorder={true} pressableStyle={{ padding: 16 }} />
+            <AvatarAndName
+                pubkey={event.pubkey}
+                userProfile={userProfile}
+                onPress={viewProfile}
+                imageSize={24}
+                borderColor="black"
+                canSkipBorder
+                pressableStyle={{ padding: 16 }}
+            />
 
             <Text style={headerStyles.timestamp}>
-                <RelativeTime timestamp={event.created_at!} />
+                <RelativeTime timestamp={event.created_at} />
             </Text>
         </View>
-    )
+    );
 }
 
 const headerStyles = StyleSheet.create({
@@ -66,20 +80,32 @@ const headerStyles = StyleSheet.create({
         fontSize: 12,
         color: '#9CA3AF', // Tailwind 'text-gray-400'
     },
-})
+});
 
 export default function ViewScreen() {
-    const activeEvent = useAtomValue<NDKEvent>(activeEventAtom);
-    const reactions = useReactionsStore(state => state.reactions.get(activeEvent?.tagId() ?? ''));
-    const {events} = useSubscribe( activeEvent ? [
-        activeEvent.filter(),
-    ] : false, { groupable: false }, [activeEvent?.id]);
+    // Explicitly assert the type from the atom
+    const activeEvent = useAtomValue(activeEventAtom) as NDKEvent | null;
 
-    const height = useHeaderHeight(); 
+    // Handle the case where activeEvent might be null
+    if (!activeEvent) {
+        // Optionally return a loading indicator or an error message
+        return <View><Text>Loading event...</Text></View>;
+    }
+    const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
+    const { events } = useSubscribe(
+        activeEvent ? [activeEvent.filter()] : false,
+        { groupable: false },
+        [activeEvent?.id]
+    );
+
+    const height = useHeaderHeight();
     const insets = useSafeAreaInsets();
-    const style = useMemo(() => ({
+    const style = useMemo(
+        () => ({
             paddingTop: height,
-    }), [height]);
+        }),
+        [height]
+    );
 
     if (!activeEvent) {
         return <Text style={styles.noActiveEvent}>No active event</Text>;
@@ -110,29 +136,50 @@ export default function ViewScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    headerTintColor: "white",
-                    header: () => <Header event={activeEvent} />
+                    headerTintColor: 'white',
+                    header: () => <Header event={activeEvent} />,
                 }}
             />
             <View style={[styles.scrollView, style]}>
-                <ScrollView minimumZoomScale={1} maximumZoomScale={5} style={{ flex: 1 }}
-                contentContainerStyle={{ flex: 1 }}>
+                <ScrollView
+                    minimumZoomScale={1}
+                    maximumZoomScale={5}
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flex: 1 }}
+                >
                     <EventMediaContainer
                         event={activeEvent}
                         contentFit="contain"
                         maxWidth={Dimensions.get('window').width}
                         maxHeight={Dimensions.get('window').height}
                         muted={false}
-                        autoplay={true}
+                        autoplay
                     />
                 </ScrollView>
 
                 {/* Content */}
                 <View style={[styles.contentContainer, { paddingBottom: insets.bottom * 2 }]}>
-                    {price && <Text numberOfLines={1} variant="title1" className="text-white">{nicelyFormattedSatNumber(price)} {currency.toLowerCase()}</Text>}
-                    {title && <Text numberOfLines={1} variant="title1" className="text-white">{title}</Text>}
-                    <EventContent event={activeEvent} content={content} style={styles.eventContent} />
-                    <Reactions event={activeEvent} foregroundColor='white' inactiveColor='white' reactions={reactions} />
+                    {price && (
+                        <Text numberOfLines={1} variant="title1" className="text-white">
+                            {nicelyFormattedSatNumber(price)} {currency.toLowerCase()}
+                        </Text>
+                    )}
+                    {title && (
+                        <Text numberOfLines={1} variant="title1" className="text-white">
+                            {title}
+                        </Text>
+                    )}
+                    <EventContent
+                        event={activeEvent}
+                        content={content}
+                        style={styles.eventContent}
+                    />
+                    <Reactions
+                        event={activeEvent}
+                        foregroundColor="white"
+                        inactiveColor="white"
+                        reactions={reactions}
+                    />
                 </View>
             </View>
         </>

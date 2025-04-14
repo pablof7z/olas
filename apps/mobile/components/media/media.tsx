@@ -1,9 +1,11 @@
-import { urlIsVideo } from '@/utils/media';
+import type { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
+import { useMemo } from 'react';
+import { Dimensions, type StyleProp, type ViewStyle } from 'react-native';
+
 import ImageComponent from './image';
 import VideoComponent from './video';
-import { Dimensions, StyleProp, ViewStyle } from 'react-native';
-import { NDKImetaTag } from '@nostr-dev-kit/ndk-mobile';
-import { useMemo } from 'react';
+
+import { urlIsVideo } from '@/utils/media';
 
 export default function MediaComponent({
     imeta,
@@ -25,7 +27,7 @@ export default function MediaComponent({
     imeta: NDKImetaTag;
     maxWidth?: number;
     maxHeight?: number;
-    priority?: 'low' | 'normal' | 'high',
+    priority?: 'low' | 'normal' | 'high';
     onPress?: () => void;
     forceProxy?: boolean;
     onLongPress?: () => void;
@@ -37,24 +39,24 @@ export default function MediaComponent({
     style?: StyleProp<ViewStyle>;
     autoplay?: boolean;
 }) {
-    const forceDimensions= width && height ? { width, height } : undefined;
-    const {
-        url,
-        blurhash,
-        dim,
-        dimensions,
-    } = useMemo(() => {
+    const forceDimensions = width && height ? { width, height } : undefined;
+    const { url, blurhash, dim, dimensions } = useMemo(() => {
         const { url, blurhash, dim } = imeta;
         const dimensions = dim?.split('x').map(Number) ?? undefined;
-        const validDimensions = dimensions && dimensions[0] && dimensions[1] ? { width: dimensions[0], height: dimensions[1] } : undefined;
+        const validDimensions =
+            dimensions?.[0] && dimensions[1]
+                ? { width: dimensions[0], height: dimensions[1] }
+                : undefined;
 
         return {
             url,
             blurhash,
             dim,
             dimensions: validDimensions,
-        }
+        };
     }, [imeta]);
+
+    if (!url) return null;
 
     if (urlIsVideo(url)) {
         return (

@@ -1,16 +1,18 @@
+import { useState } from 'react';
+import { View } from 'react-native';
+
+import { Button } from '@/components/nativewindui/Button';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import { TextField } from '@/components/nativewindui/TextField';
 import { useAppSettingsStore } from '@/stores/app';
-import { View } from 'react-native';
-import { Button } from '@/components/nativewindui/Button';
-import { useState } from 'react';
 
 export default function BlacklistScreen() {
     const [newWord, setNewWord] = useState('');
-    const blacklistedWords = useAppSettingsStore(s => s.blacklistedWords);
-    const setBlacklistedWords = (words: string[]) => useAppSettingsStore.setState({ blacklistedWords: words });
+    const blacklistedWords = useAppSettingsStore((s) => s.blacklistedWords);
+    const setBlacklistedWords = (words: string[]) =>
+        useAppSettingsStore.setState({ blacklistedWords: words });
 
     const addWord = () => {
         if (newWord.trim() && !blacklistedWords.includes(newWord.trim())) {
@@ -20,7 +22,7 @@ export default function BlacklistScreen() {
     };
 
     const removeWord = (word: string) => {
-        setBlacklistedWords(blacklistedWords.filter(w => w !== word));
+        setBlacklistedWords(blacklistedWords.filter((w) => w !== word));
     };
 
     return (
@@ -47,7 +49,11 @@ export default function BlacklistScreen() {
                             title: item,
                         }}
                         rightView={
-                            <Button variant="destructive" size="sm" onPress={() => removeWord(item)}>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onPress={() => removeWord(item)}
+                            >
                                 Remove
                             </Button>
                         }
