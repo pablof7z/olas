@@ -300,7 +300,7 @@ function DataList() {
     return (
         <View style={{ flex: 1 }}>
             <Feed
-                prepend={<Stories style={{ marginTop: headerHeight }} />}
+                prepend={<View style={{ marginTop: headerHeight }} />}
                 filters={filters ?? []}
                 relayUrls={relayUrls}
                 filterKey={key}

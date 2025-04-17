@@ -300,16 +300,6 @@ export default function Sticker({ sticker, onSelect }: StickerProps) {
                 <Animated.View style={scaleStyle} onLayout={handleLayout}>
                     <View style={styles.contentContainer} onLayout={handleContentLayout}>
                         {renderContent()}
-                        <View style={styles.debugCoordinates}>
-                            <Text style={styles.debugText}>
-                                {sticker.style}
-                                {'\n'}
-                                X: {Math.round(translateX.value)}, Y: {Math.round(translateY.value)}
-                                {'\n'}W: {Math.round(stickerDimensions.width)}, H:{' '}
-                                {Math.round(stickerDimensions.height)}
-                                {'\n'}Scale: {scale.value.toFixed(2)}
-                            </Text>
-                        </View>
                     </View>
                 </Animated.View>
             </Animated.View>

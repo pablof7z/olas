@@ -4,7 +4,6 @@ import {
     useNDK,
     useNDKCurrentUser,
     useNDKSessionLogin,
-    useNDKSessions,
 } from "@nostr-dev-kit/ndk-mobile";
 import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";

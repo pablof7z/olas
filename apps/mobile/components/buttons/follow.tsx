@@ -26,6 +26,7 @@ export function publishFollow(ndk: NDK, pubkey: Hexpubkey) {
         ['p', pubkey],
         ['k', NDKKind.Image.toString()],
         ['k', NDKKind.VerticalVideo.toString()],
+        ['k', NDKKind.ShortVideo.toString()],
     ];
     followEvent.publish();
 
@@ -58,7 +59,9 @@ export default function FollowButton({
     const setUserBottomSheet = useSetAtom(userBottomSheetAtom);
 
     const handleOpenUserBottomSheet = useCallback(() => {
-        setUserBottomSheet(ndk?.getUser({ pubkey }));
+        if (!ndk) return;
+
+        setUserBottomSheet(ndk.getUser({ pubkey }));
     }, [ndk, pubkey, setUserBottomSheet]);
 
     const followStatus = useFollowType(pubkey);

@@ -4,19 +4,16 @@ import '@bacons/text-decoder/install';
 import { Toasts } from '@backpackapp-io/react-native-toast';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import type { NDKRelay } from '@nostr-dev-kit/ndk'; // Import NDKRelay type
+import type { NDKRelay } from '@nostr-dev-kit/ndk';
 import { PortalHost } from '@rn-primitives/portal';
 import { type ScreenProps, Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import * as SettingsStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-
-import { PromptForNotifications } from './notification-prompt';
 
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { type FeedType, feedTypeAtom } from '@/components/FeedType/store';
@@ -48,8 +45,7 @@ configureReanimatedLogger({
 
 // LogBox.ignoreAllLogs();
 
-const currentUserInSettings = SecureStore.getItem('currentUser') ?? undefined;
-const ndk = initializeNDK(currentUserInSettings);
+const ndk = initializeNDK();
 
 const modalPresentation = (
     opts: ScreenProps['options'] = { headerShown: Platform.OS !== 'ios' }
@@ -64,14 +60,16 @@ export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
     const initializeNDK = useNDKInit();
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     useEffect(() => {
         initializeNDK(ndk);
         setAppReady(true);
     }, []);
+
     return (
         <LoaderScreen appReady={appReady} wotReady>
             <SessionMonitor />
-             <RootLayout />
+            <RootLayout />
         </LoaderScreen>
     );
 }
@@ -84,7 +82,7 @@ export function RootLayout() {
     const setFeedType = useSetAtom(feedTypeAtom);
 
     useEffect(() => {
-        const storedFeed = SettingsStore.getItem('feed');
+        const storedFeed = SecureStore.getItem('feed');
         let feedType: FeedType | null = null;
         if (storedFeed) {
             try {
@@ -124,6 +122,7 @@ export function RootLayout() {
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     useEffect(() => {
         initAppSettings();
     }, []);
@@ -144,11 +143,6 @@ export function RootLayout() {
                                 <PortalHost />
                                 <Stack>
                                     <Stack.Screen name="login" />
-
-                                    <Stack.Screen
-                                        name="notification-prompt"
-                                        options={{ headerShown: false, presentation: 'modal' }}
-                                    />
 
                                     <Stack.Screen
                                         name="dlnwc"
@@ -221,10 +215,7 @@ export function RootLayout() {
                                 </Stack>
 
                                 <PostOptionsMenu />
-                                {/* <AlbumsBottomSheet /> */}
-                                {/* <PostTypeSelectorBottomSheet /> */}
                                 <FeedTypeBottomSheet />
-                                {/* <HandleNotificationPrompt /> */}
                                 <TagSelectorBottomSheet />
                                 <FeedEditorBottomSheet />
                                 <UserBottomSheet />
@@ -267,9 +258,3 @@ const styles = StyleSheet.create({
         zIndex: 1000,
     },
 });
-
-function HandleNotificationPrompt() {
-    const promptedForNotifications = useAppSettingsStore((state) => state.promptedForNotifications);
-
-    if (!promptedForNotifications) return <PromptForNotifications />;
-}

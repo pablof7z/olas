@@ -1,7 +1,6 @@
 import NDK, {
-    type Hexpubkey,
-    NDKCacheAdapterSqlite,
-    type NDKRelay,
+    bootNDK, NDKCacheAdapterSqlite,
+    type NDKRelay
 } from '@nostr-dev-kit/ndk-mobile';
 
 import { getRelays } from '@/stores/db/relays';
@@ -17,7 +16,7 @@ cacheAdapter.initialize();
  * 4. Connects to the relays
  * @returns
  */
-export function initializeNDK(currentUser?: Hexpubkey) {
+export function initializeNDK() {
     const relays = getRelays();
     const filteredRelays = relays.filter((r) => {
         try {
@@ -56,7 +55,8 @@ export function initializeNDK(currentUser?: Hexpubkey) {
         ...opts,
     });
     cacheAdapter.ndk = ndk;
-    if (currentUser) ndk.activeUser = ndk.getUser({ pubkey: currentUser });
+
+    bootNDK(ndk);
 
     ndk.connect();
 

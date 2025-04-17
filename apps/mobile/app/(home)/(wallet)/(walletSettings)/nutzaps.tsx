@@ -1,29 +1,22 @@
-import { Proof } from '@cashu/cashu-ts';
 import {
     // DBCache, // Removed unused import
-    type NDKCacheAdapterSqlite,
-    NDKEvent,
-    NDKKind,
-    NDKNutzap,
-    useNDK,
-    useNDKCurrentUser,
-    useNDKNutzapMonitor,
+    type NDKCacheAdapterSqlite, NDKNutzap,
+    useNDK, useNDKNutzapMonitor,
     useNDKWallet,
-    useProfile,
+    useProfile
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet'; // Removed unexported NDKNutzapState, NdkNutzapStatus
+import { FlashList } from '@shopify/flash-list';
+import { useCallback, useMemo } from 'react';
+import { View } from 'react-native';
 // Define placeholder types or use 'any' if specific types are unknown
 type NDKNutzapState = any; // Placeholder type
 type NdkNutzapStatus = string; // Placeholder type, assuming string statuses
-import { FlashList } from '@shopify/flash-list';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
 import { ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';
-import { formatMoney } from '@/utils/bitcoin';
 
 export default function NutzapsScreen() {
     const { activeWallet } = useNDKWallet();
