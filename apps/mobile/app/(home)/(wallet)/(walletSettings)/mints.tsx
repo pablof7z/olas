@@ -1,3 +1,4 @@
+import { useColorScheme } from '@/lib/useColorScheme';
 import type { GetInfoResponse } from '@cashu/cashu-ts';
 import { NDKCashuMintList, useNDK, useNDKWallet, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
@@ -103,8 +104,10 @@ export default function MintsScreen() {
         setMints(mints.filter((u) => u !== url));
     };
 
+    const { colors } = useColorScheme();
+
     return (
-        <View className="flex-1">
+        <View style={{ backgroundColor: colors.card, flex: 1 }}>
             <LargeTitleHeader
                 title="Mints"
                 searchBar={{ iosHideWhenScrolling: true, onChangeText: setSearchText }}

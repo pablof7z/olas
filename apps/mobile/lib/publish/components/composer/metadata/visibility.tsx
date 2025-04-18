@@ -18,7 +18,7 @@ export default function Visibility() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { borderBottomColor: colors.grey }]}>
             <TouchableOpacity style={styles.rowContainer} onPress={handlePress}>
                 <Ionicons name="people" size={iconSize} color={colors.primary} />
                 <View style={styles.textContainer}>

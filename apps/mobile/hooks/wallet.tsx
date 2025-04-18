@@ -108,7 +108,7 @@ export function useWalletMonitor(pubkey: Hexpubkey) {
             const keys = cacheAdapter.getMintKeys(mint);
             return Promise.resolve(keys);
         };
-    }, [activeWallet?.walletId, ndk.cacheAdapter]); // Add ndk.cacheAdapter dependency
+    }, [activeWallet?.walletId, ndk?.cacheAdapter]); // Add ndk.cacheAdapter dependency
 
     const setWalletConfig = useAppSettingsStore((s) => s.setWalletConfig);
 

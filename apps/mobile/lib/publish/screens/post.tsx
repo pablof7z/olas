@@ -28,10 +28,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NoPermissionsFallback from '../components/NoPermissionsFallback';
 import { useEditorStore } from '../store/editor';
 
-import type { PostMedia } from '@/lib/post-editor/types';
 import PreviewContainer from '@/lib/publish/components/preview/Container';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mapAssetToPostMedia } from '@/utils/media';
+import { PostMedia } from '../types';
 
 const COLUMNS = 4;
 

@@ -92,7 +92,6 @@ function NutzapRow({
     index,
     target,
 }: { state: NDKNutzapState; eventId: string; index: number; target: any }) {
-    const { ndk } = useNDK();
     const nutzap = state.nutzap;
     const status = state.status;
 
@@ -102,7 +101,7 @@ function NutzapRow({
         if (!nutzap) return;
         // nutzapMonitor is checked in the parent component
         const _res = await nutzapMonitor!.redeemNutzap(nutzap); // Use non-null assertion
-    }, [nutzap?.id]);
+    }, [nutzap?.id, nutzapMonitor]);
 
     // Replace NdkNutzapStatus enum with string literals
     const spent = ['REDEEMED', 'SPENT'].includes(status.toUpperCase());

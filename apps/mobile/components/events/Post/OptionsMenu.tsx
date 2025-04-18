@@ -6,7 +6,7 @@ import {
     NDKList,
     type NDKUser,
     type NostrEvent,
-    useMuteList,
+    useMuteItem,
     useNDK,
     useNDKCurrentUser,
     useNDKSessionEvent,
@@ -81,6 +81,8 @@ function OptionsContent({
     const user = event?.author;
 
     const advancedMode = useAppSettingsStore((s) => s.advancedMode);
+
+    if (!currentUser) return null;
 
     return (
         <BottomSheetView
@@ -164,11 +166,13 @@ function OptionsContent({
 function ReportBody({ event }: { event: NDKEvent }) {
     const { ndk } = useNDK();
     const [_sent, setSent] = useState(false);
-    const { mute } = useMuteList();
+    const mute = useMuteItem();
     const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
 
     const report = useCallback(
         async (reason: string) => {
+            if (!ndk || !optionsSheetRef?.current) return;
+
             const report = new NDKEvent(ndk, {
                 kind: NDKKind.Report,
             } as NostrEvent);
@@ -178,7 +182,7 @@ function ReportBody({ event }: { event: NDKEvent }) {
             }
             await report.sign();
             report.publish();
-            mute(event.pubkey, 'pubkey');
+            mute(event.author);
             setSent(true);
             optionsSheetRef.current?.dismiss();
         },
@@ -269,20 +273,22 @@ function MuteButton({
     currentUser: NDKUser;
     closeFn: (cb: (event?: NDKEvent) => void) => void;
 }) {
-    const { mute } = useMuteList();
-    const followType = useFollowType(user?.pubkey);
+    const mute = useMuteItem();
+    // const followType = useFollowType(user?.pubkey);
+
+    const handleButtonPress = useCallback(() => {
+        closeFn(() => mute(user));
+    }, []);
 
     if (currentUser?.pubkey === user.pubkey) return null;
-    if (followType) return null;
+    // if (followType) return null;
 
     return (
         <Button
             size="lg"
             variant="secondary"
             className="flex-1 flex-row gap-2 bg-red-900/10 py-4"
-            onPress={() => {
-                closeFn(() => mute(user.pubkey, 'pubkey'));
-            }}
+            onPress={handleButtonPress}
         >
             <UserX size={24} color="red" />
             <Text className="flex-1 text-red-500">Mute</Text>
@@ -299,9 +305,9 @@ function ReportUserButton({
     currentUser: NDKUser;
     closeFn: (cb: (event?: NDKEvent) => void) => void;
 }) {
-    const { mute } = useMuteList();
     const followType = useFollowType(event?.pubkey);
     const user = event?.author;
+    const mute = useMuteItem();
     const { ndk } = useNDK();
 
     const report = useCallback(() => {
@@ -314,8 +320,7 @@ function ReportUserButton({
     }, [event?.pubkey]);
 
     const handleBlock = useCallback(() => {
-        mute(user.pubkey, 'pubkey');
-        closeFn(undefined);
+        closeFn(() => mute(user));
     }, [user?.pubkey, mute, closeFn]);
 
     if (currentUser?.pubkey === event.pubkey) return null;

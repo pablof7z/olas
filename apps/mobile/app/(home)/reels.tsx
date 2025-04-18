@@ -2,7 +2,7 @@ import {
     type NDKEvent,
     NDKKind,
     NDKSubscriptionCacheUsage,
-    type NDKVideo,
+    NDKVideo,
     useNDK,
     useObserver,
     useProfile,
@@ -31,6 +31,7 @@ import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
 import { getClientName } from '@/utils/event';
+import { sortEvents } from 'nostr-tools';
 
 const visibleItemAtom = atom<string | null, [string | null], void>(null, (_get, set, update) => {
     set(visibleItemAtom, update);
@@ -166,7 +167,7 @@ const Reel = memo(
 );
 
 export default function ReelsScreen() {
-    const events = useObserver([{ kinds: [NDKKind.VerticalVideo] }]);
+    const {events} = useSubscribe<NDKVideo>([{ kinds: [21, NDKKind.ShortVideo] } ], { wrap: true });
     const safeAreaInsets = useSafeAreaInsets();
     const setVisibleItem = useSetAtom(visibleItemAtom);
 
@@ -188,11 +189,11 @@ export default function ReelsScreen() {
                     return self.findIndex((e) => e.pubkey === event.pubkey) === index;
                 })
                 .filter((event: NDKVideo) => {
-                    const url = event.imetas?.[0]?.url || event.tagValue('url');
-                    if (!url) return !!url;
+                    const url = event.imetas[0]?.url || event.tagValue('url');
+                    return !!url;
                 })
         );
-    }, [events]);
+    }, [events.length]);
 
     const height = Dimensions.get('window').height - safeAreaInsets.bottom;
 

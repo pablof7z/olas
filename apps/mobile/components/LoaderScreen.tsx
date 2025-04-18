@@ -31,7 +31,7 @@ export default function LoaderScreen({
     const inset = useSafeAreaInsets();
     const haveInterval = useRef(false);
     const [_ignoreWot, setIgnoreWot] = useState(true);
-    const { ndk, switchToUser } = useNDK();
+    const { ndk } = useNDK();
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
@@ -47,7 +47,6 @@ export default function LoaderScreen({
 
         if (userProfile.name === 'deleted-account') {
             alert('This account has been deleted. You need to create a new account to continue.');
-            if (switchToUser) switchToUser(''); // Switch to empty pubkey for logout
             resetAppSettings();
         }
     }, [currentUser?.pubkey, userProfile?.name]);
@@ -65,10 +64,11 @@ export default function LoaderScreen({
     }, [ndk?.cacheAdapter?.ready]);
 
     useEffect(() => {
+        console.log(`<LoaderScreen> appReady = ${appReady}, wotReady = ${wotReady}`);
         if (appReady && wotReady) {
             setTimeout(() => {
                 setRenderApp(true);
-            }, 1000);
+            }, 100);
         }
     }, [appReady, wotReady]);
 
@@ -92,6 +92,8 @@ export default function LoaderScreen({
                   }),
         };
     }, [renderApp]);
+
+    console.log('<LoaderScreen> shouldRender', shouldRender);
 
     return (
         <>

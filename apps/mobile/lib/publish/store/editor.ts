@@ -234,22 +234,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                 return;
             }
 
-            console.log("generated event for publish", result.event.inspect);
-
             const { event, relaySet } = result;
             await event.sign();
             set({ state: 'publishing' });
-
-            console.log("generated event for publish", result.event.inspect, { isImage: result.event instanceof NDKImage });
 
             if (PUBLISH_ENABLED) {
                 await event.publish(relaySet);
 
                 if (share) publishShareEvent(ndk, event);
-                else console.log('not sharing');
                 await event.publish(relaySet);
             } else {
-                console.log('not publishing');
+                console.log('not publishing', event.inspect);
             }
 
             // Reset state after successful publish

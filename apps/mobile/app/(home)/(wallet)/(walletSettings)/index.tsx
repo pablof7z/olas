@@ -38,8 +38,9 @@ export default function WalletSettings() {
     useEffect(() => {}, [balance]);
 
     const forceSync = async () => {
+        if (!(activeWallet instanceof NDKCashuWallet)) return;
         setSyncing(true);
-        const _res = await (activeWallet as NDKCashuWallet).checkProofs();
+        activeWallet.consolidateTokens();
         setSyncing(false);
     };
 
@@ -49,6 +50,7 @@ export default function WalletSettings() {
         const dump = activeWallet.state.dump();
         const journal = activeWallet.state.journal;
         const dumpStr = {
+            mintList: mintList?.rawEvent(),
             proofs: dump.proofs,
             balances: dump.balances,
             totalBalance: dump.totalBalance,
@@ -68,6 +70,7 @@ export default function WalletSettings() {
 
     const { ndk } = useNDK();
     const disableNutzaps = useCallback(async () => {
+        if (!ndk) return;
         const mintList = new NDKEvent(ndk);
         mintList.kind = NDKKind.CashuMintList;
         mintList.tags = [];
@@ -94,7 +97,7 @@ export default function WalletSettings() {
     }, [showActionSheetWithOptions]);
 
     const enableNutzaps = useCallback(async () => {
-        if (!(activeWallet instanceof NDKCashuWallet)) return;
+        if (!ndk || !(activeWallet instanceof NDKCashuWallet)) return;
 
         if (!activeWallet.p2pks[0]) {
             toast('Your NIP-60 wallet did not have a private key; fixing that.');
@@ -180,7 +183,7 @@ export default function WalletSettings() {
                 onPress: () => showDisableNutzapActionSheet(),
             });
 
-            opts.push(`P2PK: ${mintList?.p2pk ? mintList.p2pk : 'Not set'}`);
+            opts.push(`P2PK: ${mintList?.tagValue('pubkey') ? mintList.tagValue('pubkey') : 'Not set' }`);
         } else if (activeWallet instanceof NDKCashuWallet) {
             opts.push('Incoming zaps');
 
@@ -249,7 +252,7 @@ export default function WalletSettings() {
     }
 
     return (
-        <>
+        <View style={{ backgroundColor: colors.card, flex: 1 }}>
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
@@ -259,7 +262,7 @@ export default function WalletSettings() {
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
             />
-        </>
+        </View>
     );
 }
 

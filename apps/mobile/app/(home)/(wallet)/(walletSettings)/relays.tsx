@@ -36,13 +36,14 @@ export default function WalletRelayScreen() {
     const [relays, setRelays] = useState<string[]>([]);
     const [url, setUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const { colors } = useColorScheme();
 
     useEffect(() => {
         if (!mintList) return;
-        setRelays([...mintList.relays]);
+        setRelays([...mintList.relays||[]]);
     }, [mintList?.relays?.length]);
 
-    const addFn = () => {
+    const addFn = useCallback(() => {
         try {
             const uri = new URL(url);
             if (!['wss:', 'ws:'].includes(uri.protocol)) {
@@ -55,7 +56,7 @@ export default function WalletRelayScreen() {
         } catch (_e) {
             alert('Invalid URL');
         }
-    };
+    }, []);
 
     const removeRelay = useCallback(
         (url: string) => {
@@ -107,7 +108,7 @@ export default function WalletRelayScreen() {
     }, [relays, activeWallet]);
 
     return (
-        <>
+        <View style={{ backgroundColor: colors.card, flex: 1 }}>
             <LargeTitleHeader
                 title="Relays"
                 searchBar={{
@@ -134,7 +135,7 @@ export default function WalletRelayScreen() {
                 keyExtractor={keyExtractor}
                 sectionHeaderAsGap
             />
-        </>
+        </View>
     );
 }
 

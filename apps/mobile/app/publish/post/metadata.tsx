@@ -30,7 +30,6 @@ export default function PostMetadataScreen() {
     const publish = useEditorStore((state) => state.publish);
     const { ndk } = useNDK();
     const blossomServer = useActiveBlossomServer();
-    const visibility = useEditorStore((state) => state.visibility);
 
     const mediaSize = dimensions.height * 0.3;
 
@@ -93,7 +92,7 @@ export default function PostMetadataScreen() {
             <Stack.Screen
                 options={{
                     contentStyle: {
-                        backgroundColor: 'white',
+                        backgroundColor: colors.card,
                     },
                     headerShown: true,
                     title: 'New Post',
@@ -120,7 +119,7 @@ export default function PostMetadataScreen() {
                     ),
                 }}
             />
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
                 {isPublishing && (
                     <View style={styles.publishingOverlay}>
                         <ActivityIndicator size="large" color={colors.primary} />

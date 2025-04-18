@@ -159,12 +159,12 @@ function renderItemWithVariant<T extends ListDataItem>(
         const nextItem = data?.[args.index + 1];
         return renderItem
             ? renderItem({
-                  ...args,
-                  variant,
-                  isFirstInSection: !previousItem || typeof previousItem === 'string',
-                  isLastInSection: !nextItem || typeof nextItem === 'string',
-                  sectionHeaderAsGap,
-              })
+                ...args,
+                variant,
+                isFirstInSection: !previousItem || typeof previousItem === 'string',
+                isLastInSection: !nextItem || typeof nextItem === 'string',
+                sectionHeaderAsGap,
+            })
             : null;
     };
 }

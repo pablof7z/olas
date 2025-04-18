@@ -39,7 +39,7 @@ export default function Expiration() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container]}>
             <TouchableOpacity style={styles.rowContainer} onPress={handleOpenBottomSheet}>
                 <Timer size={iconSize} color={colors.foreground} />
                 <View style={styles.textContainer}>

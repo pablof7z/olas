@@ -432,9 +432,16 @@ export default function SettingsIosStyleScreen() {
         ],
     ); // Add dependencies used inside renderItem
 
+    const { colors } = useColorScheme();
+
     return (
-        <>
-            <Stack.Screen options={{ title: "Settings", headerRight: () => <ThemeToggle /> }} />
+        <View style={{ backgroundColor: colors.card, flex: 1 }}>
+            <Stack.Screen options={{
+                title: "Settings",
+                headerStyle: { backgroundColor: colors.card },
+                headerTitleStyle: { color: colors.foreground },
+                headerTintColor: colors.foreground,
+                headerRight: () => <ThemeToggle /> }} />
             <List
                 contentContainerClassName="pt-4"
                 contentInsetAdjustmentBehavior="automatic"
@@ -444,7 +451,7 @@ export default function SettingsIosStyleScreen() {
                 renderItem={renderItem} // Use the memoized renderItem
                 keyExtractor={keyExtractor} // Use the updated keyExtractor
             />
-        </>
+        </View>
     );
 }
 

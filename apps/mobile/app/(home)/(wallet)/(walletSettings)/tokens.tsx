@@ -36,6 +36,8 @@ export default function TokensScreen() {
     const { activeWallet } = useNDKWallet();
     const [forceSyncing, setForceSyncing] = useState(false);
 
+    const { colors } = useColorScheme();
+
     const forceSync = useCallback(() => {
         setForceSyncing(true);
     }, []);
@@ -51,7 +53,7 @@ export default function TokensScreen() {
     }
 
     return (
-        <>
+        <View style={{ backgroundColor: colors.card, flex: 1 }}>
             <Stack.Screen
                 options={{
                     title: 'Coins',
@@ -76,7 +78,7 @@ export default function TokensScreen() {
                     />
                 )}
             />
-        </>
+        </View>
     );
 }
 

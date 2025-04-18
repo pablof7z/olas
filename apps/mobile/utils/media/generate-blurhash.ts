@@ -6,15 +6,21 @@ import {
 } from 'react-native-compressor';
 
 export default async function generateBlurhash(uri: string) {
-    const compressedUri = await CompressedImage.compress(uri, {
-        compressionMethod: 'manual',
-        maxWidth: 300,
-        maxHeight: 300,
-        quality: 0.5,
-    });
-
     try {
-        return await Blurhash.encode(compressedUri, 7, 5);
+        console.log('[BLURHASH] compressing', uri);
+        const compressedUri = await CompressedImage.compress(uri, {
+            compressionMethod: 'manual',
+            maxWidth: 300,
+            maxHeight: 300,
+            quality: 0.5,
+        });
+        console.log('[BLURHASH] compressed', compressedUri);
+
+        const bh = await Blurhash.encode(compressedUri, 7, 5);
+
+        console.log('[BLURHASH] generated', bh);
+
+        return bh;
     } catch (error) {
         console.error('Error generating blurhash', error);
         return null;

@@ -71,40 +71,46 @@ export function useAppSub() {
 
     useEffect(() => {
         if (!ndk || !pubkey) return;
-        const timeSinceLastAppSync = SecureStore.getItem("timeSinceLastAppSync");
-        const sinceFilter = timeSinceLastAppSync ? { since: Number.parseInt(timeSinceLastAppSync), limit: 1 } : {};
-
         const kindString = Array.from(mainKinds).map((k) => k.toString());
 
         const filters = [
-            { kinds: [NDKKind.Text], "#k": kindString, authors: [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.Text], "#k": kindString, authors: [pubkey] },
             { kinds: [NDKKind.GenericReply], "#K": kindString, "#p": [pubkey] },
-            { kinds: [NDKKind.GenericRepost], "#k": kindString, "#p": [pubkey], ...sinceFilter },
-            { kinds: [NDKKind.Reaction], "#k": kindString, "#p": [pubkey], ...sinceFilter },
-            { kinds: [NDKKind.EventDeletion], "#k": kindString, authors: [pubkey], ...sinceFilter },
+            { kinds: [NDKKind.GenericRepost], "#k": kindString, "#p": [pubkey] },
+            { kinds: [NDKKind.Reaction], "#k": kindString, "#p": [pubkey] },
+            { kinds: [NDKKind.EventDeletion], "#k": kindString, authors: [pubkey] },
         ];
+
+        console.log("app-sub filters", JSON.stringify(filters));
 
         const appSub = ndk.subscribe(
             filters,
             {
-                cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
                 groupable: false,
                 skipVerification: true,
+                addSinceFromCache: true,
                 subId: "main-sub",
             },
             {
+                onEvents: (events) => {
+                    for (const event of events) {
+                        if (processedEventsRef.current.has(event.id)) continue;
+                        processedEventsRef.current.add(event.id);
+                        eventsToAdd.current.push(event);
+                    }
+                },
                 onEvent: (event) => {
                     if (processedEventsRef.current.has(event.id)) return;
                     processedEventsRef.current.add(event.id);
                     eventsToAdd.current.push(event);
                 },
                 onEose: () => {
+                    console.log("app-sub eose");
                     addReactionEvents(eventsToAdd.current, pubkey);
                     addPayments(eventsToAdd.current);
                     eventsToAdd.current = [];
 
                     const time = Math.floor(Date.now() / 1000);
-                    SecureStore.setItemAsync("timeSinceLastAppSync", time.toString());
                 },
             },
         );

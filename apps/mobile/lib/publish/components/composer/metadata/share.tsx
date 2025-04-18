@@ -37,7 +37,7 @@ export default function ShareOptions() {
             >
                 <Ionicons name="person-outline" size={iconSize} color={colors.primary} />
                 <View style={styles.textContainer}>
-                    <Text style={styles.title}>Share to all Nostr apps</Text>
+                    <Text style={[styles.title, { color: colors.foreground }]}>Share to all Nostr apps</Text>
                     <Text style={styles.subtitle}>Increase visibility of this post</Text>
                 </View>
                 <Switch

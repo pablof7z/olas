@@ -1,19 +1,15 @@
 import { toast } from '@backpackapp-io/react-native-toast';
 import {
-    NDKEvent,
-    type NDKFilter,
-    NDKImage,
-    NDKKind,
+    type NDKEvent,
+    type NDKFilter, NDKKind,
     NDKSubscriptionCacheUsage,
     type NDKUser,
-    type NDKUserProfile,
-    type NostrEvent,
-    useNDK,
+    type NDKUserProfile, useNDK,
     useNDKCurrentUser,
     useObserver,
     useSubscribe,
-    useProfile,
-    // useUsersStore, // Removed as it's likely deprecated/changed in NDK
+    useSetProfile,
+    useProfileValue
 } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
 import * as Clipboard from 'expo-clipboard';
@@ -21,14 +17,13 @@ import { Image } from 'expo-image';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
-    ArrowLeft,
     Check,
     Copy,
     Grid,
     ImageIcon,
     ShoppingCart,
     Wind,
-    X,
+    X
 } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -38,11 +33,9 @@ import {
     type StyleProp,
     StyleSheet,
     Text,
-    TextInput,
-    Touchable,
-    TouchableOpacity,
+    TextInput, TouchableOpacity,
     View,
-    type ViewStyle,
+    type ViewStyle
 } from 'react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -58,7 +51,6 @@ import * as User from '@/components/ui/user';
 import { useUserFlare } from '@/hooks/user-flare';
 import { uploadMedia } from '@/lib/publish/actions/upload';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { SHOP_ENABLED } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
 import { prettifyNip05 } from '@/utils/user';
@@ -105,6 +97,7 @@ function Header({
     const insets = useSafeAreaInsets();
     const bannerHeight = insets.top + headerStyles.leftContainer.height + 50;
     const currentUser = useNDKCurrentUser();
+    const updateProfile = useSetProfile();
 
     // Create a new Animated.Value for blur intensity
     const defaultBlurValue = new Animated.Value(0);
@@ -123,10 +116,10 @@ function Header({
     // Create opacity animation for the username
     const usernameOpacity = scrollY
         ? scrollY.interpolate({
-              inputRange: [0, bannerHeight / 2, bannerHeight],
-              outputRange: [0, 0.5, 1],
-              extrapolate: 'clamp',
-          })
+            inputRange: [0, bannerHeight / 2, bannerHeight],
+            outputRange: [0, 0.5, 1],
+            extrapolate: 'clamp',
+        })
         : defaultBlurValue;
 
     const cancelProfileEdit = useCallback(() => {
@@ -149,15 +142,11 @@ function Header({
             setEditState('edit'); // Revert state if NDK is missing
             return;
         }
-        const e = new NDKEvent(ndk, { kind: 0 } as NostrEvent);
         const profileWithoutEmptyValues = Object.fromEntries(
             Object.entries(editProfile || {}).filter(([_, value]) => value !== null)
         );
-        profileWithoutEmptyValues.created_at = undefined;
 
-        e.content = JSON.stringify(profileWithoutEmptyValues);
-        await e.publishReplaceable();
-        // if (editProfile) updateUserProfile(pubkey, editProfile); // Commented out due to useUsersStore removal
+        updateProfile(profileWithoutEmptyValues);
         setEditState(null);
     }, [editProfile, setEditState, pubkey, ndk]); // Removed updateUserProfile from dependencies
 
@@ -265,16 +254,9 @@ const headerStyles = StyleSheet.create({
 export default function Profile() {
     const { pubkey, view } = useLocalSearchParams() as { pubkey: string; view?: string };
     const { ndk } = useNDK();
-    const user = ndk?.getUser({ pubkey }); // Use optional chaining
-
-    if (!user) {
-        // Handle case where user object couldn't be created (ndk is null or getUser failed)
-        console.error(`Could not get user object for pubkey: ${pubkey}`);
-        toast.error("Failed to load user data.");
-        return <View><Text>Error loading profile</Text></View>; // Render an error state
-    }
+    const user = ndk?.getUser({ pubkey });
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey);
     const flare = useUserFlare(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const { events: content } = useSubscribe(
@@ -329,7 +311,7 @@ export default function Profile() {
         return content.some((e: NDKEvent) => e.kind === 30402);
     }, [content]);
 
-    if (!pubkey) return null;
+    if (!user || !pubkey) return null;
 
     return (
         <>
@@ -430,7 +412,7 @@ export default function Profile() {
 }
 
 function Banner({ pubkey }: { pubkey: string }) {
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey);
     const insets = useSafeAreaInsets();
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     const editState = useAtomValue(editStateAtom);

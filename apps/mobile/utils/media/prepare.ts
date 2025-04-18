@@ -1,3 +1,4 @@
+import type { PostMedia } from '@/lib/publish/types';
 import { determineMimeType } from '../url';
 import compressFile from './compress';
 import getDimensions from './dimensions';
@@ -5,8 +6,6 @@ import generateBlurhash from './generate-blurhash';
 import generateThumbnail from './generate-thumbnail';
 import removeExifFromFile from './remove-exif';
 import calculateSha256 from './sha256';
-
-import type { PostMedia } from '@/lib/post-editor/types';
 
 export type ProgressCb = (type: string, progress: number) => void;
 
@@ -36,7 +35,9 @@ export async function prepareMediaItem(
         await compress(result, onProgress);
         await removeExif(result);
         await thumbnail(result);
+        console.log('will get blurhash', result.mediaType, result.localUri);
         await blurhash(result);
+        console.log('will get dimensions', result.mediaType, result.localUri);
         await dimensions(result);
         await sha256(result);
     } catch (error) {
@@ -87,7 +88,7 @@ async function sha256(media: PostMedia): Promise<void> {
 async function removeExif(media: PostMedia): Promise<void> {
     if (!media.localUri) throw new Error('Local URI is not set');
 
-    const location = await removeExifFromFile(media.localUri!, media.mediaType);
+    const location = await removeExifFromFile(media.localUri, media.mediaType);
     if (location) media.location = location;
 }
 

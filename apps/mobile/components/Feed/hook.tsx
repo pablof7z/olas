@@ -4,16 +4,13 @@ import {
     NDKEvent,
     type NDKEventId,
     type NDKFilter,
-    NDKKind,
-    NDKRelaySet,
-    type NDKSubscription,
+    NDKKind, type NDKSubscription,
     useNDK,
-    useNDKCurrentUser,
+    useNDKCurrentUser
 } from "@nostr-dev-kit/ndk-mobile";
-import { type VerifiedEvent, matchFilters } from "nostr-tools";
+import { matchFilters } from "nostr-tools";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { usePubkeyBlacklist } from "@/hooks/blacklist";
 import { usePaymentStore } from "@/stores/payments";
 import { useReactionsStore } from "@/stores/reactions";
 
@@ -50,6 +47,8 @@ export type FeedEntry = {
      */
     deleted?: boolean;
 };
+
+const timeZero = Date.now();
 
 /**
  * Handles creating a feed that accounts for reposts, mutes
@@ -120,7 +119,6 @@ export function useFeedEvents(
      */
     const [newEntries, setNewEntries] = useState<FeedEntry[]>([]);
 
-    const pubkeyBlacklist = usePubkeyBlacklist();
     const isMutedEvent = useMuteFilter(); // Instantiate the hook
 
     const freezeState = useRef(false);
@@ -135,9 +133,10 @@ export function useFeedEvents(
      * update in the feed of entries to render
      */
     const updateEntries = useCallback(
-        (_reason: string) => {
+        (reason: string) => {
+            const time = Date.now();
             if (freezeState.current) return;
-            // console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
+            console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
 
             const newSliceIds = Array.from(newEntriesRef.current.values());
             let newSlice = entriesFromIds(new Set(newSliceIds));
@@ -179,20 +178,13 @@ export function useFeedEvents(
         [isMutedEvent, filterFn],
     );
 
-    // const shouldIncludeRenderedEntry = useCallback((entry: FeedEntry) => {
-    //     if (!entry.event) return false;
-    //     if (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event?.pubkey)) return false;
-    //     if (filterFn && !filterFn(entry, 0)) return false;
-    //     return true;
-    // }, [isMutedEvent, pubkeyBlacklist, filterFn]);
-
     useEffect(() => {
         // check if any of the entries or new entries are muted or blacklisted, if anything changes
         // set the value
         let changed = false;
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            if (entry?.event && (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event.pubkey))) {
+            if (entry?.event && (isMutedEvent(entry.event))) {
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -207,7 +199,7 @@ export function useFeedEvents(
         // same thing for new entries
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
-            if (entry?.event && (isMutedEvent(entry.event) || pubkeyBlacklist.has(entry.event.pubkey))) {
+            if (entry?.event && (isMutedEvent(entry.event))) {
                 // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
@@ -216,7 +208,7 @@ export function useFeedEvents(
         }
 
         if (changed) setNewEntries(entriesFromIds(newEntriesRef.current));
-    }, [isMutedEvent, pubkeyBlacklist]);
+    }, [isMutedEvent]);
 
     const highestTimestamp = useRef(-1);
 
@@ -229,12 +221,12 @@ export function useFeedEvents(
      */
     const updateEntry = useCallback(
         (id: string, cb: (currentEntry: FeedEntry | undefined) => FeedEntry | undefined) => {
-            let entry: FeedEntry | undefined = allEntriesRef.current.get(id);
+            const entry: FeedEntry | undefined = allEntriesRef.current.get(id);
             // Provide default if entry is undefined before calling cb
             const ret = cb(entry ?? { id, reposts: [], timestamp: -1 });
             if (ret) {
                 // check this isn't muted or blacklisted
-                if (ret.event && (isMutedEvent(ret.event) || pubkeyBlacklist.has(ret.event.pubkey))) return;
+                if (ret.event && (isMutedEvent(ret.event))) return;
 
                 if (!ret.timestamp) ret.timestamp = ret.event?.created_at ?? -1;
 
@@ -275,7 +267,7 @@ export function useFeedEvents(
             }
             return ret;
         },
-        [updateEntries, setNewEntries, filterFn, pubkeyBlacklist], // Added dependencies
+        [updateEntries, setNewEntries, filterFn], // Added dependencies
     );
 
     const handleContentEvent = useCallback(
@@ -383,12 +375,10 @@ export function useFeedEvents(
     );
 
     const handleEvent = useCallback(
-        (event: NDKEvent, logIt = true) => {
+        (event: NDKEvent) => {
             const eventId = event.tagId();
             if (addedEventIds.current.has(eventId)) return;
             addedEventIds.current.add(eventId);
-
-            if (logIt) console.log("\thandling new event", event.kind);
 
             switch (event.kind) {
                 case NDKKind.VerticalVideo:
@@ -415,7 +405,7 @@ export function useFeedEvents(
         (events: NDKEvent[]) => {
             freezeState.current = true;
             for (const event of events) {
-                handleEvent(event, false);
+                handleEvent(event);
             }
 
             freezeState.current = false;
@@ -438,7 +428,7 @@ export function useFeedEvents(
 
         // Go through the currently-rendered entries and see if we need to change them
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            const keep = entry?.event && filters && matchFilters(filters, entry.event.rawEvent() as VerifiedEvent);
+            const keep = entry?.event && filters && matchFilters(filters, entry.event.rawEvent());
             if (!entry || !keep || !passesFilter(entry)) {
                 // Ensure entry is defined
                 changed = true;
@@ -462,7 +452,7 @@ export function useFeedEvents(
 
                 const keep =
                     filters && // Ensure filters exist
-                    matchFilters(filters, feedEntry.event.rawEvent() as VerifiedEvent);
+                    matchFilters(filters, feedEntry.event.rawEvent());
                 if (!keep || !passesFilter(feedEntry)) {
                     // passesFilter expects FeedEntry
                     newEntriesRef.current.delete(id);
@@ -497,6 +487,7 @@ export function useFeedEvents(
             { wrap: true, groupable: false, skipVerification: true, subId, relayUrls },
             {
                 onEose: handleEose,
+                onEvent: handleEvent,
                 onEvents: handleBulkEvents,
             },
         );

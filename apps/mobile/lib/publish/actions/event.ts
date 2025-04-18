@@ -36,6 +36,7 @@ function mediaToImeta(media: PostMedia): NDKImetaTag {
         imeta.ox = media.localSha256;
     imeta.dim = `${media.width}x${media.height}`;
     imeta.m = media.mimeType;
+    imeta.blurhash = media.blurhash;
     imeta.size = media.size?.toString?.();
 
     return imeta;

@@ -35,7 +35,7 @@ export default function Location() {
             >
                 <Ionicons name="location-outline" size={iconSize} color={colors.primary} />
                 <View style={styles.textContainer}>
-                    <Text style={styles.title}>Location</Text>
+                    <Text style={[styles.title, { color: colors.foreground }]}>Location</Text>
                     <Text style={styles.subtitle}>Include location data with this post</Text>
                 </View>
                 <Switch

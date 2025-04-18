@@ -3,26 +3,29 @@ import { Stack } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { View, type ViewStyle } from 'react-native';
+import Animated, {
+    useSharedValue,
+    withTiming,
+    useAnimatedStyle,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from '@/components/Feed';
 import type { FeedEntry } from '@/components/Feed/hook';
+import { scrollDirAtom } from '@/components/Feed/store';
 import { feedTypeAtom } from '@/components/FeedType/store';
 import HomeHeader from '@/components/Headers/Home';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
 import UploadIndicator from '@/components/UploadIndicator';
 import { useAllFollows } from '@/hooks/follows';
 import { useIsSavedSearch } from '@/hooks/saved-search';
-import { Stories } from '@/lib/stories/components/feed-item';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { videoKinds } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
-import { Hexpubkey, NDKEvent, NDKEventId, NDKFilter, NDKKind, NDKSubscription, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-hooks';
+import { type Hexpubkey, type NDKEvent, type NDKEventId, type NDKFilter, NDKKind, type NDKSubscription, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-hooks';
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
-
-    console.log('Rendering <HomeScreen>');
 
     const style = useMemo<ViewStyle>(
         () => ({
@@ -294,13 +297,12 @@ function DataList() {
     ]);
 
     const insets = useSafeAreaInsets();
-    const headerHeight = useHeaderHeight();
     const { colors } = useColorScheme();
 
     return (
         <View style={{ flex: 1 }}>
             <Feed
-                prepend={<View style={{ marginTop: headerHeight }} />}
+                prepend={<HomeTopMargin />}
                 filters={filters ?? []}
                 relayUrls={relayUrls}
                 filterKey={key}
@@ -308,6 +310,24 @@ function DataList() {
                 numColumns={numColumns}
             />
         </View>
+    );
+}
+
+function HomeTopMargin() {
+    const headerHeight = useHeaderHeight();
+    const scrollDir = useAtomValue(scrollDirAtom);
+    const headerAnim = useSharedValue(0);
+    
+    useEffect(() => {
+        headerAnim.value = withTiming(scrollDir === 'up' ? 0 : 1, { duration: 200 });
+    }, [scrollDir]);
+    
+    const containerStyle = useAnimatedStyle(() => ({
+        paddingTop: (1 - headerAnim.value) * headerHeight,
+    }));
+    
+    return (
+        <Animated.View style={containerStyle} />
     );
 }
 
