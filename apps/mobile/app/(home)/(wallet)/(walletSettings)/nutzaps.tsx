@@ -3,7 +3,7 @@ import {
     type NDKCacheAdapterSqlite, NDKNutzap,
     useNDK, useNDKNutzapMonitor,
     useNDKWallet,
-    useProfile
+    useProfileValue
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet'; // Removed unexported NDKNutzapState, NdkNutzapStatus
 import { FlashList } from '@shopify/flash-list';
@@ -106,7 +106,7 @@ function NutzapRow({
     // Replace NdkNutzapStatus enum with string literals
     const spent = ['REDEEMED', 'SPENT'].includes(status.toUpperCase());
 
-    const userProfile = useProfile(nutzap?.pubkey);
+    const userProfile = useProfileValue(nutzap?.pubkey, { skipVerification: true });
 
     const handleLongPress = useCallback(() => {}, [eventId]);
 

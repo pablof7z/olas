@@ -1,11 +1,7 @@
 import {
-    NDKCashuMintList,
-    NDKKind,
     type NDKUser,
-    useNDKCurrentUser,
-    useNDKSessionEvent,
-    useNDKWallet,
-    useProfile,
+    useNDKCurrentUser, useNDKWallet,
+    useProfileValue
 } from '@nostr-dev-kit/ndk-mobile';
 import {
     NDKCashuWallet,
@@ -142,8 +138,6 @@ export default function WalletScreen() {
 
     const insets = useSafeAreaInsets();
 
-    const userProfile = useProfile(currentUser?.pubkey);
-
     return (
         <>
             <Stack.Screen
@@ -213,7 +207,7 @@ export default function WalletScreen() {
 function HeaderLeft() {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfile(currentUser?.pubkey);
+    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
 
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>

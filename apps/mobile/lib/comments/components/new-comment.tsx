@@ -5,7 +5,7 @@ import {
     type NDKUser,
     type NDKUserProfile,
     useNDK,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useAtom, useSetAtom } from 'jotai';
 import { Send } from 'lucide-react-native';
@@ -34,7 +34,7 @@ export default function NewComment({
     currentUser,
     autoFocus,
 }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
-    const userProfile = useProfile(currentUser?.pubkey);
+    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();

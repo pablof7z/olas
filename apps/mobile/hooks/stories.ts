@@ -17,9 +17,6 @@ type StoryEntry = {
 };
 
 export function useStories() {
-    // useSubscribe([
-    //     { kinds: [30311] }
-    // ], { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, groupable: true, skipVerification: true, subId: 'live-sub', relays: ['wss://relay.damus.io'], dontSaveToCache: true });
     const follows = useFollows();
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60 * 10;
     const filters = useMemo(() => {

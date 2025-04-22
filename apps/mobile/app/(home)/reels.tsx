@@ -1,17 +1,14 @@
 import {
     type NDKEvent,
     NDKKind,
-    NDKSubscriptionCacheUsage,
-    NDKVideo,
-    useNDK,
-    useObserver,
-    useProfile,
+    type NDKVideo,
+    useProfileValue,
     useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { router, usePathname } from 'expo-router';
-import { VideoPlayer, VideoView, useVideoPlayer } from 'expo-video';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -31,7 +28,6 @@ import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
 import { getClientName } from '@/utils/event';
-import { sortEvents } from 'nostr-tools';
 
 const visibleItemAtom = atom<string | null, [string | null], void>(null, (_get, set, update) => {
     set(visibleItemAtom, update);
@@ -43,7 +39,7 @@ const Reel = memo(
         const isVisible = visibleItem === event.id;
         const [isLoading, setIsLoading] = useState(true);
         const videoRef = useRef<VideoView>(null);
-        const userProfile = useProfile(event.pubkey);
+        const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
         const pathname = usePathname();

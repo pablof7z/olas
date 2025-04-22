@@ -3,7 +3,7 @@ import {
     NDKKind,
     getRootEventId,
     useNDK,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
@@ -26,7 +26,7 @@ export function NotificationContainer({
     children,
 }: { event: NDKEvent; label: string; children: React.ReactNode }) {
     const { ndk } = useNDK();
-    const userProfile = useProfile(event.pubkey);
+    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 

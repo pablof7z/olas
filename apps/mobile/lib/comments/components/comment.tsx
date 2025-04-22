@@ -2,9 +2,10 @@ import { toast } from '@backpackapp-io/react-native-toast';
 import {
     type NDKEvent,
     NDKKind,
+    useNDKCurrentPubkey,
     useNDKCurrentUser,
     useObserver,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
@@ -25,10 +26,10 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { colorWithOpacity } from '@/theme/colors';
 
 export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<ViewStyle> }) {
-    const userProfile = useProfile(item.pubkey);
+    const userProfile = useProfileValue(item.pubkey, { skipVerification: true });
     const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
     const { colors } = useColorScheme();
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const flare = useUserFlare(item.pubkey);
     const reactions = useObserver([{ kinds: [NDKKind.Reaction], '#e': [item.id] }], {}, [item.id]);
 
@@ -95,7 +96,7 @@ export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<Vie
                 event={item}
                 inactiveColor={colors.foreground}
                 reactionCount={reactions.length}
-                reactedByUser={reactions.find((r) => r.pubkey === currentUser?.pubkey)}
+                reactedByUser={reactions.find((r) => r.pubkey === currentPubkey)}
                 iconSize={18}
                 showReactionCount={false}
             />

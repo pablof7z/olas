@@ -1,6 +1,7 @@
 import {
     type NDKCashuToken,
     NDKKind,
+    useNDKCurrentPubkey,
     useNDKCurrentUser, useNDKWallet,
     useSubscribe
 } from '@nostr-dev-kit/ndk-mobile';
@@ -328,17 +329,10 @@ const rightActionStyles = StyleSheet.create({
 
 function ForceSync() {
     const { activeWallet } = useNDKWallet();
-    const [validating, setValidating] = useState(false);
-    const [result, setResult] = useState<string | null>(null);
-    const currentUser = useNDKCurrentUser();
-    const { events: tokenEvents } = useSubscribe<NDKCashuToken>(
-        [{ kinds: [NDKKind.CashuToken], authors: [currentUser?.pubkey] }],
-        {
-            wrap: true,
-            skipVerification: true,
-            closeOnEose: true,
-        }
-    );
+    const currentPubkey = useNDKCurrentPubkey();
+    const { events: tokenEvents } = useSubscribe<NDKCashuToken>( currentPubkey ? [
+        { kinds: [NDKKind.CashuToken], authors: [currentPubkey] }
+    ] : false);
     const proofs = useMemo(() => {
         const proofs = new Map<string, { amount: number; proof: any }[]>();
         const knownProofs = new Set<string>();
@@ -359,16 +353,9 @@ function ForceSync() {
         return proofs;
     }, [tokenEvents.length]);
 
-    const { events: deletedEvents } = useSubscribe(
-        [
-            {
-                kinds: [NDKKind.EventDeletion],
-                '#k': [NDKKind.CashuToken.toString()],
-                authors: [currentUser?.pubkey],
-            },
-        ],
-        { skipVerification: true, closeOnEose: true }
-    );
+    const { events: deletedEvents } = useSubscribe(currentPubkey ? [
+        { kinds: [NDKKind.EventDeletion], '#k': [NDKKind.CashuToken.toString()], authors: [currentPubkey] }
+    ] : false, { skipVerification: true, closeOnEose: true });
 
     const deletedEventIds = useMemo(() => {
         const deletedIds = new Set<string>();

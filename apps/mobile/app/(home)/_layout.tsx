@@ -1,4 +1,4 @@
-import { useNDKCurrentUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentPubkey, useNDKCurrentUser, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { Tabs, router, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
@@ -18,7 +18,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { WALLET_ENABLED } from '@/utils/const';
 
 export default function TabsLayout() {
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const { colors } = useColorScheme();
     const scrollRef = useAtomValue(homeScreenScrollRefAtom);
     const tabBarAnim = useSharedValue(0);
@@ -132,7 +132,7 @@ export default function TabsLayout() {
                 listeners={{
                     tabPress: (e) => {
                         e?.preventDefault?.();
-                        if (!currentUser) {
+                        if (!currentPubkey) {
                             router.push('/login');
                         } else {
                             router.push('/publish');
@@ -171,7 +171,7 @@ export default function TabsLayout() {
                 listeners={{
                     tabPress: (e) => {
                         e.preventDefault();
-                        if (!currentUser) {
+                        if (!currentPubkey) {
                             router.push('/login');
                         } else {
                             router.push('/(home)/(settings)');
@@ -184,15 +184,15 @@ export default function TabsLayout() {
 }
 
 function UserButton({ size = 32 }: { size?: number }) {
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const { colors } = useColorScheme();
-    const userProfile = useProfile(currentUser?.pubkey);
-    const userFlare = useUserFlare(currentUser?.pubkey);
+    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
+    const userFlare = useUserFlare(currentPubkey || undefined);
 
-    if (currentUser) {
+    if (currentPubkey) {
         return (
             <UserAvatar
-                pubkey={currentUser.pubkey}
+                pubkey={currentPubkey}
                 userProfile={userProfile}
                 imageSize={size}
                 flare={userFlare}

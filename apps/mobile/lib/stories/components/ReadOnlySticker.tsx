@@ -2,7 +2,7 @@ import {
     type NDKEvent,
     NDKStoryStickerType,
     useNDK,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -160,7 +160,7 @@ function MentionSticker({
         () => ndk?.getUser({ pubkey: sticker.value as string }),
         [ndk, sticker.value]
     );
-    const userProfile = useProfile(user?.pubkey);
+    const userProfile = useProfileValue(user?.pubkey, { skipVerification: true });
 
     const pubkeySticker = useMemo<Sticker<NDKStoryStickerType.Pubkey>>(
         () =>

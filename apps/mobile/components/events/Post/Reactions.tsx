@@ -3,7 +3,7 @@ import {
     NDKKind,
     NDKList,
     NostrEvent,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useMemo, useRef } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -107,7 +107,7 @@ export function InlinedComments({
 }
 
 export function InlineComment({ comment }: { comment: NDKEvent }) {
-    const userProfile = useProfile(comment.pubkey);
+    const userProfile = useProfileValue(comment.pubkey, { skipVerification: true });
     return (
         <Text>
             <Text className="text-sm font-medium text-foreground">@{userProfile?.name} </Text>

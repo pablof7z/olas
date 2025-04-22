@@ -1,5 +1,5 @@
 import { toast } from '@backpackapp-io/react-native-toast'; // Import toast
-import { NDKList, useMuteList, useNDK, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { NDKList, useMuteList, useNDK, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import type { RenderTarget } from '@shopify/flash-list';
 import { Stack, router } from 'expo-router';
 import { atom, useAtom, useSetAtom } from 'jotai';
@@ -159,7 +159,7 @@ function MutedUserListItem({
     target,
     index,
 }: { pubkey: string; target: RenderTarget; index: number }) {
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey, { skipVerification: true });
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {

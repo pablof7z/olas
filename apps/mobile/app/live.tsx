@@ -4,9 +4,9 @@ import {
     type NDKKind,
     type NDKUserProfile,
     useNDK,
-    useNDKCurrentUser,
+    useNDKCurrentPubkey,
     useSubscribe,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
@@ -40,6 +40,13 @@ const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom | null], void>(null, (
 export default function LiveScreen() {
     // Explicitly assert the type from the atom
     const activeEvent = useAtomValue(activeEventAtom) as NDKEvent | null;
+    const headerHeight = useHeaderHeight();
+    const insets = useSafeAreaInsets();
+    const maxSize = Dimensions.get('window').height - insets.top - headerHeight - 100;
+    const [showChat, setShowChat] = useState(true);
+    const [contentFit, setContentFit] = useState<VideoContentFit>('cover');
+    const ref = useSheetRef();
+    
     // Ensure activeEvent is not null before accessing properties
     let source = activeEvent ? activeEvent.tagValue?.('streaming') : undefined;
     if (activeEvent && !source) {
@@ -47,26 +54,16 @@ export default function LiveScreen() {
     }
     // Ensure source is defined before using it
     const videoSource = source ? { uri: source } : undefined;
-
-    // If no video source, don't render the player component
-    if (!videoSource) {
-        console.error("No video source found for live event.");
-        // Optionally return a placeholder or error message component
-        return <View><Text>Error: Video source not available.</Text></View>;
-    }
-
-    const video = useVideoPlayer(videoSource, (player) => {
-        player.muted = false;
-        player.play();
+    
+    // Initialize the video player hook unconditionally
+    const video = useVideoPlayer(videoSource || { uri: '' }, (player) => {
+        if (videoSource) {
+            player.muted = false;
+            player.play();
+        }
     });
+    
     const title = activeEvent?.tagValue('title');
-    const [showChat, setShowChat] = useState(true);
-    const headerHeight = useHeaderHeight();
-    const [contentFit, setContentFit] = useState<VideoContentFit>('cover');
-    const ref = useSheetRef();
-
-    const insets = useSafeAreaInsets();
-    const maxSize = Dimensions.get('window').height - insets.top - headerHeight - 100;
 
     useEffect(() => {
         if (!ref) return;
@@ -96,10 +93,17 @@ export default function LiveScreen() {
                 </Pressable>
             ),
         }),
-        [title, showChat, toggleContentFit]
+        [title, toggleContentFit]
     );
 
     const style = useMemo(() => ({ width: '100%', height: '100%' }), []);
+
+    // If no video source, don't render the player component
+    if (!videoSource) {
+        console.error("No video source found for live event.");
+        // Optionally return a placeholder or error message component
+        return <View><Text>Error: Video source not available.</Text></View>;
+    }
 
     if (!activeEvent) return null;
 
@@ -108,14 +112,16 @@ export default function LiveScreen() {
             <Stack.Screen options={screenOpts} />
             <View className="h-screen w-screen flex-1 flex-col">
                 <Pressable onPress={() => !showChat && onPress}>
-                    <VideoView
-                        player={video}
-                        allowsPictureInPicture
-                        startsPictureInPictureAutomatically
-                        contentFit={contentFit}
-                        nativeControls={false}
-                        style={style as any} // Cast to any as temporary workaround for style error
-                    />
+                    {video && (
+                        <VideoView
+                            player={video}
+                            allowsPictureInPicture
+                            startsPictureInPictureAutomatically
+                            contentFit={contentFit}
+                            nativeControls={false}
+                            style={style as any} // Cast to any as temporary workaround for style error
+                        />
+                    )}
                 </Pressable>
 
                 <Sheet
@@ -169,9 +175,9 @@ export default function LiveScreen() {
 
 function ChatInput({ event }: { event: NDKEvent }) {
     const [value, setValue] = useState('');
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const { ndk } = useNDK();
-    const userProfile = useProfile(currentUser?.pubkey);
+    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
     const replyValue = useAtomValue(replyToAtom);
     const { event: replyTo, profile: replyToProfile } = replyValue ?? {};
 
@@ -198,8 +204,8 @@ function ChatInput({ event }: { event: NDKEvent }) {
 
     return (
         <View className="w-full flex-row items-center gap-4 py-4">
-            {currentUser?.pubkey && ( // Check if pubkey exists
-                <UserAvatar userProfile={userProfile} pubkey={currentUser.pubkey} imageSize={24} />
+            {currentPubkey && (
+                <UserAvatar userProfile={userProfile} pubkey={currentPubkey} imageSize={24} />
             )}
             <View className="flex-1 flex-col">
                 {replyTo && (
@@ -261,7 +267,7 @@ function Chat({ event }: { event: NDKEvent }) {
 }
 
 function ChatItem({ event }: { event: NDKEvent }) {
-    const userProfile = useProfile(event.pubkey);
+    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
     const [replyTo, setReplyTo] = useAtom(replyToAtom);
 
     const onPress = () => {

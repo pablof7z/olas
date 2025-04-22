@@ -1,4 +1,4 @@
-import { type NDKEvent, type NDKImage, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKImage, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import {
     Pressable,
@@ -23,7 +23,7 @@ export type StoryHeaderProps = {
 export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) {
     // Get pubkey from item or use direct pubkey
     const userPubkey = item ? item.pubkey : pubkey;
-    const userProfile = useProfile(userPubkey);
+    const userProfile = useProfileValue(userPubkey, { skipVerification: true });
     const insets = useSafeAreaInsets();
 
     if (!userPubkey) return null;

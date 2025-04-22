@@ -1,5 +1,5 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { type NDKEvent, type NDKUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, type NDKUser, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { atom, useAtomValue } from 'jotai';
 import { useCallback, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
@@ -25,7 +25,7 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
     const [comment, setComment] = useState<string>('');
     const [amount, setAmount] = useState<number>(21);
     const target = useAtomValue(zapperModalTargetAtom);
-    const userProfile = useProfile(target?.pubkey);
+    const userProfile = useProfileValue(target?.pubkey, { skipVerification: true });
 
     const sendZap = useZap();
 

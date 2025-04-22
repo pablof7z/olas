@@ -1,4 +1,4 @@
-import { type NDKEvent, useNDKCurrentUser, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, useNDKCurrentPubkey, useNDKCurrentUser, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
@@ -16,15 +16,15 @@ import { activeEventAtom } from '@/stores/event';
 const AVATAR_SIZE = 80;
 
 function StoryPrompt() {
-    const currentUser = useNDKCurrentUser();
-    const userProfile = useProfile(currentUser?.pubkey);
+    const currentPubkey = useNDKCurrentPubkey();
+    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
     const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
         router.push('/story');
     }, []);
 
-    if (!currentUser) return null;
+    if (!currentPubkey) return null;
 
     return (
         <Animated.View entering={SlideInRight} exiting={FadeOut}>
@@ -33,7 +33,7 @@ function StoryPrompt() {
                 style={{ flexDirection: 'column', alignItems: 'center', padding: 5 }}
             >
                 <UserAvatar
-                    pubkey={currentUser!.pubkey}
+                    pubkey={currentPubkey}
                     userProfile={userProfile}
                     imageSize={AVATAR_SIZE}
                     borderWidth={3}
@@ -46,7 +46,7 @@ function StoryPrompt() {
 
 export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
     const stories = useStories();
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
 
     const renderItem = useCallback(
         ({
@@ -69,7 +69,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
     // }
 
     const storyEntries = Array.from(stories.entries());
-    if (currentUser?.pubkey && !stories.has(currentUser.pubkey)) {
+    if (currentPubkey && !stories.has(currentPubkey)) {
         const prompt: [string, { events: NDKEvent[]; live: boolean }] = [
             'prompt',
             { events: [], live: false },
@@ -101,7 +101,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
 
 function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
     const pubkey = events[0].pubkey;
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey, { skipVerification: true });
     const flare = useUserFlare(pubkey);
 
     const setStories = useSetAtom(storiesAtom);

@@ -2,7 +2,7 @@ import {
     NDKCacheAdapterSqlite,
     useNDK,
     useNDKCurrentUser,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -35,7 +35,7 @@ export default function LoaderScreen({
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
-    const userProfile = useProfile(currentUser?.pubkey); // Use useProfile directly
+    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     useEffect(() => {

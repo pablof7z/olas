@@ -3,7 +3,7 @@ import {
     NDKKind,
     NDKUserProfile,
     useSubscribe,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
@@ -41,7 +41,7 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 function Header({ event }: { event: NDKEvent }) {
-    const userProfile = useProfile(event.pubkey);
+    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
     const insets = useSafeAreaInsets();
     const _flare = useUserFlare(event.pubkey);
 

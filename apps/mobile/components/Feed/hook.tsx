@@ -6,7 +6,7 @@ import {
     type NDKFilter,
     NDKKind, type NDKSubscription,
     useNDK,
-    useNDKCurrentUser
+    useNDKCurrentPubkey
 } from "@nostr-dev-kit/ndk-mobile";
 import { matchFilters } from "nostr-tools";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -465,13 +465,9 @@ export function useFeedEvents(
         if (changed) updateEntries("filtering out events");
     }, [filters, filterFn, updateEntries, entriesFromIds]); // Added dependencies
 
-    const subscriptionStartTime = useRef(0);
-
     useEffect(() => {
         if (!ndk) return;
         if (!filters) return;
-
-        subscriptionStartTime.current = Date.now();
 
         if (subscription.current) {
             subscription.current.stop();
@@ -548,7 +544,7 @@ function calcNeededSlices(currentIndex: number, sliceSize: number, events: NDKEv
  */
 export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
     const { ndk } = useNDK();
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const activeSlices = useRef<Slice[]>([]);
     const activeIds = useRef<Set<NDKEventId>>(new Set());
@@ -573,11 +569,11 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
             { closeOnEose: false, groupable: true, groupableDelay: 300 },
             {
                 onEvent: (event) => {
-                    addEvents([event], currentUser?.pubkey);
+                    addEvents([event], currentPubkey || undefined);
                     addPayments([event]);
                 },
                 onEvents: (events) => {
-                    addEvents(events, currentUser?.pubkey);
+                    addEvents(events, currentPubkey || undefined);
                     addPayments(events);
                 },
             },
@@ -628,7 +624,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
         events.length < sliceSize,
         sliceSize,
         ndk,
-        currentUser?.pubkey,
+        currentPubkey || undefined,
         addPayments,
     ]); // Added dependencies
 

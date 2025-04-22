@@ -1,12 +1,11 @@
 import {
     NDKEvent,
     NDKKind,
-    NDKList,
+    type NDKList,
     NDKRelaySet,
     useNDK,
     useNDKCurrentUser,
-    // useNDKSessionEventKind, // Removed - needs replacement
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback, useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
@@ -20,7 +19,7 @@ import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfile(currentUser?.pubkey);
+    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [state, setState] = useState<'open' | 'closed'>('open');

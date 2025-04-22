@@ -6,7 +6,7 @@ import {
     type NDKPaymentConfirmation,
     type NDKZapSplit,
     useNDK,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuDeposit, type NDKWallet } from '@nostr-dev-kit/ndk-wallet';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
@@ -26,7 +26,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import type { PendingZap } from '@/stores/payments';
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out'; pubkey?: string }) => {
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey, { skipVerification: true });
     const { colors } = useColorScheme();
 
     const color = colors.primary;

@@ -1,4 +1,4 @@
-import { useNDK, useNDKCurrentUser, useNDKWallet, useProfile } from '@nostr-dev-kit/ndk-mobile'; // Import useNDKCurrentUser
+import { useNDK, useNDKCurrentPubkey, useNDKCurrentUser, useNDKWallet, useProfileValue } from '@nostr-dev-kit/ndk-mobile'; // Import useNDKCurrentUser
 import { type NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
@@ -105,7 +105,7 @@ function Item({
     target,
     onPress,
 }: { item: Payment | NDKNWCTransaction; index: number; target: any; onPress: () => void }) {
-    const currentUser = useNDKCurrentUser(); // Get current user
+    const currentPubkey = useNDKCurrentPubkey(); // Get current user pubkey
     const { recipientPubkey, amount, type, createdAt } = useMemo(() => {
         let recipientPubkey = null;
         let amount = null;
@@ -132,11 +132,11 @@ function Item({
             // Determine type based on status if possible, default to outgoing
             // Use activeWallet obtained from useNDKWallet hook
             // Compare payment sender with current user's pubkey
-            type = (payment.status === 'confirmed' && currentUser && payment.sender !== currentUser.pubkey) ? 'incoming' : 'outgoing';
+            type = (payment.status === 'confirmed' && currentPubkey && payment.sender !== currentPubkey) ? 'incoming' : 'outgoing';
         }
 
         return { recipientPubkey, amount, createdAt, type };
-    }, [item, currentUser]); // Add currentUser to useMemo dependencies
+    }, [item, currentPubkey]); // Add currentPubkey to useMemo dependencies
 
     // Check if item is Payment and has status 'pending' or 'delayed'
     const isPending = 'status' in item && (item.status === 'pending' || item.status === 'delayed'); // Check if item is Payment and pending/delayed
@@ -171,7 +171,7 @@ const LeftView = ({
     direction,
     pubkey,
 }: { direction: 'incoming' | 'outgoing'; pubkey?: string }) => {
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey, { skipVerification: true });
     const { colors } = useColorScheme();
 
     const color = colors.primary;

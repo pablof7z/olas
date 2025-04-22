@@ -9,9 +9,10 @@ import {
     NDKZapper,
     useFollows,
     useNDK,
+    useNDKCurrentPubkey,
     useNDKCurrentUser,
     useNDKWallet,
-    useProfile,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
@@ -29,7 +30,7 @@ import WalletBalance from '@/components/ui/wallet/WalletBalance';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { usePaymentStore } from '@/stores/payments';
 export function UserAsHeader({ pubkey }: { pubkey: Hexpubkey }) {
-    const userProfile = useProfile(pubkey);
+    const userProfile = useProfileValue(pubkey, { skipVerification: true });
     return (
         <View className="flex-1 flex-col items-center gap-2">
             <User.Avatar pubkey={pubkey} userProfile={userProfile} imageSize={100} />
@@ -196,7 +197,7 @@ function FollowItem({
     item,
     onPress,
 }: { index: number; target: any; item: string; onPress: () => void }) {
-    const userProfile = useProfile(item);
+    const userProfile = useProfileValue(item, { skipVerification: true });
 
     return (
         <ListItem

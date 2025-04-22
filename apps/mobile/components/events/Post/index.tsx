@@ -1,4 +1,4 @@
-import { type NDKEvent, NDKKind, useProfile } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
@@ -201,7 +201,7 @@ export default function Post({
     reposts: NDKEvent[];
     timestamp: number;
 }) {
-    const userProfile = useProfile(event.pubkey);
+    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
 
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {
