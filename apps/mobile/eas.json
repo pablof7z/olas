@@ -10,21 +10,12 @@
                 "buildType": "apk"
             }
         },
-        "monorepo": {
-            "pnpm": "9.14.2",
-            "node": "22.9.0",
-            "env": {
-                "EXPO_USE_FAST_RESOLVER": "true"
-            }
-        },
         "development": {
-            "extends": "monorepo",
             "developmentClient": true,
             "distribution": "internal",
             "resourceClass": "medium"
         },
         "production": {
-            "extends": "monorepo",
             "distribution": "store",
             "autoIncrement": true,
             "android": {

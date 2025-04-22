@@ -4,7 +4,7 @@ import {
     NostrEvent,
     useNDK,
     useNDKSessionEvent,
-} from '@nostr-dev-kit/ndk-mobile';
+} from '@nostr-dev-kit/ndk-hooks';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';

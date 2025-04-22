@@ -1,14 +1,15 @@
 import {
     type NDKEvent,
-    type NDKEventWithFrom,
     NDKKind,
     NDKList,
-    NDKSubscriptionCacheUsage,
+} from "@nostr-dev-kit/ndk";
+import {
+    type NDKEventWithFrom,
     useNDK,
     useNDKCurrentUser,
     useObserver,
 } from "@nostr-dev-kit/ndk-mobile";
-import * as SecureStore from "expo-secure-store";
+
 import { useEffect, useRef } from "react";
 
 import { useUserFlareStore } from "./user-flare";

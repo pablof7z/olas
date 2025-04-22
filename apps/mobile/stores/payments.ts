@@ -9,7 +9,7 @@ import {
     type NDKZapSplit,
     type NDKZapper,
     zapInvoiceFromEvent,
-} from '@nostr-dev-kit/ndk-mobile';
+} from '@nostr-dev-kit/ndk';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 

@@ -2,8 +2,7 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import {
     type NDKRelay,
     NDKRelayStatus,
-    useNDK
-} from '@nostr-dev-kit/ndk-mobile';
+} from '@nostr-dev-kit/ndk';
 import { Icon } from '@roninoss/icons';
 import { router, usePathname } from 'expo-router';
 import { atom, useAtom } from 'jotai';
@@ -27,6 +26,7 @@ import {
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(
     new Map(),

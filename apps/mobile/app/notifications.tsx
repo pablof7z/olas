@@ -1,4 +1,4 @@
-import { type NDKEvent, NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind } from '@nostr-dev-kit/ndk';
 import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
 import { atom, useAtom } from 'jotai';
@@ -15,6 +15,7 @@ import {
 } from '@/hooks/notifications';
 import { useAppSettingsStore } from '@/stores/app';
 import { WALLET_ENABLED } from '@/utils/const';
+import { useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 
 const settingsTabAtom = atom('all');
 

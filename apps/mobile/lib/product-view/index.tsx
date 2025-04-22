@@ -1,28 +1,20 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import type NDK from '@nostr-dev-kit/ndk-mobile';
-import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk-mobile';
+import type NDK from '@nostr-dev-kit/ndk';
+import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk';
 import { Image } from 'expo-image';
-import { Link } from 'expo-router';
 import { atom, useAtom } from 'jotai';
-import { Scroll } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     Animated,
     Dimensions,
-    FlatList,
-    Linking,
-    SafeAreaView,
-    TextInput,
-    View,
+    FlatList, View
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
-import EventMediaContainer from '@/components/media/event';
 import MultiStepButton from '@/components/multistep-button';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import EventContent from '@/components/ui/event/content';
 import { formatMoney } from '@/utils/bitcoin';
-import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 
 const sizeAtom = atom<string | undefined, [string], void>(undefined, (_get, set, size) => {

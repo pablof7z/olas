@@ -1,12 +1,11 @@
 import {
-    NDKEvent,
     NDKKind,
-    NDKSubscriptionCacheUsage,
-    useSubscribe,
-} from '@nostr-dev-kit/ndk-mobile';
+    NDKSubscriptionCacheUsage
+} from '@nostr-dev-kit/ndk';
+import { useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useMemo } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { List, ListItem, type ListItemProps } from '@/components/nativewindui/List';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';

@@ -1,23 +1,19 @@
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
-    type NDKCacheAdapter,
-    useCurrentUserProfile, // Use generic cache adapter type
-    useNDK, // Import from ndk-hooks
+    useCurrentUserProfile,
+    useNDK,
     useNDKCurrentUser,
     useNDKSessionLogout,
-    useNDKSessions, // Import from ndk-hooks
-    useNDKUnpublishedEvents, // Import from ndk-hooks
-    useNDKWallet, // Import from ndk-hooks
-    useProfile, // Import from ndk-hooks
-    // useWOT, // Removed - hook no longer exists
+    useNDKUnpublishedEvents,
 } from "@nostr-dev-kit/ndk-mobile";
+import { useNDKWallet } from "@nostr-dev-kit/ndk-hooks";
 import { NDKCashuWallet } from "@nostr-dev-kit/ndk-wallet";
-import { Icon, MaterialIconName } from "@roninoss/icons";
+import { Icon } from "@roninoss/icons";
 import { Image } from "expo-image";
 import { Stack, router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, Pressable, Switch, TouchableOpacity, View } from "react-native";
+import { useCallback, useMemo } from "react";
+import { Platform, Switch, View } from "react-native";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { IconView } from "@/components/icon-view";

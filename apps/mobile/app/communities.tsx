@@ -18,7 +18,7 @@ import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { cn } from '@/lib/cn';
 import { useAllGroups } from '@/lib/groups/store';
 import { useThrottle } from '@/utils/debounce';
-import { GroupEntry } from '@/lib/groups/types';
+import type { GroupEntry } from '@/lib/groups/types';
 
 const relays = ['wss://groups.0xchat.com'];
 
@@ -54,9 +54,9 @@ function GroupListItem({
     const follows = useFollows();
     const membersToShow = useMemo(() => {
         // find the first 3 members that the user follows
-        const members = Array.from(groupEntry.members).filter((m) => follows.includes(m));
+        const members = Array.from(groupEntry.members).filter((m) => follows.has(m));
         return members.slice(0, 3);
-    }, [groupEntry.members?.size, follows.length]);
+    }, [groupEntry.members?.size, follows.size]);
 
     return (
         <ListItem

@@ -3,6 +3,9 @@ apps/*/credentials.json
 apps/*/build
 packages/*/build
 
+# Bun
+bun.lockb
+
 # Turborepo
 .turbo
 
@@ -19,6 +22,7 @@ node_modules
 npm-debug.log
 yarn-error.log
 package-lock.json
+pnpm-lock.yaml
 
 # Ruby
 .direnv
@@ -63,3 +67,5 @@ xcuserdata
 .vscode/
 
 **/.repomix-output.txt
+
+**/bun.lock

@@ -5,7 +5,7 @@ import {
     NDKKind,
     NDKVideo,
     mapImetaTag,
-} from '@nostr-dev-kit/ndk-mobile';
+} from '@nostr-dev-kit/ndk';
 import {
     Dimensions,
     ScrollView,

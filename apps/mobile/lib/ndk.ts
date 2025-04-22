@@ -1,10 +1,8 @@
-import NDK, {
-    bootNDK, NDKCacheAdapterSqlite,
-    type NDKRelay
-} from '@nostr-dev-kit/ndk-mobile';
+import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
 
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
+import { NDKCacheAdapterSqlite } from '@nostr-dev-kit/ndk-mobile';
 
 const cacheAdapter = new NDKCacheAdapterSqlite('olas');
 cacheAdapter.initialize();
@@ -55,8 +53,6 @@ export function initializeNDK() {
         ...opts,
     });
     cacheAdapter.ndk = ndk;
-
-    bootNDK(ndk);
 
     ndk.connect();
 

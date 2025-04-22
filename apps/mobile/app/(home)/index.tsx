@@ -22,7 +22,8 @@ import { useIsSavedSearch } from '@/hooks/saved-search';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { videoKinds } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
-import { type Hexpubkey, type NDKEvent, type NDKEventId, type NDKFilter, NDKKind, type NDKSubscription, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-hooks';
+import { type Hexpubkey, type NDKEvent, type NDKEventId, type NDKFilter, NDKKind, type NDKSubscription } from '@nostr-dev-kit/ndk';
+import { useNDK, useNDKCurrentPubkey } from '@nostr-dev-kit/ndk-mobile';
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
@@ -175,7 +176,7 @@ function textSearch(text: string) {
 
 function DataList() {
     const feedType = useAtomValue(feedTypeAtom);
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
     const follows = useAllFollows();
     const bookmarkIds = useBookmarkIds();
 
@@ -192,9 +193,9 @@ function DataList() {
 
     const followSet = useMemo(() => {
         const set = new Set(follows);
-        if (currentUser) set.add(currentUser.pubkey);
+        if (currentPubkey) set.add(currentPubkey);
         return set;
-    }, [currentUser?.pubkey, follows.size]);
+    }, [currentPubkey, follows.size]);
 
     const searchQuery = useAtomValue(searchQueryAtom);
 
@@ -224,7 +225,7 @@ function DataList() {
             };
         }
 
-        const keyParts = [currentUser?.pubkey ?? ''];
+        const keyParts = [currentPubkey ?? ''];
         if (feedType.hashtags && feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
         else if (feedType.value) keyParts.push(feedType.value);
 
@@ -290,7 +291,7 @@ function DataList() {
         followSet.size,
         withTweets,
         feedType.value,
-        currentUser?.pubkey,
+        currentPubkey,
         bookmarkIdsForFilter.length,
         isSavedSearch,
         searchQuery,
