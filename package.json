@@ -1,0 +1,9 @@
+{
+  "name": "olas-workspace",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "packages/ndk/*"
+  ],
+  "packageManager": "bun@1.0.0"
+}

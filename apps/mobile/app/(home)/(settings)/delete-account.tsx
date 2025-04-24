@@ -20,7 +20,7 @@ export default function DeleteAccountScreen() {
     const { ndk } = useNDK();
     const [buttonStatus, setButtonStatus] = useState<ButtonState>('idle');
 
-    const showRealInTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const showRealInTimeoutRef = useRef<number | NodeJS.Timeout | null>(null);
     const showRealInRef = useRef(5);
     const [showRealIn, setShowRealIn] = useState<number | null>(null);
 

@@ -9,7 +9,7 @@ export const Counterparty = ({
     timestamp,
     children,
 }: { pubkey: string; timestamp?: number; children?: React.ReactNode }) => {
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     return (
         <View className="flex-col gap-0">
             <Text

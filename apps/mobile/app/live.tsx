@@ -177,7 +177,7 @@ function ChatInput({ event }: { event: NDKEvent }) {
     const [value, setValue] = useState('');
     const currentPubkey = useNDKCurrentPubkey();
     const { ndk } = useNDK();
-    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
+    const userProfile = useProfileValue(currentPubkey || undefined, { subOpts: { skipVerification: true } });
     const replyValue = useAtomValue(replyToAtom);
     const { event: replyTo, profile: replyToProfile } = replyValue ?? {};
 
@@ -267,7 +267,7 @@ function Chat({ event }: { event: NDKEvent }) {
 }
 
 function ChatItem({ event }: { event: NDKEvent }) {
-    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
     const [replyTo, setReplyTo] = useAtom(replyToAtom);
 
     const onPress = () => {

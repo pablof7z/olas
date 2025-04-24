@@ -3,10 +3,8 @@ import {
     type NDKEvent,
     NDKKind,
     useNDKCurrentPubkey,
-    useNDKCurrentUser,
-    useObserver,
-    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
+import { useProfileValue, useObserver } from '@nostr-dev-kit/ndk-hooks';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useAtom } from 'jotai';
@@ -26,7 +24,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { colorWithOpacity } from '@/theme/colors';
 
 export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<ViewStyle> }) {
-    const userProfile = useProfileValue(item.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(item.pubkey, { subOpts: { skipVerification: true } });
     const [replyEvent, setReplyEvent] = useAtom(replyEventAtom);
     const { colors } = useColorScheme();
     const currentPubkey = useNDKCurrentPubkey();

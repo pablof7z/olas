@@ -160,7 +160,7 @@ function MentionSticker({
         () => ndk?.getUser({ pubkey: sticker.value as string }),
         [ndk, sticker.value]
     );
-    const userProfile = useProfileValue(user?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(user?.pubkey, { subOpts: { skipVerification: true } });
 
     const pubkeySticker = useMemo<Sticker<NDKStoryStickerType.Pubkey>>(
         () =>

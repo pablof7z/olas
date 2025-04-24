@@ -26,7 +26,7 @@ export function NotificationContainer({
     children,
 }: { event: NDKEvent; label: string; children: React.ReactNode }) {
     const { ndk } = useNDK();
-    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
 
     const setActiveEvent = useSetAtom(activeEventAtom);
 

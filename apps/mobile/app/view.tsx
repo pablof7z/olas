@@ -41,7 +41,7 @@ function getUrlFromEvent(event: NDKEvent) {
 }
 
 function Header({ event }: { event: NDKEvent }) {
-    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
     const insets = useSafeAreaInsets();
     const _flare = useUserFlare(event.pubkey);
 

@@ -59,7 +59,7 @@ export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
 }
 
 function ZapPill({ zap, withComment = true }: { zap: Payment; withComment?: boolean }) {
-    const userProfile = useProfileValue(zap.sender, { skipVerification: true });
+    const userProfile = useProfileValue(zap.sender, { subOpts: { skipVerification: true } });
     const opacity = useSharedValue(0);
     const scale = useSharedValue(5); // Start scaled up 5x
     const rotate = useSharedValue(0);

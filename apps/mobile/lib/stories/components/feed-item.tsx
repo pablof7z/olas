@@ -17,7 +17,7 @@ const AVATAR_SIZE = 80;
 
 function StoryPrompt() {
     const currentPubkey = useNDKCurrentPubkey();
-    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
+    const userProfile = useProfileValue(currentPubkey, { subOpts: { skipVerification: true } });
     const { colors } = useColorScheme();
 
     const handlePress = useCallback(() => {
@@ -101,7 +101,7 @@ export function Stories({ style }: { style?: StyleProp<ViewStyle> }) {
 
 function StoryEntry({ events, live }: { events: NDKEvent[]; live: boolean }) {
     const pubkey = events[0].pubkey;
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const flare = useUserFlare(pubkey);
 
     const setStories = useSetAtom(storiesAtom);

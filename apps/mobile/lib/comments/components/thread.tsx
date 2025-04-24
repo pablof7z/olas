@@ -1,4 +1,5 @@
-import { type NDKEvent, NDKKind, useObserver } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { useObserver } from '@nostr-dev-kit/ndk-hooks';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 

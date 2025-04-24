@@ -39,7 +39,7 @@ const Reel = memo(
         const isVisible = visibleItem === event.id;
         const [isLoading, setIsLoading] = useState(true);
         const videoRef = useRef<VideoView>(null);
-        const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
+        const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
         const safeAreaInsets = useSafeAreaInsets();
         const thumb = event.tagValue('thumb');
         const pathname = usePathname();

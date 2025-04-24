@@ -100,7 +100,7 @@ function RenderMention({
         }
     }
     
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
 
     if (!entity) return null;
     

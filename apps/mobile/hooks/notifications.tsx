@@ -6,8 +6,8 @@ import {
     type NostrEvent,
     useNDK,
     useNDKCurrentUser,
-    useObserver
 } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKCurrentPubkey, useObserver } from '@nostr-dev-kit/ndk-hooks';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -19,26 +19,20 @@ const kindString = Array.from(mainKinds).map((k) => k.toString());
 
 export function useNotifications(onlyNew = false) {
     const seenNotificationsAt = useAppSettingsStore((s) => s.seenNotificationsAt);
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentPubkey();
 
     const events = useObserver(
-        currentUser
+        currentPubkey
             ? [
-                  { kinds: [NDKKind.Text], '#p': [currentUser.pubkey] },
-                  { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentUser.pubkey] },
-                  {
-                      kinds: [NDKKind.Reaction, NDKKind.GenericRepost],
-                      '#k': ['20'],
-                      '#p': [currentUser.pubkey],
-                  },
-                  { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentUser.pubkey] },
+                  { kinds: [NDKKind.Text], '#p': [currentPubkey] },
+                  { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentPubkey] },
+                  { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentPubkey], },
+                  { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentPubkey] },
                   ...[
-                      WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentUser.pubkey] } : {},
+                      WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentPubkey] } : {},
                   ],
               ]
             : false,
-        {},
-        [!!currentUser]
     );
 
     const filteredNotifications = useMemo(() => {
@@ -69,9 +63,9 @@ export function useNotificationPermission() {
 
 export function useEnableNotifications() {
     const { ndk } = useNDK();
-    const currentUser = useNDKCurrentUser();
+    const currentPubkey = useNDKCurrentUser();
     return useCallback(async () => {
-        if (!currentUser) return;
+        if (!currentPubkey) return;
 
         const token = await registerForPushNotificationsAsync();
         if (!token) return false;
@@ -85,7 +79,7 @@ export function useEnableNotifications() {
             kind: 10901,
             content: JSON.stringify({
                 token,
-                pubkey: currentUser.pubkey,
+                pubkey: currentPubkey,
             }),
             tags: [['p', olas.pubkey]],
         } as NostrEvent);

@@ -35,7 +35,7 @@ export default function LoaderScreen({
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
-    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     useEffect(() => {

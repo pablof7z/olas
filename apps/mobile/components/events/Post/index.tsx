@@ -201,7 +201,7 @@ export default function Post({
     reposts: NDKEvent[];
     timestamp: number;
 }) {
-    const userProfile = useProfileValue(event.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
 
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {

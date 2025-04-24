@@ -17,7 +17,7 @@ const AvatarGroupItem: React.FC<{ pubkey: Hexpubkey; avatarSize: number; index: 
     avatarSize,
     index,
 }) => {
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
 
     const style = useMemo(() => {
         return {

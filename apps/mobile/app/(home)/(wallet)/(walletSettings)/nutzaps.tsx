@@ -106,7 +106,7 @@ function NutzapRow({
     // Replace NdkNutzapStatus enum with string literals
     const spent = ['REDEEMED', 'SPENT'].includes(status.toUpperCase());
 
-    const userProfile = useProfileValue(nutzap?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(nutzap?.pubkey, { subOpts: { skipVerification: true } });
 
     const handleLongPress = useCallback(() => {}, [eventId]);
 

@@ -26,7 +26,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import type { PendingZap } from '@/stores/payments';
 
 const LeftView = ({ direction, pubkey }: { direction: 'in' | 'out'; pubkey?: string }) => {
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const { colors } = useColorScheme();
 
     const color = colors.primary;

@@ -159,7 +159,7 @@ function MutedUserListItem({
     target,
     index,
 }: { pubkey: string; target: RenderTarget; index: number }) {
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 
     const remove = useCallback(() => {

@@ -52,7 +52,7 @@ export default function EventStickerView({ sticker, onLayout, maxWidth }: EventS
 }
 
 function RenderEvent({ event, styles }: { event: NDKEvent; styles: EventStickerStyle }) {
-    const userProfile = useProfileValue(event?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(event?.pubkey, { subOpts: { skipVerification: true } });
 
     // Convert NDKUserProfile to UserProfile if needed
     const profile = userProfile

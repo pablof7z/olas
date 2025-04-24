@@ -13,7 +13,8 @@
         "development": {
             "developmentClient": true,
             "distribution": "internal",
-            "resourceClass": "medium"
+            "resourceClass": "medium",
+            "bun": "1.0.0"
         },
         "production": {
             "distribution": "store",

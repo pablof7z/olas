@@ -107,7 +107,7 @@ export function InlinedComments({
 }
 
 export function InlineComment({ comment }: { comment: NDKEvent }) {
-    const userProfile = useProfileValue(comment.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(comment.pubkey, { subOpts: { skipVerification: true } });
     return (
         <Text>
             <Text className="text-sm font-medium text-foreground">@{userProfile?.name} </Text>

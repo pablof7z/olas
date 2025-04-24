@@ -186,7 +186,7 @@ export default function TabsLayout() {
 function UserButton({ size = 32 }: { size?: number }) {
     const currentPubkey = useNDKCurrentPubkey();
     const { colors } = useColorScheme();
-    const userProfile = useProfileValue(currentPubkey || undefined, { skipVerification: true });
+    const userProfile = useProfileValue(currentPubkey, { subOpts: { skipVerification: true } });
     const userFlare = useUserFlare(currentPubkey || undefined);
 
     if (currentPubkey) {

@@ -19,7 +19,7 @@ import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [state, setState] = useState<'open' | 'closed'>('open');

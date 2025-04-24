@@ -6,11 +6,11 @@ import {
     type NDKUser,
     type NDKUserProfile, useNDK,
     useNDKCurrentUser,
-    useObserver,
     useSubscribe,
     useSetProfile,
     useProfileValue
 } from '@nostr-dev-kit/ndk-mobile';
+import { useObserver } from '@nostr-dev-kit/ndk-hooks';
 import { BlurView } from 'expo-blur';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
@@ -256,7 +256,7 @@ export default function Profile() {
     const { ndk } = useNDK();
     const user = ndk?.getUser({ pubkey });
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfileValue(pubkey);
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const flare = useUserFlare(pubkey);
     const scrollY = useRef(new Animated.Value(0)).current;
     const { events: content } = useSubscribe(
@@ -412,7 +412,7 @@ export default function Profile() {
 }
 
 function Banner({ pubkey }: { pubkey: string }) {
-    const userProfile = useProfileValue(pubkey);
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const insets = useSafeAreaInsets();
     const [editProfile, setEditProfile] = useAtom(editProfileAtom);
     const editState = useAtomValue(editStateAtom);

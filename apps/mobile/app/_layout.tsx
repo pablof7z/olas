@@ -33,7 +33,7 @@ import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { relayNoticesAtom } from '@/stores/relays';
 import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
-import { useNDKInit } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKInit } from '@nostr-dev-kit/ndk-hooks';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 
@@ -65,6 +65,12 @@ export default function App() {
         initializeNDK(ndk);
         setAppReady(true);
     }, []);
+
+    // return <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+    //     <Text>NDKMobileVersion: {NDKMobileVersion}</Text>
+    //     <Text>NDKMobileHooksVersion: {NDKMobileHooksVersion}</Text>
+    //     <Text>NDKHooksVersion: {NDKHooksVersion}</Text>
+    // </View>
 
     return (
         <LoaderScreen appReady={appReady} wotReady>

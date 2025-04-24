@@ -34,7 +34,7 @@ export default function NewComment({
     currentUser,
     autoFocus,
 }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
-    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();

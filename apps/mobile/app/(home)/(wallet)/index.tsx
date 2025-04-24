@@ -207,7 +207,7 @@ export default function WalletScreen() {
 function HeaderLeft() {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfileValue(currentUser?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
 
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>

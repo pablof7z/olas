@@ -171,7 +171,7 @@ const LeftView = ({
     direction,
     pubkey,
 }: { direction: 'incoming' | 'outgoing'; pubkey?: string }) => {
-    const userProfile = useProfileValue(pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const { colors } = useColorScheme();
 
     const color = colors.primary;

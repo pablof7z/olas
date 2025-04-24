@@ -8,7 +8,7 @@ import {
     useNDK,
     useNDKCurrentUser,
     useObserver,
-} from "@nostr-dev-kit/ndk-mobile";
+} from "@nostr-dev-kit/ndk-hooks";
 
 import { useEffect, useRef } from "react";
 
@@ -66,7 +66,7 @@ export function useAppSub() {
             processedPubkeyRef.current.add(event.pubkey);
             setUserFlare(event.pubkey, "olas365");
         }
-    }, [olas365events]);
+    }, [olas365events.length]);
 
     const eventsToAdd = useRef<NDKEvent[]>([]);
 

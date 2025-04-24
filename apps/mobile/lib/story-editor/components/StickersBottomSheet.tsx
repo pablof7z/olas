@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
-import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-mobile';
+import { NDKStoryStickerType } from '@nostr-dev-kit/ndk-hooks';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -16,7 +16,6 @@ import {
     EventStickerInput,
     MentionStickerInput,
     PromptStickerInput,
-    TextStickerInput,
 } from './sticker-types';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';

@@ -2,7 +2,7 @@ import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
 
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
-import { NDKCacheAdapterSqlite } from '@nostr-dev-kit/ndk-mobile';
+import { NDKCacheAdapterSqlite, initSignatureVerificationWorklet } from '@nostr-dev-kit/ndk-mobile';
 
 const cacheAdapter = new NDKCacheAdapterSqlite('olas');
 cacheAdapter.initialize();

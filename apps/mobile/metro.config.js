@@ -5,11 +5,12 @@ const path = require('node:path');
 const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
 
 const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '../..');
 const config = getDefaultConfig(projectRoot);
 
 // Configure Metro for a standalone project
 config.resolver.nodeModulesPaths = [
-    path.resolve(projectRoot, 'node_modules'),
+    path.resolve(workspaceRoot, 'node_modules'),
 ];
 
 // Use Metro cache

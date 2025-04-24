@@ -25,7 +25,7 @@ export default function Zapper({ onClose }: { onClose: () => void }) {
     const [comment, setComment] = useState<string>('');
     const [amount, setAmount] = useState<number>(21);
     const target = useAtomValue(zapperModalTargetAtom);
-    const userProfile = useProfileValue(target?.pubkey, { skipVerification: true });
+    const userProfile = useProfileValue(target?.pubkey, { subOpts: { skipVerification: true } });
 
     const sendZap = useZap();
 
