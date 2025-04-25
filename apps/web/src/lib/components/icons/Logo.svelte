@@ -1,1 +1,0 @@
-<h1 class="text-2xl font-black text-foreground font-serif tracking-wider">Olas</h1>

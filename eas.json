@@ -1,0 +1,32 @@
+{
+    "cli": {
+        "promptToConfigurePushNotifications": false,
+        "version": ">= 12.6.0",
+        "appVersionSource": "remote"
+    },
+    "build": {
+        "preview": {
+            "android": {
+                "buildType": "apk"
+            }
+        },
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal",
+            "resourceClass": "medium",
+            "bun": "1.0.0"
+        },
+        "production": {
+            "distribution": "store",
+            "autoIncrement": true,
+            "bun": "1.0.0",
+            "android": {
+                "buildType": "apk"
+            },
+            "resourceClass": "medium"
+        }
+    },
+    "submit": {
+        "production": {}
+    }
+}
