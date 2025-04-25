@@ -92,12 +92,21 @@ export default function HomeHeader() {
     }, [searchQuery, setSearchQuery, showSearchInput]);
 
     return (
-        <Animated.View style={[styles.header, containerStyle, { backgroundColor: colors.card }]}>
+        <Animated.View
+            style={[
+                styles.header,
+                containerStyle,
+                {
+                    backgroundColor: colors.card,
+                    paddingTop: insets.top,
+                }
+            ]}
+        >
             {!nutzaps.length ? (
                 <Animated.View
                     entering={FadeIn}
                     exiting={FadeOut}
-                    style={{ width: '100%', marginTop: insets.top }}
+                    style={{ width: '100%' }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Feed />
@@ -121,7 +130,6 @@ export default function HomeHeader() {
                         zapStyle,
                         {
                             width: '100%',
-                            marginTop: insets.top,
                         },
                     ]}
                 >
@@ -153,7 +161,7 @@ function IncomingZap({ nutzaps }: { nutzaps: NDKNutzap[] }) {
 
     return (
         <View
-            style={[zapNotificationStyle.container, { paddingTop: insets.top + 10 }]}
+            style={[zapNotificationStyle.container]}
             className="pb-2"
         >
             <AvatarGroup pubkeys={avatarsSortedByAmount} avatarSize={40} threshold={1} />

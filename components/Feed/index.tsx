@@ -152,7 +152,9 @@ export default function Feed({
             }
             item = item as FeedEntry;
 
-            if (numColumns === 1)
+            if (!item.events[0]) return null;
+
+            if (numColumns === 1) {
                 if (item.events.length === 1) {
                     return (
                         <Post
@@ -168,7 +170,7 @@ export default function Feed({
                         <Thread events={item.events} />
                     )
                 }
-            else
+            } else {
                 return (
                     <EventMediaGridContainer
                         event={item.events[0]}
@@ -178,6 +180,7 @@ export default function Feed({
                         onPress={() => handleGridPress(item.events[0]!)} // Assert non-null as checked above
                     />
                 );
+            }
         },
         [numColumns]
     );

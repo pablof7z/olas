@@ -49,7 +49,7 @@ export default function PostTypeSwitcher() {
                             POST
                         </Animated.Text>
                     </Pressable>
-                    <Pressable style={postTypeSwitcherStyles.button} onPress={handleStoryPress}>
+                    {/* <Pressable style={postTypeSwitcherStyles.button} onPress={handleStoryPress}>
                         <Animated.Text
                             style={[
                                 postTypeSwitcherStyles.buttonText,
@@ -62,7 +62,7 @@ export default function PostTypeSwitcher() {
                         >
                             STORY
                         </Animated.Text>
-                    </Pressable>
+                    </Pressable> */}
                     <Pressable style={postTypeSwitcherStyles.button} onPress={handleVideoPress}>
                         <Animated.Text
                             style={[

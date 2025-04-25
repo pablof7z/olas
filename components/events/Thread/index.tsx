@@ -22,7 +22,7 @@ export default function Thread({ events }: { events: NDKEvent[] }) {
         forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight
     );
 
-    if (!events || events.length === 0) {
+    if (!events[0]) {
         return null;
     }
     

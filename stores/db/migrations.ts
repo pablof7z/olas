@@ -244,11 +244,29 @@ export const migrations = [
             )`);
         },
     },
+{
+        version: 18,
+        up: (db: SQLite.SQLiteDatabase) => {
+            // Update the #photography saved search if it has the wrong hashtag
+            db.runSync(
+                `UPDATE saved_searches
+                 SET hashtags = REPLACE(hashtags, 'introductions', 'photography')
+                 WHERE title = '#photography' AND hashtags LIKE '%introductions%'`
+            );
+
+            // Read the updated #photography row (for verification/logging)
+            const updated = db.getFirstSync(
+                `SELECT * FROM saved_searches WHERE title = '#photography'`
+            );
+            // Optionally log or handle the result as needed
+            // console.log('Updated #photography search:', updated);
+        },
+    },
 ];
 
 export const predefinedSearches = [
     { title: '#olas365', subTitle: '#olas365 challenge posts', hashtags: ['olas365'] },
-    { title: '#photography', subTitle: 'Photography posts', hashtags: ['introductions'] },
+    { title: '#photography', subTitle: 'Photography posts', hashtags: ['photography'] },
     { title: '#family', subTitle: 'Family posts', hashtags: ['family', 'kids', 'parenting'] },
     { title: '#food', subTitle: 'Food posts', hashtags: ['food', 'foodstr'] },
     {

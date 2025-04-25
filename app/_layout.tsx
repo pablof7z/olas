@@ -32,8 +32,8 @@ import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { relayNoticesAtom } from '@/stores/relays';
-import { DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
-import { useNDKInit } from '@nostr-dev-kit/ndk-hooks';
+import { blacklistPubkeys, DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { NDKUser, useNDKInit, useNDKMutes } from '@nostr-dev-kit/ndk-hooks';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 
@@ -87,6 +87,13 @@ export function RootLayout() {
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const setFeedType = useSetAtom(feedTypeAtom);
 
+    const addExtraMuteItems = useNDKMutes(s => s.addExtraMuteItems);
+
+    useEffect(() => {
+        const users = Array.from(blacklistPubkeys).map((pubkey) => new NDKUser({ pubkey }));
+        addExtraMuteItems(users);
+    }, [])
+    
     useEffect(() => {
         const storedFeed = SecureStore.getItem('feed');
         let feedType: FeedType | null = null;

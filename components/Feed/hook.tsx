@@ -289,7 +289,7 @@ export function useFeedEvents(
             threadsRef.current.set(rootId, currentThreadVal);
 
             const rootEvent = currentThreadVal.find((e) => e.id === rootId);
-            if (!rootEvent) return;
+            if (!rootEvent || currentThreadVal.length === 0) return;
 
             const threadEvents = eventThreads(rootEvent, currentThreadVal);
 

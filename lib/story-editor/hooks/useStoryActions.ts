@@ -113,7 +113,6 @@ export const useStoryActions = ({
                     );
                 }
 
-                Alert.alert('Success', 'Story uploaded and published successfully!');
                 onClose?.();
             } else {
                 Alert.alert(

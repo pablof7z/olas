@@ -230,6 +230,7 @@ function DataList() {
         if (feedType.kind === 'search') {
             hashtagFilter = { '#t': feedType.hashtags };
             if (!isSavedSearch) numColumns = 3;
+            if (feedType.hashtags) keyParts.push(feedType.hashtags[0]);
         }
 
         const filters: NDKFilter[] = [];
@@ -246,7 +247,9 @@ function DataList() {
             limit: 50,
         });
 
-        filters.push({ kinds: [1], limit: 50, authors: Array.from(follows), ...hashtagFilter });
+        filters.push({ kinds: [1], limit: 50, ...(
+            feedType.kind !== 'search' ? {authors: Array.from(follows), ...hashtagFilter} : hashtagFilter
+        ) });
         keyParts.push('tweets');
 
         let filterFn = null;
@@ -283,15 +286,13 @@ function DataList() {
         return { filters, key: keyParts.join(), filterFn, numColumns };
     }, [
         followSet.size,
+        feedType.kind,
         feedType.value,
         currentPubkey,
         bookmarkIdsForFilter.length,
         isSavedSearch,
         searchQuery,
     ]);
-
-    const insets = useSafeAreaInsets();
-    const { colors } = useColorScheme();
 
     return (
         <View style={{ flex: 1 }}>

@@ -1,16 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { NDKStory } from '@nostr-dev-kit/ndk-mobile';
 import { useVideoPlayer } from 'expo-video';
 import React, { useEffect } from 'react';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMediaDimensions } from '../hooks/useMediaDimensions';
 import { useStickerManagement } from '../hooks/useStickerManagement';
 import { useStoryActions } from '../hooks/useStoryActions';
 import { useStickerStore } from '../store';
-import CloseButton from './CloseButton';
 import MediaRenderer from './MediaRenderer';
 import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';

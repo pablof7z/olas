@@ -17,7 +17,7 @@ export default function StoryPreviewScreen() {
     const [previewStory, setPreviewStory] = useState<NDKStory | null>(null);
 
     const handleClose = () => {
-        router.back();
+        router.replace("/(home)");
     };
 
     const handlePreviewClose = () => {
