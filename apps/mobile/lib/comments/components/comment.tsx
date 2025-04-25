@@ -29,7 +29,7 @@ export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<Vie
     const { colors } = useColorScheme();
     const currentPubkey = useNDKCurrentPubkey();
     const flare = useUserFlare(item.pubkey);
-    const reactions = useObserver([{ kinds: [NDKKind.Reaction], '#e': [item.id] }], {}, [item.id]);
+    const reactions = useObserver([{ kinds: [NDKKind.Reaction], '#e': [item.id] }], { skipVerification: true }, [item.id]);
 
     const onReplyPress = useCallback(() => {
         setReplyEvent(item);

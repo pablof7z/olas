@@ -1,14 +1,13 @@
 import { toast } from '@backpackapp-io/react-native-toast'; // Import toast
-import { NDKList, useMuteList, useNDK, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
+import { NDKList, useMuteCriteria, useNDK, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import type { RenderTarget } from '@shopify/flash-list';
 import { Stack, router } from 'expo-router';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { Delete } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, ScrollView, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
-import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem, ListSectionHeader } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';
@@ -17,8 +16,7 @@ const hashtagsAtom = atom<string[]>([]);
 const pubkeysAtom = atom<string[]>([]);
 
 export default function MutedScreen() {
-    // Update destructuring based on useMuteList return type
-    const { hashtags: mutedHashtags, pubkeys: mutedPubkeys } = useMuteList();
+    const { hashtags: mutedHashtags, pubkeys: mutedPubkeys } = useMuteCriteria();
     const [hashtags, setHashtags] = useAtom(hashtagsAtom);
     const [pubkeys, setPubkeys] = useAtom(pubkeysAtom);
 

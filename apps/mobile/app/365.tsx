@@ -238,8 +238,8 @@ export default function Wallpapers() {
     const scrollX = useSharedValue(0);
     const { pubkey } = useLocalSearchParams() as { pubkey: string };
     const { events } = useSubscribe<NDKImage>(
-        [{ kinds: [NDKKind.Image], '#t': ['olas365', '#Olas365', 'olas365'], authors: [pubkey] }],
-        { wrap: true },
+        [{ kinds: [NDKKind.Image], '#t': ['olas365', 'Olas365'], authors: [pubkey] }],
+        { wrap: true, skipVerification: true },
         [pubkey]
     );
 

@@ -24,11 +24,13 @@ export function Reactions({
     foregroundColor,
     inactiveColor,
     reactions,
+    iconSize = 24,
 }: {
     event: NDKEvent;
     foregroundColor?: string;
     inactiveColor?: string;
     reactions?: ReactionStats;
+    iconSize?: number;
 }) {
     const { colors } = useColorScheme();
     const {
@@ -51,7 +53,7 @@ export function Reactions({
                 inactiveColor={inactiveColor}
                 reactedByUser={reactedByUser ?? undefined}
                 reactionCount={reactionCount}
-                iconSize={28}
+                iconSize={iconSize}
             />
 
             <Comment
@@ -60,7 +62,7 @@ export function Reactions({
                 foregroundColor={foregroundColor}
                 commentedByUser={commentedByUser}
                 commentCount={commentCount}
-                iconSize={28}
+                iconSize={iconSize}
             />
 
             <Repost
@@ -69,10 +71,10 @@ export function Reactions({
                 activeColor={foregroundColor}
                 repostedBy={repostedBy}
                 repostedByUser={repostedByUser}
-                iconSize={28}
+                iconSize={iconSize}
             />
 
-            {WALLET_ENABLED && <Zaps event={event} inactiveColor={inactiveColor} iconSize={28} />}
+            {WALLET_ENABLED && <Zaps event={event} inactiveColor={inactiveColor} iconSize={iconSize} />}
         </View>
 
         //     <Bookmark

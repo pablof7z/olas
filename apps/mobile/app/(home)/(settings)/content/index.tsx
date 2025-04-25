@@ -1,5 +1,5 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import { useMuteList } from '@nostr-dev-kit/ndk-mobile';
+import { useNDKMutes } from '@nostr-dev-kit/ndk-hooks';
 import type { RenderTarget } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
@@ -21,7 +21,7 @@ const videosInFeedToText = (value: VideosInFeed) => {
 };
 
 export default function ContentScreen() {
-    const { muteListEvent } = useMuteList();
+    const muteListEvent = useNDKMutes(s => s.muteList);
     const { videosInFeed, setVideosInFeed, forceSquareAspectRatio, setForceSquareAspectRatio } =
         useAppSettingsStore();
     const { showActionSheetWithOptions } = useActionSheet();

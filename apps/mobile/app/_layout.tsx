@@ -133,8 +133,6 @@ export function RootLayout() {
         initAppSettings();
     }, []);
 
-    console.log('RootLayout');
-
     return (
         <>
             {ndk && <AppReady />}

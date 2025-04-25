@@ -210,7 +210,7 @@ export default function Post({
         return 'low';
     }, [index]);
 
-    const { forceSquareAspectRatio } = useAppSettingsStore();
+    const forceSquareAspectRatio = useAppSettingsStore(s => s.forceSquareAspectRatio);
 
     const headerHeight = useHeaderHeight();
     const screen = Dimensions.get('window');

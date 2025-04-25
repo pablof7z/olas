@@ -17,11 +17,6 @@ import { usePaymentStore } from "@/stores/payments";
 import { useDebounce } from "@/utils/debounce";
 import type NDK from "@nostr-dev-kit/ndk-mobile";
 
-const start = Date.now();
-function log(message: string) {
-    console.log(`[WALLET HOOK, ${Date.now() - start}ms] ${message}`);
-}
-
 interface Nip60WalletStoreState {
     wallet: NDKCashuWallet | undefined;
     init: (ndk: NDK, pubkey: Hexpubkey) => void;
@@ -33,8 +28,6 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, _get) => 
     init: (ndk: NDK, pubkey: Hexpubkey) => {
         const loadingEventIds = new Set<string>();
 
-        log(`init nip60 wallet, ${pubkey}`);
-
         ndk.subscribe(
             [{ kinds: [NDKKind.CashuWallet], authors: [pubkey] }],
             {
@@ -43,7 +36,6 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, _get) => 
             },
             {
                 onEvent: (event) => {
-                    log(`onEvent, ${event.id}`);
                     if (loadingEventIds.has(event.id)) return;
 
                     loadingEventIds.add(event.id);
@@ -122,8 +114,6 @@ export function useWalletMonitor(pubkey: Hexpubkey) {
         if (!pubkey) return;
         let wallet: NDKWallet | undefined;
 
-        log(`initWallet, ${walletType}, ${walletPayload}`);
-
         if (walletType === "none") return;
         else if (walletType === "nwc" && walletPayload) {
             wallet = new NDKNWCWallet(ndk as any, { pairingCode: walletPayload }); // Cast to any
@@ -138,7 +128,6 @@ export function useWalletMonitor(pubkey: Hexpubkey) {
                 ) as { created_at: number };
                 since = mostRecentCachedEvent?.created_at;
             }
-            log(`initWallet, starting nip60 wallet, ${since}`);
             nip60Wallet.start({ subId: "wallet", skipVerification: true, since });
             wallet = nip60Wallet;
         } else {

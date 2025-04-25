@@ -690,7 +690,7 @@ function Name({
 function StoriesContainer({ pubkey }: { pubkey: string }) {
     const latestOlas365 = useObserver(
         [{ '#t': ['olas365'], authors: [pubkey], limit: 1 }],
-        { wrap: true, cacheUnconstrainFilter: [] },
+        { wrap: true, skipVerification: true, cacheUnconstrainFilter: [] },
         [pubkey]
     );
 

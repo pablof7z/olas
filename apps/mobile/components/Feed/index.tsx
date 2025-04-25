@@ -10,8 +10,7 @@ import {
     Pressable,
     RefreshControl,
     StyleSheet,
-    Text,
-    type ViewToken,
+    Text, type ViewToken
 } from 'react-native';
 
 import Post from '../events/Post';
@@ -20,6 +19,7 @@ import { type FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
 import { scrollDirAtom } from './store';
 
 import { activeEventAtom } from '@/stores/event';
+import Thread from '../events/Thread';
 
 type FeedProps = {
     onPress?: (event: NDKEvent) => void;
@@ -61,7 +61,7 @@ export default function Feed({
         [filterKey + refreshCount]
     );
     const { setActiveIndex } = useFeedMonitor(
-        entries.map((e) => e.event).filter(e => !!e),
+        entries.map((e) => e.events[0]).filter(e => !!e),
         sliceIndex
     );
 
@@ -152,26 +152,30 @@ export default function Feed({
             }
             item = item as FeedEntry;
 
-            // Ensure item.event exists before rendering components that require it
-            if (!item.event) return null;
-
             if (numColumns === 1)
-                return (
-                    <Post
-                        event={item.event}
-                        index={index}
-                        reposts={item.reposts}
-                        timestamp={item.timestamp}
-                    />
-                );
+                if (item.events.length === 1) {
+                    return (
+                        <Post
+                            key={item.events[0]!.id}
+                            event={item.events[0]!}
+                            index={index}
+                            reposts={item.reposts}
+                            timestamp={item.timestamp}
+                        />
+                    );
+                } else {
+                    return (
+                        <Thread events={item.events} />
+                    )
+                }
             else
                 return (
                     <EventMediaGridContainer
-                        event={item.event}
+                        event={item.events[0]}
                         index={index}
                         forceProxy
                         numColumns={numColumns}
-                        onPress={() => handleGridPress(item.event!)} // Assert non-null as checked above
+                        onPress={() => handleGridPress(item.events[0]!)} // Assert non-null as checked above
                     />
                 );
         },

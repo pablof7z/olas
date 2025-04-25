@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 import { useAtom, useSetAtom } from "jotai";
 import { ArrowRight, QrCode } from "lucide-react-native";
 import React, { useCallback, useEffect } from "react";
-import { Alert, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
+import { Alert, Dimensions, Platform, StyleSheet, TextInput, View } from "react-native";
 
 import { LoginWithNip55Button } from "../components/LoginWithNip55Button";
 import { modeAtom, payloadAtom, scanQRAtom } from "../store";

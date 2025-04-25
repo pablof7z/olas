@@ -58,7 +58,7 @@ export function useAppSub() {
 
     const processedPubkeyRef = useRef(new Set<string>());
     const processedEventsRef = useRef(new Set<string>()); // Track processed event IDs
-    const olas365events = useObserver([{ kinds: [20], "#t": ["olas365"] }]);
+    const olas365events = useObserver([{ kinds: [20], "#t": ["olas365"] }], { skipVerification: true });
 
     useEffect(() => {
         for (const event of olas365events) {
@@ -82,8 +82,6 @@ export function useAppSub() {
             { kinds: [NDKKind.EventDeletion], "#k": kindString, authors: [pubkey] },
         ];
 
-        console.log("app-sub filters", JSON.stringify(filters));
-
         const appSub = ndk.subscribe(
             filters,
             {
@@ -106,7 +104,6 @@ export function useAppSub() {
                     eventsToAdd.current.push(event);
                 },
                 onEose: () => {
-                    console.log("app-sub eose");
                     addReactionEvents(eventsToAdd.current, pubkey);
                     addPayments(eventsToAdd.current);
                     eventsToAdd.current = [];

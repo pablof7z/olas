@@ -6,7 +6,6 @@ events.set(NDKKind.BlossomList, NDKList);
 events.set(NDKCashuMintList.kind, NDKCashuMintList);
 
 export default function SessionMonitor() {
-    console.log('SessionMonitor mounted');
     useSessionMonitor({
         profile: true,
         follows: [NDKKind.Image],

@@ -1,4 +1,4 @@
-import { useMuteFilter } from "@nostr-dev-kit/ndk-hooks";
+import { eventThreads, getRootTag, useMuteFilter } from "@nostr-dev-kit/ndk-hooks";
 import {
     type Hexpubkey,
     NDKEvent,
@@ -30,7 +30,7 @@ const NEW_ENTRY_THRESHOLD = 60 * 5;
  */
 export type FeedEntry = {
     id: string;
-    event?: NDKEvent;
+    events: NDKEvent[];
     reposts: NDKEvent[];
     timestamp: number;
 
@@ -184,7 +184,7 @@ export function useFeedEvents(
         let changed = false;
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            if (entry?.event && (isMutedEvent(entry.event))) {
+            if (entry?.events.length > 0 && (isMutedEvent(entry.events[0]))) {
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -199,7 +199,7 @@ export function useFeedEvents(
         // same thing for new entries
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
-            if (entry?.event && (isMutedEvent(entry.event))) {
+            if (entry?.events.length > 0 && (isMutedEvent(entry.events[0]))) {
                 // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
@@ -223,12 +223,12 @@ export function useFeedEvents(
         (id: string, cb: (currentEntry: FeedEntry | undefined) => FeedEntry | undefined) => {
             const entry: FeedEntry | undefined = allEntriesRef.current.get(id);
             // Provide default if entry is undefined before calling cb
-            const ret = cb(entry ?? { id, reposts: [], timestamp: -1 });
+            const ret = cb(entry ?? { id, events: [], reposts: [], timestamp: -1 });
             if (ret) {
                 // check this isn't muted or blacklisted
-                if (ret.event && (isMutedEvent(ret.event))) return;
+                if (ret.events[0] && (isMutedEvent(ret.events[0]))) return;
 
-                if (!ret.timestamp) ret.timestamp = ret.event?.created_at ?? -1;
+                if (!ret.timestamp) ret.timestamp = ret.events[0]?.created_at ?? -1;
 
                 // always add it to the allEntriesRef
                 allEntriesRef.current.set(id, ret);
@@ -270,12 +270,43 @@ export function useFeedEvents(
         [updateEntries, setNewEntries, filterFn], // Added dependencies
     );
 
+    /**
+     * Keeps track of kind:1s that are part of threads
+     */
+    const threadsRef = useRef(new Map<NDKEventId, NDKEvent[]>());
+
+    const handleTextEvent = useCallback(
+        (eventId: string, event: NDKEvent) => {
+            // if this is a root event, we add it
+            const rootTag = getRootTag(event);
+            const rootId = rootTag ? rootTag[1] : event.id;
+
+            const currentThreadVal = threadsRef.current.get(rootId) ?? [];
+            // make sure we don't add the same event twice
+            if (!currentThreadVal.find((e) => e.id === event.id)) {
+                currentThreadVal.push(event);
+            }
+            threadsRef.current.set(rootId, currentThreadVal);
+
+            const rootEvent = currentThreadVal.find((e) => e.id === rootId);
+            if (!rootEvent) return;
+
+            const threadEvents = eventThreads(rootEvent, currentThreadVal);
+
+            updateEntry(rootId, (entry) => {
+                // Ensure entry is defined before spreading, provide default if not
+                const baseEntry = entry ?? { id: rootId, reposts: [], timestamp: -1 };
+                return { ...baseEntry, events: threadEvents, timestamp: event.created_at };
+            });
+        }, [updateEntry]
+    );
+    
     const handleContentEvent = useCallback(
         (eventId: string, event: NDKEvent) => {
             updateEntry(eventId, (entry) => {
                 // Ensure entry is defined before spreading, provide default if not
                 const baseEntry = entry ?? { id: eventId, reposts: [], timestamp: -1 };
-                return { ...baseEntry, event, timestamp: event.created_at };
+                return { ...baseEntry, events: [event], timestamp: event.created_at };
             });
         },
         [updateEntry],
@@ -292,17 +323,17 @@ export function useFeedEvents(
 
             updateEntry(repostedId, (entry) => {
                 // Ensure entry is defined before modifying, provide default if not
-                let currentEntry = entry ?? { id: repostedId, reposts: [], timestamp: -1 };
+                let currentEntry = entry ?? { id: repostedId, events: [], reposts: [], timestamp: -1 };
                 currentEntry.reposts.push(event);
 
-                if (!currentEntry.event) {
+                if (currentEntry.events.length > 0) {
                     try {
                         if (!ndk) return currentEntry; // Need NDK instance
                         const payload = JSON.parse(event.content);
                         // Create a new entry object instead of modifying the parameter directly
                         currentEntry = {
                             id: payload.id,
-                            event: new NDKEvent(ndk, payload),
+                            events: [new NDKEvent(ndk, payload)],
                             reposts: [event],
                             timestamp: event.created_at,
                         };
@@ -330,7 +361,7 @@ export function useFeedEvents(
             if (!bookmarkedId) return;
 
             updateEntry(bookmarkedId, (entry) => {
-                let currentEntry = entry ?? { id: bookmarkedId, reposts: [], timestamp: -1 };
+                let currentEntry = entry ?? { id: bookmarkedId, events: [], reposts: [], timestamp: -1 };
                 if (!currentEntry.timestamp || currentEntry.timestamp < event.created_at) {
                     currentEntry.timestamp = event.created_at;
                 }
@@ -347,9 +378,9 @@ export function useFeedEvents(
                 if (!deletedId) continue; // Skip if ID is missing
 
                 const entry = allEntriesRef.current.get(deletedId);
-                if (entry?.event) {
+                if (entry && entry.events.length > 0) {
                     // check if the pubkey matches
-                    if (entry.event.pubkey === event.pubkey) {
+                    if (entry.events[0].pubkey === event.pubkey) {
                         entry.deleted = true;
                         // Potentially trigger an update if needed, e.g., by re-setting the entry
                         allEntriesRef.current.set(deletedId, { ...entry });
@@ -362,7 +393,7 @@ export function useFeedEvents(
                     // we don't have the event, let's just record the deletion
                     updateEntry(deletedId, (currentEntry) => {
                         // Ensure the base object has the required 'id' property
-                        const baseEntry = currentEntry ?? { id: deletedId, reposts: [], timestamp: -1 };
+                        const baseEntry = currentEntry ?? { id: deletedId, events: [], reposts: [], timestamp: -1 };
                         return {
                             ...baseEntry,
                             deletedBy: [...(baseEntry.deletedBy || []), event.pubkey],
@@ -381,12 +412,13 @@ export function useFeedEvents(
             addedEventIds.current.add(eventId);
 
             switch (event.kind) {
+                case NDKKind.Text:
+                    return handleTextEvent(eventId, event);
                 case NDKKind.VerticalVideo:
                 case NDKKind.HorizontalVideo:
                 case 22:
                 case 30018:
                 case 30402:
-                case NDKKind.Text:
                 case NDKKind.Media:
                 case NDKKind.Image:
                     return handleContentEvent(eventId, event);
@@ -428,7 +460,7 @@ export function useFeedEvents(
 
         // Go through the currently-rendered entries and see if we need to change them
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            const keep = entry?.event && filters && matchFilters(filters, entry.event.rawEvent());
+            const keep = entry?.events.length > 0 && filters && matchFilters(filters, entry.events[0].rawEvent());
             if (!entry || !keep || !passesFilter(entry)) {
                 // Ensure entry is defined
                 changed = true;
@@ -447,12 +479,12 @@ export function useFeedEvents(
             for (const id of newEntriesRef.current) {
                 const feedEntry = allEntriesRef.current.get(id);
                 // Ensure feedEntry and feedEntry.event exist
-                if (!feedEntry || !feedEntry.event || addedEventIds.current.has(id)) continue;
+                if (!feedEntry || feedEntry.events.length === 0 || addedEventIds.current.has(id)) continue;
                 if (!passesFilter(feedEntry)) continue; // passesFilter expects FeedEntry, already checked feedEntry exists
 
                 const keep =
                     filters && // Ensure filters exist
-                    matchFilters(filters, feedEntry.event.rawEvent());
+                    matchFilters(filters, feedEntry.events[0].rawEvent());
                 if (!keep || !passesFilter(feedEntry)) {
                     // passesFilter expects FeedEntry
                     newEntriesRef.current.delete(id);
@@ -477,7 +509,7 @@ export function useFeedEvents(
 
             filterExistingEvents();
         }
-
+        
         const sub = ndk.subscribe(
             filters,
             { wrap: true, groupable: false, skipVerification: true, subId, relayUrls },
@@ -513,7 +545,7 @@ export function useFeedEvents(
 type Slice = {
     eventIds: NDKEventId[];
     sub?: NDKSubscription;
-    removeTimeout?: NodeJS.Timeout;
+    removeTimeout?: number | NodeJS.Timeout;
 };
 
 /**
@@ -556,7 +588,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         const filter = {
             "#e": newSlice.eventIds,
-            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost],
+            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost, NDKKind.GenericReply],
         };
 
         const zapFilter = {
@@ -566,7 +598,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         newSlice.sub = ndk.subscribe(
             [filter, zapFilter],
-            { closeOnEose: false, groupable: true, groupableDelay: 300 },
+            { closeOnEose: false, groupable: true, skipVerification: true, groupableDelay: 300 },
             {
                 onEvent: (event) => {
                     addEvents([event], currentPubkey || undefined);

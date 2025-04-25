@@ -64,7 +64,6 @@ export default function LoaderScreen({
     }, [ndk?.cacheAdapter?.ready]);
 
     useEffect(() => {
-        console.log(`<LoaderScreen> appReady = ${appReady}, wotReady = ${wotReady}`);
         if (appReady && wotReady) {
             setTimeout(() => {
                 setRenderApp(true);
@@ -92,8 +91,6 @@ export default function LoaderScreen({
                   }),
         };
     }, [renderApp]);
-
-    console.log('<LoaderScreen> shouldRender', shouldRender);
 
     return (
         <>

@@ -126,7 +126,7 @@ function forYouFilter(followSet: Set<string>) {
         if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
             return false;
 
-        const pubkey = feedEntry.event?.pubkey;
+        const pubkey = feedEntry.events[0]?.pubkey;
         const isFollowed = pubkey ? followSet.has(pubkey) : false;
         if (!isFollowed) {
             // this is an unfollowed pubkey, check if they were recently shown
@@ -181,10 +181,6 @@ function DataList() {
     const bookmarkIds = useBookmarkIds();
 
     const isSavedSearch = useIsSavedSearch();
-    const withTweets = useMemo(
-        () => feedType.kind === 'search' && !isSavedSearch,
-        [feedType.kind, isSavedSearch]
-    );
 
     const bookmarkIdsForFilter = useMemo(() => {
         if (feedType.kind === 'discover' && feedType.value === 'bookmark-feed') return bookmarkIds;
@@ -238,7 +234,6 @@ function DataList() {
 
         const filters: NDKFilter[] = [];
 
-        // filters.push({ kinds: [1] });
         filters.push({
             kinds: [NDKKind.Image, NDKKind.VerticalVideo, 21, 22],
             ...hashtagFilter,
@@ -251,9 +246,8 @@ function DataList() {
             limit: 50,
         });
 
-        if (withTweets) {
-            filters.push({ kinds: [1], limit: 50, ...hashtagFilter });
-        }
+        filters.push({ kinds: [1], limit: 50, authors: Array.from(follows), ...hashtagFilter });
+        keyParts.push('tweets');
 
         let filterFn = null;
 
@@ -261,7 +255,7 @@ function DataList() {
             filterFn = (feedEntry: FeedEntry, index: number) => {
                 if (feedFilters.kind1MustHaveMedia(feedEntry, index, followSet) === false)
                     return false;
-                const pubkey = feedEntry.event?.pubkey;
+                const pubkey = feedEntry.events[0]?.pubkey;
                 return pubkey ? followSet.has(pubkey) : false;
             };
         } else if (feedType.kind === 'discover' && feedType.value === 'for-you') {
@@ -273,7 +267,7 @@ function DataList() {
                 if (feedFilters.videosMustBeFromFollows(feedEntry, index, followSet) === false)
                     return false;
 
-                const event = feedEntry.event;
+                const event = feedEntry.events[0];
                 if (!event) return false; // Need event to check pubkey/kind
 
                 const isFollowed = followSet.has(event.pubkey);
@@ -289,7 +283,6 @@ function DataList() {
         return { filters, key: keyParts.join(), filterFn, numColumns };
     }, [
         followSet.size,
-        withTweets,
         feedType.value,
         currentPubkey,
         bookmarkIdsForFilter.length,
@@ -333,24 +326,22 @@ function HomeTopMargin() {
 }
 
 const kind1MustHaveMedia = (feedEntry: FeedEntry): boolean => {
-    const event = feedEntry.event;
-    // If no event, assume it passes this filter. Adjust if different logic is needed.
-    if (!event) return true;
+    if (feedEntry.events[0]?.kind !== 1) return true; // Only check kind 1 events
 
-    // if it's a kind 1, make sure we have a URL of an image or video
-    if (event.kind === 1) {
+    // Check if there is an event in the thread with an image
+    // or video URL. If not, return false.
+    for (const event of feedEntry.events) {
         const imeta = event.tagValue('imeta');
         if (imeta) return true;
         const matches = event.content.match(imageOrVideoUrlRegexp);
-        return matches !== null;
+        if (matches !== null) return true;
     }
 
-    // If event.kind is not 1, it passes this specific filter
-    return true;
+    return false;
 };
 
 const videosMustBeFromFollows = (feedEntry: FeedEntry, _index: number, followSet: Set<string>) => {
-    const event = feedEntry.event;
+    const event = feedEntry.events[0];
     if (!event) return true; // If no event, can't be a video from non-follow
 
     if (videoKinds.has(event.kind)) {
