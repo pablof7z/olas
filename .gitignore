@@ -28,3 +28,4 @@ expo-env.d.ts
 .tenex.json
 .roo/mcp.json
 node_modules
+temp/
