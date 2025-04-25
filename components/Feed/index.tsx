@@ -163,7 +163,7 @@ export default function Feed({
                             timestamp={item.timestamp}
                         />
                     );
-                } else {
+                } else if (item.events.length > 1) {
                     return (
                         <Thread events={item.events} />
                     )

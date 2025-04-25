@@ -17,10 +17,14 @@ export default function Thread({ events }: { events: NDKEvent[] }) {
     const forceSquareAspectRatio = useAppSettingsStore(s => s.forceSquareAspectRatio);
 
     const headerHeight = useHeaderHeight();
-        const screen = Dimensions.get('window');
-        const maxHeight = Math.floor(
-            forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight
-        );
+    const screen = Dimensions.get('window');
+    const maxHeight = Math.floor(
+        forceSquareAspectRatio ? screen.width * 1.1 : screen.height * 0.8 - headerHeight
+    );
+
+    if (!events || events.length === 0) {
+        return null;
+    }
     
     return (
         <View style={styles.threadContainer}>
@@ -28,16 +32,15 @@ export default function Thread({ events }: { events: NDKEvent[] }) {
 
             {events.map((event, index) => {
                 return (
-                    <View style={styles.threadItemContainer}>
+                    <View style={styles.threadItemContainer} key={event.id ?? index}>
                         <View style={{ flexDirection: 'column', marginRight: 8, alignContent: 'center' }}>
                             <UserAvatar pubkey={event.pubkey} userProfile={userProfile}  imageSize={32} />
                         </View>
                         <View style={{ flexDirection: 'column', marginRight: 8, alignContent: 'center', flex: 1 }}>
                             <EventContent event={event}  />
                             <MediaSection event={event} maxHeight={maxHeight} />
-                            <ThreadItemBottom event={event} /> 
+                            <ThreadItemBottom event={event} />
                         </View>
-
                     </View>
                 );
             })}
