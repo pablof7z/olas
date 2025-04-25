@@ -25,3 +25,5 @@ expo-env.d.ts
 # @end expo-cli
 
 *.apk
+.tenex.json
+.roo/mcp.json
