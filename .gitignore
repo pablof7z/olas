@@ -27,3 +27,4 @@ expo-env.d.ts
 *.apk
 .tenex.json
 .roo/mcp.json
+node_modules

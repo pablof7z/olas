@@ -14,12 +14,12 @@
             "developmentClient": true,
             "distribution": "internal",
             "resourceClass": "medium",
-            "bun": "1.0.0"
+            "bun": "1.2.10"
         },
         "production": {
             "distribution": "store",
             "autoIncrement": true,
-            "bun": "1.0.0",
+            "bun": "1.2.10",
             "android": {
                 "buildType": "apk"
             },
