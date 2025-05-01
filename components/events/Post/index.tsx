@@ -37,7 +37,7 @@ import { isUserProfileDeleted } from '@/lib/utils/user';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
-import useImageLoader from 'lib/image-loader/hook';
+import useImageLoader from '@/lib/image-loader/hook';
 
 export const MediaSection = function MediaSection({
     event,
@@ -238,7 +238,7 @@ export default function Post({
 
     const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
 
-    const loadedImage = useImageLoader({ url: shouldTryToPreload ? imetas[0].url! : false });
+    const loadedImage = useImageLoader({ originalUrl: shouldTryToPreload ? imetas[0].url! : false });
     if (shouldTryToPreload && !loadedImage) {
         return (<Text>No blurhash, waiting for it to load</Text>);
     }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
-import useImageLoaderStore from "lib/image-loader/store";
+import useImageLoaderStore from "@/lib/image-loader/store";
 
 const POLL_INTERVAL = 1000;
 
@@ -70,10 +70,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
   stat: {
     fontSize: 13,

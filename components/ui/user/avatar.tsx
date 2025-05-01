@@ -1,10 +1,11 @@
 import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, type ImageProps } from 'expo-image';
 import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
-import useImageLoader from 'lib/image-loader/hook';
+import useImageLoader from '@/lib/image-loader/hook';
 import {
     type ImageSourcePropType,
     type ImageStyle,
+    Pressable,
     type StyleProp,
     StyleSheet,
     View,
@@ -15,6 +16,7 @@ import FlareLabel, { FlareElement } from './flare';
 
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
+import { Text } from '@/components/nativewindui/Text';
 
 interface AvatarProps extends Omit<ImageProps, 'style'> {
     pubkey: Hexpubkey;
@@ -69,11 +71,12 @@ const UserAvatar = forwardRef(function UserAvatar(
     // Use the new preloading hook for avatar image
     const avatarUrl = userProfile?.picture ?? null;
     const imageCache = useImageLoader({
-        url: avatarUrl ?? '',
-        priority: 'normal',
-        maxDimensions: { width: imageSize, height: imageSize },
+        originalUrl: avatarUrl ?? false,
+        priority: 'high',
+        reqWidth: imageSize,
         forceProxy: !skipProxy,
     });
+    console.log('avatar url', avatarUrl, imageCache);
 
     borderColor ??= colors.card;
 
@@ -113,7 +116,7 @@ const UserAvatar = forwardRef(function UserAvatar(
                 </View>
             )}
             <AvatarInner
-                image={imageCache}
+                image={imageCache.image}
                 pubkey={pubkey}
                 imageSize={imageSize}
                 borderWidth={borderWidth}

@@ -1,0 +1,1 @@
+Don't try to implement backwards compatible code unless otherwise instructed; clean code with clean implementations is preferable to backwards compatible gymnastics.

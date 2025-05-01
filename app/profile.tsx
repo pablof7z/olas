@@ -54,6 +54,7 @@ import { useColorScheme } from '@/lib/useColorScheme';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
 import { prettifyNip05 } from '@/utils/user';
+import useImageLoader from '@/lib/image-loader/hook';
 
 export const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -446,6 +447,10 @@ function Banner({ pubkey }: { pubkey: string }) {
         });
     }, [editProfile, setEditProfile]);
 
+    const bannerImage = useImageLoader({
+        originalUrl: userProfile?.banner ?? false,
+    })
+
     if (editState === 'edit') {
         return (
             <TouchableOpacity
@@ -461,7 +466,7 @@ function Banner({ pubkey }: { pubkey: string }) {
                 }}
             >
                 <Image
-                    source={{ uri: editProfile?.banner }}
+                    source={bannerImage.image}
                     style={{
                         position: 'absolute',
                         top: 0,

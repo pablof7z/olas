@@ -1,10 +1,9 @@
-import { ImageSource } from 'expo-image';
+import type { ImageSource } from 'expo-image';
 
 export interface ImageVariation {
   reqWidth: number | 'original';
-  source: ImageSource | null;
+  source: ImageSource | null; // { uri: either original_url or fetched_url, cacheKey: filesystemKey }
   status: 'idle' | 'loading' | 'loaded' | 'error';
-  timestamp: number;
   attempts: number;
 }
 
@@ -16,7 +15,6 @@ export interface ImageLoaderStats {
 export type ImagePriority = 'low' | 'normal' | 'high';
 
 export interface ImageCacheEntry {
-  blurhash?: string;
   variations: ImageVariation[];
 }
 
@@ -33,15 +31,17 @@ export interface ImageLoaderOptions {
 
 // Renamed: QueueItem -> ImageTask
 export interface ImageTask {
-  url: string;
+  originalUrl: string;
   reqWidth: number | 'original';
-  blurhash?: string;
   refCount: number;
 }
 
+// This is the original URL of the image
+type ImageCacheKey = string;
+
 // Updated: ImageState -> ImageLoaderState with renamed properties
 export interface ImageLoaderState {
-  imageCache: Map<string, ImageCacheEntry>;
+  imageCache: Map<ImageCacheKey, ImageCacheEntry>;
   downloadQueues: {
     high: ImageTask[];
     normal: ImageTask[];
@@ -58,10 +58,28 @@ export interface ImageLoaderState {
 }
 
 export interface UseImageLoaderOptions {
-  url: string | false;
+  originalUrl: string | false;
   priority?: ImagePriority;
   reqWidth?: number | 'original';
   forceProxy?: boolean;
   blurhash?: string;
   timeout?: number;
+}
+
+export type ImageCacheState = 'loaded' | 'error';
+
+export interface DbImageCacheEntry {
+  /**
+   * The original URL of the image.
+   */
+  originalUrl: string;
+  width: number | null; // null for "original"
+  state: ImageCacheState;
+  filesystemKey: string;
+  attempts: number;
+  /**
+   * The actual URL that was fetched (may differ from originalUrl when using imgproxy).
+   * Optional for backward compatibility with existing records.
+   */
+  fetchedUrl?: string;
 }

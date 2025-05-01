@@ -238,6 +238,12 @@ export const migrations = [
         version: 17,
         up: (db: SQLite.SQLiteDatabase) => {
             db.execSync(`CREATE TABLE IF NOT EXISTS pubkey_flares (
+{
+    version: 18,
+    up: (db: import('expo-sqlite').SQLiteDatabase) => {
+        db.execSync('ALTER TABLE image_cache ADD COLUMN attempts INTEGER DEFAULT 0;');
+    },
+},
                 pubkey TEXT PRIMARY KEY,
                 flare_type TEXT,
                 created_at INTEGER
@@ -253,13 +259,22 @@ export const migrations = [
                  SET hashtags = REPLACE(hashtags, 'introductions', 'photography')
                  WHERE title = '#photography' AND hashtags LIKE '%introductions%'`
             );
-
-            // Read the updated #photography row (for verification/logging)
-            const updated = db.getFirstSync(
-                `SELECT * FROM saved_searches WHERE title = '#photography'`
+        },
+    },
+    {
+        version: 19,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync(
+                `CREATE TABLE IF NOT EXISTS image_cache (
+                    original_url TEXT NOT NULL,
+                    width INTEGER,
+                    state TEXT NOT NULL,
+                    filesystem_key TEXT NOT NULL,
+                    fetched_url TEXT,
+                    attempts INTEGER DEFAULT 0,
+                    PRIMARY KEY (original_url, width)
+                );`
             );
-            // Optionally log or handle the result as needed
-            // console.log('Updated #photography search:', updated);
         },
     },
 ];

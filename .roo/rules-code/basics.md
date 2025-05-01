@@ -1,0 +1,1 @@
+Never type things as `any`. Fix typing issues.

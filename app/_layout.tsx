@@ -227,7 +227,7 @@ export function RootLayout() {
                                         }}
                                     />
                                 </Stack>
-                                <ImageLoadingOverlay />
+                                {DEV_BUILD && <ImageLoadingOverlay />}
 
                                 <PostOptionsMenu />
                                 <FeedTypeBottomSheet />

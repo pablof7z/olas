@@ -23,6 +23,10 @@ const DEFAULT_CONFIG: ImgProxyConfig = {
     },
 };
 
+export function generateFilesystemKey() {
+    return Math.random().toString(36).substring(2, 28);
+}
+
 export function getProxiedImageUrl(
     url: string,
     size: number = WINDOW_WIDTH,
@@ -71,4 +75,20 @@ export function throttle<T extends (...args: any[]) => void>(
   };
 
   return throttled as T;
+}
+import type { ImageVariation } from './types';
+
+/**
+ * Returns true if a cached variation satisfies a request for reqWidth:
+ * - `original` variation always satisfies
+ * - if reqWidth is 'original', no variation except original satisfies
+ * - else variation.reqWidth >= reqWidth
+ */
+export function isVariationSufficient(
+  variation: ImageVariation,
+  reqWidth: number | 'original'
+): boolean {
+  if (variation.reqWidth === 'original') return true;
+  if (reqWidth === 'original') return false;
+  return variation.reqWidth >= reqWidth;
 }

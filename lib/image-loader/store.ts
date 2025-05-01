@@ -1,32 +1,79 @@
+import {
+  upsertImageCacheEntry,
+  markImageCacheFailure,
+  getAllImageCacheEntries
+} from './db';
+import type { DbImageCacheEntry } from './types';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { Dimensions } from 'react-native';
-import { Image, ImageSource } from 'expo-image';
+import { Image, type ImageSource } from 'expo-image';
 import type {
   ImagePriority, ImageLoaderOptions,
   ImageVariation,
   ImageTask,
   ImageLoaderState
 } from './types';
-import { getProxiedImageUrl, throttle } from './utils';
+import { getProxiedImageUrl, isVariationSufficient, generateFilesystemKey } from './utils';
+// --- Image cache initialization from DB ---
+
+/**
+ * Loads all cached image entries from the database and populates the in-memory imageCache.
+ * Should be called once on app startup.
+ */
+export async function initializeImageCacheFromDb() {
+  const start = Date.now();
+  try {
+    // Get entries with proper error handling
+    const entries = await getAllImageCacheEntries();
+    
+    // Group by originalUrl
+    const grouped = new Map();
+    for (const entry of entries) {
+      const key = entry.originalUrl;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(entry);
+    }
+    
+    // Convert to store format
+    const cache = new Map();
+    for (const [originalUrl, dbEntries] of grouped.entries()) {
+      const variations = dbEntries.map((dbEntry: DbImageCacheEntry) => ({
+        reqWidth: dbEntry.width === null ? 'original' : dbEntry.width,
+        source: {
+          uri: dbEntry.fetchedUrl || dbEntry.originalUrl,
+          cacheKey: dbEntry.filesystemKey,
+        },
+        status: dbEntry.state,
+        attempts: dbEntry.attempts,
+      }));
+      cache.set(originalUrl, { variations });
+    }
+    
+    // Update the Zustand store atomically
+    useImageLoaderStore.setState((state) => {
+      state.imageCache = cache;
+    });
+  } catch (error) {
+    console.error(`[ImageLoader] Error loading image cache from DB: ${error}`);
+    return;
+  }
+}
 
 // In-memory array to track proxy fallback successes
 const proxySuccessTimestamps: number[] = [];
 
-// Helper to create a unique key for a queue item
-function queueItemKey(item: ImageTask): string {
-  return `${item.url}|${item.reqWidth}`;
-}
-
-// Helper to check if a queue contains a specific item
-
 interface ImageActions {
-  addToQueue: (url: string, reqWidth: number | "original", blurhash?: string, priority?: ImagePriority) => void;
+  addToQueue: (originalUrl: string, reqWidth: number | "original", priority?: ImagePriority) => void;
   processQueue: () => Promise<void>;
   loadImage: (image: ImageTask) => Promise<void>;
   clearCache: () => void;
   updateConfig: (config: Partial<ImageLoaderOptions>) => void;
-  removeFromQueue: (url: string, reqWidth: number | "original", priority?: ImagePriority) => void;
+  removeFromQueue: (originalUrl: string, reqWidth: number | "original", priority?: ImagePriority) => void;
+  retry: (
+    originalUrl: string,
+    reqWidth: number | "original",
+  ) => void;
 }
 
 const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
@@ -54,15 +101,14 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       get().processQueue();
     }
 
-    // Throttled version
-    const throttledProcessQueue = throttle(rawProcessQueue, 200, { leading: true, trailing: true });
-
     function scheduleProcessQueue() {
-      const { inFlightTasks } = get();
-      if (inFlightTasks.size === 0) {
+      const { inFlightTasks, options, downloadQueues } = get();
+      // Keep starting downloads while there's queue items and free slots
+      const totalQueued = downloadQueues.high.length + downloadQueues.normal.length + downloadQueues.low.length;
+      let slots = options.maxConcurrentDownloads - inFlightTasks.size;
+      while (slots > 0 && totalQueued > 0) {
         rawProcessQueue();
-      } else {
-        throttledProcessQueue();
+        slots--;
       }
     }
 
@@ -90,38 +136,62 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       },
       permanentFailures: new Set(),
 
-      addToQueue: (
-        url: string,
+      retry: (
+        originalUrl: string,
         reqWidth: number | "original",
-        blurhash?: string,
+      ) => {
+        set((draft: ImageLoaderState & ImageActions) => {
+          // Remove the relevant variation from imageCache
+          const cacheEntry = draft.imageCache.get(originalUrl);
+          if (cacheEntry) {
+            cacheEntry.variations = cacheEntry.variations.filter(
+              (v: ImageVariation) => v.reqWidth !== reqWidth
+            );
+            // If no variations left, remove the cache entry entirely
+            if (cacheEntry.variations.length === 0) {
+              draft.imageCache.delete(originalUrl);
+            }
+          }
+
+          // Remove from permanentFailures
+          draft.permanentFailures.delete(originalUrl);
+
+          // Remove any in-flight task for this image/variation
+          const id = `${originalUrl}|${reqWidth}`;
+          draft.inFlightTasks.delete(id);
+          delete draft.activeDownloadMeta[id];
+
+          // Remove from all download queues (in case it's queued in multiple)
+          (['high', 'normal', 'low'] as ImagePriority[]).forEach((p: ImagePriority) => {
+            draft.downloadQueues[p] = draft.downloadQueues[p].filter(
+              (q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth)
+            );
+          });
+        });
+        get().loadImage({ originalUrl, reqWidth, refCount: 1 });
+      },
+
+      addToQueue: (
+        originalUrl: string,
+        reqWidth: number | "original",
         priority: ImagePriority = 'normal'
       ) => {
         set((draft: ImageLoaderState & ImageActions) => {
           const queue = draft.downloadQueues[priority];
-          const cacheEntry = draft.imageCache.get(url);
-          if (
-            cacheEntry &&
-            cacheEntry.variations.some((v: ImageVariation) =>
-              v &&
-              (v.reqWidth === 'original'
-                ? true
-                : reqWidth === 'original'
-                  ? false
-                  : v.reqWidth >= reqWidth)
-            )
-          ) {
-            // Already cached with sufficient width, do not add to queue
-            return;
-          }
+          const cacheEntry = draft.imageCache.get(originalUrl);
+          const alreadyCached = cacheEntry && cacheEntry.variations.some((v: ImageVariation) => isVariationSufficient(v, reqWidth));
+          if (alreadyCached) return;
+      
           // Find if the item already exists in the queue
-          const existingIdx = queue.findIndex((q: ImageTask) => q.url === url && q.reqWidth === reqWidth);
+          const existingIdx = queue.findIndex((q: ImageTask) =>
+            q.originalUrl === originalUrl && q.reqWidth === reqWidth
+          );
           if (existingIdx !== -1) {
             // Increment refCount
             queue[existingIdx].refCount += 1;
           } else {
             // Add new item with refCount 1
-            const item: ImageTask = { url, reqWidth, blurhash, refCount: 1 };
-            console.log(`[ImageLoader] Queuing image: ${url} (width: ${reqWidth}, priority: ${priority})`);
+            const item: ImageTask = { originalUrl, reqWidth, refCount: 1 };
             queue.push(item);
           }
         });
@@ -131,30 +201,27 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       processQueue: async () => {
         const { inFlightTasks, options, downloadQueues } = get() as ImageLoaderState & ImageActions;
         if (inFlightTasks.size >= options.maxConcurrentDownloads) {
-          console.log(`[ImageLoader] Max concurrent downloads reached (${inFlightTasks.size}/${options.maxConcurrentDownloads}).`);
           return;
         }
 
         // Get highest priority item available
         const nextItem: ImageTask | undefined =
           downloadQueues.high[0] || downloadQueues.normal[0] || downloadQueues.low[0];
-        if (!nextItem) {
-          console.log('[ImageLoader] No images in queue to process.');
-          return;
-        }
+        if (!nextItem) return;
 
-        const key = queueItemKey(nextItem);
+        // Use url+reqWidth as unique identifier for queue/inFlight
+        const { originalUrl, reqWidth } = nextItem;
+        const id = `${originalUrl}|${reqWidth}`;
 
         // Remove from queue (regardless of refCount, since we're starting the download)
         set((draft: ImageLoaderState & ImageActions) => {
           let priority: ImagePriority = 'low';
-          if (draft.downloadQueues.high.length && queueItemKey(draft.downloadQueues.high[0]) === key) priority = 'high';
-          else if (draft.downloadQueues.normal.length && queueItemKey(draft.downloadQueues.normal[0]) === key) priority = 'normal';
+          if (draft.downloadQueues.high.length && draft.downloadQueues.high[0].originalUrl === originalUrl && draft.downloadQueues.high[0].reqWidth === reqWidth) priority = 'high';
+          else if (draft.downloadQueues.normal.length && draft.downloadQueues.normal[0].originalUrl === originalUrl && draft.downloadQueues.normal[0].reqWidth === reqWidth) priority = 'normal';
 
-          console.log(`[ImageLoader] Starting prefetch for: ${key} (priority: ${priority})`);
-          draft.downloadQueues[priority] = draft.downloadQueues[priority].filter((q: ImageTask) => queueItemKey(q) !== key);
-          draft.inFlightTasks.add(key);
-          draft.activeDownloadMeta[key] = {
+          draft.downloadQueues[priority] = draft.downloadQueues[priority].filter((q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth));
+          draft.inFlightTasks.add(id);
+          draft.activeDownloadMeta[id] = {
             startTime: Date.now(),
             timeoutMs: options.requestTimeout
           };
@@ -164,8 +231,8 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
           await (get() as ImageLoaderState & ImageActions).loadImage(nextItem);
         } finally {
           set((draft: ImageLoaderState & ImageActions) => {
-            draft.inFlightTasks.delete(key);
-            delete draft.activeDownloadMeta[key];
+            draft.inFlightTasks.delete(id);
+            delete draft.activeDownloadMeta[id];
           });
           scheduleProcessQueue(); // Process next item
         }
@@ -174,122 +241,118 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       loadImage: async (queueItem: ImageTask) => {
         const loadStart = Date.now();
         const { options, imageCache, addToQueue, stats, permanentFailures } = get() as ImageLoaderState & ImageActions;
-        const key = `${queueItem.url}|${queueItem.reqWidth}`;
+        const originalUrl = queueItem.originalUrl;
+        const reqWidth = queueItem.reqWidth;
         const timeoutMs = options.requestTimeout;
 
-        // First check filesystem cache
-        try {
-          const cachePath = await Image.getCachePathAsync(key);
-          if (cachePath) {
-            console.log(`[ImageLoader] Found in filesystem cache: ${key}`);
-            set((draft: ImageLoaderState & ImageActions) => {
-              if (!draft.imageCache.has(key)) {
-                draft.imageCache.set(key, {
-                  variations: [
-                    {
-                      reqWidth: queueItem.reqWidth,
-                      source: { uri: cachePath },
-                      status: 'loaded',
-                      timestamp: Date.now(),
-                      attempts: 1
-                    }
-                  ]
-                });
-              } else {
-                // If already present, update variations
-                const entry = draft.imageCache.get(key)!;
-                entry.variations = entry.variations.filter((v: ImageVariation) => v.reqWidth !== queueItem.reqWidth);
-                entry.variations.push({
-                  reqWidth: queueItem.reqWidth,
-                  source: { uri: cachePath },
-                  status: 'loaded',
-                  timestamp: Date.now(),
-                  attempts: 1
-                });
-              }
-            });
-            return;
-          }
-        } catch (e) {
-          console.warn(`[ImageLoader] Error checking filesystem cache for ${key}:`, e);
-        }
-        // Main image loading logic
-        if (permanentFailures.has(queueItem.url)) {
-          console.warn(`[ImageLoader] Skipping permanently failed URL: ${queueItem.url}`);
+
+        if (permanentFailures.has(originalUrl)) {
+          console.warn(`[ImageLoader] Skipping permanently failed URL: ${originalUrl}`);
           return;
         }
-
-        // --- New proxy + direct fallback with error capture ---
-        const directUrl = queueItem.url;
+        
         const now = Date.now();
         const proxyAllowed = options.imgProxyEnabled && now >= (options.imgProxyDisabledUntil || 0);
-        const proxyUrl = proxyAllowed
-          ? getProxiedImageUrl(directUrl, queueItem.reqWidth === 'original' ? Dimensions.get('window').width : queueItem.reqWidth)
-          : directUrl;
+        const proxiedUrl = proxyAllowed
+          ? getProxiedImageUrl(originalUrl, reqWidth === 'original' ? Dimensions.get('window').width : reqWidth)
+          : originalUrl;
+        
+        let fetchedUrl = proxiedUrl;
+        let filesystemKey = generateFilesystemKey();
+        let loadedSource: ImageSource | null = null;
+        let loadSuccess = false;
 
-        let loadedSource: ImageSource;
+        const start = Date.now();
+        
         try {
-          // Try proxy (or direct if disabled)
-          await Image.loadAsync({ uri: proxyUrl, cacheKey: key });
-          loadedSource = { uri: proxyUrl };
+          console.log(`\t[ImageLoader +${Date.now() - start}] Loading image: ${originalUrl} (width: ${reqWidth}, proxy: ${proxiedUrl})`);
+          await Image.loadAsync({ uri: proxiedUrl, cacheKey: filesystemKey }, { onError: (err) => {
+            console.error(`\t[ImageLoader +${Date.now() - start}] Image.loadAsync reported an error loading image: ${originalUrl} (width: ${reqWidth}, proxy: ${proxiedUrl})`, err);
+          }});
+          loadedSource = { uri: proxiedUrl, cacheKey: filesystemKey };
+          fetchedUrl = proxiedUrl;
+          loadSuccess = true;
         } catch (proxyErr) {
           // Proxy failed → try direct exactly once
           try {
-            await Image.loadAsync({ uri: directUrl, cacheKey: key });
-            loadedSource = { uri: directUrl };
+            console.log(`\t[ImageLoader +${Date.now() - start}] Proxy failed, trying direct load: ${originalUrl} (width: ${reqWidth})`, proxyErr);
+            await Image.loadAsync({ uri: originalUrl, cacheKey: filesystemKey });
+            console.log(`\t[ImageLoader +${Date.now() - start}] Direct load succeeded: ${originalUrl} (width: ${reqWidth})`);
+            loadedSource = { uri: originalUrl, cacheKey: filesystemKey };
+            fetchedUrl = originalUrl;
             recordProxyFailureSuccess();
+            loadSuccess = true;
           } catch (directErr) {
-            // Direct also failed → mark permanent failure and inject an error variation
+            console.error(`\t[ImageLoader +${Date.now() - start}] Direct load failed: ${originalUrl} (width: ${reqWidth})`, directErr);
             set((draft: ImageLoaderState & ImageActions) => {
-              draft.permanentFailures.add(queueItem.url);
-              let entry = draft.imageCache.get(queueItem.url);
+              draft.permanentFailures.add(originalUrl);
+              let entry = draft.imageCache.get(originalUrl);
               if (!entry) {
-                entry = { blurhash: queueItem.blurhash, variations: [] };
-                draft.imageCache.set(queueItem.url, entry);
+                entry = { variations: [] };
+                draft.imageCache.set(originalUrl, entry);
               }
+              // Type extension: fetchedUrl and filesystemKey are not in ImageVariation type, but required by new logic
               entry.variations.push({
-                reqWidth: queueItem.reqWidth,
+                reqWidth,
                 source: null,
                 status: 'error',
-                timestamp: Date.now(),
-                attempts: 1
+                attempts: 1,
               });
             });
-            return; // exit loadImage early, do not continue to success path
+            await markImageCacheFailure(
+              originalUrl,
+              reqWidth === 'original' ? null : reqWidth,
+              filesystemKey
+            );
+            return;
           }
         }
 
-        set((draft: ImageLoaderState & ImageActions) => {
-          let entry = draft.imageCache.get(queueItem.url);
-          if (!entry) {
-            entry = { blurhash: queueItem.blurhash, variations: [] };
-            draft.imageCache.set(queueItem.url, entry);
-          }
-          // Remove any previous variation for this reqWidth
-          entry.variations = entry.variations.filter((v: ImageVariation) => v.reqWidth !== queueItem.reqWidth);
-          entry.variations.push({
-            reqWidth: queueItem.reqWidth,
-            source: loadedSource,
-            status: 'loaded',
-            timestamp: Date.now(),
-            attempts: 1,
+        if (loadSuccess && loadedSource) {
+          set((draft: ImageLoaderState & ImageActions) => {
+            let entry = draft.imageCache.get(originalUrl);
+            if (!entry) {
+              entry = { variations: [] };
+              draft.imageCache.set(originalUrl, entry);
+            }
+            // Remove any previous variation for this reqWidth
+            entry.variations = entry.variations.filter((v: ImageVariation) => v.reqWidth !== reqWidth);
+            
+            entry.variations.push({
+              reqWidth,
+              source: { uri: fetchedUrl, cacheKey: filesystemKey },
+              status: 'loaded',
+              attempts: 1,
+            });
+        
+            // Update session stats
+            if (!draft.stats.fetched[originalUrl]) draft.stats.fetched[originalUrl] = 0;
+            draft.stats.fetched[originalUrl] += 1;
+            if (!draft.stats.loadingTimes[originalUrl]) draft.stats.loadingTimes[originalUrl] = [];
+            draft.stats.loadingTimes[originalUrl].push(Date.now() - loadStart);
           });
-
-          // Update session stats
-          if (!draft.stats.fetched[queueItem.url]) draft.stats.fetched[queueItem.url] = 0;
-          draft.stats.fetched[queueItem.url] += 1;
-          if (!draft.stats.loadingTimes[queueItem.url]) draft.stats.loadingTimes[queueItem.url] = [];
-          draft.stats.loadingTimes[queueItem.url].push(Date.now() - loadStart);
-        });
+        
+          // Persist successful load to DB
+          await upsertImageCacheEntry({originalUrl,
+            width: reqWidth === 'original' ? null : reqWidth,
+            state: 'loaded',
+            filesystemKey,
+            fetchedUrl,
+            attempts: 1});
+        }
       },
 
       clearCache: () => {
         set((draft) => {
-          draft.imageCache = new Map();
-          draft.stats = {
-            fetched: {},
-            loadingTimes: {},
-          };
+          draft.imageCache.clear();
+          draft.downloadQueues.high = [];
+          draft.downloadQueues.normal = [];
+          draft.downloadQueues.low = [];
+          draft.inFlightTasks.clear();
+          draft.activeDownloadMeta = {};
+          draft.stats.fetched = {};
+          draft.stats.loadingTimes = {};
+          draft.permanentFailures.clear();
         });
       },
 
@@ -299,41 +362,19 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
         });
       },
 
-      removeFromQueue: (
-        url: string,
-        reqWidth: number | "original",
-        priority?: ImagePriority
-      ) => {
+      removeFromQueue: (originalUrl: string, reqWidth: number | "original", priority: ImagePriority = 'normal') => {
         set((draft: ImageLoaderState & ImageActions) => {
-          const priorities: ImagePriority[] = priority ? [priority] : ['high', 'normal', 'low'];
-          let removed = false;
-
-          for (const p of priorities) {
-            const queue = draft.downloadQueues[p];
-            const idx = queue.findIndex((q: ImageTask) => q.url === url && q.reqWidth === reqWidth);
-            if (idx !== -1) {
-              const item = queue[idx];
-              if (item.refCount > 1) {
-                // Decrement refCount
-                item.refCount -= 1;
-                console.log(`[ImageLoader] Decremented refCount for image: ${url} (width: ${reqWidth}, priority: ${p}), new refCount: ${item.refCount}`);
-              } else {
-                // Remove item
-                queue.splice(idx, 1);
-                console.log(`[ImageLoader] Removed image from queue: ${url} (width: ${reqWidth}, priority: ${p})`);
-              }
-              removed = true;
-              break; // Only remove from one queue
-            }
-          }
-
-          if (!removed) {
-            console.log(`[ImageLoader] Tried to remove image not found in queue: ${url} (width: ${reqWidth}, priority: ${priority ?? 'any'})`);
-          }
+          draft.downloadQueues[priority] = draft.downloadQueues[priority].filter(
+            (q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth)
+          );
         });
       }
     });
-  })
+  }
+)
 );
+
+// Call the initialization immediately after store creation
+initializeImageCacheFromDb();
 
 export default useImageLoaderStore;

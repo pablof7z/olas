@@ -4,8 +4,7 @@ import { Dimensions, Pressable, type StyleProp, StyleSheet, type ViewStyle } fro
 
 import type { MediaDimensions } from './types';
 
-import useImageLoader from 'lib/image-loader/hook';
-import { getProxiedImageUrl } from '@/utils/imgproxy';
+import useImageLoader from '@/lib/image-loader/hook';
 import { Text } from '../nativewindui/Text';
 
 /**
@@ -80,7 +79,7 @@ export default function ImageComponent({
 
     // Use the new preloading hook
     const imageCache = useImageLoader({
-        url,
+        originalUrl: url,
         priority,
         reqWidth: sizeForProxy,
         forceProxy,
@@ -96,8 +95,6 @@ export default function ImageComponent({
         return renderDimensions || maxDimensions;
     }, []);
 
-    console.log('<Image> source', imageCache, url)
-
     return (
         <Pressable
             style={[styles.pressable, style]}
@@ -107,7 +104,7 @@ export default function ImageComponent({
             {...props}
         >
             <Image
-                source={imageCache}
+                source={imageCache.image}
                 placeholderContentFit={contentFit}
                 cachePolicy="memory-disk"
                 contentFit={contentFit}
@@ -120,10 +117,10 @@ export default function ImageComponent({
                     height: safeFloor(finalDimensions?.height),
                 }}
             />
-            <Text style={{ position: 'absolute', backgroundColor: 'red', fontSize: 18, opacity: 0.5 }}>
-                {maxDimensions?.width}
-                { imageCache?.blurhash?.toString()}
-            </Text>
+            {/* <Text style={{ position: 'absolute', backgroundColor: 'red', fontSize: 12, opacity: 0.9 }}>
+                {maxDimensions?.width} {imageCache.status}
+                { imageCache?.image?.cacheKey}
+            </Text> */}
         </Pressable>
     );
 }

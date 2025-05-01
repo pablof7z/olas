@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useCallback } from 'react';
 import useImageLoaderStore from './store';
 import type { ImageSource } from 'expo-image';
-import { ImageCacheEntry } from './types';
+import type { ImageCacheEntry } from './types';
 import type { UseImageLoaderOptions } from './types';
 
 interface UseImageLoaderResult {
@@ -16,33 +16,33 @@ interface UseImageLoaderResult {
  * - Returns the best loaded ImageSource for the requested width, and status and retry.
  */
 export default function useImageLoader({
-  url,
+  originalUrl,
   priority = 'normal',
   reqWidth = "original",
   blurhash,
 }: UseImageLoaderOptions): UseImageLoaderResult {
   // Track previous params for cleanup
-  const prevRef = useRef<{ url: string; reqWidth: number | "original"; priority: typeof priority } | null>(null);
+  const prevRef = useRef<{ originalUrl: string; reqWidth: number | "original"; priority: typeof priority } | null>(null);
 
   useEffect(() => {
-    if (!url) return;
-    useImageLoaderStore.getState().addToQueue(url, reqWidth, blurhash, priority);
-    prevRef.current = { url, reqWidth, priority };
+    if (!originalUrl) return;
+    useImageLoaderStore.getState().addToQueue(originalUrl, reqWidth, priority);
+    prevRef.current = { originalUrl, reqWidth, priority };
 
-    // Cleanup: remove from queue when unmounting or url changes
+    // Cleanup: remove from queue when unmounting or originalUrl changes
     return () => {
       if (prevRef.current) {
         useImageLoaderStore.getState().removeFromQueue(
-          prevRef.current.url,
+          prevRef.current.originalUrl,
           prevRef.current.reqWidth,
           prevRef.current.priority
         );
       }
     };
-  }, [url]);
+  }, [originalUrl]);
 
-  // Use just the URL as the cache key
-  const cacheKey = typeof url === 'string' ? url : '';
+  // Use just the originalUrl as the cache key
+  const cacheKey = typeof originalUrl === 'string' ? originalUrl : '';
   const cached: ImageCacheEntry | undefined = useImageLoaderStore(state => state.imageCache.get(cacheKey));
 
   // Find the best loaded variation for the requested width
@@ -60,7 +60,7 @@ export default function useImageLoader({
         (typeof v.reqWidth === "number" && typeof reqWidth === "number" && v.reqWidth <= reqWidth)
       )
       .sort((a, b) => getMaxWidthValueVar(b) - getMaxWidthValueVar(a));
-    if (suitable.length) return { ...suitable[0].source, blurhash: blurhash ?? cached.blurhash };
+    if (suitable.length) return { ...suitable[0].source, blurhash };
     const larger = loadedVars
       .filter(
         v =>
@@ -70,7 +70,7 @@ export default function useImageLoader({
           v.reqWidth > reqWidth
       )
       .sort((a, b) => getMaxWidthValueVar(a) - getMaxWidthValueVar(b));
-    if (larger.length) return { ...larger[0].source, blurhash: blurhash ?? cached.blurhash };
+    if (larger.length) return { ...larger[0].source, blurhash };
     const source = loadedVars
       .sort((a, b) => {
         if (typeof reqWidth !== "number") return 0;
@@ -79,17 +79,17 @@ export default function useImageLoader({
           Math.abs(getMaxWidthValueVar(b) - reqWidth)
         );
       })[0].source;
-    if (source) return { ...source, blurhash: blurhash ?? cached.blurhash };
+    if (source) return { ...source, blurhash };
     return null;
   }, [cached, reqWidth, blurhash]);
 
   // Error state: permanent failure or any variation has status 'error'
-  const hasPermanentError = useImageLoaderStore(state => state.permanentFailures.has(url as string));
+  const hasPermanentError = useImageLoaderStore(state => state.permanentFailures.has(originalUrl as string));
   const hasVariationError = !!cached?.variations?.some(v => v.status === 'error');
 
   // Status calculation
   let status: UseImageLoaderResult['status'] = 'idle';
-  if (!url) {
+  if (!originalUrl) {
     status = 'idle';
   } else if (hasPermanentError || hasVariationError) {
     status = 'error';
@@ -103,17 +103,17 @@ export default function useImageLoader({
 
   // Retry callback, stable identity
   const retry = useCallback(() => {
-    if (url) {
-      useImageLoaderStore.getState().addToQueue(url, reqWidth, blurhash, 'high');
+    if (originalUrl) {
+      useImageLoaderStore.getState().retry(originalUrl, reqWidth);
     }
-  }, [url, reqWidth, blurhash]);
+  }, [originalUrl, reqWidth]);
 
   // Memoize result object for referential stability
   const result = useMemo<UseImageLoaderResult>(() => ({
     image: bestLoaded,
     status,
     retry,
-  }), [bestLoaded, status, retry]);
+  }), [bestLoaded?.cacheKey, status, retry]);
 
   return result;
 }

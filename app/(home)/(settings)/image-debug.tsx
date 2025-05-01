@@ -1,8 +1,14 @@
 import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Text } from "~/components/nativewindui/Text";
 import { IconView } from "@/components/icon-view";
-import useImageLoaderStore from "lib/image-loader/store";
+import useImageLoaderStore from "@/lib/image-loader/store";
 import { useState, useMemo } from "react";
+import type { ImageTask } from "@/lib/image-loader/types";
+
+// Helper function similar to queueItemKey in the store
+function taskToKey(task: ImageTask): string {
+  return `${task.url}|${task.reqWidth}`;
+}
 
 function ActiveDownloadItem({ key, meta }: { key: string; meta: any }) {
   const [now, setNow] = useState(Date.now());
@@ -51,9 +57,9 @@ export default function ImageDebugScreen() {
       title: "Images in Queue",
       icon: "download-outline",
       getItems: () => [
-        ...store.downloadQueues.high,
-        ...store.downloadQueues.normal,
-        ...store.downloadQueues.low,
+        ...store.downloadQueues.high.map(taskToKey),
+        ...store.downloadQueues.normal.map(taskToKey),
+        ...store.downloadQueues.low.map(taskToKey),
       ],
     },
     {
@@ -62,8 +68,6 @@ export default function ImageDebugScreen() {
       icon: "checkmark-circle-outline",
       getItems: () => Object.keys(store.stats.fetched),
     },
-    {
-      // Remove failedImgProxy, failedSource, and cacheHits categories as they do not exist in the new structure
     {
       key: "averageLoadingTime",
       title: "Average Loading Time (ms)",
@@ -89,7 +93,7 @@ export default function ImageDebugScreen() {
       }
     }
     return result;
-  }, [store.sessionStats.loadingTimes]);
+  }, [store.stats.loadingTimes]);
 
   return (
     <ScrollView className="flex-1 bg-background">
