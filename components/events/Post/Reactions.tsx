@@ -40,7 +40,7 @@ export function Reactions({
         commentedByUser,
         repostedBy,
         repostedByUser,
-    } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions, event.id]);
+    } = useMemo(() => reactions ?? DEFAULT_STATS, [reactions?.commentCount, event.id]);
 
     inactiveColor ??= colors.foreground;
     foregroundColor ??= colors.foreground;

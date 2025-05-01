@@ -37,9 +37,9 @@ export default function Comment({
                     color={commentedByUser ? foregroundColor : inactiveColor}
                 />
             </TouchableOpacity>
-            {commentCount > 0 && (
+            {commentCount && commentCount > 0 ? (
                 <Text style={[styles.text, { color: inactiveColor }]}>{commentCount}</Text>
-            )}
+            ) : null}
         </View>
     );
 }

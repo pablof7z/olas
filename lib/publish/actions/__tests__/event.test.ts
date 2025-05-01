@@ -1,4 +1,4 @@
-import { RelayMock } from '@nostr-dev-kit/ndk-test-utils';
+import { RelayMock } from '@nostr-dev-kit/ndk/test';
 import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
 
 import { generateEvent } from '../event';

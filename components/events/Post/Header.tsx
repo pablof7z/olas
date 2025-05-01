@@ -47,11 +47,11 @@ export function PostHeader({
                         <View style={{ flexDirection: 'row', gap: 4 }}>
                             <Repeat size={16} color="green" />
 
-                            <AvatarGroup
+                            {/* <AvatarGroup
                                 pubkeys={reposts.map((r) => r.pubkey)}
                                 avatarSize={14}
                                 threshold={5}
-                            />
+                            /> */}
 
                             <Text className="text-xs text-muted-foreground">
                                 {'Reposted '}

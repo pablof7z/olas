@@ -40,7 +40,7 @@ export function AvatarChooser() {
 
     return (
         <View className="h-24 w-28 flex-row items-center justify-center gap-4">
-            <Button size="icon" variant="accent" className="!rounded-full" onPress={openCamera}>
+            <Button size="icon" variant="secondary" className="!rounded-full" onPress={openCamera}>
                 <Camera size={24} color="white" />
             </Button>
 
@@ -49,13 +49,13 @@ export function AvatarChooser() {
                     source={{
                         uri:
                             avatar ||
-                            `https://api.dicebear.com/9.x/bottts-neutral/png?seed=${username}`,
+                            `https://api.dicebear.com/9.x/shapes/png?seed=${username}`,
                     }}
                     className="h-full w-full rounded-full object-cover"
                 />
             </View>
 
-            <Button size="icon" variant="accent" className="!rounded-full" onPress={chooseImage}>
+            <Button size="icon" variant="secondary" className="!rounded-full" onPress={chooseImage}>
                 <Plus size={24} color="white" />
             </Button>
         </View>

@@ -1,4 +1,4 @@
-import NDK, { type NDKRelay, startSignatureVerificationStats } from '@nostr-dev-kit/ndk';
+import NDK, { type NDKRelay } from '@nostr-dev-kit/ndk';
 
 import { getRelays } from '@/stores/db/relays';
 import { NET_DEBUG } from '@/utils/const';
@@ -63,7 +63,6 @@ const netDebug = (_msg: string, relay: NDKRelay, direction?: 'send' | 'recv') =>
     const _url = new URL(relay.url);
     if (direction === 'send' && relay.url.match(/olas/)) {
         const asString = JSON.stringify(JSON.parse(_msg), null, 4);
-        // prepend a 🟢 to each line
         const lines = asString.split('\n');
         const newLines = lines.map((line) => `🟢 ${line}`);
         const newString = newLines.join('\n');

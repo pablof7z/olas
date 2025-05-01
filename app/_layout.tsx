@@ -37,6 +37,7 @@ import { NDKUser, useNDKInit, useNDKMutes } from '@nostr-dev-kit/ndk-hooks';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 
+import ImageLoadingOverlay from "@/components/ImageLoadingOverlay";
 // This is the default configuration
 configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -226,6 +227,7 @@ export function RootLayout() {
                                         }}
                                     />
                                 </Stack>
+                                <ImageLoadingOverlay />
 
                                 <PostOptionsMenu />
                                 <FeedTypeBottomSheet />
@@ -243,6 +245,7 @@ export function RootLayout() {
                     </KeyboardProvider>
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
+            <ImageLoadingOverlay />
         </>
     );
 }

@@ -27,7 +27,7 @@ import { PostHeader } from './Header';
 import { InlinedComments, Reactions } from './Reactions';
 
 import Lightning from '@/components/icons/lightning';
-import EventMediaContainer from '@/components/media/event';
+import EventMediaContainer, { getImetas } from '@/components/media/event';
 import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
 import { useZap } from '@/hooks/zap';
@@ -37,6 +37,7 @@ import { isUserProfileDeleted } from '@/lib/utils/user';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
+import useImagePreload from '@/hooks/useImagePreload';
 
 export const MediaSection = function MediaSection({
     event,
@@ -206,8 +207,8 @@ export default function Post({
     // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {
         if (index === 0) return 'high';
-        if (index <= 2) return 'normal';
-        return 'low';
+        if (index <= 2) return 'high';
+        return 'high';
     }, [index]);
 
     const forceSquareAspectRatio = useAppSettingsStore(s => s.forceSquareAspectRatio);
@@ -230,7 +231,17 @@ export default function Post({
         []
     );
 
+    const imetas = getImetas(event);
+    const hasBlurhash = imetas[0]?.blurhash !== undefined;
+
     if (isUserProfileDeleted(userProfile)) return null;
+
+    const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
+
+    const loadedImage = useImagePreload({ url: shouldTryToPreload ? imetas[0].url! : false });
+    if (shouldTryToPreload && !loadedImage) {
+        return (<Text>No blurhash, waiting for it to load</Text>);
+    }
 
     return (
         <View style={containerStyle}>

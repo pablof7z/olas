@@ -1,6 +1,7 @@
 import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Image, type ImageProps, useImage } from 'expo-image';
+import { Image, type ImageProps } from 'expo-image';
 import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
+import useImagePreload from '@/hooks/useImagePreload';
 import {
     type ImageSourcePropType,
     type ImageStyle,
@@ -65,23 +66,14 @@ const UserAvatar = forwardRef(function UserAvatar(
     imageSize ??= size / 3;
     borderWidth ??= imageSize / 16;
 
-    const imageSource = useMemo<ImageSourcePropType | null>(() => {
-        if (!userProfile?.picture) return null;
-
-        let imageUrl = userProfile.picture;
-        let proxiedImageUrl = !skipProxy ? getProxiedImageUrl(imageUrl, 300) : undefined;
-
-        return {
-            uri: proxiedImageUrl ?? imageUrl,
-            width: imageSize,
-            height: imageSize,
-            onError: () => {
-                if (proxiedImageUrl) {
-                    // Handle error case
-                }
-            },
-        }
-    }, [userProfile?.picture, imageSize, skipProxy]);
+    // Use the new preloading hook for avatar image
+    const avatarUrl = userProfile?.picture ?? null;
+    const imageCache = useImagePreload({
+        url: avatarUrl ?? '',
+        priority: 'normal',
+        maxDimensions: { width: imageSize, height: imageSize },
+        forceProxy: !skipProxy,
+    });
 
     borderColor ??= colors.card;
 
@@ -121,7 +113,7 @@ const UserAvatar = forwardRef(function UserAvatar(
                 </View>
             )}
             <AvatarInner
-                image={imageSource}
+                image={imageCache}
                 pubkey={pubkey}
                 imageSize={imageSize}
                 borderWidth={borderWidth}
@@ -137,7 +129,7 @@ const UserAvatar = forwardRef(function UserAvatar(
 });
 
 type AvatarInnerProps = {
-    image: ImageSourcePropType | null;
+    image: ImageSourcePropType | null | undefined;
     pubkey: string;
     imageSize: number;
     borderWidth: number;
@@ -195,7 +187,7 @@ function AvatarInner({
         <>
             <View style={[innerContainerStyle, externalStyle]}>
                 {image ? (
-                    <Image source={image} style={imageStyle} recyclingKey={pubkey} />
+                    <Image source={image} style={imageStyle} recyclingKey={pubkey} priority="low" />
                 ) : (
                     <View
                         style={{

@@ -210,6 +210,7 @@ export default function SettingsIosStyleScreen() {
 
         if (advancedMode) {
             config.push({ type: "dev", title: "Development" });
+            config.push({ type: "image-debug", title: "Image Preload Debug" });
             config.push({ type: "cache-view", title: "View Content cache" });
             config.push({ type: "cache-empty", title: "Empty Content cache" });
             config.push({ type: "nuke-database", title: "Reset local database" });
@@ -361,6 +362,10 @@ export default function SettingsIosStyleScreen() {
                 case "dev":
                     leftView = <IconView name="code-braces" className="bg-green-500" />;
                     onPress = () => router.push("/(home)/(settings)/dev");
+                    break;
+                case "image-debug":
+                    leftView = <IconView name="image" className="bg-green-500" />;
+                    onPress = () => router.push("/(home)/(settings)/image-debug");
                     break;
                 case "cache-view":
                     leftView = <IconView name="tray-arrow-up" className="bg-red-500" />;

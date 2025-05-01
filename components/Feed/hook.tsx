@@ -588,7 +588,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         const filter = {
             "#e": newSlice.eventIds,
-            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost, NDKKind.GenericReply],
+            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost, NDKKind.GenericReply, NDKKind.Text],
         };
 
         const zapFilter = {
