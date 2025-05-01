@@ -110,7 +110,7 @@ export default function useImageLoader({
 
   // Memoize result object for referential stability
   const result = useMemo<UseImageLoaderResult>(() => ({
-    image: bestLoaded,
+    image: { ...bestLoaded, blurhash },
     status,
     retry,
   }), [bestLoaded?.cacheKey, status, retry]);
