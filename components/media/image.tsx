@@ -4,7 +4,7 @@ import { Dimensions, Pressable, type StyleProp, StyleSheet, type ViewStyle } fro
 
 import type { MediaDimensions } from './types';
 
-import useImagePreload from '@/hooks/useImagePreload';
+import useImageLoader from 'lib/image-loader/hook';
 import { getProxiedImageUrl } from '@/utils/imgproxy';
 import { Text } from '../nativewindui/Text';
 
@@ -79,7 +79,7 @@ export default function ImageComponent({
     const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
 
     // Use the new preloading hook
-    const imageCache = useImagePreload({
+    const imageCache = useImageLoader({
         url,
         priority,
         reqWidth: sizeForProxy,

@@ -1,7 +1,7 @@
 import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Image, type ImageProps } from 'expo-image';
 import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
-import useImagePreload from '@/hooks/useImagePreload';
+import useImageLoader from 'lib/image-loader/hook';
 import {
     type ImageSourcePropType,
     type ImageStyle,
@@ -68,7 +68,7 @@ const UserAvatar = forwardRef(function UserAvatar(
 
     // Use the new preloading hook for avatar image
     const avatarUrl = userProfile?.picture ?? null;
-    const imageCache = useImagePreload({
+    const imageCache = useImageLoader({
         url: avatarUrl ?? '',
         priority: 'normal',
         maxDimensions: { width: imageSize, height: imageSize },

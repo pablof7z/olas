@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
-import useImageStore from "@/stores/imageStore";
+import useImageLoaderStore from "lib/image-loader/store";
 
 const POLL_INTERVAL = 1000;
 
 export default function ImageLoadingOverlay() {
-  const store = useImageStore();
+  const store = useImageLoaderStore();
   const [now, setNow] = useState(Date.now());
 
   // Poll every second for real-time updates
@@ -14,12 +14,11 @@ export default function ImageLoadingOverlay() {
     return () => clearInterval(interval);
   }, []);
 
-  const queuedCount = store.queues.high.length + store.queues.normal.length + store.queues.low.length;
+  const queuedCount = store.downloadQueues.high.length + store.downloadQueues.normal.length + store.downloadQueues.low.length;
   const activeCount = Object.keys(store.activeDownloadMeta).length;
-  const fetchedCount = Object.keys(store.sessionStats.fetched).length;
-  const failedCount =
-    Object.keys(store.sessionStats.failedImgProxy).length +
-    Object.keys(store.sessionStats.failedSource).length;
+  const fetchedCount = Object.keys(store.stats.fetched).length;
+  // Remove failedCount as failedImgProxy and failedSource do not exist in new structure
+  const failedCount = 0;
 
   // Only show if there is activity or failures
   if (activeCount === 0 && failedCount === 0) return null;

@@ -10,9 +10,6 @@ export interface ImageVariation {
 
 export interface ImageLoaderStats {
   fetched: Record<string, number>;
-  failedImgProxy: Record<string, number>;
-  failedSource: Record<string, number>;
-  cacheHits: Record<string, number>;
   loadingTimes: Record<string, number[]>;
 }
 

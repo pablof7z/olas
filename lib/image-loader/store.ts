@@ -16,9 +16,6 @@ import { getProxiedImageUrl, throttle } from './utils';
 // In-memory array to track proxy fallback successes
 const proxySuccessTimestamps: number[] = [];
 
-// Helper to extract base URL from cache key
-// Helper to check if a cached image is large enough for the requested size
-
 // Helper to create a unique key for a queue item
 function queueItemKey(item: ImageTask): string {
   return `${item.url}|${item.reqWidth}`;
@@ -93,10 +90,6 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       stats: {
         fetched: {},
         loadingTimes: {},
-        // The following fields are deprecated/unused but required by the type
-        failedImgProxy: {},
-        failedSource: {},
-        cacheHits: {},
       },
       permanentFailures: new Set(),
       temporaryFailures: new Map(),
@@ -298,9 +291,6 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
           draft.imageCache = new Map();
           draft.stats = {
             fetched: {},
-            failedImgProxy: {},
-            failedSource: {},
-            cacheHits: {},
             loadingTimes: {},
           };
         });

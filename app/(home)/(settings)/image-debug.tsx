@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Text } from "~/components/nativewindui/Text";
 import { IconView } from "@/components/icon-view";
-import useImageStore from "@/stores/imageStore";
+import useImageLoaderStore from "lib/image-loader/store";
 import { useState, useMemo } from "react";
 
 function ActiveDownloadItem({ key, meta }: { key: string; meta: any }) {
@@ -36,7 +36,7 @@ function formatKey(key: string) {
 }
 
 export default function ImageDebugScreen() {
-  const store = useImageStore();
+  const store = useImageLoaderStore();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   // Define categories inside the component for correct typing
@@ -51,40 +51,24 @@ export default function ImageDebugScreen() {
       title: "Images in Queue",
       icon: "download-outline",
       getItems: () => [
-        ...store.queues.high,
-        ...store.queues.normal,
-        ...store.queues.low,
+        ...store.downloadQueues.high,
+        ...store.downloadQueues.normal,
+        ...store.downloadQueues.low,
       ],
     },
     {
       key: "fetched",
       title: "Fetched This Session",
       icon: "checkmark-circle-outline",
-      getItems: () => Object.keys(store.sessionStats.fetched),
+      getItems: () => Object.keys(store.stats.fetched),
     },
     {
-      key: "failedImgProxy",
-      title: "Failed (imgProxy)",
-      icon: "alert-circle-outline",
-      getItems: () => Object.keys(store.sessionStats.failedImgProxy),
-    },
-    {
-      key: "failedSource",
-      title: "Failed (Source)",
-      icon: "close-circle-outline",
-      getItems: () => Object.keys(store.sessionStats.failedSource),
-    },
-    {
-      key: "cacheHits",
-      title: "Cache Hits",
-      icon: "archive-outline",
-      getItems: () => Object.keys(store.sessionStats.cacheHits),
-    },
+      // Remove failedImgProxy, failedSource, and cacheHits categories as they do not exist in the new structure
     {
       key: "averageLoadingTime",
       title: "Average Loading Time (ms)",
       icon: "timer-outline",
-      getItems: () => Object.keys(store.sessionStats.loadingTimes),
+      getItems: () => Object.keys(store.stats.loadingTimes),
     },
     {
       key: "activeDownloads",
@@ -97,7 +81,7 @@ export default function ImageDebugScreen() {
   // Compute averages for loading times
   const averageLoadingTimes = useMemo(() => {
     const result: Record<string, number> = {};
-    for (const [key, times] of Object.entries(store.sessionStats.loadingTimes)) {
+    for (const [key, times] of Object.entries(store.stats.loadingTimes)) {
       if (times.length > 0) {
         result[key] = Math.round(
           times.reduce((a, b) => a + b, 0) / times.length
