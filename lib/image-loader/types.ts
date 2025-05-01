@@ -55,7 +55,6 @@ export interface ImageLoaderState {
   // Track URLs that have definitively failed to load (permanent failures)
   permanentFailures: Set<string>;
   // Track temporary failures: URL -> last failure timestamp (ms)
-  temporaryFailures: Map<string, number>;
 }
 
 export interface UseImageLoaderOptions {

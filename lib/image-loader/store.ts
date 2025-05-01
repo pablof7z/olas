@@ -3,10 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { Dimensions } from 'react-native';
 import { Image, ImageSource } from 'expo-image';
 import type {
-  ImageLoaderStats,
-  ImagePriority,
-  ImageCacheEntry,
-  ImageLoaderOptions,
+  ImagePriority, ImageLoaderOptions,
   ImageVariation,
   ImageTask,
   ImageLoaderState
@@ -92,7 +89,6 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
         loadingTimes: {},
       },
       permanentFailures: new Set(),
-      temporaryFailures: new Map(),
 
       addToQueue: (
         url: string,
@@ -176,7 +172,8 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
       },
 
       loadImage: async (queueItem: ImageTask) => {
-        const { options, imageCache, addToQueue, stats, permanentFailures, temporaryFailures } = get() as ImageLoaderState & ImageActions;
+        const loadStart = Date.now();
+        const { options, imageCache, addToQueue, stats, permanentFailures } = get() as ImageLoaderState & ImageActions;
         const key = `${queueItem.url}|${queueItem.reqWidth}`;
         const timeoutMs = options.requestTimeout;
 
@@ -282,7 +279,7 @@ const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
           if (!draft.stats.fetched[queueItem.url]) draft.stats.fetched[queueItem.url] = 0;
           draft.stats.fetched[queueItem.url] += 1;
           if (!draft.stats.loadingTimes[queueItem.url]) draft.stats.loadingTimes[queueItem.url] = [];
-          draft.stats.loadingTimes[queueItem.url].push(Date.now());
+          draft.stats.loadingTimes[queueItem.url].push(Date.now() - loadStart);
         });
       },
 
