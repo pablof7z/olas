@@ -1,19 +1,15 @@
 import {
-    type NDKEvent,
-    NDKFilter,
-    type NDKImage,
+    type NDKEvent, type NDKImage,
     type NDKImetaTag,
-    NDKKind,
-    NDKSubscriptionCacheUsage,
-    useSubscribe,
+    NDKKind, useSubscribe
 } from '@nostr-dev-kit/ndk-mobile';
-import { AnimatedFlashList, FlashList } from '@shopify/flash-list';
-import { Image as ExpoImage, Image, type ImageRef, useImage } from 'expo-image';
+import { FlashList } from '@shopify/flash-list';
+import { Image } from 'expo-image';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { AnimatePresence } from 'framer-motion';
 import { MotiView } from 'moti';
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     Dimensions,
     Modal,
@@ -21,8 +17,7 @@ import {
     SafeAreaView,
     StyleSheet,
     Text,
-    TouchableOpacity,
-    View,
+    TextStyle, View
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, {
@@ -37,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '@/components/buttons/back-button';
 import StoriesModal from '@/lib/stories/SlidesModal';
 import { useStoriesView } from '@/lib/stories/store';
+import useImageLoader from '@/lib/image-loader/hook';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -99,10 +95,15 @@ function AnimatedBackground({
         };
     });
 
+    const {image} = useImageLoader({
+        originalUrl: item.imeta.url ?? false,
+        blurhash: item.imeta.blurhash,
+    })
+
     return (
         <SafeAreaView key={`bg-item-${item.day}`} style={StyleSheet.absoluteFill}>
             <AnimatedImage
-                source={{ uri: item.imeta.url }}
+                source={image}
                 // blurRadius is not a standard style prop here, removed. Apply blur via other means if needed.
                 style={[StyleSheet.absoluteFill, imageAnimatedStyle]}
                 // blurhash removed - not directly supported by Animated.createAnimatedComponent(Image)
@@ -200,6 +201,11 @@ function AnimatedRenderItem({
         router.push('/stories');
     }, [index, item.event, openStory]);
 
+    const { image } = useImageLoader({
+        originalUrl: item.imeta.url ?? false,
+        blurhash: item.imeta.blurhash,
+    });
+
     return (
         <Animated.View
             style={{
@@ -222,7 +228,7 @@ function AnimatedRenderItem({
                         },
                         animatedStyle,
                     ]}
-                    source={{ uri: item.imeta.url }}
+                    source={image}
                 />
             </Pressable>
             {showModal && (
@@ -242,8 +248,6 @@ export default function Wallpapers() {
         { wrap: true, skipVerification: true },
         [pubkey]
     );
-
-    const imageLoadStartedRef = useRef<Set<string>>(new Set());
 
     const [cardEntries, gridEntries] = useMemo(() => {
         const dayOfTodayInTheYear = getDayOfYear(new Date().getTime() / 1000);
@@ -266,11 +270,6 @@ export default function Wallpapers() {
             if (!day) continue;
             days[day - 1].event = event;
             days[day - 1].imeta = imeta;
-
-            if (!imageLoadStartedRef.current.has(imeta.url)) {
-                imageLoadStartedRef.current.add(imeta.url);
-                ExpoImage.prefetch(imeta.url, 'memory-disk');
-            }
         }
 
         days = days.reverse();
@@ -393,6 +392,59 @@ function EmptyDay() {
     return <View style={{ backgroundColor: '#ddd', flex: 1, width: '100%', height: '100%' }} />;
 }
 
+const windowWidth = Dimensions.get('window').width;
+
+function DayGrid({ day, event, imeta, index, onPress }: { index: number, day: number; event: NDKEvent, imeta: NDKImetaTag, onPress: (event: NDKEvent) => void }) {
+    const {image} = useImageLoader({
+        originalUrl: imeta?.url ?? false,
+        blurhash: imeta?.blurhash,
+        reqWidth: 100,
+        priority: 'low',
+    });
+
+    const size = windowWidth / 3 - 0.5;
+    
+    return (
+        <View
+            style={{
+                width: size,
+                height: size,
+                marginLeft: index % 3 === 0 ? 0 : 0.5,
+                marginRight: index % 3 === 2 ? 0 : 0.5,
+                marginBottom: 1,
+                overflow: 'hidden',
+            }}
+        >
+            {event ? (
+                <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => onPress(event)}
+                >
+                    <Image
+                        source={image}
+                        style={{ flex: 1 }}
+                    />
+                </Pressable>
+            ) : (
+                <EmptyDay />
+            )}
+            <Text style={dayItemTextStyle}>
+                Day {day}
+            </Text>
+        </View>
+    );
+}
+
+const dayItemTextStyle: TextStyle = {
+    padding: 4,
+    fontSize: 12,
+    color: 'gray',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+}
+
 // Adjust expected type for entries to match the filtered data
 export function Olas365View({ entries }: { entries: { day: number; event: NDKEvent; imeta: NDKImetaTag }[] }) {
     const openStory = useStoriesView();
@@ -404,48 +456,10 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKEve
         [openStory]
     );
 
-    const renderItem = useCallback(
-        ({ item: { day, event, imeta } }: { item: { day: number; event: NDKEvent; imeta: NDKImetaTag } }) => { // Adjust type
-            return (
-                <View
-                    style={{
-                        width: Dimensions.get('window').width / 3,
-                        height: Dimensions.get('window').width / 3,
-                        margin: 0.5,
-                        overflow: 'hidden',
-                    }}
-                >
-                    {event ? (
-                        <TouchableOpacity
-                            style={{ flex: 1 }}
-                            onPress={() => handleCardPress(event)}
-                        >
-                            <AnimatedImage
-                                source={{ uri: imeta.url }} // Use imeta directly
-                                style={{ flex: 1 }}
-                            />
-                        </TouchableOpacity>
-                    ) : (
-                        <EmptyDay />
-                    )}
-                    <Text
-                        style={{
-                            padding: 4,
-                            fontSize: 12,
-                            color: 'gray',
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                        }}
-                    >
-                        Day {day}
-                    </Text>
-                </View>
-            );
-        },
-        []
-    );
+    const { image } = useImageLoader({
+        originalUrl: entries[0]?.imeta?.url ?? false,
+        blurhash: entries[0]?.imeta?.blurhash,
+    });
 
     return (
         <FlashList
@@ -454,7 +468,7 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKEve
             keyExtractor={(e) => e.day.toString()}
             scrollEventThrottle={100}
             numColumns={3}
-            renderItem={renderItem}
+            renderItem={({ item, index }) => <DayGrid index={index} day={item.day} event={item.event} imeta={item.imeta} onPress={handleCardPress} />}
             disableIntervalMomentum
         />
     );

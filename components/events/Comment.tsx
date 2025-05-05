@@ -1,12 +1,9 @@
 import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
-import { router } from 'expo-router';
-import { useSetAtom } from 'jotai';
 import { MessageCircle } from 'lucide-react-native';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Text } from '@/components/nativewindui/Text';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
-import { activeEventAtom } from '@/stores/event';
 
 export default function Comment({
     event,

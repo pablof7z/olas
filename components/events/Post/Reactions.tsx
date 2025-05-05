@@ -24,7 +24,7 @@ export function Reactions({
     foregroundColor,
     inactiveColor,
     reactions,
-    iconSize = 24,
+    iconSize = 28,
 }: {
     event: NDKEvent;
     foregroundColor?: string;
