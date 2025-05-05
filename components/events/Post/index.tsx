@@ -205,7 +205,6 @@ export default function Post({
 }) {
     const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
 
-    // console.log(`[${Date.now() - timeZero}ms]`+'render post', event.id)
     const priority = useMemo<'high' | 'normal' | 'low'>(() => {
         if (index === 0) return 'high';
         if (index <= 2) return 'high';
@@ -234,12 +233,10 @@ export default function Post({
 
     const imetas = getImetas(event);
     const hasBlurhash = imetas[0]?.blurhash !== undefined;
+    const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
+    const loadedImage = useImageLoader(shouldTryToPreload ? imetas[0].url! : false);
 
     if (isUserProfileDeleted(userProfile)) return null;
-
-    const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
-
-    const loadedImage = useImageLoader(shouldTryToPreload ? imetas[0].url! : false);
     if (shouldTryToPreload && !loadedImage) {
         return <Text>No blurhash, waiting for it to load</Text>;
     }

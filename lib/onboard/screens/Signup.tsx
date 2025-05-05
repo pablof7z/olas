@@ -33,8 +33,9 @@ export function SignUp() {
                     autoCorrect={false}
                     value={username}
                     onChangeText={(t) => {
-                        if (!t.startsWith('@')) t = `@${t}`;
-                        setUsername(t.trim());
+                        let value = t;
+                        if (!value.startsWith('@')) value = `@${value}`;
+                        setUsername(value.trim());
                     }}
                 />
                 {isNsec ? (

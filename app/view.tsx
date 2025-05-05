@@ -85,23 +85,12 @@ const headerStyles = StyleSheet.create({
 export default function ViewScreen() {
     // Explicitly assert the type from the atom
     const activeEvent = useAtomValue(activeEventAtom) as NDKEvent | null;
-
-    // Handle the case where activeEvent might be null
-    if (!activeEvent) {
-        // Optionally return a loading indicator or an error message
-        return (
-            <View>
-                <Text>Loading event...</Text>
-            </View>
-        );
-    }
     const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
     const { events } = useSubscribe(
         activeEvent ? [activeEvent.filter()] : false,
         { groupable: false, skipVerification: true },
         [activeEvent?.id]
     );
-
     const height = useHeaderHeight();
     const insets = useSafeAreaInsets();
     const style = useMemo(
@@ -111,8 +100,14 @@ export default function ViewScreen() {
         [height]
     );
 
+    // Handle the case where activeEvent might be null
     if (!activeEvent) {
-        return <Text style={styles.noActiveEvent}>No active event</Text>;
+        // Optionally return a loading indicator or an error message
+        return (
+            <View>
+                <Text>Loading event...</Text>
+            </View>
+        );
     }
 
     const url = getUrlFromEvent(activeEvent);

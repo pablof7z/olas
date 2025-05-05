@@ -21,37 +21,29 @@ import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';
 
 export default function NutzapsScreen() {
+    // All hooks must be called before any conditional return
     const { activeWallet } = useNDKWallet();
     const { nutzapMonitor } = useNDKNutzapMonitor();
     const { ndk } = useNDK();
-    if (!ndk || !nutzapMonitor) {
-        // Handle missing ndk or nutzapMonitor
-        console.error('NDK or NutzapMonitor not available.');
-        return (
-            <View>
-                <Text>Error initializing Nutzaps screen.</Text>
-            </View>
-        );
-    }
-    const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
-    const nutzapStates = nutzapMonitor.nutzapStates;
+
+    // Placeholders for values that depend on hooks
+    const cacheAdapter = ndk?.cacheAdapter as NDKCacheAdapterSqlite | undefined;
+    const nutzapStates = nutzapMonitor?.nutzapStates;
 
     const addNutzapIfMissing = useCallback(
         (eventId: string, state: NDKNutzapState) => {
-            // if (!state.nutzap) {
+            if (!cacheAdapter || !ndk) return state;
             const event = cacheAdapter.getEventId(eventId);
             if (event) {
-                // ndk is checked above
                 state.nutzap = new NDKNutzap(ndk, event);
             }
-            // }
-
             return state;
         },
-        [nutzapStates]
+        [cacheAdapter, ndk, nutzapStates]
     );
 
     const sortedNutzaps = useMemo(() => {
+        if (!nutzapStates) return [];
         const states = Array.from(nutzapStates.entries()).map(
             ([eventId, state]) =>
                 [eventId, addNutzapIfMissing(eventId, state)] as [string, NDKNutzapState]
@@ -70,6 +62,16 @@ export default function NutzapsScreen() {
             return (nutzapB.created_at || 0) - (nutzapA.created_at || 0);
         });
     }, [nutzapStates, addNutzapIfMissing]);
+
+    // Now handle conditional returns
+    if (!ndk || !nutzapMonitor) {
+        console.error('NDK or NutzapMonitor not available.');
+        return (
+            <View>
+                <Text>Error initializing Nutzaps screen.</Text>
+            </View>
+        );
+    }
 
     if (!(activeWallet instanceof NDKCashuWallet)) return null;
 

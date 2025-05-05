@@ -47,8 +47,32 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     const inputRef = useRef<TextInput | null>(null);
     const [amount, setAmount] = useState(21);
     const user = useMemo(() => ndk?.getUser({ pubkey }), [pubkey, ndk]);
+    const [note, setNote] = useState('');
+    const zap = useMemo(
+        () =>
+            user
+                ? new NDKZapper(user, 0, 'msat', {
+                      comment: note ?? 'Sending from Olas',
+                      nutzapAsFallback: true,
+                  })
+                : null,
+        [user, pubkey, amount, note]
+    );
+    const [methods, setMethods] = useState<Map<NDKZapMethod, NDKZapMethodInfo>>(new Map());
+    const [buttonState, setButtonState] = useState<ButtonState>('idle');
+    const { addPendingPayment } = usePaymentStore();
+    const currentUser = useNDKCurrentUser();
+    const inset = useSafeAreaInsets();
 
-    if (!user) {
+    useEffect(() => {
+        if (!zap || !user) return;
+        zap.amount = amount * 1000;
+        if (ndk) {
+            zap.getZapMethods(ndk, pubkey).then(setMethods);
+        }
+    }, [pubkey, zap, user, amount, ndk]);
+
+    if (!user || !zap) {
         // Handle case where user couldn't be fetched (e.g., ndk is null or getUser failed)
         console.error(`Could not get user object for pubkey: ${pubkey}`);
         toast.error('Failed to load user data.');
@@ -56,29 +80,12 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
         return null;
     }
 
-    const [note, setNote] = useState('');
-
-    const zap = useMemo(
-        () =>
-            new NDKZapper(user, 0, 'msat', {
-                comment: note ?? 'Sending from Olas',
-                nutzapAsFallback: true,
-            }),
-        [pubkey, amount, note]
-    );
-    const [methods, setMethods] = useState<Map<NDKZapMethod, NDKZapMethodInfo>>(new Map());
-    const [buttonState, setButtonState] = useState<ButtonState>('idle');
-    const { addPendingPayment } = usePaymentStore();
-    const currentUser = useNDKCurrentUser();
-
-    useEffect(() => {
-        zap.amount = amount * 1000;
-        if (ndk) {
-            zap.getZapMethods(ndk, pubkey).then(setMethods);
-        }
-    }, [pubkey]);
-
     async function send() {
+        if (!zap) {
+            toast.error('Failed to load zapper.');
+            setButtonState('idle');
+            return;
+        }
         setButtonState('loading');
         zap.amount = amount * 1000;
         zap.once('complete', (_results) => {
@@ -97,8 +104,6 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
             router.back();
         }, 500);
     }
-
-    const inset = useSafeAreaInsets();
 
     return (
         <KeyboardAwareScrollView>
@@ -304,16 +309,16 @@ export default function SendView() {
                 </View>
 
                 <List
-                    data={follows}
-                    keyExtractor={(item) => item}
+                    data={Array.from(follows)}
+                    keyExtractor={(item: string) => item}
                     estimatedItemSize={56}
                     variant="insets"
                     renderItem={({ index, target, item }) => (
                         <FollowItem
                             index={index}
-                            target={target} // Pass target here
-                            item={item}
-                            onPress={() => onPress(item)}
+                            target={target}
+                            item={item as string}
+                            onPress={() => onPress(item as string)}
                         />
                     )}
                 />

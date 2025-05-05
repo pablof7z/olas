@@ -146,7 +146,12 @@ export class BlossomClient {
     }
 
     /** Creates a one-off upload auth event for a file */
-    static async getUploadAuth(signer: Signer, message, sha256: string, expiration = oneHour()) {
+    static async getUploadAuth(
+        signer: Signer,
+        message: string,
+        sha256: string,
+        expiration = oneHour()
+    ) {
         return await BlossomClient.createUploadAuth(sha256, signer, message, expiration);
     }
 
@@ -255,18 +260,30 @@ export class BlossomClient {
         return await BlossomClient.getGetAuth(this.signer, message, serverOrHash, expiration);
     }
     async getBlob(hash: string, auth: SignedEvent | boolean = false) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getGetAuth('Get Blob', hash);
-        return BlossomClient.getBlob(this.server, hash, auth ? auth : undefined);
+        let resolvedAuth = auth;
+        if (typeof resolvedAuth === 'boolean' && resolvedAuth) {
+            resolvedAuth = await this.getGetAuth('Get Blob', hash);
+        }
+        return BlossomClient.getBlob(this.server, hash, resolvedAuth ? resolvedAuth : undefined);
     }
 
     // upload blob
-    async getUploadAuth(_file: UploadType, message?: string, expiration?: number) {
+    async getUploadAuth(sha256: string, message?: string, expiration?: number) {
         if (!this.signer) throw new Error('Missing signer');
-        return await BlossomClient.getUploadAuth(this.signer, message, expiration);
+        return await BlossomClient.getUploadAuth(
+            this.signer,
+            message ?? 'Upload Blob',
+            sha256,
+            expiration
+        );
     }
-    async uploadBlob(file: UploadType, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getUploadAuth(file);
-        return BlossomClient.uploadBlob(this.server, file, auth ? auth : undefined);
+    async uploadBlob(file: UploadType, auth: SignedEvent | boolean = true, sha256?: string) {
+        let resolvedAuth = auth;
+        if (typeof resolvedAuth === 'boolean' && resolvedAuth) {
+            if (!sha256) throw new Error('sha256 is required to get upload auth');
+            resolvedAuth = await this.getUploadAuth(sha256);
+        }
+        return BlossomClient.uploadBlob(this.server, file, resolvedAuth ? resolvedAuth : undefined);
     }
 
     // mirror blob
@@ -275,8 +292,11 @@ export class BlossomClient {
         return await BlossomClient.createUploadAuth(sha256, this.signer, message, expiration);
     }
     async mirrorBlob(sha256: string, url: string | URL, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getMirrorAuth(sha256);
-        return BlossomClient.mirrorBlob(this.server, url, auth ? auth : undefined);
+        let resolvedAuth = auth;
+        if (typeof resolvedAuth === 'boolean' && resolvedAuth) {
+            resolvedAuth = await this.getMirrorAuth(sha256);
+        }
+        return BlossomClient.mirrorBlob(this.server, url, resolvedAuth ? resolvedAuth : undefined);
     }
 
     // has blob
@@ -301,8 +321,16 @@ export class BlossomClient {
         opts?: { since?: number; until?: number },
         auth: SignedEvent | boolean = false
     ) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getListAuth();
-        return BlossomClient.listBlobs(this.server, pubkey, opts, auth ? auth : undefined);
+        let resolvedAuth = auth;
+        if (typeof resolvedAuth === 'boolean' && resolvedAuth) {
+            resolvedAuth = await this.getListAuth();
+        }
+        return BlossomClient.listBlobs(
+            this.server,
+            pubkey,
+            opts,
+            resolvedAuth ? resolvedAuth : undefined
+        );
     }
 
     // delete blob
@@ -311,7 +339,10 @@ export class BlossomClient {
         return await BlossomClient.getDeleteAuth(hash, this.signer, message, expiration);
     }
     async deleteBlob(hash: string, auth: SignedEvent | boolean = true) {
-        if (typeof auth === 'boolean' && auth) auth = await this.getDeleteAuth(hash);
-        return BlossomClient.deleteBlob(this.server, hash, auth ? auth : undefined);
+        let resolvedAuth = auth;
+        if (typeof resolvedAuth === 'boolean' && resolvedAuth) {
+            resolvedAuth = await this.getDeleteAuth(hash);
+        }
+        return BlossomClient.deleteBlob(this.server, hash, resolvedAuth ? resolvedAuth : undefined);
     }
 }

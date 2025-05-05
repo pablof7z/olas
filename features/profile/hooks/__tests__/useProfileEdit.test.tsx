@@ -1,6 +1,6 @@
 import * as ndkMobile from '@nostr-dev-kit/ndk-mobile';
 import { act, renderHook } from '@testing-library/react-hooks';
-import type { Provider } from 'jotai';
+import { Provider } from 'jotai';
 import useProfileEdit from '../useProfileEdit';
 
 jest.mock('@nostr-dev-kit/ndk-mobile', () => ({
@@ -11,8 +11,9 @@ jest.mock('@nostr-dev-kit/ndk-mobile', () => ({
 
 describe('useProfileEdit', () => {
     it('should initialize and handle edit state transitions', () => {
-        const wrapper = ({ children }: { children: React.ReactNode }) =>
-            <Provider>{ children } < /;;;>Pdeiorrv;
+        const wrapper = ({ children }: React.PropsWithChildren<object>) => (
+            <Provider>{children}</Provider>
+        );
         const { result } = renderHook(() => useProfileEdit({ name: 'Alice' }), { wrapper });
 
         // Initial state
@@ -39,9 +40,10 @@ describe('useProfileEdit', () => {
         (ndkMobile.useSetProfile as jest.Mock).mockReturnValue(updateProfile);
         (ndkMobile.useNDK as jest.Mock).mockReturnValue({ ndk: {} });
 
-        const wrapper = ({ children }: { children: React.ReactNode }) =>
-            <Provider>{ children } < /;;;>Pdeiorrv;
-        const { result } = renderHook(() => useProfileEdit({ name: 'Bob', about: null }), {
+        const wrapper = ({ children }: React.PropsWithChildren<object>) => (
+            <Provider>{children}</Provider>
+        );
+        const { result } = renderHook(() => useProfileEdit({ name: 'Bob', about: undefined }), {
             wrapper,
         });
 

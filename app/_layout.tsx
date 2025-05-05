@@ -138,7 +138,6 @@ export function RootLayout() {
     // initialize app settings
     const initAppSettings = useAppSettingsStore((state) => state.init);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     useEffect(() => {
         initAppSettings();
     }, []);

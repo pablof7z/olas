@@ -22,7 +22,9 @@ export default function FlareLabel({ flare, pubkey }: { flare: string; pubkey: s
             <FlareElement flare={flare} size={48} />
 
             <Pressable onPress={handleFlarePress}>
-                <Text style={styles.flareLabel}>{flareLabelMap[flare]}</Text>
+                <Text style={styles.flareLabel}>
+                    {flareLabelMap[flare as keyof typeof flareLabelMap]}
+                </Text>
             </Pressable>
         </View>
     );
@@ -35,7 +37,7 @@ const styles = StyleSheet.create({
     },
     flareLabel: {
         fontSize: 11,
-        fontWeight: 600,
+        fontWeight: '600',
         paddingHorizontal: 4,
         paddingVertical: 2,
         color: 'white',
@@ -49,7 +51,7 @@ export const FlareElement = ({
 }: { flare: string; size: number; borderWidth?: number }) => {
     if (flare === 'live') {
         return <LiveFlare />;
-    } else if (flare === 'olas365' || true) {
+    } else if (flare === 'olas365') {
         return <OlasFlare size={size} borderWidth={borderWidth} />;
     } else if (flare === 'story_prompt') {
         return <StoryPromptFlare size={size} />;

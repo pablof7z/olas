@@ -18,6 +18,7 @@ import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
+    // All hooks must be called before any conditional return
     const currentUser = useNDKCurrentUser();
     const userProfile = useProfileValue(currentUser?.pubkey, {
         subOpts: { skipVerification: true },
@@ -37,27 +38,22 @@ export default function NewGroup() {
     }, [visibility]);
 
     const insets = useSafeAreaInsets();
-
     const { ndk } = useNDK();
+
+    // Placeholders for values that depend on ndk
     const randomId =
         Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    if (!ndk) {
-        // Handle case where ndk is null, maybe return loading or error state
-        console.error('NDK not available for group creation.');
-        return (
-            <View>
-                <Text>Error: NDK not initialized.</Text>
-            </View>
-        );
-    }
-    const relaySet = NDKRelaySet.fromRelayUrls([relayUrl], ndk, true);
+
+    // Define relaySet and groupBookmark as undefined if ndk is not available
+    const relaySet = ndk ? NDKRelaySet.fromRelayUrls([relayUrl], ndk, true) : undefined;
     // const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { // Commented out - needs replacement
     //     create: NDKList,
     // });
     const groupBookmark: NDKList | null = null; // Placeholder
 
+    // createGroup must be defined before any return, but only used if ndk and relaySet are available
     const createGroup = useCallback(() => {
-        // ndk is checked above
+        if (!ndk || !relaySet) return;
         const create = new NDKEvent(ndk);
         create.kind = 9007;
         create.tags = [
@@ -81,7 +77,17 @@ export default function NewGroup() {
         randomId,
         userProfile?.image,
         relaySet,
-    ]); // Added dependencies
+    ]);
+
+    if (!ndk) {
+        // Handle case where ndk is null, maybe return loading or error state
+        console.error('NDK not available for group creation.');
+        return (
+            <View>
+                <Text>Error: NDK not initialized.</Text>
+            </View>
+        );
+    }
 
     return (
         <KeyboardAwareScrollView
