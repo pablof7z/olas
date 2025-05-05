@@ -1,7 +1,7 @@
 import { useScrollY } from '@/context/ScrollYContext';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
-import { StyleProp, View, ViewStyle } from 'react-native';
+import { type StyleProp, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useProfileData from '../hooks/useProfileData';
 import useProfileTabs from '../hooks/useProfileTabs';
@@ -12,7 +12,6 @@ import Header from '../components/Header';
 import ProfileContent from '../components/ProfileContent';
 import ProfileHeader from '../components/ProfileHeader';
 import StickyProfileTabs from '../components/StickyProfileTabs';
-
 
 const TAB_BAR_HEIGHT = 48;
 

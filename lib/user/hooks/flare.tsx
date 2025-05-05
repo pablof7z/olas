@@ -29,7 +29,6 @@ export const useUserFlareStore = create<UserFlareStore>((set, _get) => ({
         set((s) => {
             const _flares = new Map(s.flares);
             _flares.set(pubkey, flare);
-            console.log('Setting flare', _flares.size);
             return { flares: _flares };
         });
         // db.runSync('INSERT OR REPLACE INTO pubkey_flares (pubkey, flare_type) VALUES (?, ?)', [
@@ -44,7 +43,6 @@ export const useUserFlareStore = create<UserFlareStore>((set, _get) => ({
             for (const pubkey of pubkeys) {
                 _flares.set(pubkey, flare);
             }
-            console.log('Setting flares', _flares.size);
             return { flares: _flares };
         });
     },

@@ -1,16 +1,12 @@
 import { type NDKEvent, NDKKind, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
-import {
-    type NDKEventWithFrom,
-    useNDK,
-    useNDKCurrentUser
-} from '@nostr-dev-kit/ndk-hooks';
+import { type NDKEventWithFrom, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-hooks';
 
 import { useEffect, useRef } from 'react';
 
+import { useUserFlareStore } from '@/lib/user/stores/flare';
 import { usePaymentStore } from '@/stores/payments';
 import { useReactionsStore } from '@/stores/reactions';
 import { mainKinds } from '@/utils/const';
-import { useUserFlareStore } from '@/lib/user/stores/flare';
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],

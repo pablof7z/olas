@@ -55,12 +55,10 @@ export const useMediaFilterStore = create<MediaFilterStore>((set, get) => ({
     },
 
     updateFilterParams: (params) => {
-        console.log('MediaFilterStore: Updating filter params:', params);
         const currentFilter = get().currentFilter;
         if (!currentFilter) {
             // If no filter is applied, start with normal
             const normalPreset = FILTER_PRESETS.find((preset) => preset.id === 'normal');
-            console.log('MediaFilterStore: No current filter, creating custom from normal');
             set({
                 currentFilter: {
                     id: 'custom',
@@ -72,7 +70,6 @@ export const useMediaFilterStore = create<MediaFilterStore>((set, get) => ({
 
         // Update existing filter parameters
         const newParams = { ...currentFilter.parameters, ...params };
-        console.log('MediaFilterStore: New combined params:', newParams);
 
         // Find if the parameters match any preset
         const matchingPreset = FILTER_PRESETS.find((preset) => {

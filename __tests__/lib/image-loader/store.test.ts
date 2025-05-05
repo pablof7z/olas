@@ -194,13 +194,9 @@ describe('image-loader store', () => {
         // Mock Image.loadAsync: fail on proxy, succeed on direct
         (Image.loadAsync as jest.Mock)
             .mockImplementationOnce((src) => {
-                // eslint-disable-next-line no-console
-                console.log('Image.loadAsync called with:', src);
                 return Promise.reject(new Error('proxy fail'));
             })
             .mockImplementationOnce((src) => {
-                // eslint-disable-next-line no-console
-                console.log('Image.loadAsync called with:', src);
                 return Promise.resolve({ uri: url });
             });
 
@@ -212,13 +208,8 @@ describe('image-loader store', () => {
 
         // Check imageCache has direct URI
         const cacheEntry = useImageLoaderStore.getState().imageCache.get(url);
-        // Debug output for diagnosis
-        // eslint-disable-next-line no-console
-        console.log('cacheEntry:', cacheEntry);
         expect(cacheEntry).toBeDefined();
         const variation = cacheEntry?.variations.find((v: ImageVariation) => v.reqWidth === 100);
-        // eslint-disable-next-line no-console
-        console.log('variation:', variation);
         expect(variation?.status).toBe('loaded');
         expect((variation?.source as any)?.uri).toBe(url);
 
@@ -258,16 +249,10 @@ describe('image-loader store', () => {
         });
 
         const state = useImageLoaderStore.getState();
-        // eslint-disable-next-line no-console
-        console.log('permanentFailures:', Array.from(state.permanentFailures));
         expect(state.permanentFailures.has(url)).toBe(true);
         const cacheEntry = state.imageCache.get(url);
-        // eslint-disable-next-line no-console
-        console.log('cacheEntry:', cacheEntry);
         expect(cacheEntry).toBeDefined();
         const variation = cacheEntry?.variations.find((v: ImageVariation) => v.reqWidth === 100);
-        // eslint-disable-next-line no-console
-        console.log('variation:', variation);
         expect(variation?.status).toBe('error');
     });
 
@@ -290,8 +275,6 @@ describe('image-loader store', () => {
         jest.useRealTimers();
 
         const times = useImageLoaderStore.getState().stats.loadingTimes[url];
-        // eslint-disable-next-line no-console
-        console.log('loadingTimes:', times);
         expect(Array.isArray(times)).toBe(true);
         expect(times[0]).toBe(100);
         expect(times[0]).toBeLessThan(500);

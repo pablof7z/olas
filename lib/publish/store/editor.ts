@@ -128,8 +128,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                 // Check if the media item is already selected
                 const mediaExists = state.media.some((item) => item.id === id);
 
-                console.log('mediaExists', mediaExists, 'for', id);
-
                 if (mediaExists) {
                     // If the item exists, remove it (toggle off)
                     return {
@@ -250,7 +248,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                 if (share) publishShareEvent(ndk, event);
                 await event.publish(relaySet);
             } else {
-                console.log('not publishing', event.inspect);
             }
 
             // Reset state after successful publish
@@ -290,13 +287,10 @@ export const publishPostTypeAtom = atom<'post' | 'story' | 'video'>('post');
 async function publishShareEvent(ndk: NDK, event: NDKEvent) {
     // don't share what is already a kind:1 event
     if (event.kind === NDKKind.Text) return;
-
-    console.log('publishShareEvent');
     const shareEvent = new NDKEvent(ndk, {
         kind: NDKKind.Text,
         content: `nostr:${event.encode()}`,
     });
     shareEvent.tag(event, undefined, true, 'q');
-    console.log('shareEvent', shareEvent.rawEvent());
     // await shareEvent.publish();
 }

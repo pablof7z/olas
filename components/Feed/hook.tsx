@@ -137,15 +137,6 @@ export function useFeedEvents(
         (reason: string) => {
             const time = Date.now();
             if (freezeState.current) return;
-            console.log(
-                `[${Date.now() - timeZero}ms]`,
-                `[FEED HOOK ${time}ms] updating entries, we start with`,
-                renderedEntryIdsRef.current.size,
-                'we have',
-                newEntriesRef.current.size,
-                'new entries to consider',
-                { reason }
-            );
 
             const newSliceIds = Array.from(newEntriesRef.current.values());
             let newSlice = entriesFromIds(new Set(newSliceIds));

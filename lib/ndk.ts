@@ -66,10 +66,8 @@ const netDebug = (_msg: string, relay: NDKRelay, direction?: 'send' | 'recv') =>
         const lines = asString.split('\n');
         const newLines = lines.map((line) => `🟢 ${line}`);
         const newString = newLines.join('\n');
-        console.log(`${newString}`);
     }
     if (direction === 'recv' && relay.url.match(/olas__/)) {
-        console.log(`🔴 ${_url.hostname} ${_msg}`);
     }
 };
 

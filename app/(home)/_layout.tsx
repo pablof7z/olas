@@ -19,8 +19,8 @@ import WalletButton from '@/components/buttons/wallet';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { useUserFlare } from '@/lib/user/stores/flare';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { WALLET_ENABLED } from '@/utils/const';
 
 export default function TabsLayout() {

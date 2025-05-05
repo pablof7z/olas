@@ -62,7 +62,6 @@ export function FilterAdjustments() {
 
     const handleValueChange = useCallback(
         (parameter: keyof FilterParameters, value: number) => {
-            console.log(`FilterAdjustments: Updating ${parameter} to ${value}`);
             updateFilterParams({ [parameter]: value });
         },
         [updateFilterParams]

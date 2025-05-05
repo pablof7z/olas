@@ -25,9 +25,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mentionQueryAtom, replyEventAtom } from '../store';
 
 import * as User from '@/components/ui/user';
-import { useUserFlare } from '@/lib/user/stores/flare';
 import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useUserFlare } from '@/lib/user/stores/flare';
 
 export default function NewComment({
     event,

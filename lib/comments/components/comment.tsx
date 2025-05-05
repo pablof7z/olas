@@ -14,9 +14,9 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { useUserFlare } from '@/lib/user/stores/flare';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { colorWithOpacity } from '@/theme/colors';
 
 export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<ViewStyle> }) {

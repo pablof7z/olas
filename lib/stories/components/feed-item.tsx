@@ -14,8 +14,8 @@ import { showStoriesModalAtom, storiesAtom } from '../store';
 
 import UserAvatar from '@/components/ui/user/avatar';
 import { useStories } from '@/hooks/stories';
-import { useUserFlare } from '@/lib/user/stores/flare';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { activeEventAtom } from '@/stores/event';
 
 const AVATAR_SIZE = 80;

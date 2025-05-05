@@ -6,7 +6,7 @@ import { profileContentViewAtom } from '../atoms';
  * @returns The current view and a setter function.
  */
 function useProfileTabs(): [string, (view: string) => void] {
-  return useAtom(profileContentViewAtom);
+    return useAtom(profileContentViewAtom);
 }
 
 export default useProfileTabs;

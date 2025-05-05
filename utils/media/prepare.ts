@@ -35,9 +35,7 @@ export async function prepareMediaItem(
         await compress(result, onProgress);
         await removeExif(result);
         await thumbnail(result);
-        console.log('will get blurhash', result.mediaType, result.localUri);
         await blurhash(result);
-        console.log('will get dimensions', result.mediaType, result.localUri);
         await dimensions(result);
         await sha256(result);
     } catch (error) {

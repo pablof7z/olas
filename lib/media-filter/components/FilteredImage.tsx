@@ -41,7 +41,6 @@ export const FilteredImage = forwardRef<FilteredImageRef, FilteredImageProps>(
         const canvasRef = useCanvasRef();
 
         const colorMatrix = useMemo(() => {
-            console.log('FilteredImage: Creating color matrix with params:', filterParams);
             return createColorMatrix(filterParams);
         }, [filterParams]);
 

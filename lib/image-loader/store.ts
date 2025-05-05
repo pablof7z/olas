@@ -175,10 +175,7 @@ const useImageLoaderStore = create<
             const reqWidth = typeof _reqWidth === 'number' ? Math.round(_reqWidth) : _reqWidth;
             set((state) => {
                 const cacheEntry = state.imageCache.get(originalUrl);
-                if (
-                    cacheEntry &&
-                    cacheEntry.variations.some((v) => isVariationSufficient(v, reqWidth))
-                ) {
+                if (cacheEntry?.variations.some((v) => isVariationSufficient(v, reqWidth))) {
                     return {};
                 }
                 const queues = {
@@ -254,17 +251,13 @@ const useImageLoaderStore = create<
             const start = Date.now();
 
             try {
-                await Image.loadAsync(
-                    { uri: proxiedUrl, headers: HTTP_HEADERS },
-                    { onError: (err) => console.error(`Error loading via proxy:`, err) } as any
-                );
+                await Image.loadAsync({ uri: proxiedUrl, headers: HTTP_HEADERS }, {
+                    onError: (err) => console.error('Error loading via proxy:', err),
+                } as any);
                 loadedSource = { uri: proxiedUrl };
                 loadSuccess = true;
             } catch (proxyErr) {
                 try {
-                    console.log(
-                        `[+${Date.now() - start}ms] Proxy failed, trying direct: ${originalUrl}`
-                    );
                     await Image.loadAsync({
                         uri: originalUrl,
                         cacheKey: directKey,

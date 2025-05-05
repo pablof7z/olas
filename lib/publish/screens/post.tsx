@@ -141,7 +141,6 @@ export default function PostScreen() {
                     const mediaType = asset.type === 'video' ? 'video' : 'image';
                     const id = `picker-${Date.now()}`;
                     await addMedia(asset.uri, mediaType, id);
-                    console.log('Added media:', asset.uri, mediaType, id);
                 }
                 openPreview();
                 router.push('/publish/post/edit');

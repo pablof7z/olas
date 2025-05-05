@@ -68,8 +68,6 @@ function PreviewContent({ previewHeight, forceShowFiltered }: PreviewContentProp
         }
     }, [currentMedia, setSource]);
 
-    console.log('we have', media.length, 'media');
-
     const handleScroll = useCallback(
         (event: any) => {
             const offsetX = event.nativeEvent.contentOffset.x;
@@ -255,18 +253,7 @@ export default function PostEditScreen() {
     }, [hasMultipleImages, hasFilterToApply, isSaving]);
 
     // Debug logs for tracking state
-    useEffect(() => {
-        console.log('State update:', {
-            hasMultipleImages,
-            isFilterApplied,
-            isEditingFilter,
-            currentFilterId,
-            hasFilterToApply,
-            buttonText,
-            mediaLength: media.length,
-            forceShowFiltered: !hasMultipleImages || isEditingFilter,
-        });
-    }, [
+    useEffect(() => {}, [
         hasMultipleImages,
         isFilterApplied,
         isEditingFilter,

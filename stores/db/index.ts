@@ -7,9 +7,7 @@ export const db = SQLite.openDatabaseSync('snap.db');
 let dbInitialized = false;
 
 if (!dbInitialized) {
-    console.log('Initializing database...', db.databasePath);
     let { user_version } = db.getFirstSync('PRAGMA user_version') as { user_version: number };
-    console.log('Current user_version:', user_version);
     if (!user_version) user_version = 0;
 
     const lastVersion = migrations[migrations.length - 1].version;

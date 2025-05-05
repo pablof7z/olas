@@ -14,8 +14,8 @@ import Animated, {
     type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import CopyToClipboard from './CopyToClipboard';
 import useProfileEdit from '../hooks/useProfileEdit';
+import CopyToClipboard from './CopyToClipboard';
 
 const headerStyles = StyleSheet.create({
     container: {

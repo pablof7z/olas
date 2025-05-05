@@ -120,7 +120,7 @@ export async function incrementImageCacheAttempts(
 ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         writeQueue.push({
-            sql: `UPDATE image_cache SET attempts = COALESCE(attempts, 0) + 1 WHERE original_url = ? AND width IS ?`,
+            sql: 'UPDATE image_cache SET attempts = COALESCE(attempts, 0) + 1 WHERE original_url = ? AND width IS ?',
             params: [originalUrl, width],
             resolve,
             reject,
@@ -136,7 +136,8 @@ export async function incrementImageCacheAttempts(
 export async function getAllImageCacheEntries(): Promise<DbImageCacheEntry[]> {
     // Ensure all pending writes are flushed before reading
     await flushWriteQueue();
-    const query = `SELECT original_url as originalUrl, fetched_url as fetchedUrl, width, state, attempts FROM image_cache`;
+    const query =
+        'SELECT original_url as originalUrl, fetched_url as fetchedUrl, width, state, attempts FROM image_cache';
     try {
         const results = await db.getAllAsync(query);
         return results as DbImageCacheEntry[];

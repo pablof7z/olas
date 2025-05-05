@@ -51,7 +51,6 @@ export default function NWCListTansactions() {
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         const timeout = setTimeout(() => {
-            console.log('Refresh timeout reached');
             setRefreshing(false);
         }, 6000);
 
@@ -60,14 +59,11 @@ export default function NWCListTansactions() {
             // Explicitly cast activeWallet to NDKNWCWallet before calling method
             (activeWallet as NDKNWCWallet)
                 .updateBalance()
-                .then(() => {
-                    console.log('Balance updated successfully');
-                })
+                .then(() => {})
                 .catch((err: any) => {
                     console.error('Error updating balance:', err);
                 })
                 .finally(() => {
-                    console.log('Update balance finally block');
                     fetchTransactions();
                     setRefreshing(false);
                     clearTimeout(timeout);
