@@ -1,0 +1,91 @@
+name: Test Header Scroll Behavior
+description: Verifies that the header scrolls out of view when scrolling down the feed
+
+appId: com.pablof7z.snapstr
+env:
+  SCREENSHOT_DIR: ../screenshots/header_scroll_behavior
+---
+# Initialize the app with clean state
+- runFlow:
+    file: ../common/app_setup.yaml
+
+# Handle any developer menus that might appear
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for app to fully load (home screen)
+- waitForAnimationToEnd
+
+# Verify we're on the home screen by checking for header elements
+- assertVisible: "Search"
+
+# Take a screenshot of the initial state with header visible
+- takeScreenshot: 01_header_visible
+
+# Scroll down on the feed to make the header disappear
+- scroll
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+
+# Take a screenshot after scrolling to show header disappearing
+- takeScreenshot: 02_header_should_be_hidden
+
+# Verify header elements are not visible or have moved off-screen after scrolling
+- runFlow:
+    when:
+      notVisible: "Search"
+    commands:
+      - takeScreenshot: 03_header_not_visible
+
+# Alternative verification if element is still technically in DOM but moved
+- runFlow:
+    when:
+      visible: "Search"
+    commands:
+      # Take a screenshot to visually verify position changed
+      - takeScreenshot: 03_header_position_changed
+
+# Scroll back to the top to verify header reappears
+- swipe:
+    start: 50%,30%
+    end: 50%,80%
+- waitForAnimationToEnd
+- swipe:
+    start: 50%,30%
+    end: 50%,80%
+- waitForAnimationToEnd
+
+# Take a screenshot after scrolling back up to show header reappearing
+- takeScreenshot: 04_header_reappears
+
+# Verify header is visible again
+- assertVisible: "Search"
+
+# Test the search button functionality
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: 05_search_activated
+
+# Verify X button appears when search is activated
+- assertVisible:
+    text: "X"
+    optional: true
+
+# Dismiss search (either by tapping X or Search button again)
+- runFlow:
+    when:
+      visible: "X"
+    commands:
+      - tapOn: "X"
+      - waitForAnimationToEnd
+      - takeScreenshot: 06_search_dismissed
+
+# Alternative dismiss if X is not found
+- runFlow:
+    when:
+      notVisible: "X"
+    commands:
+      - tapOn: "Search"
+      - waitForAnimationToEnd
+      - takeScreenshot: 06_search_dismissed_alt

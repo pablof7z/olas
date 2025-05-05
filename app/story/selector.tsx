@@ -1,18 +1,11 @@
+import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
 import { FlashList } from '@shopify/flash-list';
-import * as MediaLibrary from 'expo-media-library';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import {
-    Dimensions,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import NoPermissionsFallback from '@/lib/publish/components/NoPermissionsFallback';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const aspectRatio = width / height;
@@ -33,7 +26,7 @@ export default function MediaSelector() {
         if (status === 'granted') {
             loadMedia();
         }
-        
+
         return status === 'granted';
     };
 
@@ -61,7 +54,7 @@ export default function MediaSelector() {
 
             if (!result.canceled && result.assets.length > 0) {
                 const asset = result.assets[0];
-                
+
                 router.push({
                     pathname: '/story/preview' as const,
                     params: {

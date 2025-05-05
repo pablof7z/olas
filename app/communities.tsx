@@ -1,10 +1,12 @@
 import {
     NDKEvent,
     NDKKind,
-    NDKList, NDKRelaySet, useFollows,
+    NDKList,
+    NDKRelaySet,
+    useFollows,
     useNDK,
     useNDKCurrentUser,
-    useNDKSessionEvent
+    useNDKSessionEvent,
 } from '@nostr-dev-kit/ndk-mobile';
 import { Image } from 'expo-image';
 import { useCallback, useMemo } from 'react';
@@ -17,8 +19,8 @@ import { Text } from '@/components/nativewindui/Text';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { cn } from '@/lib/cn';
 import { useAllGroups } from '@/lib/groups/store';
-import { useThrottle } from '@/utils/debounce';
 import type { GroupEntry } from '@/lib/groups/types';
+import { useThrottle } from '@/utils/debounce';
 
 const relays = ['wss://groups.0xchat.com'];
 

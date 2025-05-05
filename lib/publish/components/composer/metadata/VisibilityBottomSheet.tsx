@@ -14,23 +14,25 @@ import { FlatList } from 'react-native-gesture-handler';
 
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
+import { useEditorStore } from '@/lib/publish/store/editor';
+import type { PostMetadata, VisibilityType } from '@/lib/publish/types';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getVisibilityLabel } from '@/lib/utils/visibility';
-import type { PostMetadata, VisibilityType } from '@/lib/publish/types';
-import VisibilityExplanationBottomSheet, { type VisibilityExplanationBottomSheetRef } from './VisibilityExplanationBottomSheet';
+import VisibilityExplanationBottomSheet, {
+    type VisibilityExplanationBottomSheetRef,
+} from './VisibilityExplanationBottomSheet';
 import { valueSheetStyles } from './style';
-import { useEditorStore } from '@/lib/publish/store/editor';
 
 export const AUDIENCE_OPTIONS = [
     {
         label: getVisibilityLabel('media-apps'),
         value: 'media-apps' as const,
-        description: 'More high-quality engagement, less reach'
+        description: 'More high-quality engagement, less reach',
     },
     {
         label: getVisibilityLabel('text-apps'),
         value: 'text-apps' as const,
-        description: 'More reach, less high-quality engagement'
+        description: 'More reach, less high-quality engagement',
     },
 ];
 
@@ -62,8 +64,13 @@ function VisibilityContent() {
                 <View style={valueSheetStyles.titleContainer}>
                     <Text style={valueSheetStyles.title}>Visibility</Text>
 
-                    <TouchableOpacity style={valueSheetStyles.helpLink} onPress={handleShowExplanation}>
-                        <Text style={[valueSheetStyles.helpText, { color: colors.muted }]}>What is this?</Text>
+                    <TouchableOpacity
+                        style={valueSheetStyles.helpLink}
+                        onPress={handleShowExplanation}
+                    >
+                        <Text style={[valueSheetStyles.helpText, { color: colors.muted }]}>
+                            What is this?
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -71,8 +78,6 @@ function VisibilityContent() {
                     Choose the type of app you want to target with this post.
                 </Text>
             </View>
-
-            
 
             <FlatList
                 data={AUDIENCE_OPTIONS}
@@ -195,4 +200,4 @@ const VisibilityBottomSheet = forwardRef<VisibilityBottomSheetRef, VisibilityBot
 
 VisibilityBottomSheet.displayName = 'VisibilityBottomSheet';
 
-export default VisibilityBottomSheet; 
+export default VisibilityBottomSheet;

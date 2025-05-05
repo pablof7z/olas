@@ -1,0 +1,72 @@
+name: Test Profile Deeplink
+description: Test that verifies the olas://profile/[npub] deeplink works correctly
+
+appId: com.pablof7z.snapstr
+env:
+  # Test npub for Pablo's profile
+  TEST_NPUB: npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft
+  SCREENSHOT_DIR: ../screenshots/profile_deeplink
+---
+# Initialize the app with clean state
+- runFlow:
+    file: ../common/app_setup.yaml
+    env:
+      clearState: true
+      clearKeychain: true
+
+# Handle any developer menus that might appear
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for app to fully load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Close the app to test cold start with deeplink
+- pressKey: home
+
+# Wait a moment to ensure app is in background
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Open the app with deeplink
+- openLink: olas://profile/${TEST_NPUB}
+
+# Handle any developer menus that might appear again
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for redirection and profile page to load
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Take screenshot of profile page
+- takeScreenshot: 01_profile_page_deeplink
+
+# Verify profile has loaded by checking for common elements
+- assertVisible:
+    text: "Following"
+    timeout: 10000
+
+# Test navigation between profile tabs if applicable
+- runFlow:
+    when:
+      visible: "Photos"
+    commands:
+      - tapOn: "Photos"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 02_profile_photos
+
+# Check for the header display of the username
+- runFlow:
+    when:
+      visible: "pablo"
+    commands:
+      - takeScreenshot: 03_username_visible
+
+# Test going back from profile
+- pressKey: back
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 04_back_navigation

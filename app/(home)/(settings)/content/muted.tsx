@@ -44,8 +44,8 @@ export default function MutedScreen() {
 
     const save = useCallback(async () => {
         if (!ndk) {
-            console.error("NDK not available to create mute list.");
-            toast.error("Error updating mute list.");
+            console.error('NDK not available to create mute list.');
+            toast.error('Error updating mute list.');
             return;
         }
         const event = new NDKList(ndk);

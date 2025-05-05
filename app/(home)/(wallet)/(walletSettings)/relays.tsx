@@ -40,7 +40,7 @@ export default function WalletRelayScreen() {
 
     useEffect(() => {
         if (!mintList) return;
-        setRelays([...mintList.relays||[]]);
+        setRelays([...(mintList.relays || [])]);
     }, [mintList?.relays?.length]);
 
     const addFn = useCallback(() => {

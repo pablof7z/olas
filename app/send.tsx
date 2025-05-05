@@ -51,7 +51,7 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
     if (!user) {
         // Handle case where user couldn't be fetched (e.g., ndk is null or getUser failed)
         console.error(`Could not get user object for pubkey: ${pubkey}`);
-        toast.error("Failed to load user data.");
+        toast.error('Failed to load user data.');
         // Optionally, return a loading or error state, or null
         return null;
     }
@@ -88,8 +88,8 @@ function SendToUser({ pubkey, onCancel }: { pubkey: Hexpubkey; onCancel: () => v
         if (currentUser?.pubkey) {
             addPendingPayment(zap, currentUser.pubkey);
         } else {
-            console.error("Cannot add pending payment: current user pubkey not found.");
-            toast.error("Error initiating payment: User not identified.");
+            console.error('Cannot add pending payment: current user pubkey not found.');
+            toast.error('Error initiating payment: User not identified.');
             setButtonState('idle'); // Reset button state if sender is missing
             return; // Prevent further execution
         }

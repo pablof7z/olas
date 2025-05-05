@@ -1,6 +1,28 @@
 appId: com.pablof7z.snapstr
 ---
-- launchApp
+- launchApp:
+      clearState: true
+      clearKeychain: true
+      permissions:
+          camera: true
+          microphone: true
+          photos: true
+- waitForAnimationToEnd:
+      timeout: 20000
+- runFlow:
+      when:
+            visible: http://localhost:8081
+      commands:
+            - tapOn: http://localhost:8081
+- waitForAnimationToEnd:
+      timeout: 10000
+- waitForAnimationToEnd:
+      timeout: 10000
+- runFlow:
+      when:
+            visible: "developer menu"
+      commands:
+            - tapOn: Continue
 - waitForAnimationToEnd:
       timeout: 10000
 - takeScreenshot: app-launch-success

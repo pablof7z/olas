@@ -1,6 +1,6 @@
 import { BottomSheetFlashList, BottomSheetView } from '@gorhom/bottom-sheet';
-import { NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useSubscribe } from '@nostr-dev-kit/ndk-hooks';
+import { NDKKind, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';

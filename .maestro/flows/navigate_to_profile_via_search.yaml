@@ -1,0 +1,92 @@
+name: Navigate to Profile via Search
+description: Test that starts the app and navigates to a profile through the search functionality
+
+appId: com.pablof7z.snapstr
+env:
+  # Test user to search for
+  TEST_USER: pablo
+  SCREENSHOT_DIR: ../screenshots/profile_search_navigation
+---
+# Initialize the app with clean state
+- runFlow:
+    file: ../common/app_setup.yaml
+    env:
+      clearState: true
+      clearKeychain: true
+
+# Handle any developer menus that might appear
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for app to fully load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Take screenshot of initial app state
+- takeScreenshot: 01_app_launched
+
+# Navigate to search screen
+- runFlow:
+    when:
+      visible: "Search"
+    commands:
+      - tapOn: "Search"
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Take screenshot of search screen
+- takeScreenshot: 02_search_screen
+
+# Perform search for user
+- inputText: ${TEST_USER}
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Take screenshot of search results
+- takeScreenshot: 03_search_results
+
+# Select the first profile from search results
+- runFlow:
+    when:
+      visible: "People"
+    commands:
+      - tapOn: "People"
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Tap on the first user profile in results
+- runFlow:
+    when:
+      visible: "${TEST_USER}"
+    commands:
+      - tapOn: "${TEST_USER}"
+      - waitForAnimationToEnd:
+          timeout: 5000
+
+# Take screenshot of profile page
+- takeScreenshot: 04_profile_page
+
+# Verify we're on a profile page
+- assertVisible:
+    id: "profile-page"
+    timeout: 10000
+  optional: true
+
+# Alternative verification if profile-page ID isn't available
+- runFlow:
+    when:
+      notVisible: "profile-page"
+    commands:
+      - assertVisible:
+          text: "Following"
+          timeout: 10000
+
+# Test profile tab navigation if available
+- runFlow:
+    when:
+      visible: "Posts"
+    commands:
+      - tapOn: "Posts"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 05_profile_posts

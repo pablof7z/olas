@@ -1,10 +1,6 @@
 import { toast } from '@backpackapp-io/react-native-toast';
-import {
-    type NDKEvent,
-    NDKKind,
-    useNDKCurrentPubkey,
-} from '@nostr-dev-kit/ndk-mobile';
-import { useProfileValue, useObserver } from '@nostr-dev-kit/ndk-hooks';
+import { useObserver, useProfileValue } from '@nostr-dev-kit/ndk-hooks';
+import { type NDKEvent, NDKKind, useNDKCurrentPubkey } from '@nostr-dev-kit/ndk-mobile';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useAtom } from 'jotai';
@@ -18,7 +14,7 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { colorWithOpacity } from '@/theme/colors';
@@ -29,7 +25,11 @@ export function Comment({ item, style }: { item: NDKEvent; style?: StyleProp<Vie
     const { colors } = useColorScheme();
     const currentPubkey = useNDKCurrentPubkey();
     const flare = useUserFlare(item.pubkey);
-    const reactions = useObserver([{ kinds: [NDKKind.Reaction], '#e': [item.id] }], { skipVerification: true }, [item.id]);
+    const reactions = useObserver(
+        [{ kinds: [NDKKind.Reaction], '#e': [item.id] }],
+        { skipVerification: true },
+        [item.id]
+    );
 
     const onReplyPress = useCallback(() => {
         setReplyEvent(item);

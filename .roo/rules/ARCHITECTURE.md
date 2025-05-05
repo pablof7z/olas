@@ -60,9 +60,8 @@ This document describes the high-level architecture of the Olas Mobile App, incl
 ## 9. Testing & Quality
 - **Unit Tests**: `__tests__/`, `lib/*/__tests__`, `tests/`
 - **End-to-End Tests**: Maestro flows under `.maestro/`, test scripts in `justfile`
-- **Linting & Formatting**: `biome.json`, `babel.config.js`, Prettier, ESLint config
+- **Linting & Formatting**: `biome.json`, `babel.config.js`, ESLint config
 
 ## 10. Build & Deployment
 - **Package Management**: `package.json`, `bun.lock`
 - **Configuration**: `app.json` for Expo, `eas.json` for EAS builds
-- **CI/CD**: GitHub workflows or EAS Build pipelines (not shown)

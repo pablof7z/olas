@@ -183,7 +183,9 @@ export default function WalletSettings() {
                 onPress: () => showDisableNutzapActionSheet(),
             });
 
-            opts.push(`P2PK: ${mintList?.tagValue('pubkey') ? mintList.tagValue('pubkey') : 'Not set' }`);
+            opts.push(
+                `P2PK: ${mintList?.tagValue('pubkey') ? mintList.tagValue('pubkey') : 'Not set'}`
+            );
         } else if (activeWallet instanceof NDKCashuWallet) {
             opts.push('Incoming zaps');
 

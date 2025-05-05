@@ -4,11 +4,7 @@ import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk';
 import { Image } from 'expo-image';
 import { atom, useAtom } from 'jotai';
 import React, { useState } from 'react';
-import {
-    Animated,
-    Dimensions,
-    FlatList, View
-} from 'react-native';
+import { Animated, Dimensions, FlatList, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import MultiStepButton from '@/components/multistep-button';

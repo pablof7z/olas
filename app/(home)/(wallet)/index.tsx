@@ -1,7 +1,8 @@
 import {
     type NDKUser,
-    useNDKCurrentUser, useNDKWallet,
-    useProfileValue
+    useNDKCurrentUser,
+    useNDKWallet,
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import {
     NDKCashuWallet,
@@ -10,7 +11,7 @@ import {
     type NDKWallet,
 } from '@nostr-dev-kit/ndk-wallet';
 import { Stack, router } from 'expo-router';
-import { atom, useAtom, useAtomValue, useSetAtom, type WritableAtom } from 'jotai'; // Import WritableAtom
+import { type WritableAtom, atom, useAtom, useAtomValue, useSetAtom } from 'jotai'; // Import WritableAtom
 import { QrCode, Settings, SettingsIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -32,10 +33,11 @@ import TransactionHistory from '@/components/wallet/transactions/list';
 import { useColorScheme } from '@/lib/useColorScheme';
 
 // Explicitly type the atom
-const nwcInfoAtom: WritableAtom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], void> = atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], void>(
-    null,
-    (_get, set, value): void => set(nwcInfoAtom, value) // Add void return type
-);
+const nwcInfoAtom: WritableAtom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], void> =
+    atom<NDKNWCGetInfoResult | null, [NDKNWCGetInfoResult | null], void>(
+        null,
+        (_get, set, value): void => set(nwcInfoAtom, value) // Add void return type
+    );
 const walletTitleAtom = atom<string | null, [string | null], void>(null, (_get, set, value) =>
     set(walletTitleAtom, value)
 );
@@ -189,7 +191,9 @@ export default function WalletScreen() {
                         {activeWallet instanceof NDKCashuWallet && (
                             <>
                                 {/* Ensure currentUser is not null */}
-                                {currentUser && <Footer activeWallet={activeWallet} currentUser={currentUser} />}
+                                {currentUser && (
+                                    <Footer activeWallet={activeWallet} currentUser={currentUser} />
+                                )}
                                 <WalletNip60 wallet={activeWallet} />
                             </>
                         )}
@@ -207,7 +211,9 @@ export default function WalletScreen() {
 function HeaderLeft() {
     const { colors } = useColorScheme();
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(currentUser?.pubkey, {
+        subOpts: { skipVerification: true },
+    });
 
     return (
         <TouchableOpacity className="ml-2" onPress={() => router.push('/(home)/(settings)')}>

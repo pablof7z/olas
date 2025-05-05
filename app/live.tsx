@@ -5,8 +5,8 @@ import {
     type NDKUserProfile,
     useNDK,
     useNDKCurrentPubkey,
-    useSubscribe,
     useProfileValue,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
@@ -33,9 +33,12 @@ import { activeEventAtom } from '@/stores/event';
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 
 // Allow setting the atom to null
-const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom | null], void>(null, (_get, set, value) => {
-    set(replyToAtom, value);
-});
+const replyToAtom = atom<ReplyToAtom | null, [ReplyToAtom | null], void>(
+    null,
+    (_get, set, value) => {
+        set(replyToAtom, value);
+    }
+);
 
 export default function LiveScreen() {
     // Explicitly assert the type from the atom
@@ -46,7 +49,7 @@ export default function LiveScreen() {
     const [showChat, setShowChat] = useState(true);
     const [contentFit, setContentFit] = useState<VideoContentFit>('cover');
     const ref = useSheetRef();
-    
+
     // Ensure activeEvent is not null before accessing properties
     let source = activeEvent ? activeEvent.tagValue?.('streaming') : undefined;
     if (activeEvent && !source) {
@@ -54,7 +57,7 @@ export default function LiveScreen() {
     }
     // Ensure source is defined before using it
     const videoSource = source ? { uri: source } : undefined;
-    
+
     // Initialize the video player hook unconditionally
     const video = useVideoPlayer(videoSource || { uri: '' }, (player) => {
         if (videoSource) {
@@ -62,7 +65,7 @@ export default function LiveScreen() {
             player.play();
         }
     });
-    
+
     const title = activeEvent?.tagValue('title');
 
     useEffect(() => {
@@ -100,9 +103,13 @@ export default function LiveScreen() {
 
     // If no video source, don't render the player component
     if (!videoSource) {
-        console.error("No video source found for live event.");
+        console.error('No video source found for live event.');
         // Optionally return a placeholder or error message component
-        return <View><Text>Error: Video source not available.</Text></View>;
+        return (
+            <View>
+                <Text>Error: Video source not available.</Text>
+            </View>
+        );
     }
 
     if (!activeEvent) return null;
@@ -177,7 +184,9 @@ function ChatInput({ event }: { event: NDKEvent }) {
     const [value, setValue] = useState('');
     const currentPubkey = useNDKCurrentPubkey();
     const { ndk } = useNDK();
-    const userProfile = useProfileValue(currentPubkey || undefined, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(currentPubkey || undefined, {
+        subOpts: { skipVerification: true },
+    });
     const replyValue = useAtomValue(replyToAtom);
     const { event: replyTo, profile: replyToProfile } = replyValue ?? {};
 
@@ -189,7 +198,7 @@ function ChatInput({ event }: { event: NDKEvent }) {
 
     const onSubmit = async () => {
         if (!ndk) {
-            console.error("NDK not available to send chat message.");
+            console.error('NDK not available to send chat message.');
             // Optionally show a toast or error message
             return;
         }
@@ -274,11 +283,12 @@ function ChatItem({ event }: { event: NDKEvent }) {
         if (replyTo?.event?.id === event.id) {
             setReplyTo(null); // Remove cast, atom now accepts null
         } else {
-            if (userProfile) { // Check if userProfile is defined
+            if (userProfile) {
+                // Check if userProfile is defined
                 setReplyTo({ event, profile: userProfile });
             } else {
                 // Handle case where profile is not available, maybe show a message or don't set reply
-                console.warn("Cannot set reply: User profile not found for", event.pubkey);
+                console.warn('Cannot set reply: User profile not found for', event.pubkey);
             }
         }
     };

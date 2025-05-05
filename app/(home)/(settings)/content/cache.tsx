@@ -1,4 +1,4 @@
-import { useObserver, type NDKImage } from '@nostr-dev-kit/ndk-mobile';
+import { type NDKImage, useObserver } from '@nostr-dev-kit/ndk-mobile';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import * as FileSystem from 'expo-file-system';

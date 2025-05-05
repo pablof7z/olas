@@ -21,7 +21,7 @@ const videosInFeedToText = (value: VideosInFeed) => {
 };
 
 export default function ContentScreen() {
-    const muteListEvent = useNDKMutes(s => s.muteList);
+    const muteListEvent = useNDKMutes((s) => s.muteList);
     const { videosInFeed, setVideosInFeed, forceSquareAspectRatio, setForceSquareAspectRatio } =
         useAppSettingsStore();
     const { showActionSheetWithOptions } = useActionSheet();

@@ -1,6 +1,6 @@
 import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { atom, useSetAtom } from 'jotai';
-import { type RefObject, useEffect, useCallback } from 'react';
+import { type RefObject, useCallback, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterAdjustments } from './FilterAdjustments';
@@ -22,7 +22,10 @@ interface AdjustmentsBottomSheetProps {
     onDismiss?: () => void;
 }
 
-export default function AdjustmentsBottomSheet({ visible, onDismiss }: AdjustmentsBottomSheetProps) {
+export default function AdjustmentsBottomSheet({
+    visible,
+    onDismiss,
+}: AdjustmentsBottomSheetProps) {
     const ref = useSheetRef();
     const setBottomSheetRef = useSetAtom(adjustmentsBottomSheetRefAtom);
     const insets = useSafeAreaInsets();

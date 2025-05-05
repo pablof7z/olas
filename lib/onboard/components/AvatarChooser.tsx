@@ -47,9 +47,7 @@ export function AvatarChooser() {
             <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-accent bg-muted">
                 <Image
                     source={{
-                        uri:
-                            avatar ||
-                            `https://api.dicebear.com/9.x/shapes/png?seed=${username}`,
+                        uri: avatar || `https://api.dicebear.com/9.x/shapes/png?seed=${username}`,
                     }}
                     className="h-full w-full rounded-full object-cover"
                 />

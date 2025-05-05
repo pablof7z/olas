@@ -3,16 +3,11 @@ import { Stack } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import Animated, {
-    useSharedValue,
-    withTiming,
-    useAnimatedStyle,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from '@/components/Feed';
 import type { FeedEntry } from '@/components/Feed/hook';
-import { scrollDirAtom } from '@/components/Feed/store';
 import { feedTypeAtom } from '@/components/FeedType/store';
 import HomeHeader from '@/components/Headers/Home';
 import { searchQueryAtom } from '@/components/Headers/Home/store';
@@ -22,11 +17,22 @@ import { useIsSavedSearch } from '@/hooks/saved-search';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { videoKinds } from '@/utils/const';
 import { imageOrVideoUrlRegexp } from '@/utils/media';
-import { type Hexpubkey, type NDKEvent, type NDKEventId, type NDKFilter, NDKKind, type NDKSubscription } from '@nostr-dev-kit/ndk';
+import {
+    type Hexpubkey,
+    type NDKEvent,
+    type NDKEventId,
+    type NDKFilter,
+    NDKKind,
+    type NDKSubscription,
+} from '@nostr-dev-kit/ndk';
 import { useNDK, useNDKCurrentPubkey } from '@nostr-dev-kit/ndk-mobile';
+
+import { ScrollYProvider } from '@/context/ScrollYContext';
+import { useSharedValue } from 'react-native-reanimated';
 
 export default function HomeScreen() {
     const { colors } = useColorScheme();
+    const scrollY = useSharedValue(0);
 
     const style = useMemo<ViewStyle>(
         () => ({
@@ -76,7 +82,11 @@ function useBookmarkIds() {
 
         if (sub.current) return;
 
-        sub.current = ndk.subscribe(bookmarksFilters, { ...bookmarksOpts, relaySet: undefined }, false);
+        sub.current = ndk.subscribe(
+            bookmarksFilters,
+            { ...bookmarksOpts, relaySet: undefined },
+            false
+        );
 
         sub.current.on('event', (event: NDKEvent) => {
             if (event.kind !== 3006) return;
@@ -175,6 +185,9 @@ function textSearch(text: string) {
 }
 
 function DataList() {
+    const { useScrollY } = require('@/context/ScrollYContext');
+    const scrollY = useScrollY();
+
     const feedType = useAtomValue(feedTypeAtom);
     const currentPubkey = useNDKCurrentPubkey();
     const follows = useAllFollows();
@@ -205,9 +218,7 @@ function DataList() {
             // Ensure feedType.value is a string before using it in the #h filter
             const groupHashTag = typeof feedType.value === 'string' ? [feedType.value] : [];
             return {
-                filters: [
-                    { kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': groupHashTag },
-                ],
+                filters: [{ kinds: [NDKKind.Image, NDKKind.VerticalVideo], '#h': groupHashTag }],
                 key: `groups-${feedType.value ?? 'unknown'}`,
                 filterFn: null,
                 relayUrls: feedType.relayUrls,
@@ -222,7 +233,8 @@ function DataList() {
         }
 
         const keyParts = [currentPubkey ?? ''];
-        if (feedType.hashtags && feedType.kind === 'search') keyParts.push(feedType.hashtags?.join(' '));
+        if (feedType.hashtags && feedType.kind === 'search')
+            keyParts.push(feedType.hashtags?.join(' '));
         else if (feedType.value) keyParts.push(feedType.value);
 
         let hashtagFilter: NDKFilter = {};
@@ -247,9 +259,13 @@ function DataList() {
             limit: 50,
         });
 
-        filters.push({ kinds: [1], limit: 50, ...(
-            feedType.kind !== 'search' ? {authors: Array.from(follows), ...hashtagFilter} : hashtagFilter
-        ) });
+        filters.push({
+            kinds: [1],
+            limit: 50,
+            ...(feedType.kind !== 'search'
+                ? { authors: Array.from(follows), ...hashtagFilter }
+                : hashtagFilter),
+        });
         keyParts.push('tweets');
 
         let filterFn = null;
@@ -308,22 +324,18 @@ function DataList() {
     );
 }
 
+import { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+
 function HomeTopMargin() {
+    const { useScrollY } = require('@/context/ScrollYContext');
+    const scrollY = useScrollY();
     const headerHeight = useHeaderHeight();
-    const scrollDir = useAtomValue(scrollDirAtom);
-    const headerAnim = useSharedValue(0);
-    
-    useEffect(() => {
-        headerAnim.value = withTiming(scrollDir === 'up' ? 0 : 1, { duration: 200 });
-    }, [scrollDir]);
-    
+
     const containerStyle = useAnimatedStyle(() => ({
-        paddingTop: (1 - headerAnim.value) * headerHeight,
+        paddingTop: interpolate(scrollY.value, [0, 100], [headerHeight, 0], Extrapolate.CLAMP),
     }));
-    
-    return (
-        <Animated.View style={containerStyle} />
-    );
+
+    return <Animated.View style={containerStyle} />;
 }
 
 const kind1MustHaveMedia = (feedEntry: FeedEntry): boolean => {

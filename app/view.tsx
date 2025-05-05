@@ -2,8 +2,8 @@ import {
     type NDKEvent,
     NDKKind,
     NDKUserProfile,
-    useSubscribe,
     useProfileValue,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
@@ -20,7 +20,7 @@ import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
 import AvatarAndName from '@/components/ui/user/avatar-name';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
@@ -89,7 +89,11 @@ export default function ViewScreen() {
     // Handle the case where activeEvent might be null
     if (!activeEvent) {
         // Optionally return a loading indicator or an error message
-        return <View><Text>Loading event...</Text></View>;
+        return (
+            <View>
+                <Text>Loading event...</Text>
+            </View>
+        );
     }
     const reactions = useReactionsStore((state) => state.reactions.get(activeEvent?.tagId() ?? ''));
     const { events } = useSubscribe(

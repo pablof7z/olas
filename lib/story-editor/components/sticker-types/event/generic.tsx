@@ -1,4 +1,4 @@
-import { type NDKEvent, type NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import type { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { Dimensions, StyleSheet, TextStyle, View } from 'react-native';
 
 import type { EventStickerStyle } from './styles';

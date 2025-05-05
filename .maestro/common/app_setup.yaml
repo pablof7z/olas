@@ -1,0 +1,14 @@
+name: App Setup
+description: Basic app setup flow with common initialization steps
+
+appId: com.pablof7z.snapstr
+---
+- launchApp:
+    clearState: false
+    clearKeychain: false
+    stopApp: true
+    permissions:
+      camera: true
+      microphone: true
+      photos: true
+- waitForAnimationToEnd

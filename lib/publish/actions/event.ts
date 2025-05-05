@@ -1,11 +1,11 @@
 import type NDK from '@nostr-dev-kit/ndk-mobile';
 import {
+    NDKEvent,
     NDKImage,
     type NDKImetaTag,
     NDKKind,
     NDKRelaySet,
     NDKVideo,
-    NDKEvent,
     imetaTagToTag,
 } from '@nostr-dev-kit/ndk-mobile';
 import { encodeBase32 } from 'geohashing';
@@ -59,14 +59,12 @@ function generateVideoEvent(ndk: NDK, _metadata: PostMetadata, media: PostMedia[
 
 function generateTextEvent(ndk: NDK, metadata: PostMetadata, media: PostMedia[]): NDKEvent {
     const tagKind = media[0].mediaType === 'image' ? NDKKind.Image : NDKKind.ShortVideo;
-    
+
     // For maximum reach, use kind:1 event
     const event = new NDKEvent(ndk, {
         kind: NDKKind.Text,
         content: metadata.caption,
-        tags: [
-            ['k', tagKind.toString()]
-        ]
+        tags: [['k', tagKind.toString()]],
     });
 
     // Add media URLs to content

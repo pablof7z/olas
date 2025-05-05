@@ -1,12 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
+import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getVisibilityLabel } from '@/lib/utils/visibility';
 import VisibilityBottomSheet, { type VisibilityBottomSheetRef } from './VisibilityBottomSheet';
 import { iconSize, styles } from './style';
-import { useEditorStore } from '@/lib/publish/store/editor';
 
 export default function Visibility() {
     const { colors } = useColorScheme();
@@ -35,4 +35,4 @@ export default function Visibility() {
             <VisibilityBottomSheet ref={bottomSheetRef} />
         </View>
     );
-} 
+}

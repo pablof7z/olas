@@ -1,0 +1,6 @@
+appId: com.pablof7z.snapstr
+---
+- launchApp:
+      clearState: true
+      clearKeychain: true
+- openLink: olas://npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft

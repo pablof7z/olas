@@ -1,6 +1,7 @@
 import '../global.css';
-import 'expo-dev-client';
+import * as DevClient from 'expo-dev-client';
 import '@bacons/text-decoder/install';
+import { ScrollYProvider } from '@/context/ScrollYContext';
 import { Toasts } from '@backpackapp-io/react-native-toast';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -14,6 +15,7 @@ import React, { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { useSharedValue } from 'react-native-reanimated';
 
 import FeedTypeBottomSheet from '@/components/FeedType/BottomSheet';
 import { type FeedType, feedTypeAtom } from '@/components/FeedType/store';
@@ -32,12 +34,12 @@ import UserBottomSheet from '@/lib/user-bottom-sheet/component';
 import ZapperBottomSheet from '@/lib/zapper/bottom-sheet';
 import { appReadyAtom, useAppSettingsStore } from '@/stores/app';
 import { relayNoticesAtom } from '@/stores/relays';
-import { blacklistPubkeys, DEV_BUILD, PUBLISH_ENABLED } from '@/utils/const';
+import { DEV_BUILD, PUBLISH_ENABLED, blacklistPubkeys } from '@/utils/const';
 import { NDKUser, useNDKInit, useNDKMutes } from '@nostr-dev-kit/ndk-hooks';
 import { ReanimatedLogLevel, configureReanimatedLogger } from 'react-native-reanimated';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 
-import ImageLoadingOverlay from "@/components/ImageLoadingOverlay";
+import ImageLoadingOverlay from '@/components/ImageLoadingOverlay';
 // This is the default configuration
 configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -45,6 +47,8 @@ configureReanimatedLogger({
 });
 
 // LogBox.ignoreAllLogs();
+
+DevClient.closeMenu();
 
 const ndk = initializeNDK();
 
@@ -61,17 +65,10 @@ export default function App() {
     const [appReady, setAppReady] = useAtom(appReadyAtom);
     const initializeNDK = useNDKInit();
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
     useEffect(() => {
         initializeNDK(ndk);
         setAppReady(true);
     }, []);
-
-    // return <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-    //     <Text>NDKMobileVersion: {NDKMobileVersion}</Text>
-    //     <Text>NDKMobileHooksVersion: {NDKMobileHooksVersion}</Text>
-    //     <Text>NDKHooksVersion: {NDKHooksVersion}</Text>
-    // </View>
 
     return (
         <LoaderScreen appReady={appReady} wotReady>
@@ -88,13 +85,18 @@ export function RootLayout() {
     const setRelayNotices = useSetAtom(relayNoticesAtom);
     const setFeedType = useSetAtom(feedTypeAtom);
 
-    const addExtraMuteItems = useNDKMutes(s => s.addExtraMuteItems);
+    const addExtraMuteItems = useNDKMutes((s) => s.addExtraMuteItems);
+
+    // Application-wide shared scrollY value
+    const scrollY = useSharedValue(0);
 
     useEffect(() => {
         const users = Array.from(blacklistPubkeys).map((pubkey) => new NDKUser({ pubkey }));
         addExtraMuteItems(users);
-    }, [])
-    
+
+        DevClient.hideMenu();
+    }, []);
+
     useEffect(() => {
         const storedFeed = SecureStore.getItem('feed');
         let feedType: FeedType | null = null;
@@ -142,7 +144,7 @@ export function RootLayout() {
     }, []);
 
     return (
-        <>
+        <ScrollYProvider value={scrollY}>
             {ndk && <AppReady />}
             {ndk && <SignerReady />}
             <StatusBar
@@ -227,7 +229,7 @@ export function RootLayout() {
                                         }}
                                     />
                                 </Stack>
-                                {DEV_BUILD && <ImageLoadingOverlay />}
+                                {/* {DEV_BUILD && <ImageLoadingOverlay />} */}
 
                                 <PostOptionsMenu />
                                 <FeedTypeBottomSheet />
@@ -245,8 +247,8 @@ export function RootLayout() {
                     </KeyboardProvider>
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
-            <ImageLoadingOverlay />
-        </>
+            {/* <ImageLoadingOverlay /> */}
+        </ScrollYProvider>
     );
 }
 

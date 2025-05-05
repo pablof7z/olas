@@ -1,99 +1,269 @@
 <!--
   context/MODULES.md
-  Detailed listing of modules, components, stores and their responsibilities
+  Project module structure conforming to GUIDELINE.md
 -->
 # Modules & Components
 
-This document enumerates the key modules, components, stores, and hooks in the codebase, grouped by folder. It outlines responsibilities and highlights opportunities to split or merge modules.
+This document maps the current codebase layout against the architectural guidelines. Items marked **pending refactor** do not yet conform. See the **Migration Plan** at the end for tasks.
 
-## 1. lib/ (Domain & Business Logic)
-- **comments/**: Threaded comment UI and state
-  - bottom-sheet.tsx: modal UI for viewing/adding comments
-  - store.ts: maintains comment threads and pagination
-  - components/: mention input, selector, new comment form
-  - **Refactor**: Consider merging with components/events/Post store/UI to avoid duplication.
-- **feed-editor/**: Compose and publish new feed posts
-  - bottom-sheet.tsx, confirm.tsx: modal workflow
-  - store.ts: draft content and upload status
-+- **groups/**
-  - store/: loads and caches community data
-  - types.ts: type definitions
-- **media-filter/**: Image filter presets and adjustments
-  - components/: UI for filter list and adjustments
-  - hooks/useMediaFilter: central hook
-  - store.ts: selected filter state
-  - presets.ts, utils.ts: filter matrices and image saving
-  - tests: unit tests for hook and store
-- **mentions/**: User mention suggestions and search
-- **ndk.ts**: Nostr relay pool initialization and helpers
-- **notifications.ts**: Notification subscription and dispatch
-- **onboard/**: Login and signup flows
-  - components/: avatar chooser, buttons
-  - screens/: LoginScreen, Signup
-  - store.ts: onboarding state
-- **product-view/**: Bottom sheet for product metadata display
-  - hook.ts: control logic
-  - store.ts: selected product
-- **publish/**: Post/story/video publishing pipeline
-  - actions/: upload & event generation
-  - components/: camera toolbar, preview, composer metadata
-  - screens/: post, story, video entry points
-  - store/: editor state management
-- **reaction-picker/**: Emoji/Reaction selection UI
-- **settings-store.ts**: Persistent user settings (theme, NSFW filter, etc.)
-- **stories/**: Story display and slides modal
-- **story-editor/**: Complex story composer with sticker management
-- **user-bottom-sheet/**: Profile preview and follow actions
-- **utils/**, **utils.ts**: Shared helpers (visibility, user formatting)
-- **zapper/**: Lightning zap modal and store
+## 1. app/ (Expo-router Screens)
 
-## 2. components/ (UI Components)
-- **animated-image.tsx**, **AnimatedText**: motion-based components
-- **Button.tsx**, **buttons/**: primary button styles (back, follow, wallet)
-- **Cashu components**: under cashu/mint, receive, send
-- **events/**: Post, Comment, Repost, Reaction UI
-  - store.ts: event-level interactions (bookmarks, zaps)
-- **Feed/**, **FeedType/**: feed container, type selector, store
-- **Headers/**: screen header layouts (Home, Search)
-- **headless/**: AppReady, SignerReady guards
-- **icons/**: SVG icon components
-- **media/**: Image and video rendering abstractions
-- **nativewindui/**: Low-level primitives (Alert, Card, TextField, etc.)
-- **notifications/**: list items and wrappers
-- **product/**: grid and details layout
-- **tabs/**: Bottom tab bar
-- **ui/**: small UI pieces (Swipable, ticker, user avatars)
-- **wallet/**: transactions, balance, NWC list UI
+All files under `app/` should be thin wrappers (≤50 LOC) importing UI from `lib/<module>/screens/`.
+The following is the exhaustive list of screens under `app/` (relative to `app/`):
+```text
+_layout.tsx
+(home)/_layout.tsx
+(home)/index.tsx
+(home)/reels.tsx
+(home)/publish2.tsx
+(home)/(settings)/_layout.tsx
+(home)/(settings)/blacklist.tsx
+(home)/(settings)/blossom.tsx
+(home)/(settings)/content-cache.tsx
+(home)/(settings)/content/cache.tsx
+(home)/(settings)/content/index.tsx
+(home)/(settings)/content/muted.tsx
+(home)/(settings)/delete-account.tsx
+(home)/(settings)/dev.tsx
+(home)/(settings)/image-debug.tsx
+(home)/(settings)/index.tsx
+(home)/(settings)/key.tsx
+(home)/(settings)/nip60.tsx
+(home)/(settings)/nwc.tsx
+(home)/(settings)/primal.tsx
+(home)/(settings)/relay.tsx
+(home)/(settings)/relays.tsx
+(home)/(settings)/wallets.tsx
+(home)/(settings)/zaps.tsx
+(home)/(wallet)/_layout.tsx
+(home)/(wallet)/scan.tsx
+(home)/(wallet)/index.tsx
+(home)/(wallet)/(walletSettings)/_layout.tsx
+(home)/(wallet)/(walletSettings)/index.tsx
+(home)/(wallet)/(walletSettings)/mints.tsx
+(home)/(wallet)/(walletSettings)/nutzaps.tsx
+(home)/(wallet)/(walletSettings)/relays.tsx
+(home)/(wallet)/(walletSettings)/tokens.tsx
+365.tsx
+bookmarks.tsx
+communities.tsx
+detail-view.tsx
+dlnwc.tsx
+enable-wallet.tsx
+eula.tsx
+expo/index.js
+groups/new.tsx
+live.tsx
+login.tsx
+notifications.tsx
+profile.tsx
+profile/[npub].tsx
+publish/_layout.tsx
+publish/index.tsx
+publish/post/edit.tsx
+publish/post/metadata.tsx
+receive.tsx
+relays.tsx
+search.tsx
+send.tsx
+stories.tsx
+story/_layout.tsx
+story/index.tsx
+story/selector.tsx
+story/preview.tsx
+tx.tsx
+unpublished.tsx
+view.tsx
+```  
+**Pending refactor**: All of the above screens must be refactored into thin wrappers that delegate rendering to `lib/<module>/screens/`.
 
-## 3. stores/ (Global State via Jotai)
-- **app.ts**: appReadyAtom, settings initialization
-- **db/**: local IndexedDB or SQLite caching layer
-- **event.ts**: ephemeral event state and selections
-- **payments.ts**: Lightning invoice and cashu tokens
-- **reactions.ts**: global reactions store (counts, subscribers)
-- **relays.ts**: relay notice notifications and error handling
+## 2. lib/ (Feature Modules)
 
-## 4. hooks/ (Custom React Hooks)
-- **app-sub.ts**: global app subscription logic
-- **blossom.tsx**: feature-flag or experiment toggles
-- **comments.tsx**: subscribe to comment threads
-- **follows.ts**: follow/unfollow logic
-- **mint.ts**: cashu minting workflow
-- **notifications.tsx**: real-time notification updates
-- **post-bottom-sheet.tsx**: manages open/close of post options modal
-- **saved-search.tsx**: persisted search queries
-- **stories.ts**: story progress monitoring
-- **user-flare.tsx**: user presence/status indicator
-- **wallet.tsx**: wallet state and refresh logic
-- **zap.ts**: zap (lightning) initiation
+Each feature module under `lib/` must follow:
+- `screens/`      # Screen-level components
+- `components/`   # Module-specific UI pieces
+- `hooks/`        # Business logic & data hooks
+- `stores/`       # Module state management
+- `utils/`        # Pure helper functions
+- `types.ts`      # Module-specific types
+- `context/`      # React Context (optional)
+- `__tests__/`    # Unit tests co-located
 
-## 5. atoms/ (Small Jotai Atoms)
-- **homeScreen.ts**: atom to track home tab scroll position/context
+Current modules (all **pending refactor**):
+- **components/**       (Skia helpers)  <!-- pending refactor -->
+- **comments/**         <!-- pending refactor -->
+- **feed-editor/**      <!-- pending refactor -->
+- **groups/**           <!-- pending refactor -->
+- **image-loader/**     <!-- pending refactor -->
+- **media-filter/**     <!-- pending refactor -->
+- **mentions/**         <!-- pending refactor -->
+- **onboard/**          <!-- pending refactor -->
+- **product-view/**     <!-- pending refactor -->
+- **publish/**          <!-- pending refactor -->
+- **reaction-picker/**  <!-- pending refactor -->
+- **stories/**          <!-- pending refactor -->
+- **story-editor/**     <!-- pending refactor -->
+- **user-bottom-sheet/**<!-- pending refactor -->
+- **user/**: user avatar & flare UI (components/, hooks/) <!-- pending refactor -->
+    - `components/avatar.tsx` (User avatar component)
+    - `components/flare.tsx` (User avatar flare component)
+    - `hooks/flare.tsx` (User flare hook)
+- **utils/**            <!-- pending refactor -->
+- **zapper/**           <!-- pending refactor -->
+
+Root-level files in `lib/` also **pending refactor** (should be relocated into proper modules or `utils/`/`hooks/`):
+- `cn.ts`
+- `ndk.ts`
+- `notifications.ts`
+- `settings-store.ts`
+- `useColorScheme.tsx`
+- `useHeaderSearchBar.tsx`
+- `utils.ts`
+
+## 3. components/ (Shared UI)
+
+Root-level reusable UI components:
+- `buttons/`, `icons/`, `events/`, `Feed/`, `FeedType/`, `Headers/`, `headless/`, `media/`, `nativewindui/`, `notifications/`, `product/`, `tabs/`, `ui/`, `wallet/`
+All root components currently conform to guidelines.
+
+## 4. hooks/ (Global Hooks)
+
+Global React hooks placed here:
+- `app-sub.ts`
+- `blossom.tsx`
+- `comments.tsx`
+- `follows.ts`
+- `mint.ts`
+- `notifications.tsx`
+- `post-bottom-sheet.tsx`
+- `saved-search.tsx`
+- `stories.ts`
+- `wallet.tsx`
+- `zap.ts`
+All global hooks correctly located.
+
+## 5. stores/ (Global State)
+
+Global state management:
+- `app.ts`
+- `db/`
+- `event.ts`
+- `payments.ts`
+- `reactions.ts`
+- `relays.ts`
+All global stores correctly located.
+
+## 6. utils/ (Root Utilities)
+
+General-purpose utilities:
+- `bitcoin.ts`, `blossom-client.ts`, `blossom.ts`, `const.ts`, `db.ts`, `debounce.tsx`, `event.ts`, `image-format.ts`, `imgproxy.ts`, `matrix.ts`, `media/`, `mint.ts`, `myfollows.ts`, `uploader.ts`, `url.ts`, `user.ts`, `uuid.ts`, `wallet.ts`
+All utilities correctly located.
+
+## 7. assets/ (Static assets)
+
+`assets/` holds images, fonts, etc.
+
+## 8. theme/ (Styling and Theming)
+
+`theme/` holds global styling, colors, and config.
+
+## 9. types.ts (Global TypeScript Definitions)
+
+**Pending refactor**: create a `types.ts` file at the project root and migrate all global type definitions into it.
+
+## 10. __tests__/ (Integration / E2E Tests)
+
+Global integration or E2E tests live here.
 
 ---
-### Split & Merge Opportunities
-- **Merge** lib/comments + components/events/Post comment UI and store
-- **Split** nativewindui into per-domain UI libraries or move primitives into shared design-system package
-- **Merge** feed-editor and story-editor common code (e.g., media selection, preview)
-- **Split** publish/actions into smaller domain-specific action modules (event, upload, video)
----
+
+## Migration Plan
+
+- [ ] Refactor the following `app/` screens into thin wrappers that delegate rendering to `lib/<module>/screens/`:
+  - [ ] _layout.tsx
+  - [ ] (home)/_layout.tsx
+  - [ ] (home)/index.tsx
+  - [ ] (home)/reels.tsx
+  - [ ] (home)/publish2.tsx
+  - [ ] (home)/(settings)/_layout.tsx
+  - [ ] (home)/(settings)/blacklist.tsx
+  - [ ] (home)/(settings)/blossom.tsx
+  - [ ] (home)/(settings)/content-cache.tsx
+  - [ ] (home)/(settings)/content/cache.tsx
+  - [ ] (home)/(settings)/content/index.tsx
+  - [ ] (home)/(settings)/content/muted.tsx
+  - [ ] (home)/(settings)/delete-account.tsx
+  - [ ] (home)/(settings)/dev.tsx
+  - [ ] (home)/(settings)/image-debug.tsx
+  - [ ] (home)/(settings)/index.tsx
+  - [ ] (home)/(settings)/key.tsx
+  - [ ] (home)/(settings)/nip60.tsx
+  - [ ] (home)/(settings)/nwc.tsx
+  - [ ] (home)/(settings)/primal.tsx
+  - [ ] (home)/(settings)/relay.tsx
+  - [ ] (home)/(settings)/relays.tsx
+  - [ ] (home)/(settings)/wallets.tsx
+  - [ ] (home)/(settings)/zaps.tsx
+  - [ ] (home)/(wallet)/_layout.tsx
+  - [ ] (home)/(wallet)/scan.tsx
+  - [ ] (home)/(wallet)/index.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/_layout.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/index.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/mints.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/nutzaps.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/relays.tsx
+  - [ ] (home)/(wallet)/(walletSettings)/tokens.tsx
+  - [ ] 365.tsx
+  - [ ] bookmarks.tsx
+  - [ ] communities.tsx
+  - [ ] detail-view.tsx
+  - [ ] dlnwc.tsx
+  - [ ] enable-wallet.tsx
+  - [ ] eula.tsx
+  - [ ] expo/index.js
+  - [ ] groups/new.tsx
+  - [ ] live.tsx
+  - [ ] login.tsx
+  - [ ] notifications.tsx
+  - [ ] profile.tsx
+  - [ ] profile/[npub].tsx
+  - [ ] publish/_layout.tsx
+  - [ ] publish/index.tsx
+  - [ ] publish/post/edit.tsx
+  - [ ] publish/post/metadata.tsx
+  - [ ] receive.tsx
+  - [ ] relays.tsx
+  - [ ] search.tsx
+  - [ ] send.tsx
+  - [ ] stories.tsx
+  - [ ] story/_layout.tsx
+  - [ ] story/index.tsx
+  - [ ] story/selector.tsx
+  - [ ] story/preview.tsx
+  - [ ] tx.tsx
+  - [ ] unpublished.tsx
+  - [ ] view.tsx
+- [ ] Create `types.ts` file at project root and migrate global type definitions into it.
+- [ ] Relocate root-level util files from `lib/` (e.g., `cn.ts`, `utils.ts`, `ndk.ts`, `notifications.ts`, `settings-store.ts`) into `utils/` or `stores/` as appropriate.
+- [ ] Relocate root-level hooks (`useColorScheme.tsx`, `useHeaderSearchBar.tsx`) into the `hooks/` directory.
+- [ ] Rename `lib/components/` to `lib/skia-helpers/` (or similar) and structure as a module.
+- [ ] For each `lib/<module>/`, create the prescribed structure (e.g. `screens/`, `components/`, `hooks/`, `stores/`, `utils/`, `types.ts`, `context/`, `__tests__/`) and move existing files accordingly:
+  - [ ] comments
+  - [ ] feed-editor
+  - [ ] groups
+  - [ ] image-loader
+  - [ ] media-filter
+  - [ ] mentions
+  - [ ] onboard
+  - [ ] product-view
+  - [ ] publish
+  - [ ] reaction-picker
+  - [ ] stories
+  - [ ] story-editor
+  - [ ] user-bottom-sheet
+  - [x] user
+  - [ ] utils (lib/utils)
+  - [ ] zapper
+- [ ] Ensure unit tests are co-located within each module’s `__tests__/` directory and integration tests remain under `__tests__/`.
+
+Once all boxes are ticked, the codebase will conform to the architectural guidelines.

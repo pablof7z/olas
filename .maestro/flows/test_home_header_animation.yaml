@@ -1,0 +1,84 @@
+name: Test HomeHeader Animation
+description: Specifically tests the animation behavior of the HomeHeader component defined in components/Headers/Home/index.tsx
+
+appId: com.pablof7z.snapstr
+env:
+  SCREENSHOT_DIR: ../screenshots/home_header_animation
+---
+# Initialize the app with clean state
+- runFlow:
+    file: ../common/app_setup.yaml
+
+# Handle any developer menus that might appear
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for app to fully load (home screen)
+- waitForAnimationToEnd
+
+# Take a screenshot of the initial header state
+- takeScreenshot: 01_initial_header_state
+
+# Verify all header elements are initially visible
+- assertVisible: "Search"
+
+# There should also be a notifications button
+- runFlow:
+    when:
+      visible: "Notification"
+    commands:
+      - assertVisible: "Notification"
+
+# Slow scroll to see gradual animation
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: 02_partial_scroll
+
+# Continue scrolling to make header fully disappear
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: 03_header_should_disappear
+
+# Verify the header is no longer visible after scrolling past threshold
+- assertNotVisible:
+    text: "Search"
+    optional: true
+
+# Slowly scroll back up to see the header gradually reappear
+- swipe:
+    start: 50%,30%
+    end: 50%,70%
+    duration: 1000
+- waitForAnimationToEnd
+- takeScreenshot: 04_header_partially_reappearing
+
+# Complete the scroll back to top
+- swipe:
+    start: 50%,30%
+    end: 50%,70%
+    duration: 1000
+- waitForAnimationToEnd
+- takeScreenshot: 05_header_fully_visible
+
+# Verify the header is fully visible again
+- assertVisible: "Search"
+
+# Test the search functionality specifically
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: 06_search_activated
+
+# Try scrolling while search is active - header should remain visible
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: 07_scroll_with_search_active
+
+# Check if the search interface is still visible even after scrolling
+- runFlow:
+    when:
+      visible: "X"
+    commands:
+      - assertVisible: "X"
+      - takeScreenshot: 08_search_still_visible
+      - tapOn: "X"
+      - waitForAnimationToEnd

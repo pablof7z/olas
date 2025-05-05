@@ -19,7 +19,9 @@ import { Text } from '@/components/nativewindui/Text';
 
 export default function NewGroup() {
     const currentUser = useNDKCurrentUser();
-    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(currentUser?.pubkey, {
+        subOpts: { skipVerification: true },
+    });
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [state, setState] = useState<'open' | 'closed'>('open');
@@ -41,8 +43,12 @@ export default function NewGroup() {
         Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     if (!ndk) {
         // Handle case where ndk is null, maybe return loading or error state
-        console.error("NDK not available for group creation.");
-        return <View><Text>Error: NDK not initialized.</Text></View>;
+        console.error('NDK not available for group creation.');
+        return (
+            <View>
+                <Text>Error: NDK not initialized.</Text>
+            </View>
+        );
     }
     const relaySet = NDKRelaySet.fromRelayUrls([relayUrl], ndk, true);
     // const groupBookmark = useNDKSessionEventKind<NDKList>(NDKKind.SimpleGroupList, { // Commented out - needs replacement
@@ -65,7 +71,17 @@ export default function NewGroup() {
         create.publish(relaySet).then(() => {
             // groupBookmark?.addItem(['group', randomId, relayUrl]); // Commented out - needs replacement
         });
-    }, [name, description, visibility, state, relayUrl, ndk, randomId, userProfile?.image, relaySet]); // Added dependencies
+    }, [
+        name,
+        description,
+        visibility,
+        state,
+        relayUrl,
+        ndk,
+        randomId,
+        userProfile?.image,
+        relaySet,
+    ]); // Added dependencies
 
     return (
         <KeyboardAwareScrollView

@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mentionQueryAtom, replyEventAtom } from '../store';
 
 import * as User from '@/components/ui/user';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import MentionSuggestions from '@/lib/mentions/mention-suggestions';
 import { useColorScheme } from '@/lib/useColorScheme';
 
@@ -34,7 +34,9 @@ export default function NewComment({
     currentUser,
     autoFocus,
 }: { event: NDKEvent; currentUser: NDKUser; autoFocus: boolean }) {
-    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(currentUser?.pubkey, {
+        subOpts: { skipVerification: true },
+    });
     const { colors } = useColorScheme();
     const [comment, setComment] = useState('');
     const insets = useSafeAreaInsets();

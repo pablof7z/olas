@@ -44,9 +44,7 @@ export default function Expiration() {
                 <Timer size={iconSize} color={colors.foreground} />
                 <View style={styles.textContainer}>
                     <Text style={[styles.title, { color: colors.foreground }]}>Expiration</Text>
-                    <Text style={styles.subtitle}>
-                        Add an expiration date to your post.
-                    </Text>
+                    <Text style={styles.subtitle}>Add an expiration date to your post.</Text>
                 </View>
                 <Text style={[styles.value, { color: colors.foreground }]}>
                     {getExpirationLabel()}

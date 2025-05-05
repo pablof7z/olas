@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
+import React, { useCallback } from 'react';
+import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
-import { useColorScheme } from '@/lib/useColorScheme';
 import { useEditorStore } from '@/lib/publish/store/editor';
+import { useColorScheme } from '@/lib/useColorScheme';
 import { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { iconSize, styles } from './style';
 
@@ -18,7 +18,7 @@ export default function ShareOptions() {
     const openLocationBottomSheet = useCallback(() => {
         locationBottomSheetRef?.current?.present();
     }, [locationBottomSheetRef]);
-    
+
     const handleShareToggle = useCallback(() => {
         setShare(!share);
     }, [share, setShare]);
@@ -37,7 +37,9 @@ export default function ShareOptions() {
             >
                 <Ionicons name="person-outline" size={iconSize} color={colors.primary} />
                 <View style={styles.textContainer}>
-                    <Text style={[styles.title, { color: colors.foreground }]}>Share to all Nostr apps</Text>
+                    <Text style={[styles.title, { color: colors.foreground }]}>
+                        Share to all Nostr apps
+                    </Text>
                     <Text style={styles.subtitle}>Increase visibility of this post</Text>
                 </View>
                 <Switch

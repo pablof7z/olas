@@ -1,9 +1,11 @@
 import {
     // DBCache, // Removed unused import
-    type NDKCacheAdapterSqlite, NDKNutzap,
-    useNDK, useNDKNutzapMonitor,
+    type NDKCacheAdapterSqlite,
+    NDKNutzap,
+    useNDK,
+    useNDKNutzapMonitor,
     useNDKWallet,
-    useProfileValue
+    useProfileValue,
 } from '@nostr-dev-kit/ndk-mobile';
 import { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet'; // Removed unexported NDKNutzapState, NdkNutzapStatus
 import { FlashList } from '@shopify/flash-list';
@@ -24,8 +26,12 @@ export default function NutzapsScreen() {
     const { ndk } = useNDK();
     if (!ndk || !nutzapMonitor) {
         // Handle missing ndk or nutzapMonitor
-        console.error("NDK or NutzapMonitor not available.");
-        return <View><Text>Error initializing Nutzaps screen.</Text></View>;
+        console.error('NDK or NutzapMonitor not available.');
+        return (
+            <View>
+                <Text>Error initializing Nutzaps screen.</Text>
+            </View>
+        );
     }
     const cacheAdapter = ndk.cacheAdapter as NDKCacheAdapterSqlite;
     const nutzapStates = nutzapMonitor.nutzapStates;

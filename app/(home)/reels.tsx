@@ -163,7 +163,10 @@ const Reel = memo(
 );
 
 export default function ReelsScreen() {
-    const {events} = useSubscribe<NDKVideo>([{ kinds: [21, NDKKind.ShortVideo] } ], { wrap: true, skipVerification: true });
+    const { events } = useSubscribe<NDKVideo>([{ kinds: [21, NDKKind.ShortVideo] }], {
+        wrap: true,
+        skipVerification: true,
+    });
     const safeAreaInsets = useSafeAreaInsets();
     const setVisibleItem = useSetAtom(visibleItemAtom);
 

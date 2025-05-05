@@ -23,7 +23,7 @@ export type StoryHeaderProps = {
 export function StoryHeader({ item, pubkey, style, onClose }: StoryHeaderProps) {
     // Get pubkey from item or use direct pubkey
     const userPubkey = item ? item.pubkey : pubkey;
-    const userProfile = useProfileValue(userpubkey, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
     const insets = useSafeAreaInsets();
 
     if (!userPubkey) return null;

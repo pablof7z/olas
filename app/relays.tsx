@@ -1,7 +1,4 @@
-import {
-    NDKKind,
-    NDKSubscriptionCacheUsage
-} from '@nostr-dev-kit/ndk';
+import { NDKKind, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import { useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import type React from 'react';
 import { useMemo } from 'react';

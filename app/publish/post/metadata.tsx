@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 
 import { useActiveBlossomServer } from '@/hooks/blossom';
-import Visibility from '@/lib/publish/components/composer/metadata/visibility';
 import Caption from '@/lib/publish/components/composer/metadata/caption';
 import Expiration from '@/lib/publish/components/composer/metadata/expiration';
 import Location from '@/lib/publish/components/composer/metadata/location';
 import ShareOptions from '@/lib/publish/components/composer/metadata/share';
+import Visibility from '@/lib/publish/components/composer/metadata/visibility';
 import { Preview } from '@/lib/publish/components/preview';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';

@@ -68,7 +68,7 @@ function TaggedEvent({
     const { ndk } = useNDK();
     const [taggedEvent, setTaggedEvent] = useState<NDKEvent | null>(null);
     const marker = tag[3];
-    
+
     useEffect(() => {
         const fetch = tag[1];
 

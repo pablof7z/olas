@@ -1,8 +1,8 @@
-import { RelayMock } from '@nostr-dev-kit/ndk/test';
 import NDK, { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk-mobile';
+import { RelayMock } from '@nostr-dev-kit/ndk/test';
 
-import { generateEvent } from '../event';
 import type { PostMedia, PostMetadata, VisibilityType } from '../../types';
+import { generateEvent } from '../event';
 
 // Helper function to create base metadata for tests
 function createBaseMetadata(visibility: VisibilityType = 'text-apps'): PostMetadata {
@@ -16,14 +16,16 @@ function createBaseMetadata(visibility: VisibilityType = 'text-apps'): PostMetad
 
 // Helper function to create test media
 function createTestMedia(type: 'image' | 'video'): PostMedia[] {
-    return [{
-        id: '1',
-        mediaType: type,
-        uris: ['test-uri'],
-        uploadedUri: 'https://example.com/test.jpg',
-        contentMode: 'square',
-        duration: type === 'video' ? 10 : undefined,
-    }];
+    return [
+        {
+            id: '1',
+            mediaType: type,
+            uris: ['test-uri'],
+            uploadedUri: 'https://example.com/test.jpg',
+            contentMode: 'square',
+            duration: type === 'video' ? 10 : undefined,
+        },
+    ];
 }
 
 describe('generateEvent', () => {
@@ -35,7 +37,7 @@ describe('generateEvent', () => {
         relayMock = new RelayMock('wss://test.relay', {
             simulateDisconnect: false,
             connectionDelay: 100,
-            autoConnect: true
+            autoConnect: true,
         });
     });
 
@@ -50,10 +52,14 @@ describe('generateEvent', () => {
     it('generates kind 1 event for videos with text-apps visibility', async () => {
         const metadata = createBaseMetadata('text-apps');
         const media = createTestMedia('video');
-        
+
         const result = await generateEvent(ndk, metadata, media);
         expect(result?.event.kind).toBe(NDKKind.Text);
-        expect(result?.event.tags.some(tag => tag[0] === 'k' && tag[1] === NDKKind.ShortVideo.toString())).toBe(true);
+        expect(
+            result?.event.tags.some(
+                (tag) => tag[0] === 'k' && tag[1] === NDKKind.ShortVideo.toString()
+            )
+        ).toBe(true);
     });
 
     it('includes shared URLs in content for text-apps visibility', async () => {
@@ -88,7 +94,7 @@ describe('generateEvent', () => {
 
         const result = await generateEvent(ndk, metadata, media);
         const now = Math.floor(Date.now() / 1000);
-        const expirationTag = result?.event.tags.find(tag => tag[0] === 'expiration');
+        const expirationTag = result?.event.tags.find((tag) => tag[0] === 'expiration');
         expect(expirationTag).toBeDefined();
         expect(Number(expirationTag?.[1])).toBeCloseTo(now + expiration, -1); // Allow 1 second difference
     });

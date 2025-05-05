@@ -1,0 +1,25 @@
+name: Simple Scroll Test
+description: Tests scrolling behavior on the main feed
+
+appId: com.pablof7z.snapstr
+---
+# Initialize the app
+- launchApp
+
+# Wait for the app to load
+- waitForAnimationToEnd
+
+# Take a screenshot of the initial state
+- takeScreenshot: 01_initial_state
+
+# Perform a simple scroll down
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: 02_scrolled_down
+
+# Perform a swipe up to scroll back
+- swipe:
+    start: 50%,20%
+    end: 50%,80%
+- waitForAnimationToEnd
+- takeScreenshot: 03_scrolled_back_up

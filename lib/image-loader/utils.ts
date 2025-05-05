@@ -42,39 +42,39 @@ export function getProxiedImageUrl(
 }
 
 export function throttle<T extends (...args: any[]) => void>(
-  func: T,
-  wait: number,
-  options: { leading?: boolean; trailing?: boolean } = {}
+    func: T,
+    wait: number,
+    options: { leading?: boolean; trailing?: boolean } = {}
 ): T {
-  let timeout: NodeJS.Timeout | null = null;
-  let lastArgs: any[] | null = null;
-  let lastCallTime = 0;
-  let leadingCalled = false;
+    let timeout: NodeJS.Timeout | null = null;
+    let lastArgs: any[] | null = null;
+    let lastCallTime = 0;
+    let leadingCalled = false;
 
-  const throttled = function (this: any, ...args: any[]) {
-    const now = Date.now();
-    const callNow = options.leading && !leadingCalled;
-    lastArgs = args;
+    const throttled = function (this: any, ...args: any[]) {
+        const now = Date.now();
+        const callNow = options.leading && !leadingCalled;
+        lastArgs = args;
 
-    if (callNow) {
-      func.apply(this, args);
-      leadingCalled = true;
-      lastCallTime = now;
-    }
-
-    if (!timeout) {
-      timeout = setTimeout(() => {
-        timeout = null;
-        if (options.trailing !== false && lastArgs) {
-          func.apply(this, lastArgs);
+        if (callNow) {
+            func.apply(this, args);
+            leadingCalled = true;
+            lastCallTime = now;
         }
-        leadingCalled = false;
-        lastArgs = null;
-      }, wait);
-    }
-  };
 
-  return throttled as T;
+        if (!timeout) {
+            timeout = setTimeout(() => {
+                timeout = null;
+                if (options.trailing !== false && lastArgs) {
+                    func.apply(this, lastArgs);
+                }
+                leadingCalled = false;
+                lastArgs = null;
+            }, wait);
+        }
+    };
+
+    return throttled as T;
 }
 import type { ImageVariation } from './types';
 
@@ -85,10 +85,10 @@ import type { ImageVariation } from './types';
  * - else variation.reqWidth >= reqWidth
  */
 export function isVariationSufficient(
-  variation: ImageVariation,
-  reqWidth: number | 'original'
+    variation: ImageVariation,
+    reqWidth: number | 'original'
 ): boolean {
-  if (variation.reqWidth === 'original') return true;
-  if (reqWidth === 'original') return false;
-  return variation.reqWidth >= reqWidth;
+    if (variation.reqWidth === 'original') return true;
+    if (reqWidth === 'original') return false;
+    return variation.reqWidth >= reqWidth;
 }

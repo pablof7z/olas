@@ -1,8 +1,5 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import {
-    type NDKRelay,
-    NDKRelayStatus,
-} from '@nostr-dev-kit/ndk';
+import { type NDKRelay, NDKRelayStatus } from '@nostr-dev-kit/ndk';
 import { Icon } from '@roninoss/icons';
 import { router, usePathname } from 'expo-router';
 import { atom, useAtom } from 'jotai';
@@ -14,6 +11,7 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { Button } from '@/components/nativewindui/Button';
 import { SegmentedControl } from '@/components/nativewindui/SegmentedControl';
 import { getRelays, setRelays } from '@/stores/db/relays';
+import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 import { LargeTitleHeader } from '~/components/nativewindui/LargeTitleHeader';
 import {
     ESTIMATED_ITEM_HEIGHT,
@@ -26,7 +24,6 @@ import {
 import { Text } from '~/components/nativewindui/Text';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { useNDK } from '@nostr-dev-kit/ndk-mobile';
 
 const relaySettingAtom = atom<Map<string, boolean>, [Map<string, boolean>], void>(
     new Map(),

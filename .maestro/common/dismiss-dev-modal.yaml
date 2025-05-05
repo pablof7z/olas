@@ -3,5 +3,4 @@ description: Dismisses the development modal
 
 appId: com.pablof7z.snapstr
 ---
-- tapOn:
-      point: '2%,2%'
+- tapOn: 'Continue'

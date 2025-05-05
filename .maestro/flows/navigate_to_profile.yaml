@@ -1,0 +1,69 @@
+name: Navigate to Profile
+description: Test that starts the app and navigates to a user profile
+
+appId: com.pablof7z.snapstr
+env:
+  # Test npub for Pablo's profile
+  TEST_NPUB: npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft
+  SCREENSHOT_DIR: ../screenshots/profile_navigation
+---
+# Initialize the app with clean state
+- runFlow:
+    file: ../common/app_setup.yaml
+    env:
+      clearState: true
+      clearKeychain: true
+
+# Handle any developer menus that might appear
+- runFlow:
+    file: ../common/handle_dev_menu.yaml
+
+# Wait for app to fully load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Take screenshot of initial app state
+- takeScreenshot: 01_app_launched
+
+# Navigate to profile by opening URL
+- openLink: olas://profile/${TEST_NPUB}
+
+# Wait for redirection and profile page to load
+- waitForAnimationToEnd:
+    timeout: 8000
+
+# Verify we're on a profile page by checking for profile elements
+- assertVisible:
+    id: "profile-page"
+
+# Alternative verification if profile-page ID isn't available
+- runFlow:
+    when:
+      notVisible: "profile-page"
+    commands:
+      - assertVisible:
+          text: "Following"
+          timeout: 10000
+
+# Take screenshot of profile page
+- takeScreenshot: 02_profile_page
+
+# Verify profile has loaded by checking for posts or stats
+- runFlow:
+    when:
+      visible: "Posts"
+    commands:
+      - tapOn: "Posts"
+
+# Take screenshot of posts tab
+- takeScreenshot: 03_profile_posts
+
+# Test navigation between tabs if they exist
+- runFlow:
+    when:
+      visible: "Photos"
+    commands:
+      - tapOn: "Photos"
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: 04_profile_photos

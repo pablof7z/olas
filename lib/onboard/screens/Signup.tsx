@@ -1,11 +1,11 @@
-import { useAtom } from "jotai";
-import React, { useState, useEffect } from "react";
-import { TextInput, View } from "react-native";
+import { useAtom } from 'jotai';
+import React, { useState, useEffect } from 'react';
+import { TextInput, View } from 'react-native';
 
-import { AvatarChooser } from "../components/AvatarChooser";
-import { usernameAtom } from "../store";
+import { AvatarChooser } from '../components/AvatarChooser';
+import { usernameAtom } from '../store';
 
-import { Text } from "@/components/nativewindui/Text";
+import { Text } from '@/components/nativewindui/Text';
 
 export function SignUp() {
     const [username, setUsername] = useAtom(usernameAtom);
@@ -13,7 +13,7 @@ export function SignUp() {
 
     // Check if username starts with nsec1
     useEffect(() => {
-        if (username?.trim().replace(/^@/, "").toLowerCase().startsWith("nsec1")) {
+        if (username?.trim().replace(/^@/, '').toLowerCase().startsWith('nsec1')) {
             setIsNsec(true);
         } else {
             setIsNsec(false);
@@ -24,7 +24,7 @@ export function SignUp() {
         <View className="w-full flex-col items-center gap-4">
             <AvatarChooser />
 
-            <View style={{ flexDirection: "column", width: "100%" }}>
+            <View style={{ flexDirection: 'column', width: '100%' }}>
                 <TextInput
                     className="w-full rounded-full py-2.5 px-4 text-xl text-foreground bg-card"
                     autoCapitalize="none"
@@ -33,7 +33,7 @@ export function SignUp() {
                     autoCorrect={false}
                     value={username}
                     onChangeText={(t) => {
-                        if (!t.startsWith("@")) t = `@${t}`;
+                        if (!t.startsWith('@')) t = `@${t}`;
                         setUsername(t.trim());
                     }}
                 />

@@ -1,0 +1,17 @@
+name: Navigation Helpers
+description: Common navigation patterns used across tests
+
+appId: com.pablof7z.snapstr
+---
+# Assert that an element is visible
+- assertVisible: ${assertTarget}
+
+# Scroll down the screen
+- scroll
+- waitForAnimationToEnd
+
+# Scroll up the screen using swipe
+- swipe:
+    start: 50%,30%
+    end: 50%,80%
+- waitForAnimationToEnd

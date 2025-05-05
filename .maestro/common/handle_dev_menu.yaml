@@ -1,0 +1,37 @@
+name: Handle Dev Menu
+description: Handles any development menu or modals that might appear during testing
+
+appId: com.pablof7z.snapstr
+---
+# Handle metro bundler if visible
+- runFlow:
+    when:
+      visible: "http://localhost:8081"
+    commands:
+      - tapOn: "http://localhost:8081"
+      - waitForAnimationToEnd
+
+# Handle development menu if it appears
+- runFlow:
+    when:
+      visible: "developer menu"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd
+
+# Handle alternate development menu text
+- runFlow:
+    when:
+      visible: "This is the development menu"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd
+
+# Handle element inspector if visible
+- runFlow:
+    when:
+      visible: "Toggle Element Inspector"
+    commands:
+      - tapOn:
+          point: 94%,43%
+      - waitForAnimationToEnd

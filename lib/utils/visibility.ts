@@ -9,4 +9,4 @@ export function getVisibilityLabel(visibility: VisibilityType): string {
         default:
             return visibility;
     }
-} 
+}

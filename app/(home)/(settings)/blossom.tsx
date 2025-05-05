@@ -1,10 +1,4 @@
-import {
-    NDKKind,
-    NDKList,
-    NostrEvent,
-    useNDK,
-    useNDKSessionEvent,
-} from '@nostr-dev-kit/ndk-hooks';
+import { NDKKind, NDKList, NostrEvent, useNDK, useNDKSessionEvent } from '@nostr-dev-kit/ndk-hooks';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';

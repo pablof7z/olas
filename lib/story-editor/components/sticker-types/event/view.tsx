@@ -2,8 +2,8 @@ import {
     type NDKEvent,
     NDKKind,
     type NDKStoryStickerType,
-    useSubscribe,
     useProfileValue,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import React from 'react';
 import { ActivityIndicator, type LayoutChangeEvent, View, type ViewStyle } from 'react-native';

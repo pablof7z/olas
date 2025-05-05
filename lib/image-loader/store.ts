@@ -1,380 +1,366 @@
-import {
-  upsertImageCacheEntry,
-  markImageCacheFailure,
-  getAllImageCacheEntries
-} from './db';
-import type { DbImageCacheEntry } from './types';
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { Dimensions } from 'react-native';
 import { Image, type ImageSource } from 'expo-image';
+import { Dimensions } from 'react-native';
+import { create } from 'zustand';
+import { getAllImageCacheEntries, markImageCacheFailure, upsertImageCacheEntry } from './db';
+import type { DbImageCacheEntry } from './types';
 import type {
-  ImagePriority, ImageLoaderOptions,
-  ImageVariation,
-  ImageTask,
-  ImageLoaderState
+    ImageLoaderOptions,
+    ImageLoaderState,
+    ImagePriority,
+    ImageTask,
+    ImageVariation,
 } from './types';
-import { getProxiedImageUrl, isVariationSufficient, generateFilesystemKey } from './utils';
-// --- Image cache initialization from DB ---
+import { getProxiedImageUrl, isVariationSufficient } from './utils';
+
+const HTTP_HEADERS = {
+    'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 olas.app',
+    Referer: 'https://olas.app/',
+};
 
 /**
  * Loads all cached image entries from the database and populates the in-memory imageCache.
  * Should be called once on app startup.
  */
 export async function initializeImageCacheFromDb() {
-  const start = Date.now();
-  try {
-    // Get entries with proper error handling
-    const entries = await getAllImageCacheEntries();
-    
-    // Group by originalUrl
-    const grouped = new Map();
-    for (const entry of entries) {
-      const key = entry.originalUrl;
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key).push(entry);
+    try {
+        const entries = await getAllImageCacheEntries();
+        const grouped = new Map<string, DbImageCacheEntry[]>();
+        for (const entry of entries) {
+            (
+                grouped.get(entry.originalUrl) ??
+                grouped.set(entry.originalUrl, []).get(entry.originalUrl)!
+            ).push(entry);
+        }
+        const cache = new Map<string, { variations: ImageVariation[] }>();
+        for (const [originalUrl, dbEntries] of grouped) {
+            const variations = dbEntries.map((e) => ({
+                reqWidth: e.width === null ? ('original' as const) : e.width,
+                source: {
+                    uri: e.fetchedUrl || e.originalUrl,
+                },
+                status: e.state,
+                attempts: e.attempts,
+            }));
+            cache.set(originalUrl, { variations });
+        }
+        useImageLoaderStore.setState({ imageCache: cache });
+    } catch (error) {
+        console.error(`[ImageLoader] Error loading cache from DB: ${error}`);
     }
-    
-    // Convert to store format
-    const cache = new Map();
-    for (const [originalUrl, dbEntries] of grouped.entries()) {
-      const variations = dbEntries.map((dbEntry: DbImageCacheEntry) => ({
-        reqWidth: dbEntry.width === null ? 'original' : dbEntry.width,
-        source: {
-          uri: dbEntry.fetchedUrl || dbEntry.originalUrl,
-          cacheKey: dbEntry.filesystemKey,
-        },
-        status: dbEntry.state,
-        attempts: dbEntry.attempts,
-      }));
-      cache.set(originalUrl, { variations });
-    }
-    
-    // Update the Zustand store atomically
-    useImageLoaderStore.setState((state) => {
-      state.imageCache = cache;
-    });
-  } catch (error) {
-    console.error(`[ImageLoader] Error loading image cache from DB: ${error}`);
-    return;
-  }
 }
 
-// In-memory array to track proxy fallback successes
 const proxySuccessTimestamps: number[] = [];
 
-interface ImageActions {
-  addToQueue: (originalUrl: string, reqWidth: number | "original", priority?: ImagePriority) => void;
-  processQueue: () => Promise<void>;
-  loadImage: (image: ImageTask) => Promise<void>;
-  clearCache: () => void;
-  updateConfig: (config: Partial<ImageLoaderOptions>) => void;
-  removeFromQueue: (originalUrl: string, reqWidth: number | "original", priority?: ImagePriority) => void;
-  retry: (
-    originalUrl: string,
-    reqWidth: number | "original",
-  ) => void;
-}
-
-const useImageLoaderStore = create<ImageLoaderState & ImageActions>()(
-  immer(
-    (set, get) => {
-    // Record a successful fallback from proxy to direct, and manage disabling proxy if needed
-    function recordProxyFailureSuccess() {
-      const now = Date.now();
-      // Keep only timestamps within the last 5 minutes
-      while (proxySuccessTimestamps.length && proxySuccessTimestamps[0] < now - 5 * 60 * 1000) {
-        proxySuccessTimestamps.shift();
-      }
-      proxySuccessTimestamps.push(now);
-      if (proxySuccessTimestamps.length >= 3) {
-        // Disable proxy for 60 minutes
-        set((draft: ImageLoaderState & ImageActions) => {
-          draft.options.imgProxyDisabledUntil = now + 60 * 60 * 1000;
-        });
-        proxySuccessTimestamps.length = 0;
-      }
+const useImageLoaderStore = create<
+    ImageLoaderState & {
+        addToQueue: (
+            originalUrl: string,
+            reqWidth: number | 'original',
+            priority?: ImagePriority
+        ) => void;
+        processQueue: () => Promise<void>;
+        loadImage: (task: ImageTask) => Promise<void>;
+        clearCache: () => void;
+        updateConfig: (config: Partial<ImageLoaderOptions>) => void;
+        removeFromQueue: (
+            originalUrl: string,
+            reqWidth: number | 'original',
+            priority?: ImagePriority
+        ) => void;
+        retry: (originalUrl: string, reqWidth: number | 'original') => Promise<void>;
     }
-
-    // Raw processor
-    function rawProcessQueue() {
-      get().processQueue();
-    }
-
-    function scheduleProcessQueue() {
-      const { inFlightTasks, options, downloadQueues } = get();
-      // Keep starting downloads while there's queue items and free slots
-      const totalQueued = downloadQueues.high.length + downloadQueues.normal.length + downloadQueues.low.length;
-      let slots = options.maxConcurrentDownloads - inFlightTasks.size;
-      while (slots > 0 && totalQueued > 0) {
-        rawProcessQueue();
-        slots--;
-      }
-    }
-
-    return ({
-      imageCache: new Map(),
-      downloadQueues: {
-        high: [],
-        normal: [],
-        low: []
-      },
-      inFlightTasks: new Set(),
-      activeDownloadMeta: {},
-      options: {
-        maxConcurrentDownloads: 10,
-        cacheTimeout: 24 * 60 * 60 * 1000, // 24 hours
-        imgProxyEnabled: true,
-        imgProxyDisabledUntil: 0,
-        retryAttempts: 3,
-        retryDelay: 1000,
-        requestTimeout: 10000
-      },
-      stats: {
-        fetched: {},
-        loadingTimes: {},
-      },
-      permanentFailures: new Set(),
-
-      retry: (
-        originalUrl: string,
-        reqWidth: number | "original",
-      ) => {
-        set((draft: ImageLoaderState & ImageActions) => {
-          // Remove the relevant variation from imageCache
-          const cacheEntry = draft.imageCache.get(originalUrl);
-          if (cacheEntry) {
-            cacheEntry.variations = cacheEntry.variations.filter(
-              (v: ImageVariation) => v.reqWidth !== reqWidth
-            );
-            // If no variations left, remove the cache entry entirely
-            if (cacheEntry.variations.length === 0) {
-              draft.imageCache.delete(originalUrl);
+>((set, get) => {
+    // Helpers
+    const updateImageCache = (
+        state: ImageLoaderState,
+        url: string,
+        transform: (vars: ImageVariation[]) => ImageVariation[]
+    ) => {
+        const cache = new Map(state.imageCache);
+        const existing = cache.get(url);
+        const newVars = transform(existing?.variations ?? []);
+        if (newVars.length) cache.set(url, { variations: newVars });
+        else cache.delete(url);
+        return cache;
+    };
+    const cloneQueues = (
+        queues: ImageLoaderState['downloadQueues'],
+        remove?: { originalUrl: string; reqWidth: number | 'original' }
+    ) => {
+        const newQ = {
+            high: [...queues.high],
+            normal: [...queues.normal],
+            low: [...queues.low],
+        };
+        if (remove) {
+            for (const p of ['high', 'normal', 'low'] as ImagePriority[]) {
+                newQ[p] = newQ[p].filter(
+                    (q) => q.originalUrl !== remove.originalUrl || q.reqWidth !== remove.reqWidth
+                );
             }
-          }
-
-          // Remove from permanentFailures
-          draft.permanentFailures.delete(originalUrl);
-
-          // Remove any in-flight task for this image/variation
-          const id = `${originalUrl}|${reqWidth}`;
-          draft.inFlightTasks.delete(id);
-          delete draft.activeDownloadMeta[id];
-
-          // Remove from all download queues (in case it's queued in multiple)
-          (['high', 'normal', 'low'] as ImagePriority[]).forEach((p: ImagePriority) => {
-            draft.downloadQueues[p] = draft.downloadQueues[p].filter(
-              (q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth)
-            );
-          });
-        });
-        get().loadImage({ originalUrl, reqWidth, refCount: 1 });
-      },
-
-      addToQueue: (
-        originalUrl: string,
-        reqWidth: number | "original",
-        priority: ImagePriority = 'normal'
-      ) => {
-        set((draft: ImageLoaderState & ImageActions) => {
-          const queue = draft.downloadQueues[priority];
-          const cacheEntry = draft.imageCache.get(originalUrl);
-          const alreadyCached = cacheEntry && cacheEntry.variations.some((v: ImageVariation) => isVariationSufficient(v, reqWidth));
-          if (alreadyCached) return;
-      
-          // Find if the item already exists in the queue
-          const existingIdx = queue.findIndex((q: ImageTask) =>
-            q.originalUrl === originalUrl && q.reqWidth === reqWidth
-          );
-          if (existingIdx !== -1) {
-            // Increment refCount
-            queue[existingIdx].refCount += 1;
-          } else {
-            // Add new item with refCount 1
-            const item: ImageTask = { originalUrl, reqWidth, refCount: 1 };
-            queue.push(item);
-          }
-        });
-        scheduleProcessQueue();
-      },
-
-      processQueue: async () => {
-        const { inFlightTasks, options, downloadQueues } = get() as ImageLoaderState & ImageActions;
-        if (inFlightTasks.size >= options.maxConcurrentDownloads) {
-          return;
         }
-
-        // Get highest priority item available
-        const nextItem: ImageTask | undefined =
-          downloadQueues.high[0] || downloadQueues.normal[0] || downloadQueues.low[0];
-        if (!nextItem) return;
-
-        // Use url+reqWidth as unique identifier for queue/inFlight
-        const { originalUrl, reqWidth } = nextItem;
-        const id = `${originalUrl}|${reqWidth}`;
-
-        // Remove from queue (regardless of refCount, since we're starting the download)
-        set((draft: ImageLoaderState & ImageActions) => {
-          let priority: ImagePriority = 'low';
-          if (draft.downloadQueues.high.length && draft.downloadQueues.high[0].originalUrl === originalUrl && draft.downloadQueues.high[0].reqWidth === reqWidth) priority = 'high';
-          else if (draft.downloadQueues.normal.length && draft.downloadQueues.normal[0].originalUrl === originalUrl && draft.downloadQueues.normal[0].reqWidth === reqWidth) priority = 'normal';
-
-          draft.downloadQueues[priority] = draft.downloadQueues[priority].filter((q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth));
-          draft.inFlightTasks.add(id);
-          draft.activeDownloadMeta[id] = {
-            startTime: Date.now(),
-            timeoutMs: options.requestTimeout
-          };
-        });
-
-        try {
-          await (get() as ImageLoaderState & ImageActions).loadImage(nextItem);
-        } finally {
-          set((draft: ImageLoaderState & ImageActions) => {
-            draft.inFlightTasks.delete(id);
-            delete draft.activeDownloadMeta[id];
-          });
-          scheduleProcessQueue(); // Process next item
-        }
-      },
-
-      loadImage: async (queueItem: ImageTask) => {
-        const loadStart = Date.now();
-        const { options, imageCache, addToQueue, stats, permanentFailures } = get() as ImageLoaderState & ImageActions;
-        const originalUrl = queueItem.originalUrl;
-        const reqWidth = queueItem.reqWidth;
-        const timeoutMs = options.requestTimeout;
-
-
-        if (permanentFailures.has(originalUrl)) {
-          console.warn(`[ImageLoader] Skipping permanently failed URL: ${originalUrl}`);
-          return;
-        }
-        
+        return newQ;
+    };
+    const recordProxyFailureSuccess = () => {
         const now = Date.now();
-        const proxyAllowed = options.imgProxyEnabled && now >= (options.imgProxyDisabledUntil || 0);
-        const proxiedUrl = proxyAllowed
-          ? getProxiedImageUrl(originalUrl, reqWidth === 'original' ? Dimensions.get('window').width : reqWidth)
-          : originalUrl;
-        
-        let fetchedUrl = proxiedUrl;
-        let filesystemKey = generateFilesystemKey();
-        let loadedSource: ImageSource | null = null;
-        let loadSuccess = false;
-
-        const start = Date.now();
-        
-        try {
-          console.log(`\t[ImageLoader +${Date.now() - start}] Loading image: ${originalUrl} (width: ${reqWidth}, proxy: ${proxiedUrl})`);
-          await Image.loadAsync({ uri: proxiedUrl, cacheKey: filesystemKey }, { onError: (err) => {
-            console.error(`\t[ImageLoader +${Date.now() - start}] Image.loadAsync reported an error loading image: ${originalUrl} (width: ${reqWidth}, proxy: ${proxiedUrl})`, err);
-          }});
-          loadedSource = { uri: proxiedUrl, cacheKey: filesystemKey };
-          fetchedUrl = proxiedUrl;
-          loadSuccess = true;
-        } catch (proxyErr) {
-          // Proxy failed → try direct exactly once
-          try {
-            console.log(`\t[ImageLoader +${Date.now() - start}] Proxy failed, trying direct load: ${originalUrl} (width: ${reqWidth})`, proxyErr);
-            await Image.loadAsync({ uri: originalUrl, cacheKey: filesystemKey });
-            console.log(`\t[ImageLoader +${Date.now() - start}] Direct load succeeded: ${originalUrl} (width: ${reqWidth})`);
-            loadedSource = { uri: originalUrl, cacheKey: filesystemKey };
-            fetchedUrl = originalUrl;
-            recordProxyFailureSuccess();
-            loadSuccess = true;
-          } catch (directErr) {
-            console.error(`\t[ImageLoader +${Date.now() - start}] Direct load failed: ${originalUrl} (width: ${reqWidth})`, directErr);
-            set((draft: ImageLoaderState & ImageActions) => {
-              draft.permanentFailures.add(originalUrl);
-              let entry = draft.imageCache.get(originalUrl);
-              if (!entry) {
-                entry = { variations: [] };
-                draft.imageCache.set(originalUrl, entry);
-              }
-              // Type extension: fetchedUrl and filesystemKey are not in ImageVariation type, but required by new logic
-              entry.variations.push({
-                reqWidth,
-                source: null,
-                status: 'error',
-                attempts: 1,
-              });
-            });
-            await markImageCacheFailure(
-              originalUrl,
-              reqWidth === 'original' ? null : reqWidth,
-              filesystemKey
-            );
-            return;
-          }
+        while (proxySuccessTimestamps.length && proxySuccessTimestamps[0] < now - 5 * 60 * 1000) {
+            proxySuccessTimestamps.shift();
         }
+        proxySuccessTimestamps.push(now);
+        if (proxySuccessTimestamps.length >= 3) {
+            set((state) => ({
+                options: { ...state.options, imgProxyDisabledUntil: now + 60 * 60 * 1000 },
+            }));
+            proxySuccessTimestamps.length = 0;
+        }
+    };
+    const scheduleProcessQueue = () => {
+        const { inFlightTasks, options, downloadQueues } = get();
+        let slots = options.maxConcurrentDownloads - inFlightTasks.size;
+        while (
+            slots > 0 &&
+            downloadQueues.high.length + downloadQueues.normal.length + downloadQueues.low.length >
+                0
+        ) {
+            get().processQueue();
+            slots--;
+        }
+    };
 
-        if (loadSuccess && loadedSource) {
-          set((draft: ImageLoaderState & ImageActions) => {
-            let entry = draft.imageCache.get(originalUrl);
-            if (!entry) {
-              entry = { variations: [] };
-              draft.imageCache.set(originalUrl, entry);
+    return {
+        imageCache: new Map(),
+        downloadQueues: { high: [], normal: [], low: [] },
+        inFlightTasks: new Set(),
+        activeDownloadMeta: {},
+        options: {
+            maxConcurrentDownloads: 5,
+            cacheTimeout: 24 * 60 * 60 * 1000,
+            imgProxyEnabled: false,
+            imgProxyDisabledUntil: 0,
+            retryAttempts: 3,
+            retryDelay: 1000,
+            requestTimeout: 10000,
+        },
+        stats: { fetched: {}, loadingTimes: {} },
+        permanentFailures: new Set(),
+
+        retry: async (originalUrl, _reqWidth) => {
+            const reqWidth = typeof _reqWidth === 'number' ? Math.round(_reqWidth) : _reqWidth;
+            set((state) => ({
+                imageCache: updateImageCache(state, originalUrl, (vars) =>
+                    vars.filter((v) => v.reqWidth !== reqWidth)
+                ),
+                permanentFailures: (() => {
+                    const s = new Set(state.permanentFailures);
+                    s.delete(originalUrl);
+                    return s;
+                })(),
+                inFlightTasks: (() => {
+                    const s = new Set(state.inFlightTasks);
+                    s.delete(`${originalUrl}|${reqWidth}`);
+                    return s;
+                })(),
+                activeDownloadMeta: (() => {
+                    const m = { ...state.activeDownloadMeta };
+                    delete m[`${originalUrl}|${reqWidth}`];
+                    return m;
+                })(),
+                downloadQueues: cloneQueues(state.downloadQueues, { originalUrl, reqWidth }),
+            }));
+            await get().loadImage({ originalUrl, reqWidth, refCount: 1 });
+        },
+
+        addToQueue: (originalUrl, _reqWidth, priority = 'normal') => {
+            const reqWidth = typeof _reqWidth === 'number' ? Math.round(_reqWidth) : _reqWidth;
+            set((state) => {
+                const cacheEntry = state.imageCache.get(originalUrl);
+                if (
+                    cacheEntry &&
+                    cacheEntry.variations.some((v) => isVariationSufficient(v, reqWidth))
+                ) {
+                    return {};
+                }
+                const queues = {
+                    ...state.downloadQueues,
+                    [priority]: [...state.downloadQueues[priority]],
+                };
+                const idx = queues[priority].findIndex(
+                    (q) => q.originalUrl === originalUrl && q.reqWidth === reqWidth
+                );
+                if (idx >= 0) {
+                    queues[priority][idx] = {
+                        ...queues[priority][idx],
+                        refCount: queues[priority][idx].refCount + 1,
+                    };
+                } else {
+                    queues[priority].push({ originalUrl, reqWidth, refCount: 1 });
+                }
+                return { downloadQueues: queues };
+            });
+            scheduleProcessQueue();
+        },
+
+        processQueue: async () => {
+            const { inFlightTasks, options, downloadQueues } = get();
+            if (inFlightTasks.size >= options.maxConcurrentDownloads) return;
+            const next =
+                downloadQueues.high[0] || downloadQueues.normal[0] || downloadQueues.low[0];
+            if (!next) return;
+            const { originalUrl, reqWidth } = next;
+            const id = `${originalUrl}|${reqWidth}`;
+            set((state) => ({
+                downloadQueues: cloneQueues(state.downloadQueues, { originalUrl, reqWidth }),
+                inFlightTasks: new Set(state.inFlightTasks).add(id),
+                activeDownloadMeta: {
+                    ...state.activeDownloadMeta,
+                    [id]: { startTime: Date.now(), timeoutMs: state.options.requestTimeout },
+                },
+            }));
+            try {
+                await get().loadImage(next);
+            } finally {
+                set((state) => {
+                    const tasks = new Set(state.inFlightTasks);
+                    tasks.delete(id);
+                    const meta = { ...state.activeDownloadMeta };
+                    delete meta[id];
+                    return { inFlightTasks: tasks, activeDownloadMeta: meta };
+                });
+                scheduleProcessQueue();
             }
-            // Remove any previous variation for this reqWidth
-            entry.variations = entry.variations.filter((v: ImageVariation) => v.reqWidth !== reqWidth);
-            
-            entry.variations.push({
-              reqWidth,
-              source: { uri: fetchedUrl, cacheKey: filesystemKey },
-              status: 'loaded',
-              attempts: 1,
-            });
-        
-            // Update session stats
-            if (!draft.stats.fetched[originalUrl]) draft.stats.fetched[originalUrl] = 0;
-            draft.stats.fetched[originalUrl] += 1;
-            if (!draft.stats.loadingTimes[originalUrl]) draft.stats.loadingTimes[originalUrl] = [];
-            draft.stats.loadingTimes[originalUrl].push(Date.now() - loadStart);
-          });
-        
-          // Persist successful load to DB
-          await upsertImageCacheEntry({originalUrl,
-            width: reqWidth === 'original' ? null : reqWidth,
-            state: 'loaded',
-            filesystemKey,
-            fetchedUrl,
-            attempts: 1});
-        }
-      },
+        },
 
-      clearCache: () => {
-        set((draft) => {
-          draft.imageCache.clear();
-          draft.downloadQueues.high = [];
-          draft.downloadQueues.normal = [];
-          draft.downloadQueues.low = [];
-          draft.inFlightTasks.clear();
-          draft.activeDownloadMeta = {};
-          draft.stats.fetched = {};
-          draft.stats.loadingTimes = {};
-          draft.permanentFailures.clear();
-        });
-      },
+        loadImage: async ({ originalUrl, reqWidth, refCount }) => {
+            const loadStart = Date.now();
+            const { options, permanentFailures } = get();
+            if (permanentFailures.has(originalUrl)) {
+                console.warn(`[ImageLoader] Skipping permanently failed URL: ${originalUrl}`);
+                return;
+            }
+            const now = Date.now();
+            const proxyAllowed =
+                options.imgProxyEnabled && now >= (options.imgProxyDisabledUntil || 0);
+            const proxiedUrl = proxyAllowed
+                ? getProxiedImageUrl(
+                      originalUrl,
+                      reqWidth === 'original' ? Dimensions.get('window').width : reqWidth
+                  ) || originalUrl
+                : originalUrl;
+            let fetchedUrl = proxiedUrl;
+            let loadedSource: ImageSource | null = null;
+            let loadSuccess = false;
 
-      updateConfig: (config: Partial<ImageLoaderOptions>) => {
-        set((draft: ImageLoaderState & ImageActions) => {
-          draft.options = { ...draft.options, ...config };
-        });
-      },
+            const start = Date.now();
 
-      removeFromQueue: (originalUrl: string, reqWidth: number | "original", priority: ImagePriority = 'normal') => {
-        set((draft: ImageLoaderState & ImageActions) => {
-          draft.downloadQueues[priority] = draft.downloadQueues[priority].filter(
-            (q: ImageTask) => !(q.originalUrl === originalUrl && q.reqWidth === reqWidth)
-          );
-        });
-      }
-    });
-  }
-)
-);
+            try {
+                await Image.loadAsync(
+                    { uri: proxiedUrl, headers: HTTP_HEADERS },
+                    { onError: (err) => console.error(`Error loading via proxy:`, err) } as any
+                );
+                loadedSource = { uri: proxiedUrl };
+                loadSuccess = true;
+            } catch (proxyErr) {
+                try {
+                    console.log(
+                        `[+${Date.now() - start}ms] Proxy failed, trying direct: ${originalUrl}`
+                    );
+                    await Image.loadAsync({
+                        uri: originalUrl,
+                        cacheKey: directKey,
+                        headers: HTTP_HEADERS,
+                    });
+                    loadedSource = { uri: originalUrl, cacheKey: directKey };
+                    fetchedUrl = originalUrl;
+                    recordProxyFailureSuccess();
+                    loadSuccess = true;
+                } catch (directErr) {
+                    console.error(
+                        `[+${Date.now() - start}ms] Direct load failed: ${originalUrl}`,
+                        directErr
+                    );
+                    set((state) => ({
+                        permanentFailures: new Set(state.permanentFailures).add(originalUrl),
+                        imageCache: updateImageCache(state, originalUrl, (vars) => [
+                            ...vars,
+                            { reqWidth, source: null, status: 'error', attempts: 1 },
+                        ]),
+                    }));
+                    await markImageCacheFailure(
+                        originalUrl,
+                        reqWidth === 'original' ? null : reqWidth,
+                        'error',
+                        directKey
+                    );
+                    return;
+                }
+            }
 
-// Call the initialization immediately after store creation
+            if (loadSuccess && loadedSource) {
+                set((state) => ({
+                    imageCache: updateImageCache(state, originalUrl, (vars) =>
+                        vars
+                            .filter((v) => v.reqWidth !== reqWidth)
+                            .concat({
+                                reqWidth,
+                                source: loadedSource,
+                                status: 'loaded',
+                                attempts: 1,
+                            })
+                    ),
+                    stats: {
+                        fetched: {
+                            ...state.stats.fetched,
+                            [originalUrl]: (state.stats.fetched[originalUrl] ?? 0) + 1,
+                        },
+                        loadingTimes: {
+                            ...state.stats.loadingTimes,
+                            [originalUrl]: [
+                                ...(state.stats.loadingTimes[originalUrl] ?? []),
+                                Date.now() - loadStart,
+                            ],
+                        },
+                    },
+                }));
+                await upsertImageCacheEntry({
+                    originalUrl,
+                    width: reqWidth === 'original' ? null : reqWidth,
+                    state: 'loaded',
+                    fetchedUrl,
+                    attempts: 1,
+                });
+            }
+        },
+
+        clearCache: () => {
+            set(() => ({
+                imageCache: new Map(),
+                downloadQueues: { high: [], normal: [], low: [] },
+                inFlightTasks: new Set(),
+                activeDownloadMeta: {},
+                stats: { fetched: {}, loadingTimes: {} },
+                permanentFailures: new Set(),
+            }));
+        },
+
+        updateConfig: (config) => {
+            set((state) => ({ options: { ...state.options, ...config } }));
+        },
+
+        removeFromQueue: (originalUrl, _reqWidth, priority = 'normal') => {
+            const reqWidth = typeof _reqWidth === 'number' ? Math.round(_reqWidth) : _reqWidth;
+            set((state) => ({
+                downloadQueues: {
+                    ...state.downloadQueues,
+                    [priority]: state.downloadQueues[priority].filter(
+                        (q) => q.originalUrl !== originalUrl || q.reqWidth !== reqWidth
+                    ),
+                },
+            }));
+        },
+    };
+});
+
 initializeImageCacheFromDb();
 
 export default useImageLoaderStore;

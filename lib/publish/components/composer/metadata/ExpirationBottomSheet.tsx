@@ -49,7 +49,8 @@ function ExpirationContent() {
                 </View>
 
                 <Text style={[valueSheetStyles.description, { color: colors.muted }]}>
-                    Relays and clients will be instructed to delete the post after the specified time.
+                    Relays and clients will be instructed to delete the post after the specified
+                    time.
                 </Text>
             </View>
 

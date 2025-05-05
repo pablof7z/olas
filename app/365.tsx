@@ -1,7 +1,9 @@
 import {
-    type NDKEvent, type NDKImage,
+    type NDKEvent,
+    type NDKImage,
     type NDKImetaTag,
-    NDKKind, useSubscribe
+    NDKKind,
+    useSubscribe,
 } from '@nostr-dev-kit/ndk-mobile';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
@@ -17,7 +19,8 @@ import {
     SafeAreaView,
     StyleSheet,
     Text,
-    TextStyle, View
+    type TextStyle,
+    View,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, {
@@ -30,9 +33,9 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BackButton from '@/components/buttons/back-button';
+import useImageLoader from '@/lib/image-loader/hook';
 import StoriesModal from '@/lib/stories/SlidesModal';
 import { useStoriesView } from '@/lib/stories/store';
-import useImageLoader from '@/lib/image-loader/hook';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -95,10 +98,7 @@ function AnimatedBackground({
         };
     });
 
-    const {image} = useImageLoader({
-        originalUrl: item.imeta.url ?? false,
-        blurhash: item.imeta.blurhash,
-    })
+    const { image } = useImageLoader(item.imeta.url ?? false);
 
     return (
         <SafeAreaView key={`bg-item-${item.day}`} style={StyleSheet.absoluteFill}>
@@ -201,10 +201,7 @@ function AnimatedRenderItem({
         router.push('/stories');
     }, [index, item.event, openStory]);
 
-    const { image } = useImageLoader({
-        originalUrl: item.imeta.url ?? false,
-        blurhash: item.imeta.blurhash,
-    });
+    const { image } = useImageLoader(item.imeta.url ?? false);
 
     return (
         <Animated.View
@@ -275,7 +272,9 @@ export default function Wallpapers() {
         days = days.reverse();
 
         // Filter both card and grid entries to ensure event and imeta are not null
-        const validEntries = days.filter((e): e is { day: number; event: NDKEvent; imeta: NDKImetaTag } => !!e.event && !!e.imeta);
+        const validEntries = days.filter(
+            (e): e is { day: number; event: NDKEvent; imeta: NDKImetaTag } => !!e.event && !!e.imeta
+        );
         return [validEntries, validEntries]; // Use filtered entries for both card and grid
     }, [events]);
 
@@ -394,16 +393,23 @@ function EmptyDay() {
 
 const windowWidth = Dimensions.get('window').width;
 
-function DayGrid({ day, event, imeta, index, onPress }: { index: number, day: number; event: NDKEvent, imeta: NDKImetaTag, onPress: (event: NDKEvent) => void }) {
-    const {image} = useImageLoader({
-        originalUrl: imeta?.url ?? false,
-        blurhash: imeta?.blurhash,
-        reqWidth: 100,
-        priority: 'low',
-    });
+function DayGrid({
+    day,
+    event,
+    imeta,
+    index,
+    onPress,
+}: {
+    index: number;
+    day: number;
+    event: NDKEvent;
+    imeta: NDKImetaTag;
+    onPress: (event: NDKEvent) => void;
+}) {
+    const { image } = useImageLoader(imeta?.url ?? false);
 
     const size = windowWidth / 3 - 0.5;
-    
+
     return (
         <View
             style={{
@@ -416,21 +422,13 @@ function DayGrid({ day, event, imeta, index, onPress }: { index: number, day: nu
             }}
         >
             {event ? (
-                <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => onPress(event)}
-                >
-                    <Image
-                        source={image}
-                        style={{ flex: 1 }}
-                    />
+                <Pressable style={{ flex: 1 }} onPress={() => onPress(event)}>
+                    <Image source={image} style={{ flex: 1 }} />
                 </Pressable>
             ) : (
                 <EmptyDay />
             )}
-            <Text style={dayItemTextStyle}>
-                Day {day}
-            </Text>
+            <Text style={dayItemTextStyle}>Day {day}</Text>
         </View>
     );
 }
@@ -443,23 +441,23 @@ const dayItemTextStyle: TextStyle = {
     bottom: 0,
     left: 0,
     right: 0,
-}
+};
 
 // Adjust expected type for entries to match the filtered data
-export function Olas365View({ entries }: { entries: { day: number; event: NDKEvent; imeta: NDKImetaTag }[] }) {
+export function Olas365View({
+    entries,
+}: { entries: { day: number; event: NDKEvent; imeta: NDKImetaTag }[] }) {
     const openStory = useStoriesView();
     const handleCardPress = useCallback(
-        (event: NDKEvent) => { // Adjust type here as well
+        (event: NDKEvent) => {
+            // Adjust type here as well
             openStory([event]);
             router.push('/stories');
         },
         [openStory]
     );
 
-    const { image } = useImageLoader({
-        originalUrl: entries[0]?.imeta?.url ?? false,
-        blurhash: entries[0]?.imeta?.blurhash,
-    });
+    const { image } = useImageLoader(entries[0]?.imeta?.url ?? false);
 
     return (
         <FlashList
@@ -468,7 +466,15 @@ export function Olas365View({ entries }: { entries: { day: number; event: NDKEve
             keyExtractor={(e) => e.day.toString()}
             scrollEventThrottle={100}
             numColumns={3}
-            renderItem={({ item, index }) => <DayGrid index={index} day={item.day} event={item.event} imeta={item.imeta} onPress={handleCardPress} />}
+            renderItem={({ item, index }) => (
+                <DayGrid
+                    index={index}
+                    day={item.day}
+                    event={item.event}
+                    imeta={item.imeta}
+                    onPress={handleCardPress}
+                />
+            )}
             disableIntervalMomentum
         />
     );

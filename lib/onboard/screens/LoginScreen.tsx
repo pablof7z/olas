@@ -1,6 +1,19 @@
+import {
+    NDKEvent,
+    NDKNip46Signer,
+    NDKNip55Signer,
+    NDKPrivateKeySigner,
+    type NDKSigner,
+    ndkSignerFromPayload,
+    useNDK,
+    useNDKCurrentPubkey,
+    useNDKSessionLogin,
+    useNDKWallet,
+    useNip55,
+} from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { router, Stack, useRouter } from 'expo-router';
-import { useAtom, useAtomValue } from 'jotai';
+import { Stack, router, useRouter } from 'expo-router';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
     Alert,
@@ -10,32 +23,26 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-    FadeIn, useSharedValue,
+    FadeIn,
+    useSharedValue,
     useAnimatedStyle,
-    withSpring
+    withSpring,
 } from 'react-native-reanimated';
-import {
-    NDKEvent,
-    NDKNip55Signer,
-    NDKPrivateKeySigner,
-    useNDK,
-    useNDKSessionLogin,
-    useNDKWallet,
-    useNip55,
-} from '@nostr-dev-kit/ndk-mobile';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { modeAtom, usernameAtom, avatarAtom, payloadAtom } from '../store';
+import { avatarAtom, modeAtom, payloadAtom, usernameAtom } from '../store';
 import { Login } from './Login';
 import { SignUp } from './Signup';
 import { Welcome } from './Welcome';
 
+import { ActivityIndicator } from '@/components/nativewindui/ActivityIndicator';
 import { Text } from '@/components/nativewindui/Text';
 import { LavaLamp } from '@/components/ui/LavaLamp';
-import { prepareMedia } from '@/utils/media/prepare';
 import { uploadMedia } from '@/lib/publish/actions/upload';
+import { prepareMedia } from '@/utils/media/prepare';
 import { createNip60Wallet } from '@/utils/wallet';
+import { Activity } from 'lucide-react-native';
 
 function CreateAccountButton() {
     const [mode, setMode] = useAtom(modeAtom);
@@ -60,21 +67,21 @@ function CreateAccountButton() {
         if (avatar) {
             try {
                 const media = await prepareMedia([
-                    { uris: [avatar], id: "avatar", mediaType: "image", contentMode: "square" },
+                    { uris: [avatar], id: 'avatar', mediaType: 'image', contentMode: 'square' },
                 ]);
                 const uploaded = await uploadMedia(media, ndk);
                 if (uploaded?.[0]?.uploadedUri) {
                     imageUrl = uploaded[0].uploadedUri;
                 }
             } catch (error) {
-                console.error("Error uploading avatar:", error);
+                console.error('Error uploading avatar:', error);
             }
         }
 
         const event = new NDKEvent(ndk, {
             kind: 0,
             content: JSON.stringify({
-                name: username.replace(/^@/, ""),
+                name: username.replace(/^@/, ''),
                 picture: imageUrl,
             }),
         });
@@ -84,7 +91,7 @@ function CreateAccountButton() {
             setActiveWallet(wallet);
         });
 
-        router.replace("/");
+        router.replace('/');
     }, [username, ndkLogin]);
 
     const handlePress = () => {
@@ -111,18 +118,15 @@ function LoginWithNip55Button() {
     const { apps } = useNip55();
     const login = useNDKSessionLogin();
 
-    const loginWith = useCallback(
-        async (packageName: string) => {
-            try {
-                const nip55Signer = new NDKNip55Signer(packageName);
-                await login(nip55Signer, true);
-            } catch (error) {
-                console.error(`Failed to login with NIP-55 app ${packageName}:`, error);
-                // Add user feedback here (e.g., toast notification)
-            }
-        },
-        []
-    );
+    const loginWith = useCallback(async (packageName: string) => {
+        try {
+            const nip55Signer = new NDKNip55Signer(packageName);
+            await login(nip55Signer, true);
+        } catch (error) {
+            console.error(`Failed to login with NIP-55 app ${packageName}:`, error);
+            // Add user feedback here (e.g., toast notification)
+        }
+    }, []);
 
     if (apps.length === 0) return null;
 
@@ -138,24 +142,53 @@ function LoginWithNip55Button() {
                 Login with {app.name}
             </Text>
         </TouchableOpacity>
-    )
+    );
 }
+
+const loadingAtom = atom(false);
 
 function LoginButton() {
     const [mode, setMode] = useAtom(modeAtom);
     const payload = useAtomValue(payloadAtom);
+    const login = useNDKSessionLogin();
+    const { ndk } = useNDK();
+    const [loading, setLoading] = useAtom(loadingAtom);
 
-    const handlePress = () => {
+    const handlePress = useCallback(async () => {
+        if (!ndk) return;
+
         if (mode === 'login') {
-            if (!payload) {
-                Alert.alert('Error', 'Please enter your private key or scan a QR code');
-                return;
+            try {
+                setLoading(true);
+                if (!payload) {
+                    Alert.alert(
+                        'Error',
+                        'Please enter your private key or remote signer information'
+                    );
+                    return;
+                }
+
+                const trimPayload = payload.trim();
+                let signer: NDKSigner | null = null;
+                if (trimPayload.startsWith('nsec1')) {
+                    signer = new NDKPrivateKeySigner(trimPayload);
+                } else if (trimPayload.startsWith('bunker://')) {
+                    signer = new NDKNip46Signer(ndk, trimPayload);
+                    await signer.blockUntilReady();
+                }
+
+                if (signer) await login(signer);
+                else {
+                    Alert.alert('Error', 'Invalid signing information.');
+                }
+            } catch {
+            } finally {
+                setLoading(false);
             }
-            // …real login logic here
         } else {
             setMode('login');
         }
-    };
+    }, [payload, setLoading]);
 
     const isNotPrimary = mode && mode !== 'login';
 
@@ -164,9 +197,13 @@ function LoginButton() {
             onPress={handlePress}
             style={isNotPrimary ? styles.notPrimaryButton : styles.button}
         >
-            <Text style={isNotPrimary ? styles.notPrimaryButtonText : styles.buttonText}>
-                Login
-            </Text>
+            {loading ? (
+                <ActivityIndicator size="small" color="#000" />
+            ) : (
+                <Text style={isNotPrimary ? styles.notPrimaryButtonText : styles.buttonText}>
+                    Login
+                </Text>
+            )}
         </TouchableOpacity>
     );
 }
@@ -180,9 +217,9 @@ export default function LoginScreen() {
     const hasNip55Signer = useMemo(() => apps.length > 10, [apps.length]);
 
     useEffect(() => {
-        if (hasNip55Signer) setMode("nip55");
+        if (hasNip55Signer) setMode('nip55');
         setMode(null);
-    }, [hasNip55Signer])
+    }, [hasNip55Signer]);
 
     // shared value drives the flex of the button container
     const flexSv = useSharedValue(mode === null ? 0.5 : 0.2);
@@ -193,12 +230,17 @@ export default function LoginScreen() {
         });
     }, [mode]);
 
-    const animatedButtonStyle = useAnimatedStyle(() => ({
-    }));
+    const animatedButtonStyle = useAnimatedStyle(() => ({}));
 
     const handleTermsOfService = useCallback(() => {
         router.push('/eula');
     }, [router]);
+
+    const currentPubkey = useNDKCurrentPubkey();
+
+    useEffect(() => {
+        if (currentPubkey) router.push('/(home)');
+    }, [currentPubkey]);
 
     return (
         <>
@@ -229,23 +271,17 @@ export default function LoginScreen() {
                             <Welcome />
                         </View>
                     ) : mode === 'login' ? (
-                        <View
-                            style={styles.formContainer}
-                        >
+                        <View style={styles.formContainer}>
                             <Login />
                         </View>
                     ) : (
-                        <View
-                            style={styles.formContainer}
-                        >
+                        <View style={styles.formContainer}>
                             <SignUp />
                         </View>
                     )}
                 </Animated.View>
 
-                <Animated.View
-                    style={[styles.buttonContainer, animatedButtonStyle]}
-                >
+                <Animated.View style={[styles.buttonContainer, animatedButtonStyle]}>
                     {hasNip55Signer && <LoginWithNip55Button />}
                     {mode === 'login' ? (
                         <>
@@ -271,9 +307,7 @@ export default function LoginScreen() {
                 >
                     <Text className="text-sm text-foreground">
                         By continuing you agree to our{' '}
-                        <Text className="text-sm text-foreground font-bold">
-                            Terms of Service
-                        </Text>
+                        <Text className="text-sm text-foreground font-bold">Terms of Service</Text>
                     </Text>
                 </TouchableOpacity>
             </KeyboardAvoidingView>
@@ -309,7 +343,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'center',
         marginVertical: 5,
-        backgroundColor: '#00000077'
+        backgroundColor: '#00000077',
     },
     buttonText: {
         color: '#000',

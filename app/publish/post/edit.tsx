@@ -146,7 +146,15 @@ export default function PostEditScreen() {
     const hasMultipleImages = media.length > 1;
 
     // Use the media filter hook
-    const { currentFilterId, selectFilter, sourceUri, saveImage, currentFilterParams, updateFilterParams, resetFilter } = useMediaFilter();
+    const {
+        currentFilterId,
+        selectFilter,
+        sourceUri,
+        saveImage,
+        currentFilterParams,
+        updateFilterParams,
+        resetFilter,
+    } = useMediaFilter();
 
     // Determine if there's a filter to apply - filter is not 'normal' and we're actively editing
     const hasFilterToApply = currentFilterId !== 'normal' && isEditingFilter;
@@ -202,16 +210,16 @@ export default function PostEditScreen() {
 
         try {
             setIsSaving(true);
-            
+
             // Save the filtered image
             const newUri = await saveImage();
-            
+
             if (newUri) {
                 // Update the media item with the new URI at the beginning of the uris array
                 updateMedia(currentMedia.id, {
                     uris: [newUri, ...currentMedia.uris],
                 });
-                
+
                 // Mark this filter as applied and no longer editing
                 setIsFilterApplied(true);
                 setIsEditingFilter(false);
@@ -248,17 +256,25 @@ export default function PostEditScreen() {
 
     // Debug logs for tracking state
     useEffect(() => {
-        console.log('State update:', { 
-            hasMultipleImages, 
+        console.log('State update:', {
+            hasMultipleImages,
             isFilterApplied,
             isEditingFilter,
             currentFilterId,
             hasFilterToApply,
             buttonText,
             mediaLength: media.length,
-            forceShowFiltered: !hasMultipleImages || isEditingFilter
+            forceShowFiltered: !hasMultipleImages || isEditingFilter,
         });
-    }, [hasMultipleImages, isFilterApplied, isEditingFilter, currentFilterId, hasFilterToApply, buttonText, media.length]);
+    }, [
+        hasMultipleImages,
+        isFilterApplied,
+        isEditingFilter,
+        currentFilterId,
+        hasFilterToApply,
+        buttonText,
+        media.length,
+    ]);
 
     // Determine what action to take when the button is pressed
     const handleButtonPress = useCallback(() => {
@@ -293,9 +309,9 @@ export default function PostEditScreen() {
             />
             <View style={[styles.container, { paddingTop: headerHeight }]}>
                 <View style={[styles.previewContainer, { height: previewHeight }]}>
-                    <PreviewContent 
-                        previewHeight={previewHeight} 
-                        forceShowFiltered={shouldForceShowFiltered} 
+                    <PreviewContent
+                        previewHeight={previewHeight}
+                        forceShowFiltered={shouldForceShowFiltered}
                     />
                 </View>
 
@@ -334,9 +350,7 @@ export default function PostEditScreen() {
                             onResetFilter={handleResetFilter}
                             onDismiss={handleFilterSheetDismiss}
                         />
-                        <AdjustmentsBottomSheet 
-                            onDismiss={handleAdjustmentSheetDismiss}
-                        />
+                        <AdjustmentsBottomSheet onDismiss={handleAdjustmentSheetDismiss} />
                     </>
                 )}
             </View>

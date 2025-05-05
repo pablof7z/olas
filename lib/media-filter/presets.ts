@@ -12,7 +12,7 @@ export const FILTER_PRESETS: FilterPreset[] = [
             temperature: 0,
             vignette: 0,
             grayscale: false,
-            sepia: 0
+            sepia: 0,
         },
     },
     {

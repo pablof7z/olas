@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LegendList } from '@legendapp/list';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -31,7 +31,7 @@ import { useEditorStore } from '../store/editor';
 import PreviewContainer from '@/lib/publish/components/preview/Container';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mapAssetToPostMedia } from '@/utils/media';
-import { PostMedia } from '../types';
+import type { PostMedia } from '../types';
 
 const COLUMNS = 4;
 
@@ -136,7 +136,7 @@ export default function PostScreen() {
                 if (result.assets.length > 1) {
                     setIsMultipleSelectionMode(true);
                 }
-                
+
                 for (const asset of result.assets) {
                     const mediaType = asset.type === 'video' ? 'video' : 'image';
                     const id = `picker-${Date.now()}`;
@@ -194,10 +194,10 @@ export default function PostScreen() {
                     <>
                         <PreviewView heightValue={heightValue} height={gridSize * 3} />
                         <Animated.View style={[styles.container, { paddingBottom: insets.bottom }]}>
-                            <FlashList
+                            <LegendList
                                 data={mediaItems}
                                 extraData={mediaKey}
-                                renderItem={({ item }) => (
+                                renderItem={({ item }: { item: MediaItem }) => (
                                     <MediaGridItem
                                         item={item}
                                         gridSize={gridSize}

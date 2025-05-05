@@ -4,7 +4,13 @@ import { create } from 'zustand';
 
 import { generateEvent } from '@/lib/publish/actions/event';
 import { uploadMedia } from '@/lib/publish/actions/upload';
-import type { Location, PostMedia, PostMetadata, PostState, VisibilityType } from '@/lib/publish/types';
+import type {
+    Location,
+    PostMedia,
+    PostMetadata,
+    PostState,
+    VisibilityType,
+} from '@/lib/publish/types';
 import { PUBLISH_ENABLED } from '@/utils/const';
 import { convertMediaPath, extractLocationFromMedia } from '@/utils/media';
 import { prepareMedia } from '@/utils/media/prepare';
@@ -216,10 +222,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             set({ state: 'uploaded' });
 
             const { location, includeLocation, caption, expiration, share, visibility } = get();
-            const metadata: PostMetadata = { 
-                caption, 
+            const metadata: PostMetadata = {
+                caption,
                 expiration: expiration || undefined,
-                visibility
+                visibility,
             };
 
             // Add location data to metadata if it exists and should be included
@@ -284,11 +290,11 @@ export const publishPostTypeAtom = atom<'post' | 'story' | 'video'>('post');
 async function publishShareEvent(ndk: NDK, event: NDKEvent) {
     // don't share what is already a kind:1 event
     if (event.kind === NDKKind.Text) return;
-    
+
     console.log('publishShareEvent');
     const shareEvent = new NDKEvent(ndk, {
         kind: NDKKind.Text,
-        content: `nostr:${event.encode()}`
+        content: `nostr:${event.encode()}`,
     });
     shareEvent.tag(event, undefined, true, 'q');
     console.log('shareEvent', shareEvent.rawEvent());

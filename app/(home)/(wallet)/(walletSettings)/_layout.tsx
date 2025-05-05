@@ -3,13 +3,15 @@ import { Stack } from 'expo-router';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const { colors } = useColorScheme();
-    
+
     return (
-        <Stack screenOptions={{
-            headerShown: true,
-            headerStyle: { backgroundColor: colors.card },
-            headerTitleStyle: { color: colors.foreground },
-        }}>
+        <Stack
+            screenOptions={{
+                headerShown: true,
+                headerStyle: { backgroundColor: colors.card },
+                headerTitleStyle: { color: colors.foreground },
+            }}
+        >
             <Stack.Screen name="index" options={{ title: 'Wallet', headerShown: true }} />
             <Stack.Screen name="relays" options={{ title: 'Relays', headerShown: false }} />
             <Stack.Screen name="mints" options={{ title: 'Mints', headerShown: false }} />

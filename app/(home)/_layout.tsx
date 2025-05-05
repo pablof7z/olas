@@ -1,19 +1,25 @@
+import { ScrollYProvider, useScrollY } from '@/context/ScrollYContext';
 import { useNDKCurrentPubkey, useNDKCurrentUser, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
 import { useScrollToTop } from '@react-navigation/native';
 import { Tabs, router, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import { Home, UserCircle2 } from 'lucide-react-native';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ViewStyle } from 'react-native';
-import { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import {
+    interpolate,
+    useAnimatedStyle,
+    useDerivedValue,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
 
 import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
-import { scrollDirAtom } from '@/components/Feed/store';
 import WalletButton from '@/components/buttons/wallet';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
 import UserAvatar from '@/components/ui/user/avatar';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { WALLET_ENABLED } from '@/utils/const';
 
@@ -33,17 +39,33 @@ export default function TabsLayout() {
 
     useScrollToTop(safeScrollRef);
 
-    const scrollDir = useAtomValue(scrollDirAtom);
+    // Use scrollY shared value to animate tabBar based on scroll direction
+    // HomeScreen (index.tsx) should update scrollY as the user scrolls
+    const scrollY = useScrollY();
+    const prevScrollY = useRef(0);
 
-    // Use a worklet-friendly approach
-    useEffect(() => {
-        // Use withSpring for a more natural animation
-        tabBarAnim.value = withSpring(scrollDir === 'up' ? 0 : 1, {
-            damping: 20,
-            stiffness: 200,
-            mass: 0.5, // Add a bit less mass for faster response
-        });
-    }, [scrollDir, tabBarAnim]);
+    // Use a derived value to update tabBarAnim based on scroll direction
+    // This runs on the UI thread
+    useDerivedValue(() => {
+        const current = scrollY.value;
+
+        if (current < prevScrollY.current) {
+            // Scrolling up
+            tabBarAnim.value = withSpring(0, {
+                damping: 20,
+                stiffness: 200,
+                mass: 0.5,
+            });
+        } else if (current > prevScrollY.current) {
+            // Scrolling down
+            tabBarAnim.value = withSpring(1, {
+                damping: 20,
+                stiffness: 200,
+                mass: 0.5,
+            });
+        }
+        prevScrollY.current = current;
+    }, [scrollY, tabBarAnim]);
 
     const isReels = usePathname() === '/reels';
 

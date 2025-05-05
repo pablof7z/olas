@@ -1,0 +1,35 @@
+name: Test Header Visibility
+description: Tests that the header visibility changes when scrolling up and down
+
+appId: com.pablof7z.snapstr
+---
+# Initialize the app
+- launchApp
+
+# Wait for the app to load
+- waitForAnimationToEnd
+
+# Take a screenshot of the initial state with header visible
+- takeScreenshot: 01_header_visible
+
+# Scroll down to hide the header
+- scroll
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+
+# Take a screenshot to verify header is hidden
+- takeScreenshot: 02_header_hidden
+
+# Scroll back up to make the header visible again
+- swipe:
+    start: 50%,20%
+    end: 50%,80%
+- waitForAnimationToEnd
+- swipe:
+    start: 50%,20%
+    end: 50%,80%
+- waitForAnimationToEnd
+
+# Take a screenshot to verify header is visible again
+- takeScreenshot: 03_header_visible_again

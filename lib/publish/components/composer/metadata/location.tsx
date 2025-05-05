@@ -3,10 +3,10 @@ import { useAtomValue } from 'jotai';
 import React from 'react';
 import { Switch, Text, TouchableOpacity, View } from 'react-native';
 
-import LocationBottomSheet, { locationBottomSheetRefAtom } from './LocationBottomSheet';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
-import { styles, iconSize } from './style';
+import LocationBottomSheet, { locationBottomSheetRefAtom } from './LocationBottomSheet';
+import { iconSize, styles } from './style';
 
 export default function Location() {
     const location = useEditorStore((state) => state.location);

@@ -1,9 +1,4 @@
-import {
-    NDKEvent,
-    NDKKind,
-    useNDK,
-    useNDKCurrentUser,
-} from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, NDKKind, useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -74,7 +69,7 @@ export default function DeleteAccountScreen() {
         setButtonStatus('loading');
 
         if (!ndk) {
-            console.error("NDK not available to delete account.");
+            console.error('NDK not available to delete account.');
             setButtonStatus('idle');
             return;
         }

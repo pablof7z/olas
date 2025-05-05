@@ -11,4 +11,4 @@ config:
     deviceCapabilities:
         - 'SCREENSHOTS'
         - 'VIDEO'
-    deviceId: '46FC18EA-59F0-4B47-BE94-811B787E6666'
+    deviceId: '29BF3D2B-4202-4DC4-8EDB-B4D5BD27E7B9'

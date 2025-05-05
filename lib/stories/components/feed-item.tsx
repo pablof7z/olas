@@ -1,4 +1,9 @@
-import { type NDKEvent, useNDKCurrentPubkey, useNDKCurrentUser, useProfileValue } from '@nostr-dev-kit/ndk-mobile';
+import {
+    type NDKEvent,
+    useNDKCurrentPubkey,
+    useNDKCurrentUser,
+    useProfileValue,
+} from '@nostr-dev-kit/ndk-mobile';
 import { router } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
@@ -9,7 +14,7 @@ import { showStoriesModalAtom, storiesAtom } from '../store';
 
 import UserAvatar from '@/components/ui/user/avatar';
 import { useStories } from '@/hooks/stories';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { activeEventAtom } from '@/stores/event';
 

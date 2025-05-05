@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
     container: {
@@ -27,7 +27,7 @@ export const styles = StyleSheet.create({
     },
     value: {
         fontSize: 14,
-        opacity: 0.5
+        opacity: 0.5,
     },
 });
 
@@ -107,13 +107,11 @@ export const valueSheetStyles = StyleSheet.create({
     flatListContent: {
         paddingBottom: 24,
     },
-    helpLink: {
-    },
+    helpLink: {},
     helpText: {
         fontSize: 14,
         textDecorationLine: 'underline',
     },
-}); 
-
+});
 
 export const iconSize = 28;
