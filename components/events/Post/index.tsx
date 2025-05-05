@@ -32,12 +32,12 @@ import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
 import { useZap } from '@/hooks/zap';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
+import useImageLoader from '@/lib/image-loader/hook';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { isUserProfileDeleted } from '@/lib/utils/user';
 import { useAppSettingsStore } from '@/stores/app';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
-import useImageLoader from '@/lib/image-loader/hook';
 
 export const MediaSection = function MediaSection({
     event,
@@ -145,6 +145,7 @@ export const MediaSection = function MediaSection({
                     onPress={onPress}
                     autoplay
                     muted
+                    forceScroll={false}
                     maxHeight={maxHeight}
                     priority={priority}
                 />
@@ -211,7 +212,7 @@ export default function Post({
         return 'high';
     }, [index]);
 
-    const forceSquareAspectRatio = useAppSettingsStore(s => s.forceSquareAspectRatio);
+    const forceSquareAspectRatio = useAppSettingsStore((s) => s.forceSquareAspectRatio);
 
     const headerHeight = useHeaderHeight();
     const screen = Dimensions.get('window');
@@ -238,9 +239,9 @@ export default function Post({
 
     const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
 
-    const loadedImage = useImageLoader({ originalUrl: shouldTryToPreload ? imetas[0].url! : false });
+    const loadedImage = useImageLoader(shouldTryToPreload ? imetas[0].url! : false);
     if (shouldTryToPreload && !loadedImage) {
-        return (<Text>No blurhash, waiting for it to load</Text>);
+        return <Text>No blurhash, waiting for it to load</Text>;
     }
 
     return (

@@ -10,18 +10,29 @@ import {
     Pressable,
     RefreshControl,
     StyleSheet,
-    Text, type ViewToken
+    Text,
+    type ViewToken,
 } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedScrollHandler,
+    useAnimatedStyle,
+    interpolate,
+    Extrapolate,
+} from 'react-native-reanimated';
 
 import Post from '../events/Post';
 import { EventMediaGridContainer } from '../media/event';
 import { type FeedEntry, useFeedEvents, useFeedMonitor } from './hook';
-import { scrollDirAtom } from './store';
 
 import { activeEventAtom } from '@/stores/event';
 import Thread from '../events/Thread';
 
-type FeedProps = {
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
+
+import { useScrollY } from '@/context/ScrollYContext';
+
+export type FeedProps = {
     onPress?: (event: NDKEvent) => void;
     filters: NDKFilter[];
     filterKey: string;
@@ -30,6 +41,9 @@ type FeedProps = {
     filterFn?: (feedEntry: FeedEntry, index: number) => boolean;
     relayUrls?: string[];
     numColumns?: number;
+    ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
+    scrollEventThrottle?: number;
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 };
 
 type PrependEntry = {
@@ -39,20 +53,38 @@ type PrependEntry = {
 
 const keyExtractor = (entry: FeedEntry | PrependEntry) => entry.id;
 
-export default function Feed({
-    filters,
-    filterKey,
-    prepend,
-    filterFn,
-    relayUrls,
-    numColumns = 1,
-    filterOpts,
-}: FeedProps) {
+const Feed = React.forwardRef<FlashList<any>, FeedProps>(function Feed(
+    {
+        filters,
+        filterKey,
+        prepend,
+        filterFn,
+        relayUrls,
+        numColumns = 1,
+        filterOpts,
+        ListHeaderComponent,
+        scrollEventThrottle,
+        onScroll,
+    },
+    ref: React.Ref<FlashList<any>>
+) {
+    const scrollY = useScrollY();
+
+    const animatedScrollHandler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+            scrollY.value = event.contentOffset.y;
+        },
+    });
+
+    const innerRef = useRef<FlashList<any>>(null);
     const visibleIndex = useRef(0);
-    const ref = useRef<FlashList<any> | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
 
-    useScrollToTop(ref);
+    // Expose the local ref to the parent
+    React.useImperativeHandle(ref, () => innerRef.current!);
+
+    // useScrollToTop expects a RefObject
+    useScrollToTop(innerRef);
 
     const sliceIndex = numColumns * 7;
     const { entries, newEntries, updateEntries } = useFeedEvents(
@@ -61,7 +93,7 @@ export default function Feed({
         [filterKey + refreshCount]
     );
     const { setActiveIndex } = useFeedMonitor(
-        entries.map((e) => e.events[0]).filter(e => !!e),
+        entries.map((e) => e.events[0]).filter((e) => !!e),
         sliceIndex
     );
 
@@ -79,11 +111,12 @@ export default function Feed({
     );
 
     const update = useCallback(() => {
-        if (!ref.current) return;
-        ref.current.scrollToIndex({
-            animated: true,
-            index: 0,
-        });
+        if (innerRef.current) {
+            innerRef.current.scrollToIndex({
+                animated: true,
+                index: 0,
+            });
+        }
         updateEntries('update run');
         setShowNewEntriesPrompt(false);
     }, [updateEntries]);
@@ -143,7 +176,10 @@ export default function Feed({
     }, []);
 
     const renderItem = useCallback(
-        ({ item, index }: { item: FeedEntry | PrependEntry; index: number }): React.ReactElement | null => {
+        ({
+            item,
+            index,
+        }: { item: FeedEntry | PrependEntry; index: number }): React.ReactElement | null => {
             if (numColumns === 1 && index === 0 && item.id === 'prepend') {
                 const node = (item as PrependEntry).node;
                 // Ensure we return ReactElement or null, as required by FlashList
@@ -166,9 +202,7 @@ export default function Feed({
                         />
                     );
                 } else if (item.events.length > 1) {
-                    return (
-                        <Thread events={item.events} />
-                    )
+                    return <Thread events={item.events} />;
                 }
             } else {
                 return (
@@ -181,6 +215,7 @@ export default function Feed({
                     />
                 );
             }
+            return null;
         },
         [numColumns]
     );
@@ -189,34 +224,7 @@ export default function Feed({
     const scrollDirRef = useRef<'up' | 'down'>('down');
     const minScrollThreshold = 60; // minimum pixels to scroll before changing direction
 
-    useEffect(() => {
-        setScrollDir('up');
-    }, [filterKey]);
-
-    const setScrollDir = useSetAtom(scrollDirAtom);
-    const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const currentScrollPos = event.nativeEvent.contentOffset.y;
-        const scrollDiff = Math.abs(currentScrollPos - scrollPosRef.current);
-        const scrollDir = currentScrollPos < scrollPosRef.current ? 'up' : 'down';
-
-        if (currentScrollPos < 20 && scrollDirRef.current === 'down') {
-            setScrollDir('up');
-            scrollDirRef.current = 'up';
-            scrollPosRef.current = currentScrollPos;
-            return;
-        }
-
-        if (scrollDiff < minScrollThreshold) return;
-
-        if (scrollDir === 'up' && scrollDirRef.current === 'down') {
-            setScrollDir('up');
-            scrollDirRef.current = 'up';
-        } else if (scrollDir === 'down' && scrollDirRef.current === 'up') {
-            setScrollDir('down');
-            scrollDirRef.current = 'down';
-        }
-        scrollPosRef.current = currentScrollPos;
-    }, []);
+    // Removed scrollDirAtom effect
 
     return (
         <>
@@ -226,26 +234,35 @@ export default function Feed({
                 </Pressable>
             )}
             {renderEntries.length > 0 && (
-                <FlashList
-                    ref={ref}
+                <AnimatedFlashList
+                    ref={innerRef}
                     data={renderEntries}
                     estimatedItemSize={500}
-                    keyExtractor={keyExtractor}
+                    keyExtractor={keyExtractor as (item: unknown, index: number) => string}
                     onViewableItemsChanged={onViewableItemsChanged}
-                    onScroll={onScroll}
-                    scrollEventThrottle={100}
+                    onScroll={onScroll ?? animatedScrollHandler}
+                    scrollEventThrottle={scrollEventThrottle ?? 100}
                     numColumns={numColumns}
+                    ListHeaderComponent={ListHeaderComponent}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={forceRefresh} />
                     }
-                    getItemType={(item) => (item.id === 'prepend' ? 'prepend' : 'post')}
-                    renderItem={renderItem}
+                    getItemType={(item: unknown) =>
+                        (item as FeedEntry | PrependEntry).id === 'prepend' ? 'prepend' : 'post'
+                    }
+                    renderItem={
+                        renderItem as unknown as import(
+                            '@shopify/flash-list'
+                        ).ListRenderItem<unknown>
+                    }
                     disableIntervalMomentum
                 />
             )}
         </>
     );
-}
+});
+
+export default Feed;
 
 const styles = StyleSheet.create({
     newEntriesPrompt: {
@@ -259,5 +276,14 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         flexDirection: 'row',
         gap: 10,
+    },
+    animatedBlur: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 60,
+        zIndex: 100,
+        width: '100%',
     },
 });

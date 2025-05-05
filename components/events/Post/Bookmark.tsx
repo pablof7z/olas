@@ -2,7 +2,6 @@ import { NDKEvent, type NostrEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-
 type BookmarkProps = {
     /**
      * Event the user is reacting to

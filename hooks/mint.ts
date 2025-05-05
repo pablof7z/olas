@@ -10,7 +10,6 @@ export function useMintInfo(url?: string) {
     let fromDb: GetInfoResponse | null = null;
     if (cacheAdapter instanceof NDKCacheAdapterSqlite && url) {
         fromDb = cacheAdapter.getAllMintInfo(url);
-
     }
 
     const [mintInfo, setMintInfo] = useState<GetInfoResponse | null>(fromDb);

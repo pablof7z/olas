@@ -19,13 +19,14 @@ import ProductGridContainer from '../product/grid-container';
 import MediaComponent from './media';
 
 import { useColorScheme } from '@/lib/useColorScheme';
+import EventMedia3ItemsContainer from './event-3-items';
+import EventMedia4ItemsContainer from './event-4-items';
 
 export type EventMediaProps = {
     event: NDKEvent;
     muted?: boolean;
     width?: number;
     height?: number;
-    className?: string;
     singleMode?: boolean;
     forceProxy?: boolean;
     contentFit?: 'contain' | 'cover';
@@ -36,6 +37,7 @@ export type EventMediaProps = {
     onPress?: () => void;
     onLongPress?: () => void;
     autoplay?: boolean;
+    forceScroll?: boolean;
 };
 
 export type EventMediaGridContainerProps = {
@@ -113,7 +115,6 @@ const styles = StyleSheet.create({
 export default function EventMediaContainer({
     event,
     width,
-    className,
     autoplay,
     muted,
     singleMode,
@@ -126,6 +127,7 @@ export default function EventMediaContainer({
     onPress,
     onLongPress,
     style,
+    forceScroll = true,
     ...props
 }: EventMediaProps) {
     const { colors } = useColorScheme();
@@ -151,7 +153,6 @@ export default function EventMediaContainer({
                 onPress={onPress}
                 muted={muted}
                 onLongPress={onLongPress}
-                className={className}
                 style={style}
                 autoplay={autoplay}
                 {...props}
@@ -159,6 +160,34 @@ export default function EventMediaContainer({
         );
     }
 
+    // Grid layout for 3 or 4 images when forceScroll is false
+    if (!forceScroll && (imetas.length === 3 || imetas.length === 4)) {
+        maxHeight ??= maxWidth;
+        if (imetas.length === 3) {
+            return (
+                <EventMedia3ItemsContainer
+                    imetas={imetas}
+                    maxWidth={maxWidth}
+                    maxHeight={maxHeight}
+                    onPress={onPress}
+                    width={0}
+                    height={0}
+                />
+            );
+        } else if (imetas.length === 4) {
+            // 4-image grid: 2x2
+            return (
+                <EventMedia4ItemsContainer
+                    imetas={imetas}
+                    maxWidth={maxWidth}
+                    maxHeight={maxHeight}
+                    onPress={onPress}
+                />
+            );
+        }
+    }
+
+    // Default: scroll view for multiple images
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
@@ -178,7 +207,6 @@ export default function EventMediaContainer({
                         maxHeight={maxHeight}
                         onPress={onPress}
                         priority={priority}
-                        className={className}
                         style={style}
                     />
                 ))}
@@ -207,7 +235,12 @@ export default function EventMediaContainer({
     // }
 }
 
-const VIDEO_KINDS = new Set([NDKKind.HorizontalVideo, NDKKind.VerticalVideo]);
+const VIDEO_KINDS = new Set([
+    NDKKind.HorizontalVideo,
+    NDKKind.VerticalVideo,
+    NDKKind.ShortVideo,
+    NDKKind.Video,
+]);
 
 export function isEventVideo(event: NDKEvent) {
     if (VIDEO_KINDS.has(event.kind)) return true;

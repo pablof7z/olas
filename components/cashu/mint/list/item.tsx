@@ -18,7 +18,7 @@ const MintListItem = ({
     const [units, setUnits] = useState<string[]>([]);
 
     const url = item.tagValue('u');
-    
+
     useEffect(() => {
         if (url) {
             CashuMint.getInfo(url).then(setMintInfo);

@@ -3,6 +3,12 @@ import { router } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+const flareLabelMap = {
+    live: 'LIVE',
+    olas365: '#365',
+    story_prompt: 'Add',
+};
+
 export default function FlareLabel({ flare, pubkey }: { flare: string; pubkey: string }) {
     const handleFlarePress = useCallback(() => {
         if (flare === 'olas365') {
@@ -12,7 +18,7 @@ export default function FlareLabel({ flare, pubkey }: { flare: string; pubkey: s
     }, [flare]);
 
     return (
-        <View className="w-fit" style={styles.container}>
+        <View>
             <FlareElement flare={flare} size={48} />
 
             <Pressable onPress={handleFlarePress}>
@@ -21,12 +27,6 @@ export default function FlareLabel({ flare, pubkey }: { flare: string; pubkey: s
         </View>
     );
 }
-
-const flareLabelMap = {
-    live: 'LIVE',
-    olas365: '#365',
-    story_prompt: 'Add',
-};
 
 const styles = StyleSheet.create({
     container: {
@@ -42,18 +42,20 @@ const styles = StyleSheet.create({
     },
 });
 
-export const FlareElement = memo(
-    ({ flare, size, borderWidth }: { flare: string; size: number; borderWidth?: number }) => {
-        if (flare === 'live') {
-            return <LiveFlare />;
-        } else if (flare === 'olas365') {
-            return <OlasFlare size={size} borderWidth={borderWidth} />;
-        } else if (flare === 'story_prompt') {
-            return <StoryPromptFlare size={size} />;
-        }
-        return null;
+export const FlareElement = ({
+    flare,
+    size,
+    borderWidth,
+}: { flare: string; size: number; borderWidth?: number }) => {
+    if (flare === 'live') {
+        return <LiveFlare />;
+    } else if (flare === 'olas365' || true) {
+        return <OlasFlare size={size} borderWidth={borderWidth} />;
+    } else if (flare === 'story_prompt') {
+        return <StoryPromptFlare size={size} />;
     }
-);
+    return null;
+};
 
 export const LiveFlare = memo(() => {
     return (
@@ -86,35 +88,32 @@ export const StoryPromptFlare = memo(({ size }: { size: number }) => {
     );
 });
 
-export const OlasFlare = memo(
-    ({ size, borderWidth }: { size: number; borderWidth?: number }) => {
-        return (
-            <Canvas style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                {borderWidth ? (
-                    // Hollow Circle (stroke only)
-                    <Circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={size / 2 - borderWidth / 2}
-                        style="stroke"
-                        strokeWidth={borderWidth}
-                    >
-                        <SweepGradient
-                            c={vec(size / 2, size / 2)}
-                            colors={['#112FED', 'cyan', '#112FED']}
-                        />
-                    </Circle>
-                ) : (
-                    <Rect x={0} y={0} width={size} height={size}>
-                        <SweepGradient
-                            c={vec(size / 2, size / 2)}
-                            colors={['#112FED', 'cyan', '#112FED']}
-                        />
-                    </Rect>
-                )}
-            </Canvas>
-        );
-    },
-    (prevProps, nextProps) =>
-        prevProps.size === nextProps.size && prevProps.borderWidth === nextProps.borderWidth
-);
+export const OlasFlare = ({ size, borderWidth }: { size: number; borderWidth?: number }) => {
+    // return <View style={{ width: size, height: size, overflow: 'hidden', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'blue' }} />
+    return (
+        <Canvas style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            {borderWidth ? (
+                // Hollow Circle (stroke only)
+                <Circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={size / 2 - borderWidth / 2}
+                    style="stroke"
+                    strokeWidth={borderWidth}
+                >
+                    <SweepGradient
+                        c={vec(size / 2, size / 2)}
+                        colors={['#112FED', 'cyan', '#112FED']}
+                    />
+                </Circle>
+            ) : (
+                <Rect x={0} y={0} width={size} height={size}>
+                    <SweepGradient
+                        c={vec(size / 2, size / 2)}
+                        colors={['#112FED', 'cyan', '#112FED']}
+                    />
+                </Rect>
+            )}
+        </Canvas>
+    );
+};

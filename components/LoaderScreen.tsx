@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator } from './nativewindui/ActivityIndicator';
 import { Text } from './nativewindui/Text';
 
-import { useUserFlareStore } from '@/hooks/user-flare';
+import { useUserFlareStore } from '@/lib/user/stores/flare';
 import { useAppSettingsStore } from '@/stores/app';
 import { usePaymentStore } from '@/stores/payments';
 
@@ -35,7 +35,9 @@ export default function LoaderScreen({
     const [renderApp, setRenderApp] = useState(false);
     const [shouldRender, setShouldRender] = useState(true);
     const initUserFlareStore = useUserFlareStore((state) => state.init);
-    const userProfile = useProfileValue(currentUser?.pubkey, { subOpts: { skipVerification: true } });
+    const userProfile = useProfileValue(currentUser?.pubkey, {
+        subOpts: { skipVerification: true },
+    });
     const resetAppSettings = useAppSettingsStore((s) => s.reset);
 
     useEffect(() => {

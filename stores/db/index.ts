@@ -1,13 +1,13 @@
 import * as SQLite from 'expo-sqlite';
 
-import { migrations } from './migrations';
 import { lastDayOfDecade } from 'date-fns';
+import { migrations } from './migrations';
 
 export const db = SQLite.openDatabaseSync('snap.db');
 let dbInitialized = false;
 
 if (!dbInitialized) {
-    console.log('Initializing database...');
+    console.log('Initializing database...', db.databasePath);
     let { user_version } = db.getFirstSync('PRAGMA user_version') as { user_version: number };
     console.log('Current user_version:', user_version);
     if (!user_version) user_version = 0;

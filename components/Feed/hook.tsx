@@ -1,18 +1,19 @@
-import { eventThreads, getRootTag, useMuteFilter } from "@nostr-dev-kit/ndk-hooks";
+import { eventThreads, getRootTag, useMuteFilter } from '@nostr-dev-kit/ndk-hooks';
 import {
     type Hexpubkey,
     NDKEvent,
     type NDKEventId,
     type NDKFilter,
-    NDKKind, type NDKSubscription,
+    NDKKind,
+    type NDKSubscription,
     useNDK,
-    useNDKCurrentPubkey
-} from "@nostr-dev-kit/ndk-mobile";
-import { matchFilters } from "nostr-tools";
-import { useCallback, useEffect, useRef, useState } from "react";
+    useNDKCurrentPubkey,
+} from '@nostr-dev-kit/ndk-mobile';
+import { matchFilters } from 'nostr-tools';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { usePaymentStore } from "@/stores/payments";
-import { useReactionsStore } from "@/stores/reactions";
+import { usePaymentStore } from '@/stores/payments';
+import { useReactionsStore } from '@/stores/reactions';
 
 /**
  * This threshold determines how old a new entry can be to be considered
@@ -68,9 +69,9 @@ export function useFeedEvents(
         filterFn?: (feedEntry: FeedEntry, index: number) => boolean;
         relayUrls?: string[];
     } = {},
-    dependencies: any[] = [],
+    dependencies: any[] = []
 ) {
-    subId ??= "feed";
+    subId ??= 'feed';
 
     const { ndk } = useNDK();
 
@@ -136,7 +137,15 @@ export function useFeedEvents(
         (reason: string) => {
             const time = Date.now();
             if (freezeState.current) return;
-            console.log(`[${Date.now() - timeZero}ms]`, `[FEED HOOK ${time}ms] updating entries, we start with`, renderedEntryIdsRef.current.size, 'we have', newEntriesRef.current.size, 'new entries to consider', { reason });
+            console.log(
+                `[${Date.now() - timeZero}ms]`,
+                `[FEED HOOK ${time}ms] updating entries, we start with`,
+                renderedEntryIdsRef.current.size,
+                'we have',
+                newEntriesRef.current.size,
+                'new entries to consider',
+                { reason }
+            );
 
             const newSliceIds = Array.from(newEntriesRef.current.values());
             let newSlice = entriesFromIds(new Set(newSliceIds));
@@ -160,7 +169,9 @@ export function useFeedEvents(
                     renderedEntries = [...newSlice, ...renderedEntries];
                 } else {
                     // otherwise, merge with the currently rendered entries and sort everything
-                    renderedEntries = [...newSlice, ...renderedEntries].sort((a, b) => b.timestamp - a.timestamp);
+                    renderedEntries = [...newSlice, ...renderedEntries].sort(
+                        (a, b) => b.timestamp - a.timestamp
+                    );
                 }
 
                 // renderedEntries.forEach(entry => console.log('rendered entry', entry.id, entry.timestamp))
@@ -175,7 +186,7 @@ export function useFeedEvents(
             setNewEntries([]);
             newEntriesRef.current.clear();
         },
-        [isMutedEvent, filterFn],
+        [isMutedEvent, filterFn]
     );
 
     useEffect(() => {
@@ -184,7 +195,7 @@ export function useFeedEvents(
         let changed = false;
 
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            if (entry?.events.length > 0 && (isMutedEvent(entry.events[0]))) {
+            if (entry?.events.length > 0 && isMutedEvent(entry.events[0])) {
                 changed = true;
                 // remove the entry
                 renderedEntryIdsRef.current.delete(entry.id);
@@ -199,7 +210,7 @@ export function useFeedEvents(
         // same thing for new entries
         changed = false;
         for (const entry of entriesFromIds(newEntriesRef.current)) {
-            if (entry?.events.length > 0 && (isMutedEvent(entry.events[0]))) {
+            if (entry?.events.length > 0 && isMutedEvent(entry.events[0])) {
                 // console.log('removing new entry', entry.id, entry.event?.pubkey)
                 changed = true;
                 // remove the entry
@@ -226,7 +237,7 @@ export function useFeedEvents(
             const ret = cb(entry ?? { id, events: [], reposts: [], timestamp: -1 });
             if (ret) {
                 // check this isn't muted or blacklisted
-                if (ret.events[0] && (isMutedEvent(ret.events[0]))) return;
+                if (ret.events[0] && isMutedEvent(ret.events[0])) return;
 
                 if (!ret.timestamp) ret.timestamp = ret.events[0]?.created_at ?? -1;
 
@@ -245,7 +256,9 @@ export function useFeedEvents(
 
                 const isEosed = eosed.current;
 
-                const isNotTooOld = !(isEosed && ret.timestamp < Date.now() / 1000 - NEW_ENTRY_THRESHOLD);
+                const isNotTooOld = !(
+                    isEosed && ret.timestamp < Date.now() / 1000 - NEW_ENTRY_THRESHOLD
+                );
 
                 if (isNotAlreadyRendered && isNotAlreadyMarkedAsNew && isNotTooOld) {
                     newEntriesRef.current.add(id);
@@ -262,12 +275,12 @@ export function useFeedEvents(
                 // than the highest timestamp we have seen so far
                 if (!isEosed && isNewerTimestamp) {
                     highestTimestamp.current = ret.timestamp;
-                    updateEntries("new entry ");
+                    updateEntries('new entry ');
                 }
             }
             return ret;
         },
-        [updateEntries, setNewEntries, filterFn], // Added dependencies
+        [updateEntries, setNewEntries, filterFn] // Added dependencies
     );
 
     /**
@@ -298,9 +311,10 @@ export function useFeedEvents(
                 const baseEntry = entry ?? { id: rootId, reposts: [], timestamp: -1 };
                 return { ...baseEntry, events: threadEvents, timestamp: event.created_at };
             });
-        }, [updateEntry]
+        },
+        [updateEntry]
     );
-    
+
     const handleContentEvent = useCallback(
         (eventId: string, event: NDKEvent) => {
             updateEntry(eventId, (entry) => {
@@ -309,7 +323,7 @@ export function useFeedEvents(
                 return { ...baseEntry, events: [event], timestamp: event.created_at };
             });
         },
-        [updateEntry],
+        [updateEntry]
     );
 
     /**
@@ -318,12 +332,17 @@ export function useFeedEvents(
      */
     const handleRepost = useCallback(
         (event: NDKEvent) => {
-            const repostedId = event.tagValue("e");
+            const repostedId = event.tagValue('e');
             if (!repostedId) return;
 
             updateEntry(repostedId, (entry) => {
                 // Ensure entry is defined before modifying, provide default if not
-                let currentEntry = entry ?? { id: repostedId, events: [], reposts: [], timestamp: -1 };
+                let currentEntry = entry ?? {
+                    id: repostedId,
+                    events: [],
+                    reposts: [],
+                    timestamp: -1,
+                };
                 currentEntry.reposts.push(event);
 
                 if (currentEntry.events.length > 0) {
@@ -352,28 +371,33 @@ export function useFeedEvents(
                 return currentEntry;
             });
         },
-        [ndk, updateEntry],
+        [ndk, updateEntry]
     ); // Added ndk dependency
 
     const handleBookmark = useCallback(
         (event: NDKEvent) => {
-            const bookmarkedId = event.tagValue("e");
+            const bookmarkedId = event.tagValue('e');
             if (!bookmarkedId) return;
 
             updateEntry(bookmarkedId, (entry) => {
-                let currentEntry = entry ?? { id: bookmarkedId, events: [], reposts: [], timestamp: -1 };
+                const currentEntry = entry ?? {
+                    id: bookmarkedId,
+                    events: [],
+                    reposts: [],
+                    timestamp: -1,
+                };
                 if (!currentEntry.timestamp || currentEntry.timestamp < event.created_at) {
                     currentEntry.timestamp = event.created_at;
                 }
                 return currentEntry;
             });
         },
-        [updateEntry],
+        [updateEntry]
     );
 
     const handleDeletion = useCallback(
         (event: NDKEvent) => {
-            for (const deletedIdTuple of event.getMatchingTags("e")) {
+            for (const deletedIdTuple of event.getMatchingTags('e')) {
                 const deletedId = deletedIdTuple[1]; // Get the ID from the tag tuple
                 if (!deletedId) continue; // Skip if ID is missing
 
@@ -386,14 +410,19 @@ export function useFeedEvents(
                         allEntriesRef.current.set(deletedId, { ...entry });
                         // Force re-render if this entry is currently visible
                         if (renderedEntryIdsRef.current.has(deletedId)) {
-                            updateEntries("deletion");
+                            updateEntries('deletion');
                         }
                     }
                 } else {
                     // we don't have the event, let's just record the deletion
                     updateEntry(deletedId, (currentEntry) => {
                         // Ensure the base object has the required 'id' property
-                        const baseEntry = currentEntry ?? { id: deletedId, events: [], reposts: [], timestamp: -1 };
+                        const baseEntry = currentEntry ?? {
+                            id: deletedId,
+                            events: [],
+                            reposts: [],
+                            timestamp: -1,
+                        };
                         return {
                             ...baseEntry,
                             deletedBy: [...(baseEntry.deletedBy || []), event.pubkey],
@@ -402,7 +431,7 @@ export function useFeedEvents(
                 }
             }
         },
-        [updateEntry, updateEntries], // Added updateEntries dependency
+        [updateEntry, updateEntries] // Added updateEntries dependency
     );
 
     const handleEvent = useCallback(
@@ -430,7 +459,7 @@ export function useFeedEvents(
                     return handleDeletion(event);
             }
         },
-        [handleContentEvent, handleRepost, handleBookmark, handleDeletion],
+        [handleContentEvent, handleRepost, handleBookmark, handleDeletion]
     );
 
     const handleBulkEvents = useCallback(
@@ -441,13 +470,13 @@ export function useFeedEvents(
             }
 
             freezeState.current = false;
-            updateEntries("bulk events");
+            updateEntries('bulk events');
         },
-        [handleEvent, updateEntries],
+        [handleEvent, updateEntries]
     );
 
     const handleEose = useCallback(() => {
-        updateEntries("eose");
+        updateEntries('eose');
         eosed.current = true;
     }, [updateEntries]);
 
@@ -460,7 +489,10 @@ export function useFeedEvents(
 
         // Go through the currently-rendered entries and see if we need to change them
         for (const entry of entriesFromIds(renderedEntryIdsRef.current)) {
-            const keep = entry?.events.length > 0 && filters && matchFilters(filters, entry.events[0].rawEvent());
+            const keep =
+                entry?.events.length > 0 &&
+                filters &&
+                matchFilters(filters, entry.events[0].rawEvent());
             if (!entry || !keep || !passesFilter(entry)) {
                 // Ensure entry is defined
                 changed = true;
@@ -479,7 +511,8 @@ export function useFeedEvents(
             for (const id of newEntriesRef.current) {
                 const feedEntry = allEntriesRef.current.get(id);
                 // Ensure feedEntry and feedEntry.event exist
-                if (!feedEntry || feedEntry.events.length === 0 || addedEventIds.current.has(id)) continue;
+                if (!feedEntry || feedEntry.events.length === 0 || addedEventIds.current.has(id))
+                    continue;
                 if (!passesFilter(feedEntry)) continue; // passesFilter expects FeedEntry, already checked feedEntry exists
 
                 const keep =
@@ -494,7 +527,7 @@ export function useFeedEvents(
             }
         }
 
-        if (changed) updateEntries("filtering out events");
+        if (changed) updateEntries('filtering out events');
     }, [filters, filterFn, updateEntries, entriesFromIds]); // Added dependencies
 
     useEffect(() => {
@@ -509,7 +542,7 @@ export function useFeedEvents(
 
             filterExistingEvents();
         }
-        
+
         const sub = ndk.subscribe(
             filters,
             { wrap: true, groupable: false, skipVerification: true, subId, relayUrls },
@@ -517,7 +550,7 @@ export function useFeedEvents(
                 onEose: handleEose,
                 onEvent: handleEvent,
                 onEvents: handleBulkEvents,
-            },
+            }
         );
 
         // res will come back with an array of cached events, they need to be filtered (for blacklist and mutes) and then inserted in bulk into the state
@@ -587,13 +620,20 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
         if (!ndk) return; // Explicit check for ndk before use
 
         const filter = {
-            "#e": newSlice.eventIds,
-            kinds: [NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost, NDKKind.GenericRepost, NDKKind.GenericReply, NDKKind.Text],
+            '#e': newSlice.eventIds,
+            kinds: [
+                NDKKind.Reaction,
+                NDKKind.Zap,
+                NDKKind.Repost,
+                NDKKind.GenericRepost,
+                NDKKind.GenericReply,
+                NDKKind.Text,
+            ],
         };
 
         const zapFilter = {
             kinds: [NDKKind.ZapRequest],
-            "#p": newSlice.eventIds.map((id) => ndk.getUser({ hexpubkey: id }).pubkey),
+            '#p': newSlice.eventIds.map((id) => ndk.getUser({ hexpubkey: id }).pubkey),
         };
 
         newSlice.sub = ndk.subscribe(
@@ -608,7 +648,7 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
                     addEvents(events, currentPubkey || undefined);
                     addPayments(events);
                 },
-            },
+            }
         );
         activeSlices.current.push(newSlice);
         for (const id of newSlice.eventIds) {
@@ -619,7 +659,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
     const removeSlice = (slice: Slice) => {
         slice.removeTimeout = setTimeout(() => {
             slice.sub?.stop(); // Ensure optional chaining is used
-            activeSlices.current = activeSlices.current.filter((s) => s.eventIds[0] !== slice.eventIds[0]);
+            activeSlices.current = activeSlices.current.filter(
+                (s) => s.eventIds[0] !== slice.eventIds[0]
+            );
             for (const id of slice.eventIds) {
                 activeIds.current.delete(id);
             }
@@ -633,7 +675,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         // go through the slices we have and determine what we should remove
         for (const activeSlice of activeSlices.current) {
-            const keep = neededSlices.find((slice) => slice.eventIds[0] === activeSlice.eventIds[0]);
+            const keep = neededSlices.find(
+                (slice) => slice.eventIds[0] === activeSlice.eventIds[0]
+            );
 
             if (!keep) {
                 if (!activeSlice.removeTimeout) removeSlice(activeSlice);
@@ -645,7 +689,9 @@ export function useFeedMonitor(events: NDKEvent[], sliceSize = 5) {
 
         // go through the slices we want and determine what we need to add
         for (const neededSlice of neededSlices) {
-            const exists = activeSlices.current.find((slice) => slice.eventIds[0] === neededSlice.eventIds[0]);
+            const exists = activeSlices.current.find(
+                (slice) => slice.eventIds[0] === neededSlice.eventIds[0]
+            );
 
             if (!exists) addSlice(neededSlice);
         }

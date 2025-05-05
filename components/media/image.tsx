@@ -1,11 +1,20 @@
-import { Image } from 'expo-image';
-import React, { useEffect, useMemo } from 'react';
-import { Dimensions, Pressable, type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import { Image, useImage } from 'expo-image';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    Dimensions,
+    type GestureResponderEvent,
+    Linking,
+    Pressable,
+    type StyleProp,
+    StyleSheet,
+    View,
+    type ViewStyle,
+} from 'react-native';
 
 import type { MediaDimensions } from './types';
 
 import useImageLoader from '@/lib/image-loader/hook';
-import { Text } from '../nativewindui/Text';
+import { FileWarning, RefreshCcw } from 'lucide-react-native';
 
 /**
  * This keeps a record of the known image heights for a given url.
@@ -78,48 +87,70 @@ export default function ImageComponent({
     const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
 
     // Use the new preloading hook
-    const imageCache = useImageLoader({
-        originalUrl: url,
-        priority,
+    const imageCache = useImageLoader(url, {
         reqWidth: sizeForProxy,
         forceProxy,
-        blurhash
+        blurhash,
     });
 
     // Fallback for dimensions
     const renderDimensions = forceDimensions;
-    let finalDimensions = useMemo(() => {
+    const finalDimensions = useMemo(() => {
+        if (forceDimensions) return forceDimensions;
         if (dimensions && !renderDimensions) {
             return calcDimensions(dimensions, maxDimensions!);
         }
         return renderDimensions || maxDimensions;
     }, []);
 
+    const [retrying, setRetrying] = useState(false);
+
+    const retry = useCallback(async (event: GestureResponderEvent) => {
+        alert('retrying');
+        setRetrying(true);
+        // await imageCache.retry()
+        setRetrying(false);
+    }, []);
+
     return (
         <Pressable
-            style={[styles.pressable, style]}
-            onPress={onPress ?? (() => {})}
-            onLongPress={onLongPress ?? (() => {})}
+            style={[styles.pressable, style, { position: 'relative' }]}
             className={className}
+            onPress={onPress}
+            onLongPress={onLongPress}
             {...props}
         >
             <Image
                 source={imageCache.image}
-                placeholderContentFit={contentFit}
-                cachePolicy="memory-disk"
-                contentFit={contentFit}
-                recyclingKey={url}
+                allowDownscaling={false}
                 onLoad={(_e) => {
                     if (onLoad) onLoad();
                 }}
                 style={{
                     width: safeFloor(finalDimensions?.width),
                     height: safeFloor(finalDimensions?.height),
+                    flex: 1,
                 }}
             />
-            {/* <Text style={{ position: 'absolute', backgroundColor: 'red', fontSize: 12, opacity: 0.9 }}>
-                {maxDimensions?.width} {imageCache.status}
-                { imageCache?.image?.cacheKey}
+            <View style={{ position: 'absolute', top: 10, right: 10 }}>
+                {imageCache.status === 'error' && (
+                    <Pressable onPress={retry}>
+                        <FileWarning color="black" />
+                    </Pressable>
+                )}
+            </View>
+            {/* {retrying ? (
+                <ActivityIndicator size="small" />
+            ) : (imageCache.status === 'error' && (
+                <Pressable  style={{ position: 'absolute', top: 2, right: 2 }} onPress={retry}>
+                    <RefreshCcw />
+                </Pressable>
+            ))}
+            <Text style={{ backgroundColor: 'red', fontSize: 12, opacity: 0.9 }}>
+                {sizeForProxy}{' '}
+                {finalDimensions?.width}x{finalDimensions?.height}
+                { url }{' '}
+                { imageCache.status }
             </Text> */}
         </Pressable>
     );

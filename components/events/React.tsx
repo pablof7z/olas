@@ -50,10 +50,7 @@ export function useReactEvent() {
 
             addRelatedEvents([r], true);
 
-            r.publish()
-                .catch((e) => {
-                    console.error(e);
-                });
+            r.publish();
         },
         [addRelatedEvents]
     );

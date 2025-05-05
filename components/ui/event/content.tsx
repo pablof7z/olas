@@ -87,9 +87,9 @@ function RenderMention({
         },
         [onMentionPress]
     );
-    
+
     let pubkey: string | undefined = undefined;
-    
+
     if (entity) {
         try {
             const { type, data } = nip19.decode(entity);
@@ -99,15 +99,15 @@ function RenderMention({
             // Invalid entity, will render fallback
         }
     }
-    
+
     const userProfile = useProfileValue(pubkey, { subOpts: { skipVerification: true } });
 
     if (!entity) return null;
-    
+
     if (!pubkey) {
         return <Text style={{ fontSize }}>{entity.substring(0, 6)}...</Text>;
     }
-    
+
     return (
         <Text
             style={{ fontSize }}

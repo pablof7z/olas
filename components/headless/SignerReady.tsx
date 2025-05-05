@@ -1,7 +1,7 @@
-import { useNDK, useNDKCurrentUser } from "@nostr-dev-kit/ndk-mobile";
-import { useEffect, useState } from "react";
+import { useNDK, useNDKCurrentUser } from '@nostr-dev-kit/ndk-mobile';
+import { useEffect, useState } from 'react';
 
-import { useNip60WalletStore, useNutzapMonitor, useWalletMonitor } from "@/hooks/wallet";
+import { useNip60WalletStore, useNutzapMonitor, useWalletMonitor } from '@/hooks/wallet';
 
 export default function SignerReady() {
     const { ndk } = useNDK();
@@ -10,7 +10,7 @@ export default function SignerReady() {
 
     useEffect(() => {
         if (signerReady || !ndk) return;
-        ndk.once("signer:ready", () => {
+        ndk.once('signer:ready', () => {
             setSignerReady(true);
         });
     }, [ndk, signerReady, currentUser]);

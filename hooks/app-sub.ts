@@ -1,22 +1,16 @@
-import {
-    type NDKEvent,
-    NDKKind,
-    NDKList,
-} from "@nostr-dev-kit/ndk";
+import { type NDKEvent, NDKKind, NDKList, NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk';
 import {
     type NDKEventWithFrom,
     useNDK,
-    useNDKCurrentUser,
-    useObserver,
-} from "@nostr-dev-kit/ndk-hooks";
+    useNDKCurrentUser
+} from '@nostr-dev-kit/ndk-hooks';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-import { useUserFlareStore } from "./user-flare";
-
-import { usePaymentStore } from "@/stores/payments";
-import { useReactionsStore } from "@/stores/reactions";
-import { mainKinds } from "@/utils/const";
+import { usePaymentStore } from '@/stores/payments';
+import { useReactionsStore } from '@/stores/reactions';
+import { mainKinds } from '@/utils/const';
+import { useUserFlareStore } from '@/lib/user/stores/flare';
 
 const sessionKinds = new Map([
     [NDKKind.BlossomList, { wrapper: NDKList }],
@@ -53,20 +47,43 @@ export function useAppSub() {
     const addReactionEventsRef = useRef(useReactionsStore.getState().addEvents);
     const addReactionEvents = addReactionEventsRef.current;
     const addPayments = usePaymentStore((state) => state.addPayments);
+    const setUserFlares = useUserFlareStore((state) => state.setFlares);
     const setUserFlare = useUserFlareStore((state) => state.setFlare);
     const { ndk } = useNDK();
 
-    const processedPubkeyRef = useRef(new Set<string>());
     const processedEventsRef = useRef(new Set<string>()); // Track processed event IDs
-    const olas365events = useObserver([{ kinds: [20], "#t": ["olas365"] }], { skipVerification: true });
 
     useEffect(() => {
-        for (const event of olas365events) {
-            if (processedPubkeyRef.current.has(event.pubkey)) return;
-            processedPubkeyRef.current.add(event.pubkey);
-            setUserFlare(event.pubkey, "olas365");
-        }
-    }, [olas365events.length]);
+        if (!ndk) return;
+
+        const processedPubkeys = new Set<string>();
+
+        ndk.subscribe(
+            [{ '#t': ['olas365'] }],
+            { cacheUsage: NDKSubscriptionCacheUsage.ONLY_CACHE, skipVerification: true },
+            {
+                onEvents: (events) => {
+                    for (const event of events) {
+                        processedPubkeys.add(event.pubkey);
+                    }
+                    setUserFlares(Array.from(processedPubkeys), 'olas365');
+                },
+                onEvent: (event) => {
+                    if (processedPubkeys.has(event.pubkey)) return;
+                    processedPubkeys.add(event.pubkey);
+                    setUserFlare(event.pubkey, 'olas365');
+                },
+            }
+        );
+    }, [ndk]);
+
+    // useEffect(() => {
+    //     for (const event of olas365events) {
+    //         if (processedPubkeyRef.current.has(event.pubkey)) return;
+    //         processedPubkeyRef.current.add(event.pubkey);
+    //         setUserFlare(event.pubkey, "olas365");
+    //     }
+    // }, [olas365events.length]);
 
     const eventsToAdd = useRef<NDKEvent[]>([]);
 
@@ -75,11 +92,11 @@ export function useAppSub() {
         const kindString = Array.from(mainKinds).map((k) => k.toString());
 
         const filters = [
-            { kinds: [NDKKind.Text], "#k": kindString, authors: [pubkey] },
-            { kinds: [NDKKind.GenericReply], "#K": kindString, "#p": [pubkey] },
-            { kinds: [NDKKind.GenericRepost], "#k": kindString, "#p": [pubkey] },
-            { kinds: [NDKKind.Reaction], "#k": kindString, "#p": [pubkey] },
-            { kinds: [NDKKind.EventDeletion], "#k": kindString, authors: [pubkey] },
+            { kinds: [NDKKind.Text], '#k': kindString, authors: [pubkey] },
+            { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [pubkey] },
+            { kinds: [NDKKind.GenericRepost], '#k': kindString, '#p': [pubkey] },
+            { kinds: [NDKKind.Reaction], '#k': kindString, '#p': [pubkey] },
+            { kinds: [NDKKind.EventDeletion], '#k': kindString, authors: [pubkey] },
         ];
 
         const appSub = ndk.subscribe(
@@ -88,7 +105,7 @@ export function useAppSub() {
                 groupable: false,
                 skipVerification: true,
                 addSinceFromCache: true,
-                subId: "main-sub",
+                subId: 'main-sub',
             },
             {
                 onEvents: (events) => {
@@ -110,14 +127,16 @@ export function useAppSub() {
 
                     const time = Math.floor(Date.now() / 1000);
                 },
-            },
+            }
         );
 
         setTimeout(() => {
             const cachedEvents = appSub.start(false);
             if (cachedEvents) {
                 // Filter out already processed events from cache processing
-                const newEvents = cachedEvents.filter((event) => !processedEventsRef.current.has(event.id));
+                const newEvents = cachedEvents.filter(
+                    (event) => !processedEventsRef.current.has(event.id)
+                );
                 for (const event of newEvents) processedEventsRef.current.add(event.id);
 
                 if (newEvents.length > 0) {

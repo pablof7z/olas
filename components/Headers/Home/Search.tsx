@@ -1,4 +1,4 @@
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from '@backpackapp-io/react-native-toast';
 import {
     NDKEvent,
     NDKKind,
@@ -7,17 +7,17 @@ import {
     NDKUser,
     type NostrEvent,
     useNDK,
-} from "@nostr-dev-kit/ndk-mobile";
-import { router } from "expo-router";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Search } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+} from '@nostr-dev-kit/ndk-mobile';
+import { router } from 'expo-router';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { Search } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { searchQueryAtom, useSearchQuery } from "./store";
+import { searchQueryAtom, useSearchQuery } from './store';
 
-import { searchInputRefAtom } from "@/components/FeedType/store";
-import { useColorScheme } from "@/lib/useColorScheme";
+import { searchInputRefAtom } from '@/components/FeedType/store';
+import { useColorScheme } from '@/lib/useColorScheme';
 
 export default function SearchInput() {
     const searchQuery = useAtomValue(searchQueryAtom);
@@ -45,13 +45,13 @@ export default function SearchInput() {
 
     const dvmRelaySet = useMemo(() => {
         if (!ndk) return null;
-        return NDKRelaySet.fromRelayUrls(["wss://relay.vertexlab.io"], ndk);
+        return NDKRelaySet.fromRelayUrls(['wss://relay.vertexlab.io'], ndk);
     }, [ndk]);
 
     const dvmSearch = useCallback(async (input: string) => {
         const req = new NDKEvent(ndk, {
             kind: 5315,
-            tags: [["param", "search", input]],
+            tags: [['param', 'search', input]],
         } as NostrEvent);
         await req.sign();
 
@@ -62,7 +62,7 @@ export default function SearchInput() {
                 {
                     onEvent: (event) => {
                         if (event.kind === NDKKind.DVMJobFeedback) {
-                            const statusTag = event.getMatchingTags("status")?.[0];
+                            const statusTag = event.getMatchingTags('status')?.[0];
                             const status = statusTag?.[2] ?? statusTag?.[1];
                             if (status) toast(status);
                             return;
@@ -85,7 +85,7 @@ export default function SearchInput() {
                     onEose: (_event) => {
                         req.publish(dvmRelaySet);
                     },
-                },
+                }
             );
             sub.start();
         } catch (e) {
@@ -95,13 +95,13 @@ export default function SearchInput() {
 
     const search = useCallback(
         async (input: string) => {
-            if (input.startsWith("npub1")) {
+            if (input.startsWith('npub1')) {
                 try {
                     const user = new NDKUser({ npub: input });
                     router.push(`/profile?pubkey=${user.pubkey}`);
                     return;
                 } catch {}
-            } else if (input.startsWith("@") && !input.match(/\./)) {
+            } else if (input.startsWith('@') && !input.match(/\./)) {
                 dvmSearch(input.slice(1));
             } else if (input.match(/@/)) {
                 const user = await ndk.getUserFromNip05(input);
@@ -113,19 +113,19 @@ export default function SearchInput() {
 
             setSearchQuery(input.trim());
         },
-        [setSearchQuery],
+        [setSearchQuery]
     );
 
     const handleInputChange = useCallback(
         (text: string) => {
-            if (text.startsWith("@")) {
+            if (text.startsWith('@')) {
                 // find usernames that match the input
                 // cacheAdapter.db.
             }
 
             setInput(text);
         },
-        [input, setInput],
+        [input, setInput]
     );
 
     const { colors } = useColorScheme();
@@ -154,13 +154,13 @@ export default function SearchInput() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        flexDirection: "row",
+        flexDirection: 'row',
         gap: 8,
-        alignItems: "flex-end",
+        alignItems: 'flex-end',
     },
     input: {
         flex: 1,
         fontSize: 18,
-        fontWeight: "semibold",
+        fontWeight: 'semibold',
     },
 });

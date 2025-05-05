@@ -1,3 +1,4 @@
+import { useNDKCurrentPubkey, useObserver } from '@nostr-dev-kit/ndk-hooks';
 import {
     NDKEvent,
     NDKKind,
@@ -7,7 +8,6 @@ import {
     useNDK,
     useNDKCurrentUser,
 } from '@nostr-dev-kit/ndk-mobile';
-import { useNDKCurrentPubkey, useObserver } from '@nostr-dev-kit/ndk-hooks';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -26,13 +26,15 @@ export function useNotifications(onlyNew = false) {
             ? [
                   { kinds: [NDKKind.Text], '#p': [currentPubkey] },
                   { kinds: [NDKKind.GenericReply], '#K': kindString, '#p': [currentPubkey] },
-                  { kinds: [NDKKind.Reaction, NDKKind.GenericRepost], '#k': ['20'], '#p': [currentPubkey], },
+                  {
+                      kinds: [NDKKind.Reaction, NDKKind.GenericRepost],
+                      '#k': ['20'],
+                      '#p': [currentPubkey],
+                  },
                   { kinds: [3006 as NDKKind, 967 as NDKKind], '#p': [currentPubkey] },
-                  ...[
-                      WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentPubkey] } : {},
-                  ],
+                  ...[WALLET_ENABLED ? { kinds: [NDKKind.Nutzap], '#p': [currentPubkey] } : {}],
               ]
-            : false,
+            : false
     );
 
     const filteredNotifications = useMemo(() => {

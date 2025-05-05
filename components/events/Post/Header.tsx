@@ -12,7 +12,7 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import * as User from '@/components/ui/user';
 import AvatarGroup from '@/components/ui/user/AvatarGroup';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { getClientName } from '@/utils/event';
 

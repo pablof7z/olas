@@ -29,7 +29,7 @@ export function CommunityBottomSheet() {
     useEffect(() => {
         if (COMMUNITIES_ENABLED) {
             setBottomSheetRef(ref);
-            
+
             return () => {
                 setBottomSheetRef(null);
             };

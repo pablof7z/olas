@@ -1,11 +1,10 @@
-import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
-import { Image, type ImageProps } from 'expo-image';
-import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
 import useImageLoader from '@/lib/image-loader/hook';
+import type { Hexpubkey, NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
+import { Image, type ImageProps, useImage } from 'expo-image';
+import React, { type ForwardedRef, forwardRef, useMemo } from 'react';
 import {
     type ImageSourcePropType,
     type ImageStyle,
-    Pressable,
     type StyleProp,
     StyleSheet,
     View,
@@ -15,8 +14,6 @@ import {
 import FlareLabel, { FlareElement } from './flare';
 
 import { useColorScheme } from '@/lib/useColorScheme';
-import { getProxiedImageUrl } from '@/utils/imgproxy';
-import { Text } from '@/components/nativewindui/Text';
 
 interface AvatarProps extends Omit<ImageProps, 'style'> {
     pubkey: Hexpubkey;
@@ -70,13 +67,10 @@ const UserAvatar = forwardRef(function UserAvatar(
 
     // Use the new preloading hook for avatar image
     const avatarUrl = userProfile?.picture ?? null;
-    const imageCache = useImageLoader({
-        originalUrl: avatarUrl ?? false,
-        priority: 'high',
+    const { image } = useImageLoader(avatarUrl ?? false, {
         reqWidth: imageSize,
-        forceProxy: !skipProxy,
     });
-    console.log('avatar url', avatarUrl, imageCache);
+    // const image = useImage(avatarUrl, {}, [avatarUrl])
 
     borderColor ??= colors.card;
 
@@ -86,6 +80,7 @@ const UserAvatar = forwardRef(function UserAvatar(
             width: imageSize,
             height: imageSize,
             borderRadius: imageSize,
+            backgroundColor: `#${pubkey.slice(0, 6)}`,
         }),
         [imageSize]
     );
@@ -116,7 +111,15 @@ const UserAvatar = forwardRef(function UserAvatar(
                 </View>
             )}
             <AvatarInner
-                image={imageCache.image}
+                image={
+                    image && typeof image === 'object'
+                        ? {
+                              ...image,
+                              width: image.width ?? undefined,
+                              height: image.height ?? undefined,
+                          }
+                        : image
+                }
                 pubkey={pubkey}
                 imageSize={imageSize}
                 borderWidth={borderWidth}
@@ -190,7 +193,7 @@ function AvatarInner({
         <>
             <View style={[innerContainerStyle, externalStyle]}>
                 {image ? (
-                    <Image source={image} style={imageStyle} recyclingKey={pubkey} priority="low" />
+                    <Image source={image} style={imageStyle} recyclingKey={pubkey} />
                 ) : (
                     <View
                         style={{

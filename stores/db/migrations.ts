@@ -64,11 +64,12 @@ export const migrations = [
 
             for (const search of predefinedSearches) {
                 db.runSync(
-                    'INSERT INTO saved_searches (title, subtitle, hashtags, created_at, updated_at) VALUES (?, ?, ?, ?, ?);',
+                    'INSERT OR REPLACE INTO saved_searches (title, subtitle, hashtags, created_at, updated_at, last_used_at) VALUES (?, ?, ?, ?, ?, ?);',
                     [
                         search.title,
                         search.subTitle,
                         search.hashtags.join(' '),
+                        Date.now(),
                         Date.now(),
                         Date.now(),
                     ]
@@ -94,7 +95,10 @@ export const migrations = [
         up: (db: SQLite.SQLiteDatabase) => {
             const relays = (SecureStore.getItem('relays') || '').split(',');
             for (const relay of relays) {
-                db.runSync('INSERT INTO relays (url, connect) VALUES (?, ?);', [relay, true]);
+                db.runSync('INSERT OR REPLACE INTO relays (url, connect) VALUES (?, ?);', [
+                    relay,
+                    true,
+                ]);
             }
         },
     },
@@ -238,19 +242,13 @@ export const migrations = [
         version: 17,
         up: (db: SQLite.SQLiteDatabase) => {
             db.execSync(`CREATE TABLE IF NOT EXISTS pubkey_flares (
-{
-    version: 18,
-    up: (db: import('expo-sqlite').SQLiteDatabase) => {
-        db.execSync('ALTER TABLE image_cache ADD COLUMN attempts INTEGER DEFAULT 0;');
-    },
-},
                 pubkey TEXT PRIMARY KEY,
                 flare_type TEXT,
                 created_at INTEGER
             )`);
         },
     },
-{
+    {
         version: 18,
         up: (db: SQLite.SQLiteDatabase) => {
             // Update the #photography saved search if it has the wrong hashtag

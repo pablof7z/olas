@@ -118,15 +118,18 @@ function HistoryItemPendingZap({
     }
 
     // Fix callback signature for zapper.once
-    item.zapper.once('split:complete', (_split: NDKZapSplit, info: Error | NDKPaymentConfirmation | undefined) => {
-        if (info instanceof Error) {
-            setError(info);
-        } else if (info) {
-            // Handle successful confirmation if needed
-        } else {
-            // Handle undefined case if needed
+    item.zapper.once(
+        'split:complete',
+        (_split: NDKZapSplit, info: Error | NDKPaymentConfirmation | undefined) => {
+            if (info instanceof Error) {
+                setError(info);
+            } else if (info) {
+                // Handle successful confirmation if needed
+            } else {
+                // Handle undefined case if needed
+            }
         }
-    });
+    );
 
     const targetPubkey = useMemo(() => item.zapper.target?.pubkey, [item.internalId]);
 
@@ -288,15 +291,19 @@ function HistoryItemEvent({
     if (!walletChange) return <></>;
     // Ensure walletChange is valid before proceeding
     if (!walletChange) {
-         console.error("Missing walletChange data for item:", item.id);
-         // Return a minimal representation or null if walletChange is missing
-         return <ListItem index={index} target={target} item={{ title: "Loading..." }} />;
+        console.error('Missing walletChange data for item:', item.id);
+        // Return a minimal representation or null if walletChange is missing
+        return <ListItem index={index} target={target} item={{ title: 'Loading...' }} />;
     }
 
     // Ensure amount is valid
     if (typeof walletChange.amount !== 'number' || walletChange.amount < 0) {
-        console.error("Invalid amount in walletChange data for item:", item.id, typeof walletChange.amount);
-        return <ListItem index={index} target={target} item={{ title: "Invalid Amount" }} />;
+        console.error(
+            'Invalid amount in walletChange data for item:',
+            item.id,
+            typeof walletChange.amount
+        );
+        return <ListItem index={index} target={target} item={{ title: 'Invalid Amount' }} />;
     }
 
     return (
@@ -309,9 +316,12 @@ function HistoryItemEvent({
                 target={target}
                 leftView={
                     // Conditionally render LeftView based on valid direction
-                    (walletChange.direction === 'in' || walletChange.direction === 'out')
-                        ? <LeftView direction={walletChange.direction} pubkey={nutzapCounterparts?.[0]} />
-                        : null // Render nothing if direction is invalid
+                    walletChange.direction === 'in' || walletChange.direction === 'out' ? (
+                        <LeftView
+                            direction={walletChange.direction}
+                            pubkey={nutzapCounterparts?.[0]}
+                        />
+                    ) : null // Render nothing if direction is invalid
                 }
                 item={{
                     // id: item.id, // Removed as it's not a valid prop for the item object structure
@@ -339,18 +349,30 @@ function HistoryItemEvent({
                 {nutzapCounterparts && nutzapCounterparts.length === 1 && nutzapCounterparts[0] ? (
                     // Case 1: Single valid counterparty
                     <Counterparty pubkey={nutzapCounterparts[0]} timestamp={item.created_at}>
-                        <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                        <Text
+                            className="text-sm text-muted-foreground"
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
                             {walletChange?.description}
                         </Text>
                     </Counterparty>
                 ) : nutzapCounterparts && nutzapCounterparts.length > 1 ? (
-                     // Case 2: Multiple counterparties (title already shows count)
-                     <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                    // Case 2: Multiple counterparties (title already shows count)
+                    <Text
+                        className="text-sm text-muted-foreground"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {walletChange?.description}
                     </Text>
                 ) : (
                     // Case 3: No counterparties or invalid data (render description directly)
-                     <Text className="text-sm text-muted-foreground" numberOfLines={1} ellipsizeMode='tail'>
+                    <Text
+                        className="text-sm text-muted-foreground"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {walletChange?.description ?? 'Transaction'}
                     </Text>
                 )}

@@ -1,4 +1,10 @@
-import { useNDK, useNDKCurrentPubkey, useNDKCurrentUser, useNDKWallet, useProfileValue } from '@nostr-dev-kit/ndk-mobile'; // Import useNDKCurrentUser
+import {
+    useNDK,
+    useNDKCurrentPubkey,
+    useNDKCurrentUser,
+    useNDKWallet,
+    useProfileValue,
+} from '@nostr-dev-kit/ndk-mobile'; // Import useNDKCurrentUser
 import { type NDKNWCTransaction, NDKNWCWallet } from '@nostr-dev-kit/ndk-wallet';
 import { FlashList } from '@shopify/flash-list';
 import { ArrowDown, ArrowUp, Timer } from 'lucide-react-native';
@@ -45,28 +51,29 @@ export default function NWCListTansactions() {
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         const timeout = setTimeout(() => {
-             console.log("Refresh timeout reached");
-             setRefreshing(false);
+            console.log('Refresh timeout reached');
+            setRefreshing(false);
         }, 6000);
 
         // Check activeWallet before calling updateBalance
         if (activeWallet) {
             // Explicitly cast activeWallet to NDKNWCWallet before calling method
-            (activeWallet as NDKNWCWallet).updateBalance()
+            (activeWallet as NDKNWCWallet)
+                .updateBalance()
                 .then(() => {
-                    console.log("Balance updated successfully");
+                    console.log('Balance updated successfully');
                 })
                 .catch((err: any) => {
                     console.error('Error updating balance:', err);
                 })
                 .finally(() => {
-                    console.log("Update balance finally block");
+                    console.log('Update balance finally block');
                     fetchTransactions();
                     setRefreshing(false);
                     clearTimeout(timeout);
                 });
         } else {
-            console.error("Cannot refresh balance: activeWallet is null.");
+            console.error('Cannot refresh balance: activeWallet is null.');
             setRefreshing(false);
             clearTimeout(timeout);
         }
@@ -85,7 +92,13 @@ export default function NWCListTansactions() {
         }
 
         // Add types for sort callback
-        return [...notFoundPendingPayments, ...txs.sort((a: NDKNWCTransaction, b: NDKNWCTransaction) => (b.created_at ?? 0) - (a.created_at ?? 0))];
+        return [
+            ...notFoundPendingPayments,
+            ...txs.sort(
+                (a: NDKNWCTransaction, b: NDKNWCTransaction) =>
+                    (b.created_at ?? 0) - (a.created_at ?? 0)
+            ),
+        ];
     }, [txs, pendingPayments.length]);
 
     return (
@@ -113,7 +126,8 @@ function Item({
         let type: 'incoming' | 'outgoing' = 'outgoing'; // Change const to let
 
         // Check if item is NDKNWCTransaction (has invoice) or Payment (has internalId)
-        if ('invoice' in item && item.invoice !== undefined) { // Check if item is NDKNWCTransaction
+        if ('invoice' in item && item.invoice !== undefined) {
+            // Check if item is NDKNWCTransaction
             const tx = item as NDKNWCTransaction;
             // Ensure tx.invoice is defined before calling
             const zapInfo = tx.invoice ? getNWCZap(tx.invoice) : null;
@@ -132,7 +146,10 @@ function Item({
             // Determine type based on status if possible, default to outgoing
             // Use activeWallet obtained from useNDKWallet hook
             // Compare payment sender with current user's pubkey
-            type = (payment.status === 'confirmed' && currentPubkey && payment.sender !== currentPubkey) ? 'incoming' : 'outgoing';
+            type =
+                payment.status === 'confirmed' && currentPubkey && payment.sender !== currentPubkey
+                    ? 'incoming'
+                    : 'outgoing';
         }
 
         return { recipientPubkey, amount, createdAt, type };
@@ -154,14 +171,17 @@ function Item({
             onPress={onPress}
             // Construct the item prop for ListItem
             item={{
-                title: recipientPubkey ? '' : (isPending ? 'Pending Zap' : 'Transaction'), // Title handled by Counterparty or default
-                subTitle: isPending ? 'Sending...' : undefined
+                title: recipientPubkey ? '' : isPending ? 'Pending Zap' : 'Transaction', // Title handled by Counterparty or default
+                subTitle: isPending ? 'Sending...' : undefined,
             }}
         >
             {recipientPubkey ? (
                 <Counterparty pubkey={recipientPubkey} timestamp={createdAt ?? 0} />
             ) : (
-                <RelativeTime className="text-xs text-muted-foreground" timestamp={createdAt ?? 0} />
+                <RelativeTime
+                    className="text-xs text-muted-foreground"
+                    timestamp={createdAt ?? 0}
+                />
             )}
         </ListItem>
     );

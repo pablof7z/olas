@@ -8,7 +8,7 @@ export function useActiveBlossomServer() {
     if (!blossomList) {
         return DEFAULT_BLOSSOM_SERVER;
     }
-    
+
     const defaultBlossomServer =
         blossomList?.items?.find((item) => item[0] === 'server')?.[1] ?? DEFAULT_BLOSSOM_SERVER;
     return defaultBlossomServer;

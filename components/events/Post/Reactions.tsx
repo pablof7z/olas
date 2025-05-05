@@ -74,7 +74,9 @@ export function Reactions({
                 iconSize={iconSize}
             />
 
-            {WALLET_ENABLED && <Zaps event={event} inactiveColor={inactiveColor} iconSize={iconSize} />}
+            {WALLET_ENABLED && (
+                <Zaps event={event} inactiveColor={inactiveColor} iconSize={iconSize} />
+            )}
         </View>
 
         //     <Bookmark

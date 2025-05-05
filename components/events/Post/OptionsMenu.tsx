@@ -166,7 +166,7 @@ function OptionsContent({
 function ReportBody({ event }: { event: NDKEvent }) {
     const { ndk } = useNDK();
     const [_sent, setSent] = useState(false);
-    const mute = useNDKMutes(s => s.mute)
+    const mute = useNDKMutes((s) => s.mute);
     const optionsSheetRef = useAtomValue(optionsSheetRefAtom);
 
     const report = useCallback(
@@ -273,7 +273,7 @@ function MuteButton({
     currentUser: NDKUser;
     closeFn: (cb: (event?: NDKEvent) => void) => void;
 }) {
-    const mute = useNDKMutes(s => s.mute);
+    const mute = useNDKMutes((s) => s.mute);
     // const followType = useFollowType(user?.pubkey);
 
     const handleButtonPress = useCallback(() => {
@@ -307,7 +307,7 @@ function ReportUserButton({
 }) {
     const followType = useFollowType(event?.pubkey);
     const user = event?.author;
-    const mute = useNDKMutes(s => s.mute);
+    const mute = useNDKMutes((s) => s.mute);
     const { ndk } = useNDK();
 
     const report = useCallback(() => {

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import * as User from '@/components/ui/user';
-import { useUserFlare } from '@/hooks/user-flare';
+import { useUserFlare } from '@/lib/user/stores/flare';
 
 interface AvatarAndNameProps {
     pubkey: string;
@@ -38,7 +38,9 @@ export default function AvatarAndName({
     pressableStyle,
 }: AvatarAndNameProps) {
     // Fetch profile only if userProfile prop is not provided
-    const fetchedProfile = useProfileValue(!userProfile ? pubkey : undefined, { subOpts: { skipVerification: true } });
+    const fetchedProfile = useProfileValue(!userProfile ? pubkey : undefined, {
+        subOpts: { skipVerification: true },
+    });
     // Use provided userProfile prop first, fallback to fetched profile
     const _userProfile = userProfile ?? fetchedProfile;
     const __userProfile = userProfile || _userProfile;

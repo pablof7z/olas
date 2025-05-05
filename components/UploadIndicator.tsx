@@ -4,7 +4,6 @@ import { X } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-import { scrollDirAtom } from './Feed/store';
 import { Button } from './nativewindui/Button';
 import { Text } from './nativewindui/Text';
 
@@ -28,19 +27,14 @@ export default function UploadingIndicator() {
     const isPublishing = useEditorStore((s) => s.isPublishing);
     const reset = useEditorStore((s) => s.reset);
     const { colors } = useColorScheme();
-    const scrollDir = useAtomValue(scrollDirAtom);
+    // scrollDirAtom removed
 
-    const animStyle = useAnimatedStyle(() => {
-        if (scrollDir === 'up') {
-            return {
-                transform: [{ translateY: withTiming(-bottomHeight, { duration: 200 }) }],
-            };
-        }
-
-        return {
+    const animStyle = useAnimatedStyle(
+        () => ({
             transform: [{ translateY: withTiming(0, { duration: 200 }) }],
-        };
-    }, [bottomHeight, scrollDir]);
+        }),
+        [bottomHeight]
+    );
 
     if (!isPublishing) return null;
 
