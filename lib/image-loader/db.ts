@@ -64,7 +64,7 @@ function scheduleFlush() {
 export async function upsertImageCacheEntry(entry: DbImageCacheEntry): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         writeQueue.push({
-            sql: `INSERT OR REPLACE INTO image_cache (original_url, fetched_url, width, state, attempts)
+            sql: `INSERT OR REPLACE INTO image_cache (original_url, fetched_url, width, state, attempts, cache_key)
             VALUES (?, ?, ?, ?, ?, ?)`,
             params: [
                 entry.originalUrl,
@@ -72,6 +72,7 @@ export async function upsertImageCacheEntry(entry: DbImageCacheEntry): Promise<v
                 entry.width,
                 entry.state,
                 entry.attempts,
+                entry.cacheKey || null,
             ],
             resolve,
             reject,
@@ -87,14 +88,14 @@ export async function markImageCacheFailure(
     originalUrl: string,
     width: number | null,
     state: string,
-    filesystemKey: string
+    attempts: number
 ): Promise<void> {
     // This implementation increments attempts to 1 (if not present) or by 1 (if present)
     // by using a subquery for attempts.
     return new Promise<void>((resolve, reject) => {
         writeQueue.push({
             sql: `
-        INSERT OR REPLACE INTO image_cache (original_url, width, state, attempts)
+        INSERT OR REPLACE INTO image_cache (original_url, width, state)
         VALUES (
           ?,
           ?,
@@ -103,7 +104,7 @@ export async function markImageCacheFailure(
           COALESCE((SELECT attempts FROM image_cache WHERE original_url = ? AND width IS ?), 0) + 1
         )
       `,
-            params: [originalUrl, width, state, originalUrl, width],
+            params: [originalUrl, width, state, attempts],
             resolve,
             reject,
         });
@@ -133,13 +134,11 @@ export async function incrementImageCacheAttempts(
  * Retrieves all cached image entries.
  * Returns an array of { url, width, state, filesystemKey, attempts }
  */
-export async function getAllImageCacheEntries(): Promise<DbImageCacheEntry[]> {
-    // Ensure all pending writes are flushed before reading
-    await flushWriteQueue();
+export function getAllImageCacheEntries(): DbImageCacheEntry[] {
     const query =
-        'SELECT original_url as originalUrl, fetched_url as fetchedUrl, width, state, attempts FROM image_cache';
+        'SELECT original_url as originalUrl, fetched_url as fetchedUrl, cache_key as cacheKey, width, state, attempts FROM image_cache';
     try {
-        const results = await db.getAllAsync(query);
+        const results = db.getAllSync(query);
         return results as DbImageCacheEntry[];
     } catch (error) {
         console.error('[ImageLoader] Query error:', error);

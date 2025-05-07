@@ -3,7 +3,7 @@ import type { ImageSource } from 'expo-image';
 export interface ImageVariation {
     reqWidth: number | 'original';
     source: ImageSource | null; // { uri: either original_url or fetched_url, cacheKey: filesystemKey }
-    status: 'idle' | 'loading' | 'loaded' | 'error';
+    status: 'unknown' | 'queued' | 'loading' | 'loaded' | 'error';
     attempts: number;
 }
 
@@ -12,7 +12,7 @@ export interface ImageLoaderStats {
     loadingTimes: Record<string, number[]>;
 }
 
-export type ImagePriority = 'low' | 'normal' | 'high';
+export type ImagePriority = 'low' | 'normal' | 'high' | 'highest';
 
 export interface ImageCacheEntry {
     variations: ImageVariation[];
@@ -54,11 +54,22 @@ export interface ImageLoaderState {
     stats: ImageLoaderStats;
     // Track URLs that have definitively failed to load (permanent failures)
     permanentFailures: Set<string>;
-    // Track temporary failures: URL -> last failure timestamp (ms)
+    // Track image loading failures for debug UI
+    loadingFailures: ImageLoadingFailure[];
+}
+
+/**
+ * Tracks a single image loading failure for debug purposes.
+ */
+export interface ImageLoadingFailure {
+    uri: string;
+    error: string;
+    relativeTimeMs: number;
+    reqWidth: number | 'original';
+    timestamp: number;
 }
 
 export interface UseImageLoaderOptions {
-    originalUrl: string | false;
     priority?: ImagePriority;
     reqWidth?: number | 'original';
     forceProxy?: boolean;
@@ -77,4 +88,9 @@ export interface DbImageCacheEntry {
     state: ImageCacheState;
     attempts: number;
     fetchedUrl: string;
+
+    /**
+     * Identifier for the cached image, used for filesystem caching.
+     */
+    cacheKey: string;
 }

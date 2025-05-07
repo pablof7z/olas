@@ -23,8 +23,21 @@ const DEFAULT_CONFIG: ImgProxyConfig = {
     },
 };
 
-export function generateFilesystemKey() {
-    return Math.random().toString(36).substring(2, 28);
+/**
+ * Generates a random key to be used for images cacheKey.
+ *
+ * If the URL contains a file extension, it will be appended to the generated key.
+ *
+ * @returns A random string of 32 characters.
+ */
+export function generateFilesystemKey(url: string): string {
+    const fileExtensionInUrl = url.split('.').pop();
+
+    const base = Math.random().toString(36).substring(2, 34);
+    if (fileExtensionInUrl) {
+        return `${base}.${fileExtensionInUrl}`;
+    }
+    return base;
 }
 
 export function getProxiedImageUrl(

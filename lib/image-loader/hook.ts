@@ -1,38 +1,65 @@
 import type { ImageSource } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useImage } from 'expo-image';
 import useImageLoaderStore from './store';
-import type { ImageCacheEntry } from './types';
+import type { ImageCacheEntry, ImageVariation } from './types';
 import type { UseImageLoaderOptions } from './types';
+import { isVariationSufficient } from './utils';
+import { useAppSettingsStore } from '@/stores/app';
 
 interface UseImageLoaderResult {
     image: ImageSource | null;
-    status: 'idle' | 'loading' | 'loaded' | 'error';
+    status: 'unknown' | 'queued' | 'loading' | 'loaded' | 'error';
     retry: () => Promise<void>;
 }
 
-/**
- * useImageLoader hook
- * - Returns the best loaded ImageSource for the requested width, and status and retry.
- */
 export default function useImageLoader(
     url: string | false,
-    options?: Omit<UseImageLoaderOptions, 'originalUrl'>
+    options?: UseImageLoaderOptions
 ): UseImageLoaderResult {
     const { priority = 'normal', reqWidth = 'original', blurhash } = options ?? {};
+    const _reqWidth = typeof reqWidth === 'number' ? Math.floor(reqWidth) : 'original';
 
-    // Track previous params for cleanup
+    // Subscribe to cache only when URL is truthy
+    const cached: ImageCacheEntry | undefined = useImageLoaderStore((state) =>
+        typeof url === 'string' && url ? state.imageCache.get(url) : undefined
+    );
+
+    // Pick the best loaded variation that satisfies the requested width
+    const bestLoadedVariation = useMemo<ImageVariation | null>(() => {
+        if (!cached?.variations?.length) return null;
+        const loaded = cached.variations.filter((v) => v.status === 'loaded' && v.source);
+        if (!loaded.length) return null;
+        const suitable = loaded
+            .filter((v) => isVariationSufficient(v, _reqWidth))
+            .sort((a, b) => {
+                const aW = a.reqWidth === 'original' ? Number.POSITIVE_INFINITY : a.reqWidth;
+                const bW = b.reqWidth === 'original' ? Number.POSITIVE_INFINITY : b.reqWidth;
+                if (_reqWidth === 'original') return 0;
+                return Math.abs(aW - _reqWidth) - Math.abs(bW - _reqWidth);
+            });
+        return suitable[0] ?? null;
+    }, [cached, _reqWidth]);
+
+    const bestLoaded = useMemo(
+        () => ({ ...bestLoadedVariation?.source, blurhash }),
+        [bestLoadedVariation, blurhash]
+    );
+
+    // Keep track of queued tasks so we can clean up
     const prevRef = useRef<{
         url: string;
         reqWidth: number | 'original';
         priority: typeof priority;
     } | null>(null);
 
+    // Only enqueue if nothing is already loaded
     useEffect(() => {
-        if (!url) return;
-        useImageLoaderStore.getState().addToQueue(url, reqWidth, priority);
-        prevRef.current = { url, reqWidth, priority };
+        if (!url || bestLoadedVariation) return;
 
-        // Cleanup: remove from queue when unmounting or url changes
+        useImageLoaderStore.getState().addToQueue(url, _reqWidth, priority);
+        prevRef.current = { url, reqWidth: _reqWidth, priority };
+
         return () => {
             if (prevRef.current) {
                 useImageLoaderStore
@@ -44,90 +71,29 @@ export default function useImageLoader(
                     );
             }
         };
-    }, [url, reqWidth, priority]);
+    }, [url, _reqWidth, priority, !!bestLoadedVariation]);
 
-    // Use just the url as the cache key
-    const cacheKey = typeof url === 'string' ? url : '';
-    const cached: ImageCacheEntry | undefined = useImageLoaderStore((state) =>
-        state.imageCache.get(cacheKey)
-    );
+    const status = useImageLoaderStore((state) => {
+        if (typeof url !== 'string' || !url) return 'unknown' as const;
+        const entry = state.imageCache.get(url);
+        if (!entry) return 'unknown' as const;
+        const v = entry.variations.find((v) => v.reqWidth === _reqWidth);
+        return v?.status ?? 'unknown';
+    });
 
-    // Find the best loaded variation for the requested width
-    const bestLoaded = useMemo(() => {
-        if (!cached?.variations?.length) return null;
-        const loadedVars = cached.variations.filter((v) => v.status === 'loaded' && v.source);
-        if (!loadedVars.length) return null;
-        const isOriginal = (v: (typeof loadedVars)[number]) => v.reqWidth === 'original';
-        const getMaxWidthValueVar = (v: (typeof loadedVars)[number]) =>
-            v.reqWidth === 'original' ? Number.POSITIVE_INFINITY : v.reqWidth;
-
-        const suitable = loadedVars
-            .filter(
-                (v) =>
-                    isOriginal(v) ||
-                    (typeof v.reqWidth === 'number' &&
-                        typeof reqWidth === 'number' &&
-                        v.reqWidth <= reqWidth)
-            )
-            .sort((a, b) => getMaxWidthValueVar(b) - getMaxWidthValueVar(a));
-        if (suitable.length) return { ...suitable[0].source, blurhash };
-        const larger = loadedVars
-            .filter(
-                (v) =>
-                    !isOriginal(v) &&
-                    typeof v.reqWidth === 'number' &&
-                    typeof reqWidth === 'number' &&
-                    v.reqWidth > reqWidth
-            )
-            .sort((a, b) => getMaxWidthValueVar(a) - getMaxWidthValueVar(b));
-        if (larger.length) return { ...larger[0].source, blurhash };
-        const source = loadedVars.sort((a, b) => {
-            if (typeof reqWidth !== 'number') return 0;
-            return (
-                Math.abs(getMaxWidthValueVar(a) - reqWidth) -
-                Math.abs(getMaxWidthValueVar(b) - reqWidth)
-            );
-        })[0].source;
-        if (source) return { ...source, blurhash };
-        return null;
-    }, [cached, reqWidth, blurhash]);
-
-    // Error state: permanent failure or any variation has status 'error'
-    const hasPermanentError = useImageLoaderStore((state) =>
-        state.permanentFailures.has(url as string)
-    );
-    const hasVariationError = !!cached?.variations?.some((v) => v.status === 'error');
-
-    // Status calculation
-    let status: UseImageLoaderResult['status'] = 'idle';
-    if (!url) {
-        status = 'idle';
-    } else if (hasPermanentError || hasVariationError) {
-        status = 'error';
-    } else if (!cached) {
-        status = 'loading';
-    } else if (bestLoaded) {
-        status = 'loaded';
-    } else {
-        status = 'loading';
-    }
-
-    // Retry callback, stable identity
     const retry = useCallback(async () => {
         if (url) {
-            return useImageLoaderStore.getState().retry(url, reqWidth);
+            return useImageLoaderStore.getState().retry(url, _reqWidth);
         }
-    }, [url, reqWidth]);
+    }, [url, _reqWidth]);
 
-    // Memoize result object for referential stability
-    const result = useMemo<UseImageLoaderResult>(
-        () => ({
+    return useMemo<UseImageLoaderResult>(() => {
+        const res = {
             image: { ...bestLoaded, blurhash },
             status,
             retry,
-        }),
-        [bestLoaded?.cacheKey, status, retry]
-    );
+        };
 
-    return result;
+        return res;
+    }, [bestLoaded?.cacheKey, status, retry]);
 }
