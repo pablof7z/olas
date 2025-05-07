@@ -27,7 +27,6 @@ export default function UploadingIndicator() {
     const isPublishing = useEditorStore((s) => s.isPublishing);
     const reset = useEditorStore((s) => s.reset);
     const { colors } = useColorScheme();
-    // scrollDirAtom removed
 
     const animStyle = useAnimatedStyle(
         () => ({

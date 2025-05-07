@@ -14,6 +14,7 @@ export default function MediaComponent({
     maxWidth,
     maxHeight,
     priority,
+    scaleToWidth,
     onPress,
     width,
     contentFit,
@@ -27,10 +28,11 @@ export default function MediaComponent({
     imeta: NDKImetaTag;
     maxWidth?: number;
     maxHeight?: number;
-    priority?: 'low' | 'normal' | 'high';
+    priority?: 'low' | 'normal' | 'high' | 'highest';
     onPress?: () => void;
     forceProxy?: boolean;
     onLongPress?: () => void;
+    scaleToWidth?: number;
     width?: number;
     height?: number;
     contentFit?: 'contain' | 'cover';
@@ -40,7 +42,7 @@ export default function MediaComponent({
     autoplay?: boolean;
 }) {
     const forceDimensions = width && height ? { width, height } : undefined;
-    const { url, blurhash, dim, dimensions } = useMemo(() => {
+    const { url, blurhash, dimensions } = useMemo(() => {
         const { url, blurhash, dim } = imeta;
         const dimensions = dim?.split('x').map(Number) ?? undefined;
         const validDimensions =
@@ -51,7 +53,6 @@ export default function MediaComponent({
         return {
             url,
             blurhash,
-            dim,
             dimensions: validDimensions,
         };
     }, [imeta]);
@@ -65,8 +66,8 @@ export default function MediaComponent({
                 forceDimensions={forceDimensions}
                 dimensions={dimensions}
                 maxDimensions={{ width: maxWidth, height: maxHeight }}
-                onPress={onPress}
-                onLongPress={onLongPress}
+                onPress={onPress ?? (() => {})}
+                onLongPress={onLongPress ?? (() => {})}
                 muted={muted}
                 autoplay={autoplay}
                 {...props}
@@ -82,10 +83,11 @@ export default function MediaComponent({
             maxDimensions={{ width: maxWidth, height: maxHeight }}
             priority={priority}
             forceDimensions={forceDimensions}
+            scaleToWidth={scaleToWidth}
             forceProxy={forceProxy}
-            onPress={onPress}
+            onPress={onPress ?? (() => {})}
             contentFit={contentFit}
-            onLongPress={onLongPress}
+            onLongPress={onLongPress ?? (() => {})}
             className={className}
             style={style}
             {...props}

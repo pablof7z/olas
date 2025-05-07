@@ -7,7 +7,7 @@ import { Text } from '~/components/nativewindui/Text';
 
 // Helper function similar to queueItemKey in the store
 function taskToKey(task: ImageTask): string {
-    return `${task.url}|${task.reqWidth}`;
+    return `${task.originalUrl}|${task.reqWidth}`;
 }
 
 function ActiveDownloadItem({ key, meta }: { key: string; meta: any }) {
@@ -42,12 +42,7 @@ export default function ImageDebugScreen() {
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
     // Define categories inside the component for correct typing
-    const CATEGORY_CONFIG: {
-        key: string;
-        title: string;
-        icon: string;
-        getItems: () => string[];
-    }[] = [
+    const CATEGORY_CONFIG = [
         {
             key: 'queue',
             title: 'Images in Queue',
@@ -76,6 +71,13 @@ export default function ImageDebugScreen() {
             icon: 'cloud-download-outline',
             getItems: () => Object.keys(store.activeDownloadMeta),
         },
+        undefined,
+        {
+            key: 'failures',
+            title: 'Image Loading Failures',
+            icon: 'alert-circle-outline',
+            getItems: () => store.loadingFailures,
+        },
     ];
 
     // Compute averages for loading times
@@ -93,28 +95,38 @@ export default function ImageDebugScreen() {
         <ScrollView className="flex-1 bg-background">
             <View className="px-0">
                 <Text className="text-lg font-bold px-4 py-2">Image Preload Debug</Text>
-                {CATEGORY_CONFIG.map((cat) => {
-                    let items: string[] | { key: string; avg: number }[] = cat.getItems();
-                    if (cat.key === 'averageLoadingTime') {
+                {CATEGORY_CONFIG.filter(Boolean).map((cat) => {
+                    // Type assertion to silence "possibly undefined" error
+                    const category = cat as {
+                        key: string;
+                        title: string;
+                        icon: string;
+                        getItems: () => any[];
+                    };
+                    let items: string[] | { key: string; avg: number }[] | any[] =
+                        category.getItems();
+                    if (category.key === 'averageLoadingTime') {
                         items = (items as string[]).map((key) => ({
                             key,
                             avg: averageLoadingTimes[key] ?? 0,
                         }));
                     }
-                    const isExpanded = !!expanded[cat.key];
+                    const isExpanded = !!expanded[category.key];
                     return (
-                        <View key={cat.key}>
+                        <View key={category.key}>
                             <TouchableOpacity
                                 onPress={() =>
                                     setExpanded((prev) => ({
                                         ...prev,
-                                        [cat.key]: !prev[cat.key],
+                                        [category.key]: !prev[category.key],
                                     }))
                                 }
                                 className="flex-row items-center px-4 py-3 bg-card border-b border-border"
                             >
-                                <IconView name={cat.icon as any} className="mr-3 bg-primary" />
-                                <Text className="flex-1 text-base font-medium">{cat.title}</Text>
+                                <IconView name={category.icon as any} className="mr-3 bg-primary" />
+                                <Text className="flex-1 text-base font-medium">
+                                    {category.title}
+                                </Text>
                                 <Text className="text-xs text-muted-foreground">
                                     {items.length}
                                 </Text>
@@ -126,7 +138,7 @@ export default function ImageDebugScreen() {
                                         <Text className="text-muted-foreground italic">
                                             No items.
                                         </Text>
-                                    ) : cat.key === 'averageLoadingTime' ? (
+                                    ) : category.key === 'averageLoadingTime' ? (
                                         (items as { key: string; avg: number }[]).map((item) => (
                                             <View
                                                 key={item.key}
@@ -140,9 +152,32 @@ export default function ImageDebugScreen() {
                                                 </Text>
                                             </View>
                                         ))
+                                    ) : category.key === 'failures' ? (
+                                        (items as any[]).map((failure, idx) => (
+                                            <View
+                                                key={failure.timestamp ?? idx}
+                                                className="mb-2 p-2 rounded bg-destructive/10 border border-destructive"
+                                            >
+                                                <Text className="text-xs font-semibold text-destructive mb-1">
+                                                    {failure.error}
+                                                </Text>
+                                                <Text className="text-xs break-all" selectable>
+                                                    URI: {failure.uri}
+                                                </Text>
+                                                <Text className="text-xs text-muted-foreground">
+                                                    Width: {failure.reqWidth}
+                                                </Text>
+                                                <Text className="text-xs text-muted-foreground">
+                                                    Load time: {failure.relativeTimeMs} ms
+                                                </Text>
+                                                <Text className="text-2xs text-muted-foreground">
+                                                    {new Date(failure.timestamp).toLocaleString()}
+                                                </Text>
+                                            </View>
+                                        ))
                                     ) : (
                                         (items as string[]).map((key) => {
-                                            if (cat.key === 'activeDownloads') {
+                                            if (category.key === 'activeDownloads') {
                                                 return (
                                                     <ActiveDownloadItem
                                                         key={key}

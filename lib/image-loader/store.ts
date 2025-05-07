@@ -137,7 +137,7 @@ const useImageLoaderStore = create<
         inFlightTasks: new Set(),
         activeDownloadMeta: {},
         options: {
-            maxConcurrentDownloads: 5,
+            maxConcurrentDownloads: 6,
             cacheTimeout: 24 * 60 * 60 * 1000,
             imgProxyEnabled: false,
             imgProxyDisabledUntil: 0,
@@ -205,12 +205,17 @@ const useImageLoaderStore = create<
             const reqWidth = typeof _reqWidth === 'number' ? Math.round(_reqWidth) : _reqWidth;
             // Map "highest" to "high" for queueing
             const queueKey: 'high' | 'normal' | 'low' = priority === 'highest' ? 'high' : priority;
+
+            const cacheEntry = get().imageCache.get(originalUrl);
+            if (cacheEntry?.variations.some(v =>
+                (v.status === 'loaded' || v.status === 'loading') &&
+                isVariationSufficient(v, reqWidth)
+            )) {
+                return;
+            }
             set((state) => {
                 const cacheEntry = state.imageCache.get(originalUrl);
                 // If already loaded or loading, do nothing
-                if (cacheEntry?.variations.some((v) => isVariationSufficient(v, reqWidth))) {
-                    return {};
-                }
                 const queues = {
                     ...state.downloadQueues,
                     [queueKey]: [...state.downloadQueues[queueKey]],
@@ -249,6 +254,7 @@ const useImageLoaderStore = create<
                 }
                 return { downloadQueues: queues, imageCache };
             });
+
             if (priority === 'highest') {
                 get().processQueue();
             } else {
@@ -318,6 +324,7 @@ const useImageLoaderStore = create<
             const proxyAllowed = shouldUseProxy(options, reqWidth);
             let loadedSource: ImageSource | null = null;
             let loadSuccess = false;
+            let loadWidth = reqWidth;
 
             if (proxyAllowed) {
                 const proxiedUrl = getProxiedImageUrl(originalUrl, reqWidth as number);
@@ -336,6 +343,7 @@ const useImageLoaderStore = create<
                 try {
                     loadedSource = await loadImageReal(originalUrl);
                     loadSuccess = true;
+                    loadWidth = 'original';
                     recordProxyFailureSuccess();
                 } catch (err) {
                     console.error(
@@ -373,9 +381,9 @@ const useImageLoaderStore = create<
                 set((state) => ({
                     imageCache: updateImageCache(state, originalUrl, (vars) =>
                         vars
-                            .filter((v) => v.reqWidth !== reqWidth)
+                            .filter((v) => v.reqWidth !== loadWidth)
                             .concat({
-                                reqWidth,
+                                reqWidth: loadWidth,
                                 source: loadedSource,
                                 status: 'loaded',
                                 attempts: 1,
@@ -401,7 +409,7 @@ const useImageLoaderStore = create<
                 } else {
                     upsertImageCacheEntry({
                         originalUrl,
-                        width: reqWidth === 'original' ? null : reqWidth,
+                        width: typeof loadWidth === 'number' ? loadWidth : null,
                         state: 'loaded',
                         fetchedUrl: loadedSource.uri!,
                         attempts: 1,

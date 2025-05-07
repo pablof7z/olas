@@ -1,9 +1,8 @@
 import * as SQLite from 'expo-sqlite';
-
-import { lastDayOfDecade } from 'date-fns';
 import { migrations } from './migrations';
 
-export const db = SQLite.openDatabaseSync('snap.db');
+export const db = SQLite.openDatabaseSync('olas.db');
+console.log('Database opened', db.databasePath);
 let dbInitialized = false;
 
 if (!dbInitialized) {

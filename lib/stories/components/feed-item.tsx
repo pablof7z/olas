@@ -12,7 +12,7 @@ import Animated, { FadeOut, SlideInRight } from 'react-native-reanimated';
 
 import { showStoriesModalAtom, storiesAtom } from '../store';
 
-import UserAvatar from '@/components/ui/user/avatar';
+import UserAvatar from '@/lib/user/components/avatar';
 import { useStories } from '@/hooks/stories';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useUserFlare } from '@/lib/user/stores/flare';

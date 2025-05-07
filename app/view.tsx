@@ -19,11 +19,11 @@ import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import EventContent from '@/components/ui/event/content';
 import * as User from '@/components/ui/user';
-import AvatarAndName from '@/components/ui/user/avatar-name';
 import { useUserFlare } from '@/lib/user/stores/flare';
 import { activeEventAtom } from '@/stores/event';
 import { useReactionsStore } from '@/stores/reactions';
 import { nicelyFormattedSatNumber } from '@/utils/bitcoin';
+import AvatarAndName from '@/components/ui/user/avatar-name';
 
 function getUrlFromEvent(event: NDKEvent) {
     let url = event.tagValue('thumb') || event.tagValue('url') || event.tagValue('u');
@@ -43,7 +43,6 @@ function getUrlFromEvent(event: NDKEvent) {
 function Header({ event }: { event: NDKEvent }) {
     const userProfile = useProfileValue(event.pubkey, { subOpts: { skipVerification: true } });
     const insets = useSafeAreaInsets();
-    const _flare = useUserFlare(event.pubkey);
 
     const viewProfile = useCallback(() => {
         router.push(`/profile?pubkey=${event.pubkey}`);
@@ -110,6 +109,7 @@ export default function ViewScreen() {
         );
     }
 
+    const maxWidth = Dimensions.get('window').width;
     const url = getUrlFromEvent(activeEvent);
     let content = activeEvent.content;
     let title = null;
@@ -149,10 +149,11 @@ export default function ViewScreen() {
                     <EventMediaContainer
                         event={activeEvent}
                         contentFit="contain"
-                        maxWidth={Dimensions.get('window').width}
-                        maxHeight={Dimensions.get('window').height}
+                        maxWidth={maxWidth}
+                        scaleToWidth={false}
                         muted={false}
                         autoplay
+                        priority="highest"
                     />
                 </ScrollView>
 

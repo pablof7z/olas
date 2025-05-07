@@ -27,8 +27,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sheet, useSheetRef } from '@/components/nativewindui/Sheet';
 import { Text } from '@/components/nativewindui/Text';
 import EventContent from '@/components/ui/event/content';
-import UserAvatar from '@/components/ui/user/avatar';
 import { activeEventAtom } from '@/stores/event';
+import UserAvatar from '@/lib/user/components/avatar';
 
 type ReplyToAtom = { event: NDKEvent; profile: NDKUserProfile };
 

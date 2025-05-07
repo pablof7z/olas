@@ -2,20 +2,16 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router } from 'expo-router';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { Sliders, X } from 'lucide-react-native';
-import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import {
-    ActivityIndicator,
     Dimensions,
     Pressable,
     ScrollView,
     StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+    Text, View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/nativewindui/Button';
 import AdjustmentsBottomSheet, {
     adjustmentsBottomSheetRefAtom,
 } from '@/lib/media-filter/components/AdjustmentsBottomSheet';
@@ -27,10 +23,6 @@ import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
 import { Preview } from '@/lib/publish/components/preview/Preview';
 import { useEditorStore } from '@/lib/publish/store/editor';
 
-// Import the new media filter components
-import { useColorScheme } from '@/lib/useColorScheme';
-
-// Create atom for selectedMediaIndex
 export const selectedMediaIndexAtom = atom(0);
 
 function HeaderLeft() {
@@ -85,6 +77,7 @@ function PreviewContent({ previewHeight, forceShowFiltered }: PreviewContentProp
             <View
                 style={{ flex: 1, width: '100%', minHeight: previewHeight, position: 'relative' }}
             >
+                <Text>{sourceUri}</Text>
                 <FilteredImage
                     filePath={sourceUri}
                     filterParams={currentFilterParams}
@@ -284,7 +277,7 @@ export default function PostEditScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    headerTitle: 'Edit',
+                    headerTitle: '',
                     headerStyle: {
                         backgroundColor: 'black',
                     },

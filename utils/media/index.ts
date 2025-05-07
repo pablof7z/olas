@@ -8,6 +8,7 @@ import { convertHeicToJpeg, isHeicImage } from '../image-format';
 
 import type { Location, PostMedia, PostMediaType } from '@/lib/publish/types';
 
+import { ensureAccessibleUri } from './ensure-accessible-uri';
 export const imageOrVideoUrlRegexp =
     /https?:\/\/[^\s]+(?:\.jpg|\.jpeg|\.png|\.gif|\.mp4|\.mov|\.avi|\.mkv)/;
 
@@ -24,31 +25,24 @@ export function isPortrait(width: number, height: number) {
  * @returns A PostMedia representation of the asset.
  */
 export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<PostMedia> {
-    let mediaType: PostMediaType = 'image';
-    if (asset.mediaType === 'video') mediaType = 'video';
+    const mediaType: PostMediaType = asset.mediaType === 'video' ? 'video' : 'image';
 
-    if (!mediaType) {
-        mediaType = 'image';
+    let realPath = await getRealPath(asset.uri, mediaType);
+    realPath = realPath.replace(/^file:\/\/+/, 'file://');
+
+    // Handle HEIC conversion
+    if (mediaType === 'image' && isHeicImage(realPath)) {
+        realPath = await convertHeicToJpeg(realPath);
     }
 
-    // get the real path of the asset
-    const realPath = await getRealPath(asset.uri, asset.mediaType === 'video' ? 'video' : 'image');
+    const accessibleUri = await ensureAccessibleUri(realPath);
 
-    // Check if the image is HEIC and convert if needed
-    let uri = realPath;
-    if (mediaType === 'image' && isHeicImage(uri)) {
-        uri = await convertHeicToJpeg(uri);
-    }
-
-    // get the size of the file
-    const file = await FileSystem.getInfoAsync(uri);
-    let size: number | undefined;
-
-    if (file.exists) size = file.size;
+    const file = await FileSystem.getInfoAsync(accessibleUri);
+    const size = file.exists ? file.size : undefined;
 
     return {
         id: asset.id ?? asset.uri,
-        uris: [uri], // Use the potentially converted URI
+        uris: [accessibleUri],
         mediaType,
         contentMode: isPortrait(asset.width, asset.height) ? 'portrait' : 'landscape',
         size,
@@ -57,6 +51,7 @@ export async function mapAssetToPostMedia(asset: MediaLibrary.Asset): Promise<Po
         height: asset.height,
     };
 }
+
 
 export async function mapImagePickerAssetToPostMedia(asset: ImagePickerAsset): Promise<PostMedia> {
     // Check if the image is HEIC and convert if needed
@@ -112,7 +107,18 @@ export interface MediaItem {
 
 export async function convertMediaPath(uri: string, type: 'image' | 'video'): Promise<string> {
     const path = await getRealPath(uri, type);
-    return path.startsWith('file://') ? path : `file://${path}`;
+
+    // Normalize to ensure only a single file:// prefix if present
+    let sanitizedPath = path.replace(/^(file:\/\/)+/, 'file://');
+
+    // If already has a valid scheme, return as is
+    if (sanitizedPath.startsWith('file://') || sanitizedPath.startsWith('content://')) {
+        return sanitizedPath;
+    }
+
+    // Otherwise, prepend file://
+    const finalPath = `file://${sanitizedPath}`;
+    return finalPath;
 }
 
 /**

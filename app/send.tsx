@@ -8,13 +8,10 @@ import {
     type NDKZapMethodInfo,
     NDKZapper,
     useFollows,
-    useNDK,
-    useNDKCurrentPubkey,
-    useNDKCurrentUser,
+    useNDK, useNDKCurrentUser,
     useNDKWallet,
-    useProfileValue,
+    useProfileValue
 } from '@nostr-dev-kit/ndk-mobile';
-import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { router } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,7 +19,7 @@ import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-n
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, ButtonProps, type ButtonState } from '@/components/nativewindui/Button';
+import { Button, type ButtonState } from '@/components/nativewindui/Button';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
 import * as User from '@/components/ui/user';

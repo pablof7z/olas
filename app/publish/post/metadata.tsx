@@ -95,7 +95,7 @@ export default function PostMetadataScreen() {
                         backgroundColor: colors.card,
                     },
                     headerShown: true,
-                    title: 'New Post',
+                    title: 'New Post2',
                     headerRight: () => (
                         <TouchableOpacity
                             onPress={handlePublish}

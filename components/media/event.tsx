@@ -29,9 +29,10 @@ export type EventMediaProps = {
     height?: number;
     singleMode?: boolean;
     forceProxy?: boolean;
+    scaleToWidth?: number;
     contentFit?: 'contain' | 'cover';
     style?: StyleProp<ViewStyle>;
-    priority?: 'low' | 'normal' | 'high';
+    priority?: 'low' | 'normal' | 'high' | 'highest';
     maxWidth?: number;
     maxHeight?: number;
     onPress?: () => void;
@@ -92,6 +93,7 @@ export function EventMediaGridContainer({
                 forceProxy={forceProxy}
                 onLongPress={onLongPress}
                 singleMode
+                scaleToWidth={size}
                 width={size}
                 height={size}
                 autoplay={false}
@@ -123,6 +125,7 @@ export default function EventMediaContainer({
     maxWidth,
     contentFit,
     maxHeight,
+    scaleToWidth,
     priority,
     onPress,
     onLongPress,
@@ -149,6 +152,7 @@ export default function EventMediaContainer({
                 forceProxy
                 maxWidth={maxWidth}
                 maxHeight={maxHeight}
+                scaleToWidth={scaleToWidth}
                 priority={priority}
                 onPress={onPress}
                 muted={muted}
@@ -205,6 +209,7 @@ export default function EventMediaContainer({
                         imeta={imeta}
                         maxWidth={maxWidth}
                         maxHeight={maxHeight}
+                        scaleToWidth={scaleToWidth}
                         onPress={onPress}
                         priority={priority}
                         style={style}

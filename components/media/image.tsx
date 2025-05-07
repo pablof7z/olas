@@ -1,4 +1,5 @@
 import { Image, useImage } from 'expo-image';
+import { Clock } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Dimensions,
@@ -15,6 +16,9 @@ import type { MediaDimensions } from './types';
 
 import useImageLoader from '@/lib/image-loader/hook';
 import { FileWarning, RefreshCcw } from 'lucide-react-native';
+import { ActivityIndicator } from '../nativewindui/ActivityIndicator';
+import { Text } from '../nativewindui/Text';
+import { useAppSettingsStore } from '@/stores/app';
 
 /**
  * This keeps a record of the known image heights for a given url.
@@ -61,37 +65,41 @@ export default function ImageComponent({
     forceDimensions,
     forceProxy,
     priority,
+    scaleToWidth,
     contentFit,
     onPress,
     onLongPress,
-    onLoad,
     className,
     style,
     ...props
 }: {
     url: string;
     blurhash?: string;
+    scaleToWidth?: number;
     dimensions?: MediaDimensions;
-    priority?: 'low' | 'normal' | 'high';
+    priority?: 'low' | 'normal' | 'high' | 'highest';
     contentFit?: 'contain' | 'cover';
     maxDimensions?: Partial<MediaDimensions>;
     forceDimensions?: Partial<MediaDimensions>;
     forceProxy?: boolean;
     onPress: () => void;
     onLongPress: () => void;
-    onLoad?: () => void;
     className?: string;
     style?: StyleProp<ViewStyle>;
 }) {
     if (!maxDimensions) maxDimensions = { width: Dimensions.get('window').width };
-    const sizeForProxy = forceDimensions?.width || maxDimensions?.width || 4000;
-
+    
     // Use the new preloading hook
-    const imageCache = useImageLoader(url, {
-        reqWidth: sizeForProxy,
-        forceProxy,
-        blurhash,
-    });
+    const image = useImage({uri: url, blurhash});
+    // const image = useImageLoader(useImageLoaderQueue ? url : false, { blurhash, priority, reqWidth: scaleToWidth });
+
+    // const imageSource = useMemo(() => {
+    //     if (useImageLoaderQueue) {
+    //         return { ...image.image, blurhash };
+    //     } else {
+    //         return { uri: url, blurhash };
+    //     }
+    // }, [useImageLoaderQueue, image.status, image.image, blurhash]);
 
     // Fallback for dimensions
     const renderDimensions = forceDimensions;
@@ -103,15 +111,6 @@ export default function ImageComponent({
         return renderDimensions || maxDimensions;
     }, []);
 
-    const [retrying, setRetrying] = useState(false);
-
-    const retry = useCallback(async (event: GestureResponderEvent) => {
-        alert('retrying');
-        setRetrying(true);
-        // await imageCache.retry()
-        setRetrying(false);
-    }, []);
-
     return (
         <Pressable
             style={[styles.pressable, style, { position: 'relative' }]}
@@ -121,39 +120,47 @@ export default function ImageComponent({
             {...props}
         >
             <Image
-                source={imageCache.image}
+                source={image}
+                priority={priority}
+                recyclingKey={url}
                 allowDownscaling={false}
-                onLoad={(_e) => {
-                    if (onLoad) onLoad();
-                }}
                 style={{
                     width: safeFloor(finalDimensions?.width),
                     height: safeFloor(finalDimensions?.height),
                     flex: 1,
                 }}
             />
-            <View style={{ position: 'absolute', top: 10, right: 10 }}>
-                {imageCache.status === 'error' && (
-                    <Pressable onPress={retry}>
-                        <FileWarning color="black" />
-                    </Pressable>
-                )}
-            </View>
-            {/* {retrying ? (
-                <ActivityIndicator size="small" />
-            ) : (imageCache.status === 'error' && (
-                <Pressable  style={{ position: 'absolute', top: 2, right: 2 }} onPress={retry}>
-                    <RefreshCcw />
-                </Pressable>
-            ))}
-            <Text style={{ backgroundColor: 'red', fontSize: 12, opacity: 0.9 }}>
-                {sizeForProxy}{' '}
-                {finalDimensions?.width}x{finalDimensions?.height}
-                { url }{' '}
-                { imageCache.status }
-            </Text> */}
+            {/* {useImageLoaderQueue && image.status !== 'loaded' && (
+                <View style={{ position: 'absolute', top: 10, left: 0 }}>
+                    <ImageStatusIndicator status={image.status} onRetry={image.retry} />
+                </View>
+            )} */}
         </Pressable>
     );
+}
+
+function ImageStatusIndicator({
+    status,
+    onRetry,
+}: {
+    status: 'unknown' | 'queued' | 'loading' | 'loaded' | 'error';
+    onRetry: () => void;
+}) {
+    if (status === 'loading') {
+        return <ActivityIndicator size="small" color="black" style={{ opacity: 0.2 }} />;
+    }
+    if (status === 'queued') {
+        return <Clock color="black" style={{ opacity: 0.2 }} />;
+    }
+    if (status === 'error') {
+        return (
+            <Pressable onPress={onRetry}>
+                <FileWarning color="black" />
+            </Pressable>
+        );
+    }
+    // No indicator for 'idle' or 'loaded'
+    return null;
 }
 
 const styles = StyleSheet.create({

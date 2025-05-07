@@ -16,11 +16,11 @@ import { Button } from '@/components/nativewindui/Button';
 import { LargeTitleHeader } from '@/components/nativewindui/LargeTitleHeader';
 import { List, ListItem } from '@/components/nativewindui/List';
 import { Text } from '@/components/nativewindui/Text';
-import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { cn } from '@/lib/cn';
 import { useAllGroups } from '@/lib/groups/store';
 import type { GroupEntry } from '@/lib/groups/types';
 import { useThrottle } from '@/utils/debounce';
+import AvatarGroup from '@/components/ui/user/AvatarGroup';
 
 const relays = ['wss://groups.0xchat.com'];
 
@@ -63,7 +63,7 @@ function GroupListItem({
     return (
         <ListItem
             item={{
-                title: groupEntry.name,
+                title: groupEntry.name ?? "",
                 subTitle: groupEntry.about,
             }}
             subTitleNumberOfLines={1}

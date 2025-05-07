@@ -7,6 +7,7 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Feed from '@/components/Feed';
+import { useScrollY } from '@/context/ScrollYContext';
 import type { FeedEntry } from '@/components/Feed/hook';
 import { feedTypeAtom } from '@/components/FeedType/store';
 import HomeHeader from '@/components/Headers/Home';
@@ -27,12 +28,8 @@ import {
 } from '@nostr-dev-kit/ndk';
 import { useNDK, useNDKCurrentPubkey } from '@nostr-dev-kit/ndk-mobile';
 
-import { ScrollYProvider } from '@/context/ScrollYContext';
-import { useSharedValue } from 'react-native-reanimated';
-
 export default function HomeScreen() {
     const { colors } = useColorScheme();
-    const scrollY = useSharedValue(0);
 
     const style = useMemo<ViewStyle>(
         () => ({
@@ -185,13 +182,11 @@ function textSearch(text: string) {
 }
 
 function DataList() {
-    const { useScrollY } = require('@/context/ScrollYContext');
-    const scrollY = useScrollY();
-
     const feedType = useAtomValue(feedTypeAtom);
     const currentPubkey = useNDKCurrentPubkey();
     const follows = useAllFollows();
     const bookmarkIds = useBookmarkIds();
+    const scrollY = useScrollY();
 
     const isSavedSearch = useIsSavedSearch();
 
@@ -313,12 +308,13 @@ function DataList() {
     return (
         <View style={{ flex: 1 }}>
             <Feed
-                prepend={<HomeTopMargin />}
+                ListHeaderComponent={<HomeTopMargin />}
                 filters={filters ?? []}
                 relayUrls={relayUrls}
                 filterKey={key}
                 filterFn={filterFn ?? undefined}
                 numColumns={numColumns}
+                scrollY={scrollY}
             />
         </View>
     );

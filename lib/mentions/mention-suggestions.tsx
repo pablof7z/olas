@@ -10,8 +10,8 @@ import { FlashList } from '@shopify/flash-list';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import AvatarAndName from '@/components/ui/user/avatar-name';
 import { useColorScheme } from '@/lib/useColorScheme';
+import AvatarAndName from '@/components/ui/user/avatar-name';
 
 interface MentionSuggestionsProps {
     query: string;

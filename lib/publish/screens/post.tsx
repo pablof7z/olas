@@ -23,6 +23,7 @@ import Animated, {
     withSpring,
     type SharedValue,
 } from 'react-native-reanimated';
+import { ensureAccessibleUri } from '@/utils/media/ensure-accessible-uri';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import NoPermissionsFallback from '../components/NoPermissionsFallback';
@@ -92,6 +93,7 @@ export default function PostScreen() {
                 };
 
                 const { assets } = await MediaLibrary.getAssetsAsync(options);
+                console.log('[loadMediaLibrary] Received assets:', assets.map(a => a.uri));
                 const formattedMedia: MediaItem[] = await Promise.all(
                     assets.map(async (asset) => {
                         if (asset.mediaType === 'video') {
@@ -113,8 +115,12 @@ export default function PostScreen() {
 
                 setMediaItems(formattedMedia);
                 if (formattedMedia.length > 0) {
+                    console.log('[loadMediaLibrary] Passing asset to mapAssetToPostMedia:', assets[0].uri);
                     const postMedia = await mapAssetToPostMedia(assets[0]);
-                    await addMedia(postMedia.uris[0], postMedia.mediaType, postMedia.id);
+                    console.log('[loadMediaLibrary] postMedia.uris:', postMedia.uris);
+                    const accessibleUri = await ensureAccessibleUri(postMedia.uris[0]);
+                    console.log('[loadMediaLibrary] accessibleUri after ensureAccessibleUri:', accessibleUri);
+                    await addMedia(accessibleUri, postMedia.mediaType, postMedia.id);
                 }
             }
         } catch (error) {
@@ -132,15 +138,20 @@ export default function PostScreen() {
                 allowsMultipleSelection: true,
             });
 
+            console.log('[pickImageFromLibrary] ImagePicker result:', result);
+
             if (!result.canceled && result.assets.length > 0) {
                 if (result.assets.length > 1) {
                     setIsMultipleSelectionMode(true);
                 }
 
                 for (const asset of result.assets) {
+                    console.log('[pickImageFromLibrary] asset.uri:', asset.uri);
                     const mediaType = asset.type === 'video' ? 'video' : 'image';
                     const id = `picker-${Date.now()}`;
-                    await addMedia(asset.uri, mediaType, id);
+                    const accessibleUri = await ensureAccessibleUri(asset.uri);
+                    console.log('[pickImageFromLibrary] accessibleUri after ensureAccessibleUri:', accessibleUri);
+                    await addMedia(accessibleUri, mediaType, id);
                 }
                 openPreview();
                 router.push('/publish/post/edit');
@@ -161,8 +172,11 @@ export default function PostScreen() {
 
     const selectMedia = useCallback(
         async (item: MediaItem) => {
+            console.log('[selectMedia] Received item.uri:', item.uri);
             const mediaType = item.type === 'video' ? 'video' : 'image';
-            await addMedia(item.uri, mediaType, item.id);
+            const accessibleUri = await ensureAccessibleUri(item.uri);
+            console.log('[selectMedia] accessibleUri after ensureAccessibleUri:', accessibleUri);
+            await addMedia(accessibleUri, mediaType, item.id);
             openPreview();
         },
         [addMedia, openPreview]
@@ -177,7 +191,7 @@ export default function PostScreen() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    headerTitle: 'New Post',
+                    headerTitle: '',
                     headerStyle: {
                         backgroundColor: 'black',
                     },

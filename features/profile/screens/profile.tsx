@@ -21,7 +21,7 @@ export default function Profile() {
     const { colors } = useColorScheme();
     const insets = useSafeAreaInsets();
 
-    const { user, userProfile, content, flare, followCount, hasProducts } = useProfileData(pubkey);
+    const { user, userProfile, followCount, hasProducts } = useProfileData(pubkey);
     const [currentView, setView] = useProfileTabs();
 
     // Set initial tab if provided in route
@@ -29,7 +29,7 @@ export default function Profile() {
         if (view) {
             setView(view);
         }
-    }, [view, setView]);
+    }, []);
 
     // Reset scroll position when navigating to a new profile
     useEffect(() => {
@@ -67,13 +67,11 @@ export default function Profile() {
                 <ProfileHeader
                     pubkey={pubkey}
                     userProfile={userProfile}
-                    flare={flare}
                     colors={colors}
                     followCount={followCount}
                     scrollY={scrollY}
                     insets={insets}
                 />
-                {/* Sticky ProfileTabs */}
                 <StickyProfileTabs scrollY={scrollY} hasProducts={hasProducts} colors={colors} />
                 <View style={{ flex: 1, marginTop: TAB_BAR_HEIGHT }}>
                     <ProfileContent

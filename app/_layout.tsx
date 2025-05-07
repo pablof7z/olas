@@ -1,5 +1,5 @@
 import '../global.css';
-import * as DevClient from 'expo-dev-client';
+// import * as DevClient from 'expo-dev-client';
 import '@bacons/text-decoder/install';
 import { ScrollYProvider } from '@/context/ScrollYContext';
 import { Toasts } from '@backpackapp-io/react-native-toast';
@@ -12,6 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
+import { ErrorBoundary } from '../components/error-boundary';
 import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -48,7 +49,7 @@ configureReanimatedLogger({
 
 // LogBox.ignoreAllLogs();
 
-DevClient.closeMenu();
+// DevClient?.closeMenu();
 
 const ndk = initializeNDK();
 
@@ -71,10 +72,12 @@ export default function App() {
     }, []);
 
     return (
-        <LoaderScreen appReady={appReady} wotReady>
-            <SessionMonitor />
-            <RootLayout />
-        </LoaderScreen>
+        <ErrorBoundary>
+            <LoaderScreen appReady={appReady} wotReady>
+                <SessionMonitor />
+                <RootLayout />
+            </LoaderScreen>
+        </ErrorBoundary>
     );
 }
 
@@ -94,7 +97,7 @@ export function RootLayout() {
         const users = Array.from(blacklistPubkeys).map((pubkey) => new NDKUser({ pubkey }));
         addExtraMuteItems(users);
 
-        DevClient.hideMenu();
+        // DevClient?.hideMenu();
     }, []);
 
     useEffect(() => {
@@ -228,7 +231,7 @@ export function RootLayout() {
                                         }}
                                     />
                                 </Stack>
-                                {/* {DEV_BUILD && <ImageLoadingOverlay />} */}
+                                {<ImageLoadingOverlay />}
 
                                 <PostOptionsMenu />
                                 <FeedTypeBottomSheet />

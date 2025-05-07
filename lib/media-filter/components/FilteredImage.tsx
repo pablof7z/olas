@@ -77,7 +77,7 @@ export const FilteredImage = forwardRef<FilteredImageRef, FilteredImageProps>(
         if (!image) {
             return (
                 <View style={[styles.container, style]}>
-                    <Text style={{ color: 'white' }}>Loading image...</Text>
+                    <Text style={{ color: 'white' }}>Loading image {filePath}...</Text>
                 </View>
             );
         }

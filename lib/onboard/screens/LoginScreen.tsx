@@ -214,7 +214,7 @@ export default function LoginScreen() {
     const headerHeight = useHeaderHeight();
     const insets = useSafeAreaInsets();
     const { apps } = useNip55();
-    const hasNip55Signer = useMemo(() => apps.length > 10, [apps.length]);
+    const hasNip55Signer = useMemo(() => apps.length > 0, [apps.length]);
 
     useEffect(() => {
         if (hasNip55Signer) setMode('nip55');

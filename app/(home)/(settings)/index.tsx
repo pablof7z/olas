@@ -98,6 +98,8 @@ export default function SettingsIosStyleScreen() {
     const unlinkWallet = useAppSettingsStore((s) => s.unlinkWallet);
     const toggleAdvancedMode = useAppSettingsStore((s) => s.toggleAdvancedMode);
     const advancedMode = useAppSettingsStore((s) => s.advancedMode);
+    const useImageLoaderQueue = useAppSettingsStore((s) => s.useImageLoaderQueue);
+    const setUseImageLoaderQueue = useAppSettingsStore((s) => s.setUseImageLoaderQueue);
 
     const appLogout = useCallback(() => {
         if (!currentUser) return;
@@ -217,6 +219,11 @@ export default function SettingsIosStyleScreen() {
         });
 
         if (advancedMode) {
+            config.push({
+                type: 'image-loader-queue',
+                title: 'Use Image Loader Queue',
+                subTitle: 'Enable or disable the image loader queue',
+            });
             config.push({ type: 'dev', title: 'Development' });
             config.push({ type: 'image-debug', title: 'Image Preload Debug' });
             config.push({ type: 'cache-view', title: 'View Content cache' });
@@ -375,6 +382,16 @@ export default function SettingsIosStyleScreen() {
                         />
                     );
                     break;
+                case 'image-loader-queue':
+                    leftView = null;
+                    rightView = (
+                        <Switch
+                            value={useImageLoaderQueue}
+                            onValueChange={setUseImageLoaderQueue}
+                            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                        />
+                    );
+                    break;
                 case 'dev':
                     leftView = <IconView name="code-braces" className="bg-green-500" />;
                     onPress = () => router.push('/(home)/(settings)/dev');
@@ -443,6 +460,7 @@ export default function SettingsIosStyleScreen() {
             unpublishedEvents,
             advancedMode,
             defaultBlossomServer,
+            useImageLoaderQueue,
             handleUnlinkWallet,
             appLogout,
             toggleAdvancedMode,

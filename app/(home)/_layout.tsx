@@ -18,10 +18,10 @@ import { homeScreenScrollRefAtom } from '@/atoms/homeScreen';
 import WalletButton from '@/components/buttons/wallet';
 import NewIcon from '@/components/icons/new';
 import ReelIcon from '@/components/icons/reel';
-import UserAvatar from '@/components/ui/user/avatar';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useUserFlare } from '@/lib/user/stores/flare';
 import { WALLET_ENABLED } from '@/utils/const';
+import UserAvatar from '@/lib/user/components/avatar';
 
 export default function TabsLayout() {
     const currentPubkey = useNDKCurrentPubkey();

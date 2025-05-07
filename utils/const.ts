@@ -5,7 +5,7 @@ export const blacklistPubkeys = new Set([
     '7444faae22d4d4939c815819dca3c4822c209758bf86afc66365db5f79f67ddb',
 ]);
 
-export const videoKinds = new Set([NDKKind.HorizontalVideo, NDKKind.VerticalVideo]);
+export const videoKinds = new Set([NDKKind.HorizontalVideo, NDKKind.VerticalVideo, NDKKind.ShortVideo, NDKKind.Video]);
 export const mainKinds = new Set([NDKKind.Image, ...Array.from(videoKinds)]);
 
 export const DEV_BUILD = true;

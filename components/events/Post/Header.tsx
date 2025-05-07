@@ -11,7 +11,6 @@ import FollowButton from '@/components/buttons/follow';
 import { Text } from '@/components/nativewindui/Text';
 import RelativeTime from '@/components/relative-time';
 import * as User from '@/components/ui/user';
-import AvatarGroup from '@/components/ui/user/AvatarGroup';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useUserFlare } from '@/lib/user/stores/flare';
 import { getClientName } from '@/utils/event';

@@ -82,23 +82,13 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
         return { filters: res, filterKey: filterKey, filterFn, numColumns };
     }, [view, pubkey]);
 
-    // Use Reanimated's native scroll handler
-    const scrollHandler = useAnimatedScrollHandler((event) => {
-        scrollY.value = event.contentOffset.y;
-    });
-
-    // Use Reanimated's animated ref for scrollable
-    const animatedFeedRef = useAnimatedRef<FlashList<any>>();
-
     return (
         <Feed
-            ref={animatedFeedRef}
             filters={filters}
             filterKey={filterKey}
             filterFn={filterFn}
             numColumns={numColumns}
-            onScroll={scrollHandler}
-            scrollEventThrottle={16}
+            scrollY={scrollY}
         />
     );
 };

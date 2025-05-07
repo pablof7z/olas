@@ -1,5 +1,4 @@
 import EventContent from '@/components/ui/event/content';
-import UserAvatar from '@/components/ui/user/avatar';
 import { useCommentBottomSheet } from '@/lib/comments/bottom-sheet';
 import { useAppSettingsStore } from '@/stores/app';
 import { useReactionsStore } from '@/stores/reactions';
@@ -11,6 +10,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { MediaSection } from '../Post';
 import { PostHeader } from '../Post/Header';
 import { Reactions } from '../Post/Reactions';
+import UserAvatar from '@/lib/user/components/avatar';
 
 export default function Thread({ events }: { events: NDKEvent[] }) {
     const userProfile = useProfileValue(events[0]?.pubkey, { subOpts: { skipVerification: true } });

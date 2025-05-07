@@ -9,10 +9,10 @@ import { useStickerManagement } from '../hooks/useStickerManagement';
 import { useStoryActions } from '../hooks/useStoryActions';
 import { useStickerStore } from '../store';
 import MediaRenderer from './MediaRenderer';
-import Sticker from './Sticker';
 import StickersBottomSheet from './StickersBottomSheet';
 import StoryControls from './StoryControls';
 import SettingsBottomSheet from './settings';
+import Sticker from './sticker';
 import { TextStickerInput } from './sticker-types';
 
 interface StoryPreviewScreenProps {

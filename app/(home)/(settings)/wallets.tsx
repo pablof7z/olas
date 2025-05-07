@@ -1,4 +1,4 @@
-import { type NDKRelay, useNDK, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKEvent, type NDKRelay, useNDK, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
 import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
 import { router } from 'expo-router';
@@ -58,6 +58,8 @@ export default function WalletsScreen() {
             });
     }, []);
 
+    const currentUser = useNDKCurrentUser();
+
     const data = useMemo(() => {
         if (!ndk) return [];
 
@@ -82,7 +84,20 @@ export default function WalletsScreen() {
                 leftView: <IconView name="lightning-bolt" className="rounded-lg bg-orange-500" />,
                 subTitle: 'Create a nostr-native NIP-60 wallet',
                 disabled: true,
-                onPress: () => {
+                onPress: async () => {
+                    // console.log('Creating NIP-60 wallet');
+                    // const event = new NDKEvent(ndk);
+                    // event.kind = 1;
+                    // event.content = 'NIP-60 wallet';
+                    // console.log('encryptionEnabled', ndk.signer?.encryptionEnabled?.('nip44'));
+                    // console.log('user', currentUser?.pubkey);
+                    // try {
+                    //     await event.encrypt(currentUser, undefined, 'nip44')
+                    //     console.log('Encrypted event:', event.content);
+                    // } catch (e) {
+                    //     console.log('Error encrypting event:', e);
+                    // }
+                    
                     newWallet().then(() => {
                         router.back();
                     });

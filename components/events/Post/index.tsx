@@ -144,6 +144,7 @@ export const MediaSection = function MediaSection({
                     event={event}
                     onPress={onPress}
                     autoplay
+                    scaleToWidth={Dimensions.get('window').width}
                     muted
                     forceScroll={false}
                     maxHeight={maxHeight}
@@ -233,13 +234,13 @@ export default function Post({
 
     const imetas = getImetas(event);
     const hasBlurhash = imetas[0]?.blurhash !== undefined;
-    const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
-    const loadedImage = useImageLoader(shouldTryToPreload ? imetas[0].url! : false);
+    // const shouldTryToPreload = !hasBlurhash && imetas[0]?.url !== undefined;
+    // const loadedImage = useImageLoader(shouldTryToPreload ? imetas[0]?.url ?? false : false);
 
     if (isUserProfileDeleted(userProfile)) return null;
-    if (shouldTryToPreload && !loadedImage) {
-        return <Text>No blurhash, waiting for it to load</Text>;
-    }
+    // if (shouldTryToPreload && loadedImage?.status !== 'loaded') {
+    //     return <Text>No blurhash, waiting for it to load</Text>;
+    // }
 
     return (
         <View style={containerStyle}>

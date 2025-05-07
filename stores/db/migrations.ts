@@ -275,6 +275,19 @@ export const migrations = [
             );
         },
     },
+    {
+        version: 20,
+        up: (db: SQLite.SQLiteDatabase) => {
+            // remove filesystem_key from image_cache
+            db.execSync('ALTER TABLE image_cache DROP COLUMN filesystem_key;');
+        },
+    },
+    {
+        version: 21,
+        up: (db: SQLite.SQLiteDatabase) => {
+            db.execSync('ALTER TABLE image_cache ADD COLUMN cache_key TEXT;');
+        },
+    },
 ];
 
 export const predefinedSearches = [

@@ -67,9 +67,10 @@ const UserAvatar = forwardRef(function UserAvatar(
 
     // Use the new preloading hook for avatar image
     const avatarUrl = userProfile?.picture ?? null;
-    const { image } = useImageLoader(avatarUrl ?? false, {
-        reqWidth: imageSize,
-    });
+    const image = useImage({ uri: avatarUrl ?? undefined });
+    // const { image } = useImageLoader(avatarUrl ?? false, {
+    //     reqWidth: imageSize,
+    // });
     // const image = useImage(avatarUrl, {}, [avatarUrl])
 
     borderColor ??= colors.card;
@@ -80,7 +81,6 @@ const UserAvatar = forwardRef(function UserAvatar(
             width: imageSize,
             height: imageSize,
             borderRadius: imageSize,
-            backgroundColor: `#${pubkey.slice(0, 6)}`,
         }),
         [imageSize]
     );
@@ -111,14 +111,7 @@ const UserAvatar = forwardRef(function UserAvatar(
                 </View>
             )}
             <AvatarInner
-                image={
-                    image && typeof image === 'object'
-                        ? {
-                              ...image,
-                              width: image.width ?? undefined,
-                              height: image.height ?? undefined,
-                          }
-                        : image
+                image={image
                 }
                 pubkey={pubkey}
                 imageSize={imageSize}
@@ -200,7 +193,6 @@ function AvatarInner({
                             width: realImageSize,
                             height: realImageSize,
                             borderRadius: realImageSize,
-                            backgroundColor: `#${pubkey.slice(0, 6)}`,
                         }}
                     />
                 )}

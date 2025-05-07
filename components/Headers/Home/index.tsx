@@ -1,7 +1,6 @@
-import { type NDKNutzap, useNDKNutzapMonitor } from '@nostr-dev-kit/ndk-mobile';
-import { router } from 'expo-router';
+import { type NDKNutzap } from '@nostr-dev-kit/ndk-mobile';
 import { useAtomValue } from 'jotai';
-import { Search, Sun, X } from 'lucide-react-native';
+import { Search, X } from 'lucide-react-native';
 import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {

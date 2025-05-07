@@ -60,6 +60,11 @@ export type AppSettingsStoreState = {
     forceSquareAspectRatio: boolean;
 
     /**
+     * Whether to use the image loader queue.
+     */
+    useImageLoaderQueue: boolean;
+
+    /**
      * Saved searches.
      */
     savedSearches: SavedSearch[];
@@ -85,6 +90,8 @@ export type AppSettingsStoreActions = {
 
     setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => void;
 
+    setUseImageLoaderQueue: (useImageLoaderQueue: boolean) => void;
+
     addSavedSearch: (search: SavedSearch) => void;
     removeSavedSearch: (title: string) => void;
     updateSavedSearch: (search: SavedSearch) => void;
@@ -94,6 +101,7 @@ export type AppSettingsStoreActions = {
 
     reset: () => void;
 };
+
 
 const defaultZapSetting = {
     amount: 21,
@@ -134,6 +142,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         yoloZapsGrowthFactor: 0.85,
         videosInFeed: 'from-follows',
         forceSquareAspectRatio: !(SecureStore.getItem('forceSquareAspectRatio') === 'false'),
+        useImageLoaderQueue: true,
         editingPosts: [],
         savedSearches: [],
         ...getWalletConfig(),
@@ -145,6 +154,7 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
                 advancedMode: false,
                 defaultZap: defaultZapSetting,
                 videosInFeed: 'from-follows',
+                useImageLoaderQueue: true,
             };
 
             const removeLocation = SecureStore.getItem('removeLocation');
@@ -174,6 +184,11 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
 
             const videosInFeed = SecureStore.getItem('videosInFeed');
             if (videosInFeed) state.videosInFeed = videosInFeed as VideosInFeed;
+
+            const useImageLoaderQueue = SecureStore.getItem('useImageLoaderQueue');
+            if (useImageLoaderQueue !== null && useImageLoaderQueue !== undefined) {
+                state.useImageLoaderQueue = useImageLoaderQueue === 'true';
+            }
 
             const savedSearches = db.getAllSync('SELECT * FROM saved_searches') as {
                 title: string;
@@ -265,6 +280,12 @@ export const useAppSettingsStore = create<AppSettingsStoreState & AppSettingsSto
         setForceSquareAspectRatio: (forceSquareAspectRatio: boolean) => {
             SecureStore.setItemAsync('forceSquareAspectRatio', forceSquareAspectRatio.toString());
             set({ forceSquareAspectRatio });
+        },
+
+        setUseImageLoaderQueue: (useImageLoaderQueue: boolean) => {
+            // SecureStore.setItemAsync('useImageLoaderQueue', useImageLoaderQueue.toString());
+            console.log('useImageLoaderQueue', useImageLoaderQueue);
+            set({ useImageLoaderQueue });
         },
 
         addSavedSearch: (search: SavedSearch) => {

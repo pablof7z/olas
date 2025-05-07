@@ -12,11 +12,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/nativewindui/Text';
-import UserAvatar from '@/components/ui/user/avatar';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { type Payment, targetToId, usePaymentStore } from '@/stores/payments';
 import { colorWithOpacity } from '@/theme/colors';
 import { formatMoney } from '@/utils/bitcoin';
+import UserAvatar from '@/lib/user/components/avatar';
 
 export default function TopZaps({ event }: { event: NDKEvent | NDKUser }) {
     const id = targetToId(event);

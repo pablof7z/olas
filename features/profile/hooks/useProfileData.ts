@@ -1,4 +1,3 @@
-import { useUserFlare } from '@/lib/user/stores/flare';
 import { useNDK, useProfileValue, useSubscribe } from '@nostr-dev-kit/ndk-mobile';
 import {
     type NDKEvent,
@@ -19,7 +18,6 @@ function useProfileData(pubkey: string) {
     const userProfile: NDKUserProfile | undefined = useProfileValue(pubkey, {
         subOpts: { skipVerification: true },
     });
-    const flare = useUserFlare(pubkey);
 
     const { events: content } = useSubscribe(
         [
@@ -49,7 +47,6 @@ function useProfileData(pubkey: string) {
         user,
         userProfile,
         content,
-        flare,
         followCount,
         hasProducts,
     };
