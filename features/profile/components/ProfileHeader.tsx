@@ -6,13 +6,15 @@ import { prettifyNip05 } from '@/utils/user';
 import { useEvent, useObserver } from '@nostr-dev-kit/ndk-hooks';
 import { NDKKind, type NDKUserProfile } from '@nostr-dev-kit/ndk-mobile';
 import { BlurView } from 'expo-blur';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     interpolate,
     Extrapolate,
     useDerivedValue,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import About from './About';
@@ -27,7 +29,7 @@ type ProfileHeaderProps = {
     flare?: string;
     colors: Record<string, string>;
     followCount: number;
-    scrollY: SharedValue<number>;
+    isExpanded: boolean;
     insets: { top: number };
 };
 
@@ -37,10 +39,61 @@ const HEADER_MIN_HEIGHT = 110;
 const AnimatedAvatarContainer = Animated.createAnimatedComponent(View);
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
-const ProfileHeader = memo(({ pubkey, userProfile, colors, scrollY }: ProfileHeaderProps) => {
+const ProfileHeader = memo(({ pubkey, userProfile, colors, followCount, isExpanded, insets }: ProfileHeaderProps) => {
     const flare = useUserFlare(pubkey);
     // const followEvent = useEvent(
     //     [{ kinds: [NDKKind.Contacts], authors: [pubkey] }],
+// Toggle-based animation logic
+const HEADER_MAX_HEIGHT = 320;
+const HEADER_MIN_HEIGHT = 110;
+const AVATAR_MAX_SIZE = 90;
+const AVATAR_MIN_SIZE = 36;
+
+// Animation value: 1 = expanded, 0 = compact
+const anim = useSharedValue(isExpanded ? 1 : 0);
+
+useEffect(() => {
+    anim.value = withTiming(isExpanded ? 1 : 0, { duration: 350 });
+}, [isExpanded, anim]);
+
+const headerAnimatedStyle = useAnimatedStyle(() => {
+    const height = Math.round(
+        interpolate(
+            anim.value,
+            [0, 1],
+            [HEADER_MIN_HEIGHT, HEADER_MAX_HEIGHT],
+            Extrapolate.CLAMP
+        )
+    );
+    const opacity = interpolate(
+        anim.value,
+        [0, 1],
+        [0.2, 1],
+        Extrapolate.CLAMP
+    );
+    return { height, overflow: 'hidden', opacity };
+});
+
+const avatarSize = useDerivedValue(() =>
+    Math.round(
+        interpolate(
+            anim.value,
+            [0, 1],
+            [AVATAR_MIN_SIZE, AVATAR_MAX_SIZE],
+            Extrapolate.CLAMP
+        )
+    )
+);
+const avatarAnimatedStyle = useAnimatedStyle(() => ({
+    width: avatarSize.value,
+    height: avatarSize.value,
+    borderRadius: avatarSize.value / 2,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -avatarSize.value / 2,
+    marginBottom: 10,
+}));
     //     { skipVerification: true },
     //     [pubkey]
     // );
@@ -59,48 +112,8 @@ const ProfileHeader = memo(({ pubkey, userProfile, colors, scrollY }: ProfileHea
     //     [pubkey]
     // );
 
-    // Animated styles using Reanimated
-    const headerAnimatedStyle = useAnimatedStyle(() => {
-        const height = Math.round(
-            interpolate(
-                scrollY.value,
-                [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-                [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
-                Extrapolate.CLAMP
-            )
-        );
-        const opacity = interpolate(
-            scrollY.value,
-            [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-            [1, 0.2],
-            Extrapolate.CLAMP
-        );
-        return { height, overflow: 'hidden', opacity };
-    });
-
-    // Animate avatar size with useAnimatedStyle
-    const AVATAR_MAX_SIZE = 90;
-    const AVATAR_MIN_SIZE = 36;
-    const avatarSize = useDerivedValue(() =>
-        Math.round(
-            interpolate(
-                scrollY.value,
-                [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-                [AVATAR_MAX_SIZE, AVATAR_MIN_SIZE],
-                Extrapolate.CLAMP
-            )
-        )
-    );
-    const avatarAnimatedStyle = useAnimatedStyle(() => ({
-        width: avatarSize.value,
-        height: avatarSize.value,
-        borderRadius: avatarSize.value / 2,
-        overflow: 'hidden',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: -avatarSize.value / 2,
-        marginBottom: 10,
-    }));
+    // Toggle-based animation logic
+    // (moved inside component to access anim)
 
     return (
         <Animated.View style={headerAnimatedStyle}>

@@ -33,9 +33,6 @@ import { cn } from '~/lib/cn';
 
 const _damping = 14;
 const _layout = LinearTransition.springify().damping(_damping);
-const _entering = FadeInDown.springify().damping(_damping);
-const _exiting = FadeOutDown.springify().damping(_damping);
-const _fadeExit = FadeOut.springify().damping(_damping);
 
 cssInterop(FlashList, {
     className: 'style',
@@ -205,7 +202,7 @@ const itemVariants = cva('ios:gap-0 flex-row gap-0 bg-card', {
     variants: {
         variant: {
             insets: 'ios:bg-card bg-card/70',
-            'full-width': 'bg-card dark:bg-background',
+            'full-width': 'bg-card dark:bbackground',
         },
         sectionHeaderAsGap: {
             true: '',
@@ -300,7 +297,7 @@ function ListItemComponent<T extends ListDataItem>(
     }
     return (
         <>
-            <Animated.View layout={_layout} entering={_entering} exiting={_exiting}>
+            <Animated.View layout={_layout}>
                 <Button
                     disabled={disabled || !isPressable(props)}
                     variant="plain"
@@ -404,7 +401,6 @@ function ListSectionHeaderComponent<T extends ListDataItem>(
         return (
             <View
                 className={cn(
-                    'bg-background',
                     Platform.OS !== 'ios' && 'border-border/25 dark:border-border/80 border-b',
                     className
                 )}
@@ -420,7 +416,7 @@ function ListSectionHeaderComponent<T extends ListDataItem>(
             className={cn(
                 'ios:pb-1 pb-4 pl-4 pt-4',
                 Platform.OS !== 'ios' && 'border-border/25 dark:border-border/80 border-b',
-                variant === 'full-width' ? 'bg-card dark:bg-background' : 'bg-background',
+                variant === 'full-width' ? 'bg-card dark:bg-background' : '',
                 className
             )}
             {...props}

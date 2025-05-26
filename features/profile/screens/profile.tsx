@@ -1,7 +1,6 @@
-import { useScrollY } from '@/context/ScrollYContext';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo } from 'react';
-import { type StyleProp, View, type ViewStyle } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { type StyleProp, View, type ViewStyle, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useProfileData from '../hooks/useProfileData';
 import useProfileTabs from '../hooks/useProfileTabs';
@@ -17,12 +16,26 @@ const TAB_BAR_HEIGHT = 48;
 
 export default function Profile() {
     const { pubkey, view } = useLocalSearchParams() as { pubkey: string; view?: string };
-    const scrollY = useScrollY();
     const { colors } = useColorScheme();
     const insets = useSafeAreaInsets();
 
     const { user, userProfile, followCount, hasProducts } = useProfileData(pubkey);
     const [currentView, setView] = useProfileTabs();
+
+    // Toggle state for header expansion (scroll-based)
+    const [isExpanded, setIsExpanded] = useState(true);
+    const lastState = React.useRef(true);
+
+    // Scroll threshold logic: only toggle when crossing 100px up/down
+    const handleScrollYChange = useCallback((y: number) => {
+        if (y > 100 && lastState.current) {
+            setIsExpanded(false);
+            lastState.current = false;
+        } else if (y <= 100 && !lastState.current) {
+            setIsExpanded(true);
+            lastState.current = true;
+        }
+    }, []);
 
     // Set initial tab if provided in route
     useEffect(() => {
@@ -30,11 +43,6 @@ export default function Profile() {
             setView(view);
         }
     }, []);
-
-    // Reset scroll position when navigating to a new profile
-    useEffect(() => {
-        scrollY.value = 0;
-    }, [pubkey, scrollY]);
 
     const containerStyle = useMemo<StyleProp<ViewStyle>>(
         () => ({
@@ -45,6 +53,10 @@ export default function Profile() {
         [colors.card]
     );
 
+    const header = useMemo(() => <Header user={user} pubkey={pubkey} userProfile={userProfile} isExpanded={isExpanded} />,
+        [user, pubkey, userProfile, isExpanded]
+    );
+    
     if (!user || !pubkey) return null;
 
     return (
@@ -53,14 +65,7 @@ export default function Profile() {
                 options={{
                     headerShown: true,
                     headerTransparent: true,
-                    header: () => (
-                        <Header
-                            user={user}
-                            pubkey={pubkey}
-                            userProfile={userProfile}
-                            scrollY={scrollY}
-                        />
-                    ),
+                    header: () => header
                 }}
             />
             <View style={containerStyle}>
@@ -69,16 +74,16 @@ export default function Profile() {
                     userProfile={userProfile}
                     colors={colors}
                     followCount={followCount}
-                    scrollY={scrollY}
+                    isExpanded={isExpanded}
                     insets={insets}
                 />
-                <StickyProfileTabs scrollY={scrollY} hasProducts={hasProducts} colors={colors} />
+                <StickyProfileTabs isExpanded={isExpanded} hasProducts={hasProducts} colors={colors} />
                 <View style={{ flex: 1, marginTop: TAB_BAR_HEIGHT }}>
                     <ProfileContent
                         pubkey={pubkey}
                         hasProducts={hasProducts}
-                        scrollY={scrollY}
                         colors={colors}
+                        onScrollYChange={handleScrollYChange}
                     />
                 </View>
             </View>

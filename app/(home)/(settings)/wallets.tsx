@@ -1,10 +1,10 @@
-import { NDKEvent, type NDKRelay, useNDK, useNDKCurrentUser, useNDKWallet } from '@nostr-dev-kit/ndk-mobile';
+import { NDKKind, type NDKRelay, useNDK, useNDKCurrentPubkey, useNDKWallet, useObserver } from '@nostr-dev-kit/ndk-mobile';
 import type { NDKCashuWallet } from '@nostr-dev-kit/ndk-wallet';
 import { Icon } from '@roninoss/icons';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Linking, View } from 'react-native';
+import { Image, Linking, Pressable, View } from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { IconView } from '@/components/icon-view';
@@ -28,6 +28,10 @@ export default function WalletsScreen() {
     const { activeWallet, setActiveWallet } = useNDKWallet();
     const [searchText, setSearchText] = useState<string | null>(null);
     const [relays, _setRelays] = useState<NDKRelay[]>(Array.from(ndk!.pool.relays.values()));
+    const currentPubkey = useNDKCurrentPubkey();
+    const nip60Event = useObserver(currentPubkey ? [
+        { kinds: [ NDKKind.CashuWallet ], authors: [ currentPubkey ] },
+    ] : false, { skipVerification: true}, [currentPubkey]);
 
     const activateWallet = async (wallet: NDKCashuWallet) => {
         router.back();
@@ -58,8 +62,6 @@ export default function WalletsScreen() {
             });
     }, []);
 
-    const currentUser = useNDKCurrentUser();
-
     const data = useMemo(() => {
         if (!ndk) return [];
 
@@ -85,19 +87,6 @@ export default function WalletsScreen() {
                 subTitle: 'Create a nostr-native NIP-60 wallet',
                 disabled: true,
                 onPress: async () => {
-                    // console.log('Creating NIP-60 wallet');
-                    // const event = new NDKEvent(ndk);
-                    // event.kind = 1;
-                    // event.content = 'NIP-60 wallet';
-                    // console.log('encryptionEnabled', ndk.signer?.encryptionEnabled?.('nip44'));
-                    // console.log('user', currentUser?.pubkey);
-                    // try {
-                    //     await event.encrypt(currentUser, undefined, 'nip44')
-                    //     console.log('Encrypted event:', event.content);
-                    // } catch (e) {
-                    //     console.log('Error encrypting event:', e);
-                    // }
-                    
                     newWallet().then(() => {
                         router.back();
                     });
@@ -166,6 +155,7 @@ export default function WalletsScreen() {
     }
 
     async function newWallet() {
+        if (!ndk) return;
         const wallet = await createNip60Wallet(ndk);
         setActiveWallet(wallet);
     }
@@ -179,9 +169,9 @@ export default function WalletsScreen() {
                     onChangeText: setSearchText,
                 }}
                 rightView={() => (
-                    <TouchableOpacity onPress={save}>
+                    <Pressable onPress={save}>
                         <Text className="text-primary">Save</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                 )}
             />
             <List

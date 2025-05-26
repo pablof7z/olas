@@ -1,11 +1,8 @@
-import { CashuMint, type GetInfoResponse, MintKeyset } from '@cashu/cashu-ts';
+import { CashuMint, type GetInfoResponse } from '@cashu/cashu-ts';
 import type { NDKEvent } from '@nostr-dev-kit/ndk-mobile';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 
-import { ListItem } from '@/components/nativewindui/List';
-import { cn } from '@/lib/cn';
 import { Checkbox } from '~/components/nativewindui/Checkbox';
 
 const MintListItem = ({

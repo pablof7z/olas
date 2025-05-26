@@ -20,6 +20,7 @@ import Visibility from '@/lib/publish/components/composer/metadata/visibility';
 import { Preview } from '@/lib/publish/components/preview';
 import { useEditorStore } from '@/lib/publish/store/editor';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { NextButton } from '@/lib/publish/components/NextButton';
 
 const dimensions = Dimensions.get('window');
 
@@ -91,31 +92,14 @@ export default function PostMetadataScreen() {
         <>
             <Stack.Screen
                 options={{
-                    contentStyle: {
-                        backgroundColor: colors.card,
-                    },
                     headerShown: true,
-                    title: 'New Post2',
+                    title: 'New Post',
                     headerRight: () => (
-                        <TouchableOpacity
+                        <NextButton
                             onPress={handlePublish}
                             disabled={isPublishing || media.length === 0}
-                        >
-                            {isPublishing ? (
-                                <ActivityIndicator size="small" color={colors.primary} />
-                            ) : (
-                                <Text
-                                    style={{
-                                        color: media.length === 0 ? colors.grey2 : colors.primary,
-                                        fontWeight: '600',
-                                        fontSize: 16,
-                                        opacity: media.length === 0 ? 0.5 : 1,
-                                    }}
-                                >
-                                    Publish
-                                </Text>
-                            )}
-                        </TouchableOpacity>
+                            buttonText={isPublishing ? 'Publishing...' : 'Publish'}
+                        />
                     ),
                 }}
             />

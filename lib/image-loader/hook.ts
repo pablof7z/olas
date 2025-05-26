@@ -12,7 +12,7 @@ interface UseImageLoaderResult {
 }
 
 export default function useImageLoader(
-    url: string | false,
+    url: string | false | undefined,
     options?: UseImageLoaderOptions
 ): UseImageLoaderResult {
     const { priority = 'normal', reqWidth = 'original', blurhash } = options ?? {};
@@ -39,8 +39,8 @@ export default function useImageLoader(
         const suitable = loaded
             .filter(v => isVariationSufficient(v, _reqWidth))
             .sort((a, b) => {
-                const aW = a.reqWidth === 'original' ? Infinity : a.reqWidth;
-                const bW = b.reqWidth === 'original' ? Infinity : b.reqWidth;
+                const aW = a.reqWidth === 'original' ? Number.POSITIVE_INFINITY : a.reqWidth;
+                const bW = b.reqWidth === 'original' ? Number.POSITIVE_INFINITY : b.reqWidth;
                 return _reqWidth === 'original'
                     ? 0
                     : Math.abs(aW - _reqWidth) - Math.abs(bW - _reqWidth);

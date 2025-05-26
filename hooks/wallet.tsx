@@ -46,13 +46,14 @@ export const useNip60WalletStore = create<Nip60WalletStoreState>((set, _get) => 
                     loadingEventIds.add(event.id);
                     NDKCashuWallet.from(event)
                         .then((newWallet) => set({ wallet: newWallet }))
-                        .catch((e) =>
+                        .catch((e) => {
+                            toast('Error loading wallet');
                             console.error(
                                 'error loading nip60 wallet',
                                 e,
                                 JSON.stringify(event.rawEvent(), null, 4)
                             )
-                        );
+                        });
                 },
             }
         );

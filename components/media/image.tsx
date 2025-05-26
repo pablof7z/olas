@@ -121,9 +121,10 @@ export default function ImageComponent({
         >
             <Image
                 source={image}
+                placeholder={{ blurhash}}
                 priority={priority}
                 recyclingKey={url}
-                allowDownscaling={false}
+                allowDownscaling={true}
                 style={{
                     width: safeFloor(finalDimensions?.width),
                     height: safeFloor(finalDimensions?.height),

@@ -41,12 +41,20 @@ export type FeedProps = {
      * If provided, Feed will update this value on scroll.
      */
     scrollY?: SharedValue<number>;
+
+    /**
+     * Optional callback for scroll Y position (JS thread).
+     */
+    onScrollYChange?: (y: number) => void;
 };
 
 const keyExtractor = (entry: FeedEntry) => entry.id;
 
 const Feed = React.forwardRef<FlashList<any>, FeedProps>(function Feed(
-    {
+    props,
+    ref: React.Ref<FlashList<any>>
+) {
+    const {
         filters,
         filterKey,
         filterFn,
@@ -56,14 +64,18 @@ const Feed = React.forwardRef<FlashList<any>, FeedProps>(function Feed(
         ListHeaderComponent,
         scrollEventThrottle,
         scrollY,
-    }: FeedProps & { scrollY?: import('react-native-reanimated').SharedValue<number> },
-    ref: React.Ref<FlashList<any>>
-) {
+        onScrollYChange,
+    } = props;
+
     // Compose handlers: update scrollY prop if provided, also call parent if provided
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             if (scrollY !== undefined) {
                 scrollY.value = event.contentOffset.y;  // UI-thread-safe assignment
+            }
+            if (typeof onScrollYChange === 'function') {
+                // Call on JS thread
+                runOnJS(onScrollYChange)(event.contentOffset.y);
             }
         },
     });

@@ -4,18 +4,20 @@ import * as User from '@/components/ui/user';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { prettifyNip05 } from '@/utils/user';
 import { X } from 'lucide-react-native';
-import type React from 'react';
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useAnimatedProps,
     useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+    useDerivedValue,
     interpolate,
-    Extrapolate,
-    type SharedValue,
+    Extrapolate
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useProfileEdit from '../hooks/useProfileEdit';
 import CopyToClipboard from './CopyToClipboard';
+import { useNDKCurrentPubkey } from '@nostr-dev-kit/ndk-hooks';
 
 const headerStyles = StyleSheet.create({
     container: {
@@ -36,10 +38,10 @@ type HeaderProps = {
     user: any;
     pubkey: string;
     userProfile?: any;
-    scrollY: SharedValue<number>;
+    isExpanded: boolean;
 };
 
-const Header: React.FC<HeaderProps> = ({ user, pubkey, userProfile, scrollY }) => {
+const Header: React.FC<HeaderProps> = ({ user, pubkey, userProfile, isExpanded }) => {
     const { colors } = useColorScheme();
     const insets = useSafeAreaInsets();
     const bannerHeight = insets.top + headerStyles.leftContainer.height + 50;
@@ -54,28 +56,38 @@ const Header: React.FC<HeaderProps> = ({ user, pubkey, userProfile, scrollY }) =
         currentUser,
     } = useProfileEdit(userProfile);
 
-    // Animated props for blur intensity
-    const animatedBlurProps = useAnimatedProps(() => {
-        return {
-            intensity: interpolate(scrollY.value, [0, bannerHeight], [0, 100], Extrapolate.CLAMP),
-        };
-    });
+    // Toggle-based animation progress (0 = compact, 1 = expanded)
+    const progress = useSharedValue(isExpanded ? 1 : 0);
+    const currentPubkey = useNDKCurrentPubkey();
+
+    React.useEffect(() => {
+        progress.value = withTiming(isExpanded ? 1 : 0, { duration: 300 });
+    }, [isExpanded, progress]);
 
     // Animated style for username opacity
     const usernameAnimatedStyle = useAnimatedStyle(() => {
         const opacity = interpolate(
-            scrollY.value,
-            [0, bannerHeight / 2, bannerHeight],
+            progress.value,
             [0, 0.5, 1],
+            [1, 0.5, 0],
             Extrapolate.CLAMP
         );
         return { opacity };
     });
 
+    // For blur intensity (if using Expo BlurView)
+    // Example: interpolate between 100 (compact) and 0 (expanded)
+    const blurIntensity = useDerivedValue(() =>
+        interpolate(progress.value, [0, 1], [100, 0], Extrapolate.CLAMP)
+    );
+
     return (
         <Animated.View
-            animatedProps={animatedBlurProps as any}
-            style={[headerStyles.container, { paddingTop: insets.top }]}
+            style={[
+                headerStyles.container,
+                { paddingTop: insets.top },
+                // Optionally animate background color or other styles here
+            ]}
         >
             <View style={headerStyles.leftContainer}>
                 {editState === 'edit' ? (
@@ -99,11 +111,14 @@ const Header: React.FC<HeaderProps> = ({ user, pubkey, userProfile, scrollY }) =
                 )}
 
                 <Animated.View
-                    style={[{ flexDirection: 'row', alignItems: 'center' }, usernameAnimatedStyle]}
+                    style={[
+                        { flexDirection: 'row', alignItems: 'center' },
+                        usernameAnimatedStyle,
+                    ]}
                 >
-                    <Pressable onPress={() => {}} style={{ flexDirection: 'column' }}>
+                    <View style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                         <User.Name
-                            userProfile={editProfile || userProfile}
+                            userProfile={pubkey === currentPubkey ? editProfile || userProfile : userProfile}
                             pubkey={pubkey}
                             style={{ color: colors.foreground, fontSize: 20, fontWeight: 'bold' }}
                         />
@@ -112,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({ user, pubkey, userProfile, scrollY }) =
                                 {prettifyNip05(userProfile?.nip05)}
                             </Text>
                         )}
-                    </Pressable>
+                    </View>
                     <CopyToClipboard text={userProfile?.nip05 || user.npub} size={16} />
                 </Animated.View>
             </View>

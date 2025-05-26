@@ -1,32 +1,38 @@
 import type React from 'react';
-import Animated, {
-    useAnimatedStyle,
-    interpolate,
-    Extrapolate,
-    type SharedValue,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import useProfileTabs from '../hooks/useProfileTabs';
 import ProfileTabs from './ProfileTabs';
 
-const HEADER_MAX_HEIGHT = 320;
-const HEADER_MIN_HEIGHT = 100;
-const TAB_BAR_HEIGHT = 48;
 
 type StickyProfileTabsProps = {
-    scrollY: SharedValue<number>;
+    isExpanded: boolean;
     hasProducts: boolean;
     colors: Record<string, string>;
 };
 
-const StickyProfileTabs: React.FC<StickyProfileTabsProps> = ({ scrollY, hasProducts, colors }) => {
+import { useSharedValue, useAnimatedStyle, interpolate, Extrapolate, withTiming } from 'react-native-reanimated';
+import { useEffect } from 'react';
+
+const HEADER_MAX_HEIGHT = 320;
+const HEADER_MIN_HEIGHT = 110;
+const TAB_BAR_HEIGHT = 48;
+
+const StickyProfileTabs: React.FC<StickyProfileTabsProps> = ({ isExpanded, hasProducts, colors }) => {
     const [view, setView] = useProfileTabs();
 
-    // Stick to top after header collapses
+    // Animation value: 1 = expanded, 0 = compact
+    const anim = useSharedValue(isExpanded ? 1 : 0);
+
+    useEffect(() => {
+        anim.value = withTiming(isExpanded ? 1 : 0, { duration: 350 });
+    }, [isExpanded, anim]);
+
+    // Stick to top after header collapses/expands
     const stickyTabsAnimatedStyle = useAnimatedStyle(() => {
         const translateY = interpolate(
-            scrollY.value,
+            anim.value,
+            [0, 1],
             [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-            [HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT, 0],
             Extrapolate.CLAMP
         );
         return { transform: [{ translateY }] };

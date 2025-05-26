@@ -59,7 +59,7 @@ const dayItemText: TextStyle = {
     right: 0,
 };
 
-function DayGrid({
+const DayGrid = React.memo(function DayGrid({
     day,
     event,
     imeta,
@@ -72,7 +72,7 @@ function DayGrid({
     imeta: NDKImetaTag;
     onPress: (e: NDKEvent) => void;
 }) {
-    const { image } = useImageLoader(imeta.url);
+    const { image } = useImageLoader(imeta.url ?? false);
     const size = windowWidth / 3 - GRID_MARGIN * 2;
     return (
         <View
@@ -96,7 +96,7 @@ function DayGrid({
             <Text style={dayItemText}>Day {day}</Text>
         </View>
     );
-}
+});
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -107,37 +107,38 @@ const AnimatedBackground = React.memo(function AnimatedBackground({
 }: {
     item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
     index: number;
-    scrollX: { value: number };
+    scrollX: Animated.SharedValue<number>;
 }) {
     const bgStyle = useAnimatedStyle(() => {
-        const pos = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const opacity = interpolate(
-            pos,
-            [index - 0.8, index, index + 0.8],
-            [0, 0.4, 0],
-            Extrapolation.CLAMP
-        );
+        const inputRange = [
+            (index - 0.8) * (IMAGE_WIDTH + SPACING * 2),
+            index * (IMAGE_WIDTH + SPACING * 2),
+            (index + 0.8) * (IMAGE_WIDTH + SPACING * 2),
+        ];
+        const opacity = interpolate(scrollX.value, inputRange, [0, 0.4, 0], Extrapolation.CLAMP);
         return { opacity };
     });
+
     const textStyle = useAnimatedStyle(() => {
-        const pos = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const opacity = interpolate(
-            pos,
-            [index - 0.8, index, index + 0.8],
-            [0, 1, 0],
-            Extrapolation.CLAMP
-        );
+        const inputRange = [
+            (index - 0.8) * (IMAGE_WIDTH + SPACING * 2),
+            index * (IMAGE_WIDTH + SPACING * 2),
+            (index + 0.8) * (IMAGE_WIDTH + SPACING * 2),
+        ];
+        const opacity = interpolate(scrollX.value, inputRange, [0, 1, 0], Extrapolation.CLAMP);
         const translateX = interpolate(
-            pos,
-            [index - 0.8, index, index + 0.8],
+            scrollX.value,
+            inputRange,
             [200, 0, -200],
             Extrapolation.CLAMP
         );
         return { opacity, transform: [{ translateX }] };
     });
-    const { image } = useImageLoader(item.imeta.blurhash ? false : (backitem.imeta.url ?? false), {
+
+    const { image } = useImageLoader(item.imeta.blurhash ? false : (item.imeta.url ?? false), {
         blurhash: item.imeta.blurhash,
     });
+
     return (
         <View style={StyleSheet.absoluteFill} key={item.day}>
             <AnimatedImage
@@ -168,32 +169,29 @@ const AnimatedCard = React.memo(function AnimatedCard({
 }: {
     item: { day: number; event: NDKEvent; imeta: NDKImetaTag };
     index: number;
-    scrollX: { value: number };
+    scrollX: Animated.SharedValue<number>;
     events: NDKEvent[];
     currentIndex: number;
 }) {
     const style = useAnimatedStyle(() => {
-        const pos = scrollX.value / (IMAGE_WIDTH + SPACING * 2);
-        const translateY = interpolate(
-            pos,
-            [index - 1, index, index + 1],
-            [50, 0, 50],
-            Extrapolation.CLAMP
-        );
-        const scale = interpolate(
-            pos,
-            [index - 1, index, index + 1],
-            [0.8, 1, 0.8],
-            Extrapolation.CLAMP
-        );
+        const inputRange = [
+            (index - 1) * (IMAGE_WIDTH + SPACING * 2),
+            index * (IMAGE_WIDTH + SPACING * 2),
+            (index + 1) * (IMAGE_WIDTH + SPACING * 2),
+        ];
+        const translateY = interpolate(scrollX.value, inputRange, [50, 0, 50], Extrapolation.CLAMP);
+        const scale = interpolate(scrollX.value, inputRange, [0.8, 1, 0.8], Extrapolation.CLAMP);
         return { transform: [{ translateY }, { scale }] };
     });
+
     const open = useStoriesView();
     const onPress = useCallback(() => {
         open(events.slice(index));
         router.push('/stories');
     }, [index, events, open]);
+
     const { image } = useImageLoader(item.imeta.url);
+
     return (
         <Animated.View style={[styles.cardWrap, style]}>
             <Pressable onPress={onPress} style={styles.cardPress}>
@@ -236,14 +234,17 @@ export default function Wallpapers() {
     }, [events]);
 
     const visible = useMemo(() => {
+        const start = Math.max(0, currentIndex - 2);
+        const end = Math.min(entries.slider.length - 1, currentIndex + 2);
         return entries.slider
             .map((item, idx) => ({ item, idx }))
-            .filter(({ idx }) => Math.abs(idx - currentIndex) <= 1);
-    }, [entries, currentIndex]);
+            .filter(({ idx }) => idx >= start && idx <= end);
+    }, [entries.slider, currentIndex]);
 
     const onScroll = useAnimatedScrollHandler((e) => {
         scrollX.value = e.contentOffset.x;
     });
+
     const onMomentumEnd = useCallback((e) => {
         const idx = Math.round(e.nativeEvent.contentOffset.x / (IMAGE_WIDTH + SPACING * 2));
         setCurrentIndex(idx);
@@ -252,9 +253,40 @@ export default function Wallpapers() {
     const currentDay = entries.slider[currentIndex]?.day;
     const openGrid = useStoriesView();
 
+    const renderItem = useCallback(
+        ({ item, index }) => (
+            <AnimatedCard
+                item={item}
+                index={index}
+                scrollX={scrollX}
+                events={entries.slider}
+                currentIndex={currentIndex}
+            />
+        ),
+        [scrollX, entries.slider, currentIndex]
+    );
+
+    const renderGridItem = useCallback(
+        ({ item, index }) => (
+            <DayGrid
+                index={index}
+                day={item.day}
+                event={item.event}
+                imeta={item.imeta}
+                onPress={(e) => {
+                    openGrid([e]);
+                    router.push('/stories');
+                }}
+            />
+        ),
+        [openGrid]
+    );
+
     return (
         <ScrollView
             style={styles.container}
+            removeClippedSubviews={true}
+            showsVerticalScrollIndicator={false}
         >
             <Stack.Screen
                 options={{
@@ -314,20 +346,13 @@ export default function Wallpapers() {
                     }}
                     windowSize={3}
                     maxToRenderPerBatch={3}
+                    removeClippedSubviews={true}
                     getItemLayout={(_, idx) => ({
                         length: IMAGE_WIDTH + SPACING * 2,
                         offset: idx * (IMAGE_WIDTH + SPACING * 2),
                         index: idx,
                     })}
-                    renderItem={({ item, index }) => (
-                        <AnimatedCard
-                            item={item}
-                            index={index}
-                            scrollX={scrollX}
-                            events={entries.slider}
-                            currentIndex={currentIndex}
-                        />
-                    )}
+                    renderItem={renderItem}
                 />
             </View>
 
@@ -337,18 +362,8 @@ export default function Wallpapers() {
                 numColumns={3}
                 estimatedItemSize={windowWidth / 3}
                 contentContainerStyle={{ backgroundColor: '#000', paddingTop: SPACING }}
-                renderItem={({ item, index }) => (
-                    <DayGrid
-                        index={index}
-                        day={item.day}
-                        event={item.event}
-                        imeta={item.imeta}
-                        onPress={(e) => {
-                            openGrid([e]);
-                            router.push('/stories');
-                        }}
-                    />
-                )}
+                renderItem={renderGridItem}
+                removeClippedSubviews={true}
             />
         </ScrollView>
     );

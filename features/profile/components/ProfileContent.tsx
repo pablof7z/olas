@@ -30,15 +30,15 @@ const postFilterFn = (entry: FeedEntry) => {
 type ProfileContentProps = {
     pubkey: string;
     hasProducts: boolean;
-    scrollY: SharedValue<number>;
     colors: Record<string, string>;
+    onScrollYChange?: (y: number) => void;
 };
 
 const ProfileContent: React.FC<ProfileContentProps> = ({
     pubkey,
     hasProducts,
-    scrollY,
     colors,
+    onScrollYChange,
 }) => {
     const [view] = useAtom(profileContentViewAtom);
 
@@ -88,7 +88,7 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
             filterKey={filterKey}
             filterFn={filterFn}
             numColumns={numColumns}
-            scrollY={scrollY}
+            onScrollYChange={onScrollYChange}
         />
     );
 };

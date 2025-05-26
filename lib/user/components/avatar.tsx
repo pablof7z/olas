@@ -111,8 +111,7 @@ const UserAvatar = forwardRef(function UserAvatar(
                 </View>
             )}
             <AvatarInner
-                image={image
-                }
+                image={image}
                 pubkey={pubkey}
                 imageSize={imageSize}
                 borderWidth={borderWidth}
@@ -169,6 +168,7 @@ function AvatarInner({
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
+            backgroundColor: `#${pubkey.slice(0, 6)}`,
         }),
         [imageSize]
     );

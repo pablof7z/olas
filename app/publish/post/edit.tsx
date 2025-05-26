@@ -22,6 +22,7 @@ import { FilteredImage } from '@/lib/media-filter/components/FilteredImage';
 import { useMediaFilter } from '@/lib/media-filter/hooks/useMediaFilter';
 import { Preview } from '@/lib/publish/components/preview/Preview';
 import { useEditorStore } from '@/lib/publish/store/editor';
+import { NextButton } from '@/lib/publish/components/NextButton';
 
 export const selectedMediaIndexAtom = atom(0);
 
@@ -285,6 +286,9 @@ export default function PostEditScreen() {
                         color: 'white',
                     },
                     headerLeft: () => <HeaderLeft />,
+                    headerRight: () => (
+                        <NextButton buttonText={buttonText} onPress={handleButtonPress} disabled={isSaving} />
+                    ),
                 }}
             />
             <View style={[styles.container, { paddingTop: headerHeight }]}>
@@ -303,21 +307,6 @@ export default function PostEditScreen() {
                     <Pressable style={styles.actionButton} onPress={handleAdjustments}>
                         <Sliders width={16} height={16} color="#fff" style={styles.actionIcon} />
                         <Text style={styles.actionButtonText}>Adjust</Text>
-                    </Pressable>
-
-                    <Pressable
-                        style={[styles.actionButton, { backgroundColor: 'white' }]}
-                        onPress={handleButtonPress}
-                        disabled={isSaving}
-                    >
-                        <Text
-                            style={[
-                                styles.actionButtonText,
-                                { color: 'black', paddingHorizontal: 8 },
-                            ]}
-                        >
-                            {buttonText}
-                        </Text>
                     </Pressable>
                 </View>
 
@@ -377,12 +366,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    nextButton: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    },
     actionButtonText: {
         color: '#fff',
         fontSize: 16,
+    },
+    nextButton: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     actionIcon: {
         marginRight: 6,

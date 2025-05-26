@@ -6,10 +6,12 @@ import {
     type NDKSigner,
     ndkSignerFromPayload,
     useNDK,
+    NDKKind,
     useNDKCurrentPubkey,
     useNDKSessionLogin,
     useNDKWallet,
     useNip55,
+    type NDKNip55Permission
 } from '@nostr-dev-kit/ndk-mobile';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Stack, router, useRouter } from 'expo-router';
@@ -42,7 +44,6 @@ import { LavaLamp } from '@/components/ui/LavaLamp';
 import { uploadMedia } from '@/lib/publish/actions/upload';
 import { prepareMedia } from '@/utils/media/prepare';
 import { createNip60Wallet } from '@/utils/wallet';
-import { Activity } from 'lucide-react-native';
 
 function CreateAccountButton() {
     const [mode, setMode] = useAtom(modeAtom);
@@ -113,14 +114,34 @@ function CreateAccountButton() {
     );
 }
 
+const nip55Permissions: NDKNip55Permission[] = [
+    { type: 'sign_event', kind: NDKKind.Image },
+    { type: 'sign_event', kind: NDKKind.ShortVideo },
+    { type: 'sign_event', kind: 967 },
+    { type: 'sign_event', kind: NDKKind.CashuWallet },
+    { type: 'sign_event', kind: NDKKind.CashuWalletBackup },
+    { type: 'sign_event', kind: NDKKind.CashuWalletTx },
+    { type: 'sign_event', kind: NDKKind.CashuMintList },
+    { type: 'sign_event', kind: NDKKind.Nutzap },
+    { type: 'sign_event', kind: NDKKind.GenericReply },
+    { type: 'sign_event', kind: NDKKind.Reaction },
+    { type: 'sign_event', kind: NDKKind.GenericRepost },
+    { type: 'sign_event', kind: NDKKind.EventDeletion },
+    { type: 'nip44_encrypt' },
+    { type: 'nip44_decrypt' },
+
+];
+
 function LoginWithNip55Button() {
+    const { ndk } = useNDK();
     const mode = useAtomValue(modeAtom);
     const { apps } = useNip55();
     const login = useNDKSessionLogin();
 
     const loginWith = useCallback(async (packageName: string) => {
+        if (!ndk) return;
         try {
-            const nip55Signer = new NDKNip55Signer(packageName);
+            const nip55Signer = new NDKNip55Signer(packageName, ndk, nip55Permissions);
             await login(nip55Signer, true);
         } catch (error) {
             console.error(`Failed to login with NIP-55 app ${packageName}:`, error);

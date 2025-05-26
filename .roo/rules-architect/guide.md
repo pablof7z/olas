@@ -1,0 +1,1 @@
+don't create placeholder files just to satisfy directory requirements, for example, don't create lib/<module>/components/placeholder.tsx if there don't need to be any components in a module, just don't create the components directory. Same for other directories, i.e. if a module doesn't have a store don't create a stores directory

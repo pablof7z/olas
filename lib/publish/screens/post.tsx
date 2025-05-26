@@ -33,6 +33,7 @@ import PreviewContainer from '@/lib/publish/components/preview/Container';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { mapAssetToPostMedia } from '@/utils/media';
 import type { PostMedia } from '../types';
+import { NextButton } from '../components/NextButton';
 
 const COLUMNS = 4;
 
@@ -376,9 +377,7 @@ function HeaderRight() {
     }, []);
 
     return (
-        <TouchableOpacity onPress={handlePress}>
-            <Text style={headerStyles.title}>Next</Text>
-        </TouchableOpacity>
+        <NextButton onPress={handlePress} buttonText="Next" />
     );
 }
 

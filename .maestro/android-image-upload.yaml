@@ -1,0 +1,57 @@
+# Maestro flow to test Android image upload in the Olas app
+# This test verifies that an image can be selected from the gallery and uploaded in a post
+
+appId: com.olas.app # Replace with actual appId if different
+
+---
+- comment: "Start at the home screen and wait for it to load"
+- waitFor:
+    id: "home-screen" # Replace with actual home screen identifier if needed
+    timeout: 10000
+
+- comment: "Navigate to the post creation screen (tap the 'New Post' button or FAB)"
+- tapOn:
+    id: "new-post-button" # Replace with actual testID or text for the post creation button
+- waitFor:
+    id: "post-creation-screen"
+    timeout: 5000
+
+- comment: "Tap the 'Add Image' button to open the image picker"
+- tapOn:
+    id: "add-image-button" # Replace with actual testID or text for the image picker button
+
+- comment: "Handle Android permissions dialog if it appears"
+- conditional:
+    visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+- comment: "Wait for the gallery to appear and select the first image"
+- waitFor:
+    text: "Photos" # Gallery title, may need adjustment for device language/ROM
+    timeout: 5000
+- tapOn:
+    index: 0 # Tap the first image in the gallery grid
+
+- comment: "Wait for the image to be loaded and displayed in the post editor"
+- waitFor:
+    id: "selected-image-preview" # Replace with actual testID for the image preview
+    timeout: 5000
+
+- assertVisible:
+    id: "selected-image-preview"
+- comment: "Optionally, assert that the image is not empty or broken (if possible)"
+
+- comment: "Complete the post creation process"
+- tapOn:
+    id: "publish-post-button" # Replace with actual testID or text for the publish button
+
+- comment: "Wait for confirmation that the post was created"
+- waitFor:
+    id: "post-success-toast" # Replace with actual testID or text for success message
+    timeout: 5000
+
+- assertVisible:
+    id: "post-success-toast"
+
+# End of flow
